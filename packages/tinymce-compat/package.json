@@ -1,0 +1,55 @@
+{
+  "name": "@novaprose/tinymce-compat",
+  "version": "0.5.1",
+  "description": "Drop-in tinymce.init() compatibility for the NovaProse editor: keep your TinyMCE configuration, plugins API and events while switching to an MIT-licensed editor.",
+  "keywords": [
+    "tinymce",
+    "migration",
+    "wysiwyg",
+    "rich-text-editor",
+    "prosemirror",
+    "novaprose"
+  ],
+  "license": "MIT",
+  "author": "NovaProse <hello@novaprose.com>",
+  "homepage": "https://novaprose.com/guides/migrating-from-tinymce/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novaprose/novaprose.git",
+    "directory": "packages/tinymce-compat"
+  },
+  "bugs": {
+    "url": "https://github.com/novaprose/novaprose/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./cdn": "./dist/tinymce.global.js"
+  },
+  "unpkg": "./dist/tinymce.global.js",
+  "jsdelivr": "./dist/tinymce.global.js",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "./dist/tinymce.global.js"
+  ],
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@novaprose/core": "workspace:^",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-model": "^1.24.1"
+  }
+}

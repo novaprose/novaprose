@@ -1,0 +1,162 @@
+---
+/**
+ * Живой пример перехода: конфигурация в стиле tinymce.init() работает на NovaProse через
+ * @novaprose/tinymce-compat. Посетитель меняет toolbar и plugins — редактор пересоздаётся;
+ * неподдержанные опции и плагины показываются списком (а не ломают страницу).
+ */
+const defaultPlugins = 'lists link image table code charmap anchor callout';
+const defaultToolbar =
+  'undo redo | blocks | bold italic underline | bullist numlist | link image table | callout code';
+---
+
+<div class="np-tiny not-content">
+  <div class="np-tiny-config">
+    <pre class="np-tiny-code" aria-label="The configuration running below"><code id="np-tiny-code"></code></pre>
+    <div class="np-tiny-controls">
+      <label>
+        <span>plugins</span>
+        <input id="np-tiny-plugins" value={defaultPlugins} spellcheck="false" autocomplete="off" />
+      </label>
+      <label>
+        <span>toolbar</span>
+        <input id="np-tiny-toolbar" value={defaultToolbar} spellcheck="false" autocomplete="off" />
+      </label>
+      <div class="np-tiny-row">
+        <button type="button" class="np-tiny-btn is-primary" id="np-tiny-apply">Run this config</button>
+        <button type="button" class="np-tiny-btn" id="np-tiny-reset">Reset</button>
+      </div>
+      <p class="np-tiny-warn" id="np-tiny-warn" role="status"></p>
+    </div>
+  </div>
+  <textarea id="np-tiny-editor" aria-label="Editor">
+    <h2>Your TinyMCE config, running on NovaProse</h2>
+    <p>This editor was created with <code>tinymce.init()</code>. Try the toolbar, type, or press <strong>Callout</strong> — a custom plugin with a dialog, written against the TinyMCE plugin API.</p>
+    <ul><li><p>Change <code>toolbar</code> or <code>plugins</code> above and run it again.</p></li><li><p>Events fire with the usual names — see the log below.</p></li></ul>
+  </textarea>
+  <p class="np-tiny-events">Events: <output id="np-tiny-events">—</output></p>
+</div>
+
+<script>
+  import { tinymce } from '@novaprose/tinymce-compat';
+  import '@novaprose/core/style.css';
+
+  const DEFAULT_PLUGINS = 'lists link image table code charmap anchor callout';
+  const DEFAULT_TOOLBAR =
+    'undo redo | blocks | bold italic underline | bullist numlist | link image table | callout code';
+  // Только имена кнопок и плагинов: буквы, цифры, «|», пробелы, запятые, дефис и подчёркивание.
+  const SAFE = /^[a-z0-9_|, -]{0,400}$/i;
+
+  const pluginsInput = document.getElementById('np-tiny-plugins') as HTMLInputElement;
+  const toolbarInput = document.getElementById('np-tiny-toolbar') as HTMLInputElement;
+  const code = document.getElementById('np-tiny-code')!;
+  const warn = document.getElementById('np-tiny-warn')!;
+  const eventsOut = document.getElementById('np-tiny-events')!;
+  const events: string[] = [];
+  const log = (name: string) => {
+    if (events[events.length - 1] === name) return;
+    events.push(name);
+    eventsOut.textContent = events.slice(-8).join(' → ');
+  };
+
+  // Свой плагин с диалогом — как его пишут для TinyMCE (PluginManager + windowManager.open).
+  tinymce.PluginManager.add('callout', (editor) => {
+    editor.ui.registry.addButton('callout', {
+      text: 'Callout',
+      tooltip: 'Insert a callout',
+      onAction: () =>
+        editor.windowManager.open({
+          title: 'Insert callout',
+          body: {
+            type: 'panel',
+            items: [
+              { type: 'input', name: 'text', label: 'Text' },
+              {
+                type: 'selectbox',
+                name: 'kind',
+                label: 'Kind',
+                items: [
+                  { text: 'Note', value: 'Note' },
+                  { text: 'Tip', value: 'Tip' },
+                  { text: 'Warning', value: 'Warning' },
+                ],
+              },
+            ],
+          },
+          initialData: { kind: 'Tip' },
+          buttons: [
+            { type: 'cancel', text: 'Cancel' },
+            { type: 'submit', text: 'Insert', primary: true },
+          ],
+          onSubmit: (api) => {
+            const data = api.getData() as { text: string; kind: string };
+            editor.insertContent(
+              `<blockquote><p><strong>${editor.dom.encode(data.kind)}:</strong> ${editor.dom.encode(data.text || '…')}</p></blockquote>`,
+            );
+            api.close();
+          },
+        }),
+    });
+  });
+
+  const render = (plugins: string, toolbar: string) => {
+    // Показываем ровно то, что запущено (текстом).
+    code.textContent = `tinymce.init({
+  selector: '#editor',
+  plugins: '${plugins}',
+  toolbar: '${toolbar}',
+  menubar: false,
+  height: 380,
+  setup: (editor) => {
+    editor.on('init input change', (e) => log(e.type));
+  },
+});`;
+  };
+
+  let content: string | null = null;
+  async function run(plugins: string, toolbar: string) {
+    if (!SAFE.test(plugins) || !SAFE.test(toolbar)) {
+      warn.textContent = 'Use plugin and button names only (letters, digits, “|”, spaces).';
+      return;
+    }
+    const existing = tinymce.get('np-tiny-editor');
+    if (existing) {
+      content = existing.getContent();
+      tinymce.remove('#np-tiny-editor');
+    }
+    render(plugins, toolbar);
+    // Предупреждения слоя совместимости — на страницу, а не только в консоль.
+    const notes: string[] = [];
+    const original = console.warn;
+    console.warn = (...args: unknown[]) => {
+      const text = String(args[0] ?? '');
+      if (text.startsWith('[nova] tinymce-compat:')) notes.push(text.replace('[nova] tinymce-compat: ', ''));
+      else original(...args);
+    };
+    try {
+      const [editor] = await tinymce.init({
+        selector: '#np-tiny-editor',
+        plugins,
+        toolbar,
+        menubar: false,
+        height: 380,
+        setup: (editor) => {
+          editor.on('init input change', (event) => log(String(event.type)));
+        },
+      });
+      if (content !== null) editor?.setContent(content);
+    } finally {
+      console.warn = original;
+    }
+    warn.textContent = notes.length ? `Not available yet: ${notes.join('; ')}` : '';
+  }
+
+  document.getElementById('np-tiny-apply')!.addEventListener('click', () => {
+    void run(pluginsInput.value.trim(), toolbarInput.value.trim());
+  });
+  document.getElementById('np-tiny-reset')!.addEventListener('click', () => {
+    pluginsInput.value = DEFAULT_PLUGINS;
+    toolbarInput.value = DEFAULT_TOOLBAR;
+    void run(DEFAULT_PLUGINS, DEFAULT_TOOLBAR);
+  });
+  void run(DEFAULT_PLUGINS, DEFAULT_TOOLBAR);
+</script>

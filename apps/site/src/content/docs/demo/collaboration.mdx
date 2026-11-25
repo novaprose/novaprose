@@ -1,0 +1,27 @@
+---
+title: Live collaboration demo
+description: Edit one document together in real time — live cursors, instant sync and personal undo, running on the NovaProse sync server.
+---
+
+import CollabDemo from '../../../components/CollabDemo.astro';
+
+Open this page in a second window, or send the invite link to a colleague, and type at the same
+time. Select a phrase and press **Ctrl+Alt+M** (or the comment button) to discuss it. Everything below is the real `@novaprose/collab` package talking to the open-source
+NovaProse sync server.
+
+<CollabDemo />
+
+## Add it to your app
+
+```ts
+import { createEditor } from '@novaprose/core';
+import { collab } from '@novaprose/collab';
+
+createEditor({
+  element,
+  plugins: [collab({ url: 'wss://sync.example.com', document: 'post-42', token, user: { name } })],
+});
+```
+
+Read the [collaboration guide](/guides/collaboration/) to run your own server and connect it to
+your users and permissions.

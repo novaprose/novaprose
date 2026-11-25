@@ -1,0 +1,185 @@
+---
+title: Changelog
+description: "Release notes for all @novaprose packages."
+---
+
+<!-- Сгенерировано из CHANGELOG.md: правьте его, затем pnpm --filter @novaprose/site sync-docs -->
+
+All packages in this repository are versioned together. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
+(until 1.0, minor versions may contain breaking changes).
+
+## 0.5.1 — 2026-11-25
+
+0.5.0 was tagged but never published (the release build failed); 0.5.1 is the same release.
+
+### Release tooling
+
+- The build now runs on Linux CI as well: the packages filter is quoted so the shell does not expand it.
+
+### `@novaprose/tinymce-compat`
+
+- **Dialogs** — `windowManager.open` with panels and tabs, inputs, selects, checkboxes, buttons, HTML
+  panels (sanitized), banners and grids; `initialData`, `onSubmit`, `onChange`, `onAction`, `onCancel`,
+  `onClose`, `onTabChange` and the dialog `api`.
+- `editor.ui.registry.addContextToolbar`; `editor.dom` for reading the content (`select`, `getParent`,
+  `getAttrib`, `encode`…); `editor.formatter` (`apply`/`remove`/`toggle`/`match`) for built-in formats.
+
+### Site
+
+- [Switch from TinyMCE](https://novaprose.com/migrate/): run your `tinymce.init()` toolbar and plugins
+  on NovaProse right on the page.
+
+## 0.4.0 — 2026-11-25
+
+### `@novaprose/core`
+
+- **Suggested edits** (`plugins: ['suggestions']`, buttons `suggestions` and `reviewsuggestions`,
+  Ctrl+Alt+Shift+E): typing and deleting become suggestions (`<ins>`/`<del>` with author and time)
+  that are accepted or rejected one by one or all at once; author colors and “who, when” tooltips;
+  options `author`, `enabled`, `force`, `canReview`. Works in real-time collaboration.
+  `listSuggestions`, `resolveSuggestions`, `suggestionsResult`, `isSuggesting`, `setSuggesting`.
+- Plugins can rewrite transactions before they apply (`transformTransaction`).
+- New exports for integrations: `icons`, `HTMLSerializer`.
+
+### `@novaprose/tinymce-compat` (new, preview)
+
+- **Drop-in `tinymce.init()`**: keep an existing TinyMCE integration and run it on NovaProse —
+  `tinymce.init/get/remove/activeEditor/triggerSave`, `PluginManager.add`, the editor API
+  (`getContent`, `setContent`, `insertContent`, `execCommand`, `on/off/fire`, `selection`,
+  `undoManager`, `mode`, `ui.registry`, notifications and alert/confirm), the common `init`
+  options and events, form submit into the textarea. A CDN build replaces `tinymce.min.js` with one
+  line and loads its own styles; `init()` in `<head>` waits for the document. Unsupported options
+  and plugins are reported in a warning, not an error.
+
+## 0.3.0 — 2026-11-25
+
+### `@novaprose/core`
+
+- **Comments** (`plugins: ['comments']`, buttons `addcomment` and `showcomments`, Ctrl+Alt+M):
+  threads on selected text with replies, edit, delete, resolve and reopen; highlights in the text;
+  a side panel that moves below the text on narrow screens. Threads are stored next to your
+  content (`threads` + `onChange`) or in any `CommentStore`; the HTML keeps only
+  `<span data-comment="id">` anchors. Adding or removing a comment is not undone by Ctrl+Z.
+- **Mentions** (`plugins: ['mentions']`, `pluginOptions.mentions.fetch`): type @ to pick a person
+  from your API; saved as `<span data-mention="id">@Name</span>`, removed as one unit;
+  `getMentions(editor)` lists everyone mentioned. In comments, @ opens the same list, mentioned
+  people are stored on the comment and reported through `comments.onMention`.
+- Autocompleter items accept `detail` — plain text on the right (role, e-mail).
+- **Version history** (`plugins: ['revisionhistory']`): browse versions, see the differences from
+  the current text (word by word), restore in one undoable step. Versions come from
+  `pluginOptions.revisionhistory` (`list`, `load`, optional `save`, `onRestore`).
+- `pluginOptions` is typed for built-in plugins (`comments`, `mentions`, `revisionhistory`,
+  `autosave`, `quickbars`): editors suggest and check their settings; other keys stay allowed.
+- `editor.ui.closeOverlays()` closes popovers and the toolbar's “⋯” menu; the comments panel and
+  version history use it, so they no longer open under the overflow menu on phones.
+
+### `@novaprose/collab`
+
+- `sync.commentStore()`: comments in the shared Y.Doc — synced live and saved by the sync server;
+  simultaneous replies are merged.
+- `sync.versions()`: version history from the sync server for the `revisionhistory` plugin.
+
+### Sync server
+
+- Version history: snapshots at most every `NOVA_SYNC_VERSION_INTERVAL` minutes (default 10), when
+  the last person leaves, and on “Save version”; up to 500 per document; viewers can read but not
+  save. Demo rooms keep versions in memory only.
+
+## 0.2.0 — 2026-11-25
+
+### `@novaprose/core`
+
+- **Plugins can add document nodes and marks** (`nodes`, `marks` in `definePlugin`). Every editor
+  now has its own schema (`editor.schema`), so editors with different plugins on one page don't
+  affect each other. Plugins with nodes must be passed as objects, not lazy loaders.
+- The HTML serializer now re-checks all output: `on*` attributes, unsafe URLs in `href`/`src`/
+  `srcset` and unsafe CSS are removed, and elements such as `<script>`, `<style>` and `<object>`
+  are never written, even if a plugin's `toDOM` produces them.
+- **Paste from Word, Word for the web, Google Docs, Excel, Google Sheets and LibreOffice**: real
+  nested lists instead of indented paragraphs, styles from CSS classes, highlights, tables with
+  shading and merged cells, Google Docs links without the redirect wrapper. New option
+  `pasteStyles: 'clean' | 'keep'` (default `'clean'`: no source fonts, sizes or spacing).
+- **Images pasted from Word for Windows / Mac** are extracted from the RTF clipboard data (PNG,
+  JPEG) instead of being lost behind `file:///` paths.
+- With `uploadImage`, embedded (`data:`) images that arrive by paste or drop are uploaded
+  automatically and replaced with the returned URL; on failure they stay embedded.
+- Pasting into an empty paragraph keeps the first pasted paragraph's formatting.
+- Superscript and subscript are recognized from `vertical-align`; `transparent`, `windowtext`
+  and `auto` are no longer treated as colors.
+- **New built-in plugins** (lazy, by name, TinyMCE names): `charmap`, `emoticons` (with `:name`
+  autocompletion), `nonbreaking`, `autolink` (typing, Enter, and pasting a URL over a selection),
+  `autosave` (`restoredraft`), `autoresize`, `visualblocks`.
+- **`anchor`, `pagebreak`, `media`** plugins (document nodes, enabled by name). `media` embeds only
+  YouTube (via youtube-nocookie.com), Vimeo and https video files; any other `<iframe>` is dropped on
+  parse and on output.
+- **`directionality`** (RTL) and **`advlist`** (bullet and numbering styles, split buttons) plugins.
+  Schema: `dir` on paragraphs and headings, `listStyle` on lists (`list-style-type`, legacy
+  `<ol type>`). Word paste keeps list styles (`a.` → lower-alpha, `o` → circle). New control type
+  `editor.ui.registry.addSplitButton()`.
+- **Tables:** sort by column (`advtablesort`), table properties (`tableprops`: width, alignment),
+  cell properties (`tablecellprops`: vertical alignment, header/data cell, column width). Schema:
+  `width`/`align` on tables, `valign` on cells (also from legacy `align`/`valign` attributes).
+- Fix: a wide table or long code line no longer stretches the whole editor on narrow screens; it
+  scrolls inside the editor.
+- Paste (clean mode) drops source table sizes and default cell vertical alignment.
+- Fix: on narrow screens, opening a dialog from the toolbar's “⋯” menu now closes that menu.
+- `editor.updateUI()` refreshes toolbar state after display-only changes; the fullscreen button now
+  reflects its state immediately.
+- New exports: `createSchema`, `parserFor`, `nodesOf`, `marksOf`, types `NovaSchema`,
+  `SchemaExtensions`.
+- Plugins can override named commands (`commands`) and replace the built-in history
+  (`replaceHistory`); plugins may dispatch transactions while the editor is being created.
+
+### `@novaprose/collab` (new, preview)
+
+- **Real-time collaboration** on Yjs: live sync, other participants' cursors and selections with
+  names, per-user undo (Ctrl+Z never reverts someone else's changes). Works with node plugins.
+- Connects to the NovaProse sync server, or to your own `Y.Doc` and `Awareness`.
+- `onUsers` reports who is in the document (name, color, self); `plugin.setUser()` renames you
+  for everyone without reconnecting.
+
+### Sync server (`apps/sync-server`, new)
+
+- Hocuspocus-protocol server with SQLite storage (`node:sqlite`), JWT (HS256) auth from your
+  backend, document patterns in tokens, read-only viewers, public no-token rooms
+  for demos (`NOVA_SYNC_PUBLIC_PREFIX`, never stored), `/health`, Docker image and Compose + Caddy setup.
+
+### Site
+
+- [Live collaboration demo](https://novaprose.com/demo/collaboration/): edit one document with
+  anyone who has the link.
+
+## 0.1.0 — first preview
+
+### `@novaprose/core`
+
+- ProseMirror-based editor with a deterministic string HTML serializer and a URL/CSS allowlist
+  applied on parse and on output.
+- Formatting: headings, lists, blockquote, code, sub/superscript, colors, fonts, font size, line
+  height, alignment, indent, links, images (upload, resize, alignment, alt text), tables.
+- UI: sliding toolbar with overflow, menu bar, context toolbars, quick bars, link bubble, dialogs,
+  search and replace, source code view, preview, print, fullscreen, help, status bar, slash commands.
+- Modes: classic, inline, distraction-free. Light and dark theme, English and Russian UI.
+- TinyMCE-compatible names for toolbar items, menus and plugins; content restrictions
+  (`validElements`, `invalidElements`, `validStyles`); paste hooks and plain-text paste.
+- Plugin system with lazy built-in plugins (`insertdatetime`, `quickbars`).
+- `editor.isActive(command)`, `editableChange` event.
+
+### `@novaprose/react`
+
+- `<NovaProseEditor>` (controlled / uncontrolled, `init`, `name` for native forms, React Hook Form).
+- Hooks `useEditor`, `useEditorState`, `useCommand`; `'use client'` for Next.js.
+
+### `@novaprose/vue`
+
+- `<NovaProseEditor>` with `v-model`; composables `useEditor`, `useEditorState`, `useCommand`; Nuxt-safe.
+
+### `@novaprose/web-component`
+
+- `<novaprose-editor>` form-associated custom element (FormData, reset, required, disabled,
+  readonly, `input` / `change` events); CDN build `dist/novaprose.global.js` + `dist/novaprose.css`.
+
+### `@novaprose/angular`
+
+- Standalone `NovaProseEditorComponent` with `ngModel` / Reactive Forms, zoneless and SSR support.

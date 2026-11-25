@@ -1,0 +1,101 @@
+# NovaProse — правила проекта
+
+Встраиваемый WYSIWYG-редактор на ProseMirror с облачной платформой. Независимый открытый проект.
+
+**Позиционирование:** продаём свои сильные стороны (MIT, совместная работа из коробки, качество), а не «замену
+TinyMCE». TinyMCE — ориентир для паритета функций (внутренние документы) и источник миграций; в публичных текстах
+он упоминается только в описании совместимости и переноса, без сравнений цен и тарифов.
+Внутренние документы (PRD, дорожная карта, решения, трекер паритета, тексты запуска) — в **приватном** репозитории,
+локально в соседней папке `../nova-internal/docs/` (PRD.md, ROADMAP.md, DECISIONS.md, PARITY.md, launch/). Сюда, в
+публичный репозиторий, их не копировать; паритет пересчитывается там: `node scripts/parity.mjs`.
+
+Язык общения, комментариев в коде и документации — русский. Идентификаторы, имена API и коммиты — английский.
+
+## Clean-room — обязательно
+
+- **Не читать, не открывать и не копировать исходный код TinyMCE** (GPL2+), его иконки, скины, тексты документации.
+  Это касается и агентов: не искать код TinyMCE на GitHub, не подсматривать реализацию плагинов.
+- Совместимость (имена плагинов, опции `tinymce.init()`, события) делаем **только по публичной документации API**
+  на tiny.cloud/docs — описание поведения, а не код.
+- Бренд, иконки, названия продуктов — свои. Слова «Tiny», «TinyMCE» допустимы только при описании совместимости.
+- Код ProseMirror (MIT) читать и использовать можно.
+
+## Структура
+
+```
+packages/core/src
+  editor.ts         класс Editor — единственный публичный API
+  schema.ts         схема документа + валидация CSS-значений (cssValue)
+  serializer.ts     строковый HTML-сериализатор (getHTML): детерминированный, без DOM
+  commands.ts       именованные команды (CommandName)
+  styles.ts, link.ts, image.ts — команды стилей, ссылок, картинок (+ их диалоги)
+  i18n/             строки UI: en (эталон ключей), ru
+  ui/               UI-слой: manager (editor.ui), registry, toolbar, menu, popover, dialog, tooltip,
+                    notification, statusbar, link-bubble, color-panel, builtins (встроенные кнопки)
+  style.css         скин и дизайн-токены --nova-*
+packages/react      @novaprose/react — компонент <NovaProseEditor> + хуки useEditor/useEditorState/useCommand
+packages/vue        @novaprose/vue — компонент с v-model + композаблы (те же имена)
+packages/web-component  <novaprose-editor>: form-associated элемент + CDN-сборка (dist/novaprose.global.js)
+packages/angular    @novaprose/angular — standalone-компонент + ControlValueAccessor; сборка ng-packagr,
+                    свой TypeScript 6 (Angular 22 его требует), тесты — JIT в vitest
+packages/tinymce-compat  @novaprose/tinymce-compat — tinymce.init() поверх Editor (+ CDN-замена tinymce.min.js)
+packages/collab     @novaprose/collab — совместное редактирование (Yjs, y-prosemirror, Hocuspocus-клиент)
+apps/sync-server    сервер синхронизации: Hocuspocus + node:sqlite + JWT вашего бэкенда, Dockerfile
+apps/playground     Vite-песочница (по исходникам). ?lang=en|ru, ?upload=slow|fail — имитация загрузки;
+                    react.html, vue.html, element.html, angular.html — песочницы обёрток, collab.html —
+                    два редактора в одной комнате (их гоняют e2e/*.spec.ts; sync-сервер Playwright поднимает сам)
+apps/site           сайт novaprose.com (Astro + Starlight, английский). Страницы фреймворков и changelog
+                    генерируются из README/CHANGELOG: правьте источник и запускайте sync-docs
+e2e/                Playwright: Chromium, Firefox, WebKit, мобильный Chrome
+docs/               RELEASING.md — как выпускать релизы (публичное)
+test/setup.ts       заглушки jsdom для юнит-тестов
+```
+
+## Команды
+
+```bash
+pnpm install        # зависимости
+pnpm dev            # playground на http://localhost:5173
+pnpm test           # юнит-тесты (vitest + jsdom)
+pnpm typecheck      # tsc по всем пакетам
+pnpm lint           # eslint
+pnpm format         # prettier
+pnpm build          # сборка пакетов (tsup → dist/)
+pnpm e2e            # браузерные тесты Playwright (playground поднимается сам)
+pnpm check          # формат, линт, типы, юнит-тесты — перед коммитом
+```
+
+## Архитектурные правила
+
+- **Публичный API — только класс `Editor`** (`packages/core/src/editor.ts`). Обёртки фреймворков не трогают
+  ProseMirror напрямую, только `Editor`: `getHTML/setContent/exec/can/on/destroy`.
+- **Схема — источник правды для HTML.** Каждый новый узел/марка обязаны иметь `parseDOM` и `toDOM`, и тест
+  «HTML туда-обратно без изменений» в `packages/core/test`.
+- **Безопасность по умолчанию.** Любой URL из контента проходит `isSafeLinkUrl` / `isSafeImageUrl` и при разборе,
+  и при выводе (документ может прийти через JSON). Никаких `innerHTML` с пользовательскими данными в UI.
+- **Именованные команды** (`CommandName` в `commands.ts`) — часть публичного API: переименование = breaking change.
+- **Бюджет размера:** ядро ≤ 150 КБ gzip (сейчас ~129 КБ JS + 6 КБ CSS при первой загрузке, вместе с ProseMirror,
+  таблицами и очисткой вставки; ленивые плагины ~9 КБ отдельно). Новая тяжёлая
+  зависимость — только отдельным лениво загружаемым плагином.
+- **SSR:** никакого обращения к `window`/`document` на уровне модуля.
+- **UI-строки только через `editor.ui.t(key)`.** Новый ключ — сначала в `i18n/en.ts`, затем перевод в `ru.ts`.
+- **Необязательная функциональность — плагином** в `src/plugins/` (`definePlugin`, ленивая регистрация
+  в `src/plugins/index.ts`). В ядро — только то, без чего редактор не редактор.
+- **Новые кнопки — через `editor.ui.registry`** (как плагин); имена — как в публичной документации TinyMCE.
+- **UI строим через `h()` из `ui/dom.ts`**, без innerHTML (исключение — собственные SVG-иконки).
+- **Доступность обязательна:** роли ARIA, клавиатура (стрелки, Esc, Tab), видимый фокус, aria-label у иконок.
+- Все цвета UI — через CSS-переменные `--nova-*` в `style.css`; светлая и тёмная тема обязаны работать.
+
+## Приоритеты
+
+P0 — к MVP, P1 — к GA, P2 — после GA (см. PRD в ../nova-internal). Не браться за P1/P2, пока не закрыт P0 этапа.
+Перед крупной фичей — свериться с ROADMAP.md (../nova-internal), чтобы не распыляться.
+
+## Качество
+
+- Новая функциональность = тесты. Баг = сначала падающий тест, потом фикс.
+- `pnpm check` должен быть зелёным перед коммитом.
+- jsdom не считает вёрстку: выделение, IME, вставка, раскладка тулбара, мобильные — покрывать e2e в `e2e/`.
+  e2e не должны зависеть от раскладки: контролы нажимать через хелпер `clickControl` (учитывает «⋯»).
+- Визуальные изменения UI — проверять скриншотами в светлой и тёмной теме и на узком экране.
+- `pnpm check` и `pnpm e2e` зелёные перед коммитом.

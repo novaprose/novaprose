@@ -1,0 +1,23 @@
+{
+  "name": "@novaprose/site",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro sync && tsc --noEmit -p tsconfig.json",
+    "sync-docs": "node scripts/sync-docs.mjs"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.43.0",
+    "@novaprose/collab": "workspace:^",
+    "@novaprose/core": "workspace:^",
+    "@novaprose/tinymce-compat": "workspace:^",
+    "astro": "^7.4.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.0"
+  }
+}

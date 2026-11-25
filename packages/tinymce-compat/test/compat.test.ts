@@ -1,0 +1,235 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { createTinymce, type CompatEditor } from '../src';
+
+/** tinymce.init() и API редактора — сценарии типичных интеграций (по публичной документации). */
+
+let tinymce = createTinymce();
+afterEach(() => {
+  tinymce.remove();
+  tinymce = createTinymce();
+  document.body.innerHTML = '';
+  vi.restoreAllMocks();
+});
+
+function page(html: string) {
+  document.body.innerHTML = html;
+}
+
+describe('tinymce.init', () => {
+  it('заменяет <textarea>: начальное содержимое, скрытый textarea, getContent/setContent', async () => {
+    page(
+      '<form id="f"><textarea id="post" name="body"><p>Hello <b>world</b></p></textarea></form>',
+    );
+    const [editor] = await tinymce.init({
+      selector: '#post',
+      plugins: 'lists link',
+      toolbar: 'bold italic',
+    });
+    expect(editor!.id).toBe('post');
+    expect(editor!.getContent()).toBe('<p>Hello <strong>world</strong></p>');
+    expect(document.querySelector<HTMLTextAreaElement>('#post')!.hidden).toBe(true);
+    expect(tinymce.get('post')).toBe(editor);
+    expect(tinymce.activeEditor).toBe(editor);
+    editor!.setContent('<p>New</p>');
+    expect(editor!.getContent({ format: 'text' })).toBe('New');
+  });
+
+  it('порядок: setup → события init → init_instance_callback; промис отдаёт редакторы', async () => {
+    page('<textarea class="rich"></textarea><textarea class="rich"></textarea>');
+    const calls: string[] = [];
+    const editors = await tinymce.init({
+      selector: 'textarea.rich',
+      setup: (editor) => {
+        calls.push('setup');
+        editor.on('init', () => calls.push('init'));
+      },
+      init_instance_callback: () => calls.push('callback'),
+    });
+    expect(editors).toHaveLength(2);
+    expect(calls).toEqual(['setup', 'init', 'callback', 'setup', 'init', 'callback']);
+    expect(editors[1]!.id).toMatch(/^mce_/);
+  });
+
+  it('отправка формы записывает HTML в textarea; triggerSave и isDirty', async () => {
+    page('<form><textarea id="t"><p>a</p></textarea></form>');
+    const [editor] = await tinymce.init({ selector: '#t' });
+    editor!.setContent('<p>b</p>');
+    expect(editor!.isDirty()).toBe(true);
+    const textarea = document.querySelector<HTMLTextAreaElement>('#t')!;
+    textarea.form!.dispatchEvent(new Event('submit'));
+    expect(textarea.value).toBe('<p>b</p>');
+    expect(editor!.isDirty()).toBe(false);
+    editor!.setContent('<p>c</p>');
+    tinymce.triggerSave();
+    expect(textarea.value).toBe('<p>c</p>');
+  });
+
+  it('execCommand и queryCommandState по именам команд TinyMCE', async () => {
+    page('<textarea id="t"><p>text</p></textarea>');
+    const [editor] = await tinymce.init({ selector: '#t' });
+    const onExec = vi.fn();
+    editor!.on('ExecCommand', onExec);
+    editor!.execCommand('SelectAll');
+    expect(editor!.execCommand('Bold')).toBe(true);
+    expect(editor!.queryCommandState('bold')).toBe(true);
+    editor!.execCommand('FormatBlock', false, 'h2');
+    expect(editor!.getContent()).toBe('<h2><strong>text</strong></h2>');
+    expect(editor!.execCommand('mceNoSuchCommand')).toBe(false);
+    expect(onExec).toHaveBeenCalledWith(expect.objectContaining({ command: 'Bold' }));
+    editor!.execCommand('Undo');
+    expect(editor!.getContent()).toBe('<p><strong>text</strong></p>');
+  });
+
+  it('insertContent вставляет HTML с той же очисткой, что и вставка', async () => {
+    page('<textarea id="t"><p>a</p></textarea>');
+    const [editor] = await tinymce.init({ selector: '#t' });
+    editor!.execCommand('SelectAll');
+    editor!.selection.collapse(false);
+    editor!.insertContent('<em>b</em><script>alert(1)</script>');
+    expect(editor!.getContent()).toBe('<p>a<em>b</em></p>');
+  });
+
+  it('insertContent с блоком (<p>) посреди абзаца вставляет новый абзац', async () => {
+    page('<textarea id="t"><p>Hello world</p></textarea>');
+    const [editor] = await tinymce.init({ selector: '#t' });
+    editor!.execCommand('SelectAll');
+    editor!.selection.collapse(false);
+    editor!.insertContent('<p>Signature</p>');
+    expect(editor!.getContent()).toBe('<p>Hello world</p><p>Signature</p>');
+  });
+
+  it('PluginManager.add: плагин регистрирует кнопку и команду, как в TinyMCE', async () => {
+    tinymce.PluginManager.add('signature', (editor) => {
+      editor.addCommand('insertSignature', () => editor.insertContent('<p>— Anna</p>'));
+      editor.ui.registry.addButton('signature', {
+        text: 'Signature',
+        onAction: () => editor.execCommand('insertSignature'),
+      });
+    });
+    page('<textarea id="t"><p>Hi</p></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'signature',
+      toolbar: 'bold signature',
+    });
+    const button = editor!
+      .getContainer()
+      .querySelector<HTMLButtonElement>('[data-control="signature"]')!;
+    expect(button.textContent).toContain('Signature');
+    editor!.selection.collapse(false);
+    button.click();
+    expect(editor!.getContent()).toContain('— Anna');
+  });
+
+  it('addToggleButton с onSetup и api.setActive; иконки по именам TinyMCE', async () => {
+    page('<textarea id="t"></textarea>');
+    let teardown = false;
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      toolbar: 'mytoggle',
+      setup: (e: unknown) => {
+        const ed = e as CompatEditor;
+        ed.ui.registry.addToggleButton('mytoggle', {
+          icon: 'bold',
+          tooltip: 'Toggle',
+          onAction: (api) =>
+            (api as { setActive(v: boolean): void; isActive(): boolean }).setActive(
+              !(api as { isActive(): boolean }).isActive(),
+            ),
+          onSetup: () => () => (teardown = true),
+        });
+      },
+    });
+    const button = editor!
+      .getContainer()
+      .querySelector<HTMLButtonElement>('[data-control="mytoggle"]')!;
+    expect(button.querySelector('svg')).not.toBeNull();
+    button.click();
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    editor!.remove();
+    expect(teardown).toBe(true);
+  });
+
+  it('события: input на каждое изменение, change при уходе фокуса, keydown — событие браузера', async () => {
+    page('<textarea id="t"><p>a</p></textarea>');
+    const [editor] = await tinymce.init({ selector: '#t' });
+    const input = vi.fn();
+    const change = vi.fn();
+    const keydown = vi.fn();
+    editor!.on('input', input).on('Change', change).on('keydown', keydown);
+    editor!.getBody().dispatchEvent(new FocusEvent('focus'));
+    editor!.setContent('<p>b</p>');
+    expect(input).toHaveBeenCalledTimes(1);
+    editor!.getBody().dispatchEvent(new FocusEvent('blur'));
+    expect(change).toHaveBeenCalledTimes(1);
+    editor!.getBody().dispatchEvent(new KeyboardEvent('keydown', { key: 'a', keyCode: 65 }));
+    expect(keydown.mock.calls[0]![0]).toBeInstanceOf(KeyboardEvent);
+  });
+
+  it('опции: readonly, placeholder, height, content_style, images_upload_handler', async () => {
+    page('<textarea id="t"></textarea>');
+    const handler = vi.fn(async (info: { filename(): string; base64(): string }) => {
+      expect(info.filename()).toBe('a.png');
+      expect(info.base64()).toBe(btoa('png'));
+      return 'https://cdn.example.com/a.png';
+    });
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      readonly: true,
+      placeholder: 'Type…',
+      height: 300,
+      content_style: 'body { font-family: Georgia; }',
+      images_upload_handler: handler,
+    });
+    expect(editor!.mode.isReadOnly()).toBe(true);
+    editor!.mode.set('design');
+    expect(editor!.mode.get()).toBe('design');
+    expect(editor!.getContainer().style.height).toBe('300px');
+    expect(editor!.getBody().getAttribute('data-placeholder')).toBe('Type…');
+    expect(editor!.getContainer().querySelector('style')!.textContent).toContain(
+      '& { font-family: Georgia; }',
+    );
+    const upload = editor!.core.options.uploadImage!;
+    await expect(upload(new File(['png'], 'a.png', { type: 'image/png' }), () => {})).resolves.toBe(
+      'https://cdn.example.com/a.png',
+    );
+  });
+
+  it('незнакомые опции и плагины — предупреждение, а не ошибка', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"></textarea>');
+    await tinymce.init({ selector: '#t', plugins: 'lists nosuchplugin', some_future_option: 1 });
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).toMatch(/nosuchplugin/);
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).toMatch(/some_future_option/);
+  });
+
+  it('inline: редактирование прямо в элементе; remove возвращает исходный textarea', async () => {
+    page('<div id="inline"><p>Inline text</p></div><textarea id="t"><p>x</p></textarea>');
+    const [inline] = await tinymce.init({ selector: '#inline', inline: true });
+    expect(document.querySelector('#inline .nova-prosemirror')).not.toBeNull();
+    expect(inline!.getContent()).toBe('<p>Inline text</p>');
+
+    const [editor] = await tinymce.init({ selector: '#t' });
+    editor!.setContent('<p>saved on remove</p>');
+    tinymce.remove('#t');
+    const textarea = document.querySelector<HTMLTextAreaElement>('#t')!;
+    expect(textarea.hidden).toBe(false);
+    expect(textarea.value).toBe('<p>saved on remove</p>');
+    expect(tinymce.get('t')).toBeNull();
+    expect(document.querySelector('.nova-compat')).toBeNull();
+  });
+
+  it('notificationManager и windowManager.alert/confirm', async () => {
+    page('<textarea id="t"></textarea>');
+    const [editor] = await tinymce.init({ selector: '#t' });
+    editor!.notificationManager.open({ text: 'Saved', type: 'success' });
+    expect(editor!.getContainer().textContent).toContain('Saved');
+    const answer = vi.fn();
+    editor!.windowManager.confirm('Delete?', answer);
+    const dialog = document.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Delete?');
+    dialog.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(answer).toHaveBeenCalledWith(true);
+  });
+});

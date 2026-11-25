@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "paths": {
+      "@novaprose/core": ["../core/src/index.ts"]
+    }
+  },
+  "include": ["src", "test"]
+}

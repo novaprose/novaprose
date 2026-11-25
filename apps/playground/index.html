@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaProse — playground</title>
+  </head>
+  <body>
+    <header class="pg-header">
+      <h1>NovaProse <span class="pg-badge">playground</span></h1>
+      <div class="pg-controls">
+        <label><input type="checkbox" id="readonly" /> Только чтение</label>
+        <select id="theme" aria-label="Тема">
+          <option value="auto">Тема: авто</option>
+          <option value="light">Тема: светлая</option>
+          <option value="dark">Тема: тёмная</option>
+        </select>
+        <button type="button" id="reset">Сбросить</button>
+      </div>
+    </header>
+    <main class="pg-main">
+      <section id="editor"></section>
+      <section class="pg-output">
+        <div class="pg-tabs" role="tablist">
+          <button type="button" role="tab" data-tab="html" aria-selected="true">HTML</button>
+          <button type="button" role="tab" data-tab="json" aria-selected="false">JSON</button>
+        </div>
+        <pre id="output"></pre>
+        <p class="pg-stats" id="stats"></p>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

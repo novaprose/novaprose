@@ -1,0 +1,47 @@
+---
+title: Migrate an existing editor
+description: Move an existing editor integration to NovaProse step by step — starting with a compatibility layer for tinymce.init() configurations.
+tableOfContents: false
+---
+
+import TinymceDemo from '../../components/TinymceDemo.astro';
+
+Rewriting an editor integration is rarely the first thing a team wants to do. NovaProse offers
+compatibility layers so an existing setup can run first, and be moved to the native API later.
+
+## From a `tinymce.init()` setup
+
+`@novaprose/tinymce-compat` accepts the familiar `tinymce.init()` configuration, plugin API and
+events. For a page with a script tag, point the script to NovaProse:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@novaprose/tinymce-compat/dist/tinymce.global.js"></script>
+```
+
+With a bundler: `npm install @novaprose/tinymce-compat @novaprose/core`, then
+`import { tinymce } from '@novaprose/tinymce-compat'`.
+
+### Try it with your configuration
+
+The editor below is created with `tinymce.init()`. Paste the `plugins` and `toolbar` from your
+project and run them. Options or plugins that aren't supported yet are listed instead of breaking
+the page.
+
+<TinymceDemo />
+
+### What the compatibility layer covers
+
+| Area                             | Status                                                                     |
+| -------------------------------- | -------------------------------------------------------------------------- |
+| `tinymce.init()` options         | Common options, toolbar and plugin names; unknown ones are reported        |
+| Editor API                       | Content, commands, events, selection, undo, mode, notifications            |
+| Custom plugins                   | `PluginManager.add`, `editor.ui.registry` buttons, menus, context toolbars |
+| Dialogs                          | `windowManager.open` panels and tabs, inputs, selects, checkboxes, buttons |
+| `editor.dom`, `editor.formatter` | Reading the DOM and built-in formats; direct DOM edits are not supported   |
+| Forms                            | The textarea receives the HTML on submit                                   |
+
+The [migration guide](/guides/migrating-from-tinymce/) maps each option to the native API, and the
+[package README](https://www.npmjs.com/package/@novaprose/tinymce-compat) lists what's covered.
+
+TinyMCE is a trademark of Tiny Technologies Inc. NovaProse is an independent project, not
+affiliated with Tiny Technologies; compatibility is implemented from public API documentation.

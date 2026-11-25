@@ -1,0 +1,21 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@novaprose/core": ["../../packages/core/src/index.ts"],
+      "@novaprose/react": ["../../packages/react/src/index.ts"],
+      "@novaprose/vue": ["../../packages/vue/src/index.ts"],
+      "@novaprose/web-component": ["../../packages/web-component/src/index.ts"],
+      "@novaprose/web-component/define": ["../../packages/web-component/src/define.ts"],
+      "@novaprose/angular": ["../../packages/angular/src/public-api.ts"],
+      "@novaprose/collab": ["../../packages/collab/src/index.ts"],
+      "@novaprose/tinymce-compat": ["../../packages/tinymce-compat/src/index.ts"]
+    },
+    "jsx": "react-jsx",
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false
+  },
+  "include": ["src", "vite.config.ts"]
+}

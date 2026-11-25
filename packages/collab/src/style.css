@@ -1,0 +1,30 @@
+/* Курсоры и выделения участников совместного редактирования. Цвета участников приходят из данных,
+   остальное — токены --nova-* (светлая и тёмная тема). */
+
+.nova-collab .nova-collab-caret {
+  position: relative;
+  margin-left: -1px;
+  margin-right: -1px;
+  border-left: 2px solid;
+  word-break: normal;
+  pointer-events: none;
+}
+
+.nova-collab .nova-collab-label {
+  position: absolute;
+  top: -1.4em;
+  left: -2px;
+  padding: 1px 5px;
+  border-radius: 4px 4px 4px 0;
+  color: #fff;
+  font:
+    600 11px/1.3 system-ui,
+    sans-serif;
+  white-space: nowrap;
+  user-select: none;
+  opacity: 0.95;
+}
+
+.nova-collab .nova-collab-selection {
+  border-radius: 2px;
+}

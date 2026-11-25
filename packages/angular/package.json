@@ -1,0 +1,55 @@
+{
+  "name": "@novaprose/angular",
+  "version": "0.5.1",
+  "description": "NovaProse rich text editor for Angular: standalone component with ngModel and Reactive Forms support, zoneless and SSR ready.",
+  "keywords": [
+    "angular",
+    "wysiwyg",
+    "rich-text-editor",
+    "editor",
+    "prosemirror",
+    "reactive-forms",
+    "ngmodel",
+    "novaprose"
+  ],
+  "license": "MIT",
+  "author": "NovaProse <hello@novaprose.com>",
+  "homepage": "https://novaprose.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novaprose/novaprose.git",
+    "directory": "packages/angular"
+  },
+  "bugs": {
+    "url": "https://github.com/novaprose/novaprose/issues"
+  },
+  "scripts": {
+    "build": "ng-packagr -p ng-package.json -c tsconfig.lib.json && node scripts/finalize-dist.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@novaprose/core": "workspace:^",
+    "tslib": "^2.3.0"
+  },
+  "peerDependencies": {
+    "@angular/core": ">=19.0.0",
+    "@angular/forms": ">=19.0.0"
+  },
+  "devDependencies": {
+    "@angular/common": "^22.3.0",
+    "@angular/compiler": "^22.3.0",
+    "@angular/compiler-cli": "^22.3.0",
+    "@angular/core": "^22.3.0",
+    "@angular/forms": "^22.3.0",
+    "@angular/platform-browser": "^22.3.0",
+    "@angular/platform-server": "^22.3.0",
+    "ng-packagr": "^22.3.0",
+    "prosemirror-state": "^1.4.3",
+    "rxjs": "^7.8.0",
+    "typescript": "~6.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  }
+}

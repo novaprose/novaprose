@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaProse — Web Component playground</title>
+    <script type="module" src="/src/element/main.ts"></script>
+  </head>
+  <body>
+    <main class="pg-react">
+      <h1>NovaProse <span class="pg-badge">Web Component</span></h1>
+
+      <section class="pg-react-block" aria-labelledby="form-title">
+        <h2 id="form-title">Обычная HTML-форма, без фреймворка</h2>
+        <form id="form">
+          <fieldset id="fieldset">
+            <legend>Статья</legend>
+            <label for="title">Заголовок</label>
+            <input id="title" name="title" value="Черновик" />
+            <novaprose-editor
+              id="body"
+              name="body"
+              required
+              toolbar="undo redo | bold italic | bullist numlist | link"
+              statusbar="false"
+              placeholder="Текст статьи…"
+            >
+              <p>Разметка внутри тега — <strong>начальное содержимое</strong>.</p>
+            </novaprose-editor>
+          </fieldset>
+          <div class="pg-react-actions">
+            <button type="submit">Отправить</button>
+            <button type="reset">Сбросить</button>
+            <label><input type="checkbox" id="disable" /> fieldset disabled</label>
+          </div>
+        </form>
+        <p>input: <output id="inputs">0</output> · change: <output id="changes">0</output></p>
+        <pre id="submitted"></pre>
+      </section>
+    </main>
+  </body>
+</html>

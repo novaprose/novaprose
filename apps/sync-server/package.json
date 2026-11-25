@@ -1,0 +1,20 @@
+{
+  "name": "@novaprose/sync-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "NovaProse real-time collaboration server (Hocuspocus protocol, SQLite storage, JWT auth).",
+  "scripts": {
+    "start": "node src/server.mjs",
+    "dev": "node src/server.mjs --dev"
+  },
+  "dependencies": {
+    "@hocuspocus/extension-database": "^4.9.0",
+    "@hocuspocus/server": "^4.9.0",
+    "jose": "^6",
+    "yjs": "^13.6.33"
+  },
+  "devDependencies": {
+    "@hocuspocus/provider": "^4.9.0"
+  }
+}

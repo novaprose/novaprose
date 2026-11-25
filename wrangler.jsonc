@@ -1,0 +1,16 @@
+// Cloudflare Workers (статические файлы): сайт novaprose.com из apps/site/dist.
+// Сборка и публикация — Cloudflare Workers Builds при push в main (см. docs/RELEASING.md → «Сайт»).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "novaprose",
+  "compatibility_date": "2026-11-24",
+  // Сайт доступен только по novaprose.com (Custom Domains в Cloudflare). Технический адрес *.workers.dev
+  // и превью-ссылки выключены, чтобы у поисковиков не было копий сайта.
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "./apps/site/dist",
+    // Starlight генерирует 404.html — показываем его для несуществующих страниц.
+    "not_found_handling": "404-page",
+  },
+}

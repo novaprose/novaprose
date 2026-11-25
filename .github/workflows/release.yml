@@ -1,0 +1,54 @@
+name: Release
+
+# Публикация в npm по тегу vX.Y.Z. Без токенов: npm trusted publishing (OIDC).
+# Каждый пакет на npmjs.com должен доверять этому workflow — см. docs/RELEASING.md.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  id-token: write # OIDC-токен для npm trusted publishing
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing требует npm >= 11.5.1.
+      - run: npm install -g npm@^11.5.1
+      - run: pnpm install --frozen-lockfile
+
+      - name: Tag matches package versions
+        run: |
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match package version $VERSION"; exit 1
+          fi
+
+      - run: pnpm check
+      - run: pnpm release:pack
+
+      - name: Publish to npm (core first)
+        run: |
+          VERSION=$(node -p "require('./packages/core/package.json').version")
+          for name in core collab react vue web-component angular tinymce-compat; do
+            # Уже опубликованную версию пропускаем: перезапуск workflow безопасен.
+            if npm view "@novaprose/$name@$VERSION" version >/dev/null 2>&1; then
+              echo "@novaprose/$name@$VERSION already published, skipping"; continue
+            fi
+            file=$(ls .release/novaprose-$name-*.tgz)
+            echo "Publishing $file"
+            npm publish "$file" --access public
+          done

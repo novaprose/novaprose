@@ -1,0 +1,221 @@
+/* Бренд сайта поверх темы Starlight. Цвета редактора остаются токенами --nova-* из @novaprose/core. */
+:root {
+  --sl-color-accent-low: #1e1b4b;
+  --sl-color-accent: #6366f1;
+  --sl-color-accent-high: #c7d2fe;
+}
+:root[data-theme='light'] {
+  --sl-color-accent-low: #e0e7ff;
+  --sl-color-accent: #4f46e5;
+  --sl-color-accent-high: #312e81;
+}
+
+.np-demo {
+  margin-block: 1.5rem;
+  text-align: start;
+}
+.np-demo .nova-editor {
+  min-height: 320px;
+}
+.np-demo-output {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  max-height: 160px;
+  overflow: auto;
+}
+
+/* Демо совместного редактирования: панель (статус, участники, имя, ссылка) над редактором. */
+.np-collab {
+  margin-block: 1.5rem;
+  text-align: start;
+}
+.np-collab .nova-editor {
+  min-height: 340px;
+}
+.np-collab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: var(--sl-text-sm);
+}
+.np-collab-spacer {
+  flex: 1;
+}
+.np-collab-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--sl-color-gray-2);
+}
+.np-collab-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--sl-color-gray-4);
+}
+.np-collab-status[data-status='connected'] .np-collab-dot {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #16a34a 25%, transparent);
+}
+.np-collab-status[data-status='disconnected'] .np-collab-dot {
+  background: #dc2626;
+}
+.np-collab-users {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.np-collab-user {
+  display: grid;
+  place-items: center;
+  min-width: 1.75rem;
+  padding: 0 0.3rem;
+  height: 1.75rem;
+  margin-inline-start: -0.35rem;
+  border: 2px solid var(--sl-color-bg);
+  border-radius: 999px;
+  background: var(--np-user);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.np-collab-user:first-child {
+  margin-inline-start: 0;
+}
+.np-collab-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--sl-color-gray-2);
+}
+.np-collab-name input,
+.np-collab-btn {
+  height: 2rem;
+  padding: 0 0.65rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.4rem;
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text);
+  font: inherit;
+}
+.np-collab-name input {
+  width: 9rem;
+}
+.np-collab-btn {
+  cursor: pointer;
+}
+.np-collab-btn:hover {
+  border-color: var(--sl-color-accent);
+}
+.np-collab-name input:focus-visible,
+.np-collab-btn:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 1px;
+}
+.np-collab-note {
+  margin-top: 0.75rem;
+  color: var(--sl-color-gray-3);
+  font-size: var(--sl-text-xs);
+}
+@media (max-width: 40rem) {
+  .np-collab-spacer {
+    display: none;
+  }
+  .np-collab-name {
+    flex-basis: 100%;
+  }
+  .np-collab-name input {
+    flex: 1;
+  }
+}
+
+/* Страница «Switch from TinyMCE»: конфиг и элементы управления над живым редактором. */
+.np-tiny {
+  margin-block: 1.5rem;
+  text-align: start;
+}
+.np-tiny-config {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.np-tiny-code {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  overflow: auto;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.5rem;
+  background: var(--sl-color-gray-7, var(--sl-color-black));
+  font-size: var(--sl-text-xs);
+  line-height: 1.6;
+}
+.np-tiny-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  font-size: var(--sl-text-sm);
+}
+.np-tiny-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  color: var(--sl-color-gray-2);
+  font-family: var(--__sl-font-mono, monospace);
+}
+.np-tiny-controls input {
+  height: 2.1rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.4rem;
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text);
+  font: inherit;
+  font-size: var(--sl-text-xs);
+}
+.np-tiny-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.np-tiny-btn {
+  height: 2.1rem;
+  padding: 0 0.9rem;
+  border: 1px solid var(--sl-color-gray-5);
+  border-radius: 0.4rem;
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text);
+  font: inherit;
+  cursor: pointer;
+}
+.np-tiny-btn.is-primary {
+  border-color: var(--sl-color-accent);
+  background: var(--sl-color-accent);
+  color: var(--sl-color-white, #fff);
+}
+.np-tiny-controls input:focus-visible,
+.np-tiny-btn:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 1px;
+}
+.np-tiny-warn:empty {
+  display: none;
+}
+.np-tiny-warn {
+  margin: 0;
+  color: var(--sl-color-orange, #b45309);
+  font-size: var(--sl-text-xs);
+}
+.np-tiny-events {
+  margin-top: 0.6rem;
+  color: var(--sl-color-gray-3);
+  font-size: var(--sl-text-xs);
+}
+:root[data-theme='light'] .np-tiny-warn {
+  color: #9a3412;
+}
+:root[data-theme='dark'] .np-tiny-warn {
+  color: #fbbf24;
+}

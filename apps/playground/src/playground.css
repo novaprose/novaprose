@@ -1,0 +1,174 @@
+:root {
+  --pg-bg: #f4f5f7;
+  --pg-fg: #1f2328;
+  --pg-muted: #6b7280;
+  --pg-panel: #ffffff;
+  --pg-border: #d0d7de;
+  color-scheme: light;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+:root[data-theme='dark'] {
+  --pg-bg: #010409;
+  --pg-fg: #e6edf3;
+  --pg-muted: #8b949e;
+  --pg-panel: #0d1117;
+  --pg-border: #30363d;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --pg-bg: #010409;
+    --pg-fg: #e6edf3;
+    --pg-muted: #8b949e;
+    --pg-panel: #0d1117;
+    --pg-border: #30363d;
+    color-scheme: dark;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--pg-bg);
+  color: var(--pg-fg);
+}
+
+.pg-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+}
+
+.pg-header h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.pg-badge {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pg-border);
+  color: var(--pg-muted);
+  vertical-align: middle;
+}
+
+.pg-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.pg-controls select,
+.pg-controls button,
+.pg-tabs button {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--pg-border);
+  background: var(--pg-panel);
+  color: inherit;
+  cursor: pointer;
+}
+
+.pg-main {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 16px;
+  padding: 0 24px 24px;
+}
+
+@media (max-width: 900px) {
+  .pg-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pg-output {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pg-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.pg-tabs button[aria-selected='true'] {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+#output {
+  flex: 1;
+  margin: 0;
+  padding: 12px;
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid var(--pg-border);
+  border-radius: 8px;
+  background: var(--pg-panel);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.pg-stats {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--pg-muted);
+}
+
+/* React-песочница */
+.pg-react {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: grid;
+  gap: 24px;
+}
+.pg-react-block {
+  display: grid;
+  gap: 8px;
+}
+.pg-react-block pre {
+  margin: 0;
+  padding: 8px;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  border: 1px solid var(--pg-border);
+  border-radius: 6px;
+  background: var(--pg-panel);
+}
+.pg-react-actions,
+.pg-react-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+.pg-react-toolbar [aria-pressed='true'] {
+  font-weight: 700;
+  outline: 2px solid currentColor;
+}
+
+/* Песочница совместного редактирования: два редактора рядом, на узком экране — друг под другом. */
+.pg-collab {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}

@@ -1,0 +1,63 @@
+{
+  "name": "@novaprose/collab",
+  "version": "0.5.1",
+  "description": "Real-time collaborative editing for the NovaProse editor: Yjs sync, live cursors and presence, per-user undo.",
+  "keywords": [
+    "collaboration",
+    "real-time",
+    "yjs",
+    "crdt",
+    "prosemirror",
+    "wysiwyg",
+    "rich-text-editor",
+    "novaprose"
+  ],
+  "license": "MIT",
+  "author": "NovaProse <hello@novaprose.com>",
+  "homepage": "https://novaprose.com/guides/collaboration/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novaprose/novaprose.git",
+    "directory": "packages/collab"
+  },
+  "bugs": {
+    "url": "https://github.com/novaprose/novaprose/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./style.css": "./src/style.css"
+  },
+  "files": [
+    "dist",
+    "src/style.css",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap --external @novaprose/core",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "^4.9.0",
+    "@novaprose/core": "workspace:^",
+    "y-prosemirror": "^1.3.7",
+    "y-protocols": "^1.0.7",
+    "yjs": "^13.6.33"
+  },
+  "devDependencies": {
+    "prosemirror-model": "^1.24.1",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-view": "^1.37.1"
+  }
+}

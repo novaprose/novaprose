@@ -1,0 +1,38 @@
+---
+/**
+ * Живое демо на главной: настоящий @novaprose/core в браузере. На сервере (при сборке сайта)
+ * рендерится только контейнер с HTML-содержимым — его видно и без JS.
+ */
+const initial = `<h2>Try NovaProse</h2>
+<p>This is a <strong>live editor</strong>. Select text and use the toolbar, or try the shortcuts:
+<code>Ctrl+B</code>, <code>Ctrl+I</code>, <code>Ctrl+K</code> for a link.</p>
+<ul><li><p>Type <code>#</code> and a space for a heading, <code>-</code> for a list, <code>/</code> for commands.</p></li>
+<li><p>Paste from another page: unsafe markup is dropped.</p></li></ul>
+<blockquote><p>Open source, MIT licensed, built on ProseMirror.</p></blockquote>`;
+---
+
+<div class="np-demo not-content">
+  <div id="np-demo-editor" set:html={initial} />
+  <details class="np-demo-output">
+    <summary>Output HTML</summary>
+    <pre><code id="np-demo-html"></code></pre>
+  </details>
+</div>
+
+<script>
+  import { createEditor } from '@novaprose/core';
+  import '@novaprose/core/style.css';
+
+  const host = document.getElementById('np-demo-editor')!;
+  const output = document.getElementById('np-demo-html')!;
+  const content = host.innerHTML;
+  host.replaceChildren();
+  const editor = createEditor({
+    element: host,
+    content,
+    placeholder: 'Start typing…',
+    plugins: ['insertdatetime', 'quickbars'],
+    onChange: (e) => (output.textContent = e.getHTML()),
+  });
+  output.textContent = editor.getHTML();
+</script>

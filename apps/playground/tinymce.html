@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaProse — tinymce.init() compatibility</title>
+    <script type="module" src="/src/tinymce/main.ts"></script>
+  </head>
+  <body>
+    <main class="pg-react">
+      <h1>NovaProse <span class="pg-badge">tinymce.init()</span></h1>
+      <p>
+        A typical TinyMCE integration — textarea in a form, config, a custom plugin, events —
+        running on NovaProse through <code>@novaprose/tinymce-compat</code>.
+      </p>
+      <form id="post-form">
+        <label for="title">Title</label>
+        <input id="title" name="title" value="Release notes" />
+        <textarea id="body" name="body"><p>Welcome to <strong>NovaProse</strong>.</p></textarea>
+        <div class="pg-react-actions"><button type="submit">Save</button></div>
+      </form>
+      <p>Events: <output id="events"></output></p>
+      <pre id="submitted"></pre>
+    </main>
+  </body>
+</html>

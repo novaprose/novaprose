@@ -1,0 +1,66 @@
+{
+  "name": "@novaprose/web-component",
+  "version": "0.5.1",
+  "description": "NovaProse rich text editor as a framework-agnostic <novaprose-editor> custom element that works as a native form field. CDN build included.",
+  "keywords": [
+    "web-component",
+    "custom-element",
+    "form-associated",
+    "wysiwyg",
+    "rich-text-editor",
+    "editor",
+    "prosemirror",
+    "cdn",
+    "novaprose"
+  ],
+  "license": "MIT",
+  "author": "NovaProse <hello@novaprose.com>",
+  "homepage": "https://novaprose.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novaprose/novaprose.git",
+    "directory": "packages/web-component"
+  },
+  "bugs": {
+    "url": "https://github.com/novaprose/novaprose/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./cdn": "./dist/novaprose.global.js",
+    "./define": {
+      "types": "./dist/define.d.ts",
+      "import": "./dist/define.js",
+      "require": "./dist/define.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@novaprose/core": "workspace:^"
+  },
+  "unpkg": "./dist/novaprose.global.js",
+  "jsdelivr": "./dist/novaprose.global.js",
+  "sideEffects": [
+    "./dist/novaprose.global.js",
+    "./dist/define.*"
+  ],
+  "devDependencies": {
+    "prosemirror-state": "^1.4.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

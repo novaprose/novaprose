@@ -1,0 +1,61 @@
+{
+  "name": "@novaprose/react",
+  "version": "0.5.1",
+  "description": "NovaProse rich text editor for React: component, hooks (useEditor, useEditorState, useCommand), forms and Next.js support.",
+  "keywords": [
+    "react",
+    "wysiwyg",
+    "rich-text-editor",
+    "editor",
+    "prosemirror",
+    "react-hook-form",
+    "nextjs",
+    "novaprose"
+  ],
+  "license": "MIT",
+  "author": "NovaProse <hello@novaprose.com>",
+  "homepage": "https://novaprose.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/novaprose/novaprose.git",
+    "directory": "packages/react"
+  },
+  "bugs": {
+    "url": "https://github.com/novaprose/novaprose/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@novaprose/core": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "prosemirror-state": "^1.4.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

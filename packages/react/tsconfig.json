@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "..",
+    "jsx": "react-jsx",
+    "paths": {
+      "@novaprose/core": ["../core/src/index.ts"]
+    }
+  },
+  "include": ["src", "test"]
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaProse — совместное редактирование</title>
+    <script type="module" src="/src/collab/main.ts"></script>
+  </head>
+  <body>
+    <main class="pg-react">
+      <h1>NovaProse <span class="pg-badge">Collab</span></h1>
+      <p>
+        Два редактора в одной комнате через локальный сервер синхронизации (<code
+          >pnpm --filter @novaprose/sync-server dev</code
+        >). Откройте страницу в двух вкладках — участников станет больше.
+      </p>
+      <p>
+        Комната: <code id="room"></code> · Статус: <output id="status">connecting</output> ·
+        Загружено: <output id="synced">0</output>/2
+      </p>
+      <section class="pg-collab" aria-label="Участники">
+        <div>
+          <h2>Anna</h2>
+          <div id="anna"></div>
+        </div>
+        <div>
+          <h2>Boris</h2>
+          <div id="boris"></div>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

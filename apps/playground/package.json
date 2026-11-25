@@ -1,0 +1,35 @@
+{
+  "name": "@novaprose/playground",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@angular/common": "^22.3.0",
+    "@angular/compiler": "^22.3.0",
+    "@angular/core": "^22.3.0",
+    "@angular/forms": "^22.3.0",
+    "@angular/platform-browser": "^22.3.0",
+    "@novaprose/angular": "workspace:^",
+    "@novaprose/collab": "workspace:^",
+    "@novaprose/core": "workspace:*",
+    "@novaprose/react": "workspace:^",
+    "@novaprose/tinymce-compat": "workspace:^",
+    "@novaprose/vue": "workspace:^",
+    "@novaprose/web-component": "workspace:^",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "rxjs": "^7.8.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "vite": "^6.0.5"
+  }
+}

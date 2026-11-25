@@ -1,0 +1,13 @@
+dist
+coverage
+pnpm-lock.yaml
+playwright-report
+test-results
+
+# Сгенерировано из README пакетов и CHANGELOG.md (apps/site/scripts/sync-docs.mjs)
+apps/site/src/content/docs/frameworks/
+apps/site/src/content/docs/changelog.md
+apps/site/.astro/
+
+# Эталоны буфера обмена: байт в байт как у Word/Google Docs/Excel — не форматировать
+packages/core/test/fixtures/

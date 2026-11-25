@@ -1,0 +1,151 @@
+---
+/**
+ * Живое демо совместного редактирования: настоящий сервер синхронизации (wss://sync.novaprose.cloud),
+ * публичные комнаты demo/… — без входа и без сохранения. Комната — в адресе (#room=…), ссылку можно
+ * отправить коллеге или открыть во втором окне.
+ */
+---
+
+<div class="np-collab not-content">
+  <div class="np-collab-bar">
+    <span class="np-collab-status" data-status="connecting">
+      <span class="np-collab-dot" aria-hidden="true"></span>
+      <span id="np-collab-status-text">Connecting…</span>
+    </span>
+    <ul class="np-collab-users" id="np-collab-users" aria-label="People in this document"></ul>
+    <span class="np-collab-spacer"></span>
+    <label class="np-collab-name">
+      <span>Your name</span>
+      <input id="np-collab-name" maxlength="40" autocomplete="nickname" />
+    </label>
+    <button type="button" class="np-collab-btn" id="np-collab-copy">Copy link</button>
+    <button type="button" class="np-collab-btn" id="np-collab-window">New window</button>
+  </div>
+  <div id="np-collab-editor"></div>
+  <p class="np-collab-note">
+    Demo rooms are public to anyone with the link and are deleted when the last person leaves. Don't
+    type anything private.
+  </p>
+</div>
+
+<script>
+  import { createEditor, type Editor } from '@novaprose/core';
+  import { collab, type CollabParticipant } from '@novaprose/collab';
+  import '@novaprose/core/style.css';
+  import '@novaprose/collab/style.css';
+
+  const SYNC_URL = 'wss://sync.novaprose.cloud';
+  const SEED = `<h2>Edit this together</h2>
+<p>Send the invite link to a colleague, or open a second window, and type at the same time. You will
+see each other's cursors and changes instantly.</p>
+<ul><li><p><strong>Undo is personal:</strong> Ctrl+Z reverts only your own changes.</p></li>
+<li><p>Edits merge without conflicts, even after a dropped connection.</p></li>
+<li><p>Select a phrase and press <strong>Ctrl+Alt+M</strong> to start a discussion; type <strong>@</strong> to mention someone in the room.</p></li>
+<li><p>Open <strong>Version history</strong> to compare and restore earlier versions.</p></li>
+<li><p>Turn on <strong>Suggest edits</strong> (Ctrl+Alt+Shift+E): your changes become suggestions others can accept or reject.</p></li></ul>`;
+  const ANIMALS = ['Fox', 'Owl', 'Lynx', 'Otter', 'Heron', 'Panda', 'Koala', 'Falcon', 'Badger', 'Seal'];
+
+  // Комната: из адреса или новая случайная (10 символов base36 из crypto).
+  const roomFromHash = new URLSearchParams(location.hash.slice(1)).get('room') ?? '';
+  const room = /^[a-z0-9]{6,32}$/.test(roomFromHash)
+    ? roomFromHash
+    : Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => (b % 36).toString(36)).join('');
+  history.replaceState(null, '', `#room=${room}`);
+  const inviteUrl = location.href;
+
+  const nameInput = document.getElementById('np-collab-name') as HTMLInputElement;
+  const storedName = localStorage.getItem('np-collab-name');
+  const name = storedName || `Guest ${ANIMALS[crypto.getRandomValues(new Uint8Array(1))[0]! % ANIMALS.length]}`;
+  nameInput.value = name;
+
+  const statusEl = document.querySelector<HTMLElement>('.np-collab-status')!;
+  const statusText = document.getElementById('np-collab-status-text')!;
+  const usersEl = document.getElementById('np-collab-users')!;
+  const labels = { connecting: 'Connecting…', connected: 'Live', disconnected: 'Offline — reconnecting' };
+
+  /** «Guest Owl» → «GO», «Boris» → «B». */
+  const initials = (value: string) =>
+    value
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((word) => [...word][0]!.toUpperCase())
+      .join('') || '?';
+
+  function renderUsers(users: CollabParticipant[]) {
+    // Имена приходят от других посетителей — только textContent.
+    usersEl.replaceChildren(
+      ...users.map((user) => {
+        const li = document.createElement('li');
+        li.className = 'np-collab-user';
+        li.style.setProperty('--np-user', user.color);
+        li.title = user.self ? `${user.name} (you)` : user.name;
+        li.textContent = initials(user.name);
+        return li;
+      }),
+    );
+    usersEl.setAttribute('aria-label', `${users.length} ${users.length === 1 ? 'person' : 'people'} in this document`);
+  }
+
+  let editor: Editor | undefined;
+  // Кого можно упомянуть через «@» — тех, кто сейчас в комнате (кроме себя).
+  let people: CollabParticipant[] = [];
+  let seeded = false;
+  const plugin = collab({
+    url: SYNC_URL,
+    document: `demo/${room}`,
+    user: { name },
+    onStatus: (status) => {
+      statusEl.dataset.status = status;
+      statusText.textContent = labels[status];
+    },
+    onSynced: () => {
+      // Новая комната пуста — кладём приветственный текст (один раз, только первый посетитель).
+      if (!seeded && editor && editor.getHTML() === '<p></p>') editor.setContent(SEED);
+      seeded = true;
+    },
+    onUsers: (users) => {
+      people = users;
+      renderUsers(users);
+    },
+  });
+  editor = createEditor({
+    element: document.getElementById('np-collab-editor')!,
+    plugins: [plugin, 'quickbars', 'comments', 'mentions', 'revisionhistory', 'suggestions'],
+    // Комментарии — в общем документе комнаты: видны всем участникам сразу.
+    pluginOptions: {
+      comments: { author: { id: name, name }, store: plugin.commentStore() },
+      // История версий с сервера (в демо-комнатах — пока в комнате кто-то есть).
+      revisionhistory: plugin.versions(),
+      suggestions: { author: { id: `guest-${crypto.randomUUID().slice(0, 8)}`, name } },
+      mentions: {
+        fetch: (query: string) =>
+          people
+            .filter((p) => !p.self && p.name.toLowerCase().includes(query.toLowerCase()))
+            .map((p) => ({ id: `guest-${p.clientId}`, name: p.name })),
+      },
+    },
+    placeholder: 'Loading the shared document…',
+  });
+
+  nameInput.addEventListener('change', () => {
+    const value = nameInput.value.trim().slice(0, 40);
+    if (!value) return;
+    localStorage.setItem('np-collab-name', value);
+    plugin.setUser({ name: value });
+  });
+
+  const copyBtn = document.getElementById('np-collab-copy') as HTMLButtonElement;
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(inviteUrl);
+      copyBtn.textContent = 'Link copied';
+    } catch {
+      prompt('Copy this link:', inviteUrl);
+    }
+    setTimeout(() => (copyBtn.textContent = 'Copy link'), 2000);
+  });
+  document.getElementById('np-collab-window')!.addEventListener('click', () => {
+    window.open(inviteUrl, '_blank', 'popup,width=760,height=720');
+  });
+</script>
