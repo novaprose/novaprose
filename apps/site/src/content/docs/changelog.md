@@ -18,11 +18,17 @@ All packages in this repository are versioned together. The format follows
 - `resize` option: a resize handle in the status bar (`true` — height, `'both'` — height and width),
   usable with mouse, touch and arrow keys.
 - `blockFormats` option: your own items and order for the block menu.
+- `contentStyle` and `contentCss` options: your styles for the text only. Each editor gets its own
+  scope (no iframe needed, the rest of the page is untouched), `body` means the text area, `@import`
+  and relative `url()` work, and the styles are attached as constructable stylesheets, so a strict
+  CSP without `unsafe-inline` is fine. `await editor.ready` waits for the files.
 - `filePicker` option: plug in your own file manager — a Browse button appears next to the address
   field in the link, image and video dialogs (`filePickerTypes` limits which ones).
 
 ### TinyMCE compatibility
 
+- `content_css`; `content_style` now uses the same scoping (selectors are prefixed instead of
+  relying on CSS nesting).
 - `file_picker_callback` and `file_picker_types`.
 - `block_formats`, `disabled` (including `editor.options.set('disabled', …)`) and `resize` (on by
   default, as in TinyMCE).

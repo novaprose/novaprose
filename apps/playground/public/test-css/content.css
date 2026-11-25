@@ -1,0 +1,10 @@
+/* Тестовые стили содержимого для e2e (contentCss): @import, относительный url(), body. */
+@import 'base.css';
+
+body {
+  font-family: Georgia, serif;
+}
+
+h1 {
+  color: rgb(0, 0, 128);
+}

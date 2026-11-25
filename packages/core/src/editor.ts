@@ -1,4 +1,5 @@
 import type { AutosaveOptions } from './plugins/autosave';
+import { attachCss, loadCss, scopeCss } from './content-css';
 import type { FilePicker, FilePickType } from './ui/file-picker';
 import type { CommentsOptions } from './plugins/comments';
 import type { MentionsOptions } from './plugins/mentions';
@@ -118,6 +119,16 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
    * По умолчанию — абзац, H1–H6 и блок кода.
    */
   blockFormats?: BlockFormat[];
+  /**
+   * Стили содержимого (как content_style в TinyMCE): применяются только к тексту этого редактора.
+   * `body`/`html` в селекторах — это сама область текста: 'body { font-family: Georgia }'.
+   */
+  contentStyle?: string;
+  /**
+   * Файлы стилей содержимого (как content_css): загружаются и применяются только к тексту
+   * этого редактора; относительные url() и @import работают. `await editor.ready` ждёт загрузки.
+   */
+  contentCss?: string | string[];
   /** Язык UI (BCP-47): 'en', 'ru'… По умолчанию 'en'. */
   language?: string;
   /** Точечная замена строк UI. */
@@ -158,6 +169,9 @@ export interface BlockFormat {
 }
 
 type Listener = (editor: Editor) => void;
+
+/** Номер области стилей содержимого (contentStyle/contentCss) — уникален на странице. */
+let contentScopeId = 0;
 
 /**
  * Публичный API редактора NovaProse.
@@ -371,9 +385,43 @@ export class Editor {
     if (options.onChange) this.on('change', options.onChange);
     this.updatePlaceholder();
 
-    this.ready = resolved.loaders.length
-      ? this.loadLazyPlugins(resolved.loaders)
-      : Promise.resolve();
+    const contentCss = this.applyContentStyles();
+    this.ready = Promise.all([
+      resolved.loaders.length ? this.loadLazyPlugins(resolved.loaders) : undefined,
+      contentCss,
+    ]).then(() => undefined);
+  }
+
+  /** contentStyle сразу, contentCss — по мере загрузки. Каждый редактор — своя область. */
+  private applyContentStyles(): Promise<void> | undefined {
+    const { contentStyle, contentCss } = this.options;
+    const files =
+      contentCss === undefined ? [] : Array.isArray(contentCss) ? contentCss : [contentCss];
+    if (!contentStyle && !files.length) return undefined;
+    const id = `nova-cs-${++contentScopeId}`;
+    this.root.classList.add(id);
+    const scope = `.nova-editor.${id} .nova-prosemirror`;
+    // Порядок как в TinyMCE: сначала файлы, затем content_style (он перекрывает файлы).
+    const sheets: string[] = files.map(() => '');
+    let detach: (() => void) | null = null;
+    const apply = () => {
+      if (this.destroyed) return;
+      detach?.();
+      detach = attachCss(this.root, scopeCss([...sheets, contentStyle ?? ''].join('\n'), scope));
+    };
+    this.cleanups.push(() => detach?.());
+    apply();
+    if (!files.length) return undefined;
+    return Promise.all(
+      files.map((url, index) =>
+        loadCss(url).then(
+          (css) => {
+            sheets[index] = css;
+          },
+          (error) => console.warn(`[nova] contentCss: could not load ${url}`, error),
+        ),
+      ),
+    ).then(apply);
   }
 
   // ---------- плагины ----------

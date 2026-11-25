@@ -42,6 +42,10 @@ const editor = createEditor({
     ? { resize: new URLSearchParams(location.search).get('resize') === 'both' ? 'both' : true }
     : {}),
   disabled: new URLSearchParams(location.search).has('disabled'),
+  // ?contentcss=1 — стили содержимого из файла (+ @import) и строкой (их гоняет e2e/editor-options.spec.ts).
+  ...(new URLSearchParams(location.search).has('contentcss')
+    ? { contentCss: '/test-css/content.css', contentStyle: 'h2 { color: rgb(0, 128, 0) }' }
+    : {}),
   // ?picker=1 — «Обзор» в диалогах ссылки/картинки/видео (имитация своего менеджера файлов).
   ...(new URLSearchParams(location.search).has('picker')
     ? {

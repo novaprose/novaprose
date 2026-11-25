@@ -194,6 +194,17 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.statusbar === 'boolean') options.statusbar = config.statusbar;
   if (typeof config.placeholder === 'string') options.placeholder = config.placeholder;
   if (config.readonly === true) options.editable = false;
+  if (typeof config.content_style === 'string') options.contentStyle = config.content_style;
+  // content_css: адрес, список через запятую или массив; имена встроенных скинов TinyMCE пропускаем.
+  if (config.content_css !== undefined && config.content_css !== false) {
+    const skins = new Set(['default', 'dark', 'document', 'writer', 'tinymce-5', 'tinymce-5-dark']);
+    const files = (
+      Array.isArray(config.content_css) ? config.content_css : String(config.content_css).split(',')
+    )
+      .map((file) => String(file).trim())
+      .filter((file) => file && !skins.has(file));
+    if (files.length) options.contentCss = files;
+  }
   if (config.disabled === true) options.disabled = true;
   // resize: в TinyMCE по умолчанию true (по высоте), 'both' — и по ширине, false — без ручки.
   if (config.resize !== false) options.resize = config.resize === 'both' ? 'both' : true;

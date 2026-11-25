@@ -1,4 +1,4 @@
-import { createEditor, type Editor } from '@novaprose/core';
+import { createEditor } from '@novaprose/core';
 import { CompatEditor } from './editor';
 import { mapOptions, type TinyConfig } from './options';
 
@@ -47,17 +47,8 @@ function warnOnce(message: string): void {
   console.warn(`[nova] tinymce-compat: ${message}`);
 }
 
+/** Номер для id редакторов без собственного id (mce_1, mce_2…). */
 let counter = 0;
-
-/** Стили content_style — для содержимого конкретного редактора (CSS nesting: body → сам текст). */
-function applyContentStyle(core: Editor, css: string): void {
-  const scope = `nova-compat-${++counter}`;
-  core.root.classList.add(scope);
-  const style = document.createElement('style');
-  style.setAttribute('data-nova-compat', scope);
-  style.textContent = `.${scope} .nova-prosemirror { ${css.replace(/\b(html|body)\b/g, '&')} }`;
-  core.root.prepend(style);
-}
 
 const px = (value: unknown) => (typeof value === 'number' ? `${value}px` : String(value));
 
@@ -121,7 +112,6 @@ export function createTinymce(): TinyMCECompat {
     if (config.min_height !== undefined) core.root.style.minHeight = px(config.min_height);
     if (config.max_height !== undefined) core.root.style.maxHeight = px(config.max_height);
     if (config.width !== undefined) core.root.style.width = px(config.width);
-    if (typeof config.content_style === 'string') applyContentStyle(core, config.content_style);
 
     // События: изменения, выделение, фокус и клавиатура — с именами из API TinyMCE.
     let changedSinceFocus = false;

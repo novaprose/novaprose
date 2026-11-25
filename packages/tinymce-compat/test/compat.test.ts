@@ -187,7 +187,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContainer().style.height).toBe('300px');
     expect(editor!.getBody().getAttribute('data-placeholder')).toBe('Type…');
     expect(editor!.getContainer().querySelector('style')!.textContent).toContain(
-      '& { font-family: Georgia; }',
+      '.nova-prosemirror{ font-family: Georgia; }',
     );
     const upload = editor!.core.options.uploadImage!;
     await expect(upload(new File(['png'], 'a.png', { type: 'image/png' }), () => {})).resolves.toBe(

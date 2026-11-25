@@ -34,3 +34,33 @@ test('отключённый редактор: не принимает ввод 
   await expect(page.locator('.nova-editor').first()).toHaveAttribute('aria-disabled', 'true');
   await expect(text).toHaveAttribute('tabindex', '-1');
 });
+
+test('стили содержимого: файл с @import и строка действуют только на текст редактора', async ({
+  page,
+}) => {
+  await page.goto('/?lang=en&contentcss=1');
+  await page.evaluate(async () => {
+    const editor = (
+      window as unknown as {
+        editor: { ready: Promise<void>; setContent(h: string, o: object): void };
+      }
+    ).editor;
+    await editor.ready;
+    editor.setContent('<h1>A</h1><h2>B</h2><p>C</p>', { addToHistory: false });
+  });
+  const text = page.locator('.nova-prosemirror');
+  await expect(text).toHaveCSS('font-family', /Georgia/);
+  await expect(text.locator('h1')).toHaveCSS('color', 'rgb(0, 0, 128)');
+  await expect(text.locator('h2')).toHaveCSS('color', 'rgb(0, 128, 0)');
+  await expect(text.locator('p')).toHaveCSS('color', 'rgb(200, 0, 0)');
+  // Страница вокруг редактора не задета.
+  const outside = await page.evaluate(() => {
+    const p = document.createElement('p');
+    p.textContent = 'outside';
+    document.body.append(p);
+    const style = getComputedStyle(p);
+    return { color: style.color, font: getComputedStyle(document.body).fontFamily };
+  });
+  expect(outside.color).not.toBe('rgb(200, 0, 0)');
+  expect(outside.font).not.toMatch(/Georgia/);
+});
