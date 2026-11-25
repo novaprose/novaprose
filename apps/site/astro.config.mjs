@@ -13,6 +13,7 @@ export default defineConfig({
       logo: { src: './src/assets/logo.svg', replacesTitle: false },
       favicon: '/favicon.svg',
       social: [
+        { icon: 'github', label: 'GitHub', href: 'https://github.com/novaprose/novaprose' },
         { icon: 'npm', label: 'npm', href: 'https://www.npmjs.com/org/novaprose' },
         { icon: 'email', label: 'Contact', href: 'mailto:hello@novaprose.com' },
       ],
