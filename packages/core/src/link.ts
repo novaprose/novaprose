@@ -1,4 +1,5 @@
 import type { Command, EditorState } from 'prosemirror-state';
+import { attachFilePicker } from './ui/file-picker';
 import { getLinkAt, markRange } from './commands';
 import type { Editor } from './editor';
 import { marksOf } from './commands';
@@ -95,6 +96,10 @@ export function openLinkDialog(editor: Editor): void {
   const text = textField({ label: t('link.text'), value: selectedText });
   const title = textField({ label: t('link.tooltip'), value: existing?.title ?? '' });
   const newTab = checkboxField(t('link.newTab'), existing?.target === '_blank');
+  attachFilePicker(editor, url, 'file', (picked) => {
+    if (picked.text && !text.input.value.trim()) text.input.value = picked.text;
+    if (picked.title) title.input.value = picked.title;
+  });
 
   const body = h(
     'div',

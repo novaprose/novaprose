@@ -94,6 +94,7 @@ export const ru: Messages = {
 
   'status.words': 'Слов: {count}',
   'status.resize': 'Изменить размер редактора',
+  'dialog.browse': 'Обзор',
 
   pasteAsText: 'Вставлять как текст',
 

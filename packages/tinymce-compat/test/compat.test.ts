@@ -216,6 +216,30 @@ describe('tinymce.init', () => {
     expect(b!.getContainer().querySelector('.nova-resize-handle')).toBeNull();
   });
 
+  it('file_picker_callback и file_picker_types: свой менеджер файлов в диалогах', async () => {
+    page('<textarea id="t"></textarea>');
+    const calls: unknown[] = [];
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      file_picker_types: 'image',
+      file_picker_callback: (
+        callback: (url: string, meta?: object) => void,
+        value: string,
+        meta: { filetype: string },
+      ) => {
+        calls.push([value, meta.filetype]);
+        callback('https://cdn.example.com/cat.png', { alt: 'Cat' });
+      },
+    });
+    const picker = editor!.core.options.filePicker!;
+    expect(editor!.core.options.filePickerTypes).toEqual(['image']);
+    await expect(picker({ type: 'image', value: 'old.png' })).resolves.toEqual({
+      url: 'https://cdn.example.com/cat.png',
+      alt: 'Cat',
+    });
+    expect(calls).toEqual([['old.png', 'image']]);
+  });
+
   it('незнакомые опции и плагины — предупреждение, а не ошибка', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

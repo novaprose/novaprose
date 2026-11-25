@@ -95,6 +95,7 @@ const editor = {
   copy: 'copy',
   edit: 'pencil',
   resizeHandle: 'grip-horizontal',
+  browse: 'folder-open',
   resizeHandleBoth: 'move-diagonal-2',
   // Плагины
   anchor: 'anchor',

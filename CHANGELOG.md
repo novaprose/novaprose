@@ -13,9 +13,12 @@ All packages in this repository are versioned together. The format follows
 - `resize` option: a resize handle in the status bar (`true` — height, `'both'` — height and width),
   usable with mouse, touch and arrow keys.
 - `blockFormats` option: your own items and order for the block menu.
+- `filePicker` option: plug in your own file manager — a Browse button appears next to the address
+  field in the link, image and video dialogs (`filePickerTypes` limits which ones).
 
 ### TinyMCE compatibility
 
+- `file_picker_callback` and `file_picker_types`.
 - `block_formats`, `disabled` (including `editor.options.set('disabled', …)`) and `resize` (on by
   default, as in TinyMCE).
 

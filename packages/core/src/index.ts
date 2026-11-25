@@ -8,6 +8,7 @@ export {
   type BlockFormat,
 } from './editor';
 export { DEFAULT_MENUS, DEFAULT_MENUBAR, type MenuDefinition } from './ui/menubar';
+export type { FilePicker, FilePickResult, FilePickType } from './ui/file-picker';
 export { printContent } from './ui/menu-items';
 export {
   schema,

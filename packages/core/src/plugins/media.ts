@@ -1,4 +1,5 @@
 import { icons } from '../ui/icons';
+import { attachFilePicker } from '../ui/file-picker';
 import type { Node as PMNode } from 'prosemirror-model';
 import { NodeSelection, Plugin } from 'prosemirror-state';
 import { definePlugin } from '../plugins';
@@ -190,6 +191,9 @@ export default definePlugin({
       const title = textField({
         label: labels.name,
         value: (current?.node.attrs.title as string | undefined) ?? '',
+      });
+      attachFilePicker(editor, url, 'media', (picked) => {
+        if (picked.title) title.input.value = picked.title;
       });
       editor.ui.openDialog({
         title: labels.title,

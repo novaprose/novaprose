@@ -1,4 +1,5 @@
 import type { AutosaveOptions } from './plugins/autosave';
+import type { FilePicker, FilePickType } from './ui/file-picker';
 import type { CommentsOptions } from './plugins/comments';
 import type { MentionsOptions } from './plugins/mentions';
 import type { QuickbarsOptions } from './plugins/quickbars';
@@ -123,6 +124,13 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   translations?: Partial<Messages>;
   /** Загрузка изображений на ваш сервер. Без неё картинки встраиваются как data:URL. */
   uploadImage?: UploadImageHandler;
+  /**
+   * Свой выбор файла: кнопка «Обзор» у поля адреса в диалогах ссылки, картинки и видео.
+   * Получает тип поля и текущий адрес, возвращает { url, text?, title?, alt? } или null.
+   */
+  filePicker?: FilePicker;
+  /** Для каких полей показывать «Обзор»: 'file' (ссылка), 'image', 'media'. По умолчанию — для всех. */
+  filePickerTypes?: FilePickType[];
   fontFamilies?: FontOption[];
   fontSizes?: string[];
   lineHeights?: string[];

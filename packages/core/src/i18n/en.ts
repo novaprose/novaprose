@@ -93,6 +93,7 @@ export const en = {
 
   'status.words': '{count} words',
   'status.resize': 'Resize editor',
+  'dialog.browse': 'Browse',
 
   pasteAsText: 'Paste as text',
 

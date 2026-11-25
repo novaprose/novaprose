@@ -1403,6 +1403,24 @@ html.nova-fullscreen-lock body {
   font-size: 12px;
 }
 
+.nova-input-group {
+  display: flex;
+  gap: 6px;
+}
+
+.nova-input-group .nova-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.nova-input-action {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
 .nova-input {
   width: 100%;
   height: 36px;

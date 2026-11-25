@@ -1,6 +1,7 @@
 import {
   isPluginRegistered,
   type BlockFormat,
+  type FilePickType,
   type EditorOptions,
   type UploadImageHandler,
 } from '@novaprose/core';
@@ -95,6 +96,8 @@ const IGNORED = new Set([
   'readonly',
   'disabled',
   'block_formats',
+  'file_picker_callback',
+  'file_picker_types',
   'language',
   'images_upload_handler',
   'paste_as_text',
@@ -247,6 +250,28 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       return handler(info, progress);
     };
     options.uploadImage = upload;
+  }
+
+  // file_picker_callback(callback, value, meta): свой менеджер файлов зовёт callback(url, { text, title, alt }).
+  if (typeof config.file_picker_callback === 'function') {
+    const pick = config.file_picker_callback as (
+      callback: (url: string, meta?: { text?: string; title?: string; alt?: string }) => void,
+      value: string,
+      meta: { filetype: string; fieldname: string },
+    ) => void;
+    // file_picker_types: 'file image media' — для каких полей показывать кнопку (по умолчанию для всех).
+    if (typeof config.file_picker_types === 'string') {
+      options.filePickerTypes = list(config.file_picker_types).filter(
+        (type): type is FilePickType => type === 'file' || type === 'image' || type === 'media',
+      );
+    }
+    options.filePicker = ({ type, value }) =>
+      new Promise((resolve) =>
+        pick((url, meta = {}) => resolve({ url, ...meta }), value, {
+          filetype: type,
+          fieldname: 'src',
+        }),
+      );
   }
 
   // Настройки плагинов под их опциями.

@@ -1,5 +1,5 @@
 import { TextSelection } from 'prosemirror-state';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor, type EditorOptions } from '../src';
 
 /** Опции паритета: blockFormats (block_formats), disabled, resize. */
@@ -98,5 +98,60 @@ describe('resize', () => {
     expect(e.root.dataset.resize).toBe('both');
     handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
     expect(e.root.style.width).toBe('200px');
+  });
+});
+
+describe('filePicker', () => {
+  const flush = () => new Promise((r) => setTimeout(r, 0));
+  const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]')!;
+  const browse = () => dialog().querySelector<HTMLButtonElement>('.nova-input-action');
+
+  it('без filePicker кнопки «Обзор» нет', () => {
+    const e = mount();
+    control(e, 'link').click();
+    expect(browse()).toBeNull();
+  });
+
+  it('ссылка: «Обзор» заполняет адрес, текст и подсказку; получает тип и текущий адрес', async () => {
+    const picker = vi.fn(async () => ({
+      url: 'https://cdn.example.com/a.pdf',
+      text: 'Отчёт',
+      title: 'PDF',
+    }));
+    const e = mount('<p></p>', { filePicker: picker });
+    control(e, 'link').click();
+    const button = browse()!;
+    expect(button.getAttribute('aria-label')).toBe('Browse');
+    button.click();
+    await flush();
+    expect(picker).toHaveBeenCalledWith({ type: 'file', value: '' });
+    const inputs = dialog().querySelectorAll<HTMLInputElement>('input.nova-input');
+    expect(inputs[0]!.value).toBe('https://cdn.example.com/a.pdf');
+    expect(inputs[1]!.value).toBe('Отчёт');
+    expect(inputs[2]!.value).toBe('PDF');
+  });
+
+  it('картинка: тип image, alt из результата; отказ (null) ничего не меняет', async () => {
+    const picker = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ url: 'https://cdn.example.com/a.png', alt: 'Кот' });
+    const e = mount('<p></p>', { filePicker: picker });
+    control(e, 'image').click();
+    browse()!.click();
+    await flush();
+    const inputs = dialog().querySelectorAll<HTMLInputElement>('input.nova-input');
+    expect(inputs[0]!.value).toBe('');
+    browse()!.click();
+    await flush();
+    expect(picker).toHaveBeenLastCalledWith({ type: 'image', value: '' });
+    expect(inputs[0]!.value).toBe('https://cdn.example.com/a.png');
+    expect(inputs[1]!.value).toBe('Кот');
+  });
+
+  it('filePickerTypes: кнопка только у разрешённых полей', () => {
+    const e = mount('<p></p>', { filePicker: () => null, filePickerTypes: ['image'] });
+    control(e, 'link').click();
+    expect(browse()).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
 import type { Node as PMNode } from 'prosemirror-model';
+import { attachFilePicker } from './ui/file-picker';
 import {
   NodeSelection,
   Plugin,
@@ -236,6 +237,9 @@ export function openImageDialog(editor: Editor): void {
   );
   const url = textField({ label: t('image.url'), type: 'url', placeholder: 'https://' });
   const alt = textField({ label: t('image.alt'), hint: t('image.altHint') });
+  attachFilePicker(editor, url, 'image', (picked) => {
+    if (picked.alt) alt.input.value = picked.alt;
+  });
 
   const body = h(
     'div',

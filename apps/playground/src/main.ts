@@ -42,6 +42,15 @@ const editor = createEditor({
     ? { resize: new URLSearchParams(location.search).get('resize') === 'both' ? 'both' : true }
     : {}),
   disabled: new URLSearchParams(location.search).has('disabled'),
+  // ?picker=1 — «Обзор» в диалогах ссылки/картинки/видео (имитация своего менеджера файлов).
+  ...(new URLSearchParams(location.search).has('picker')
+    ? {
+        filePicker: async ({ type }: { type: string }) =>
+          type === 'image'
+            ? { url: 'https://picsum.photos/seed/nova/640/360', alt: 'Пример картинки' }
+            : { url: 'https://example.com/report.pdf', text: 'Отчёт.pdf', title: 'PDF, 2 МБ' },
+      }
+    : {}),
   // Встроенный плагин — грузится лениво отдельным чанком.
   // ?parity=1 — плагины паритета с TinyMCE (их гоняет e2e/plugins-parity.spec.ts).
   plugins: [
