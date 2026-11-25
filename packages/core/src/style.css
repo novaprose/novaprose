@@ -2373,3 +2373,30 @@ div.nova-diff-removed {
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
+
+/* ======================= переменные (mergetags) ======================= */
+
+.nova-mergetag {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--nova-active);
+  color: var(--nova-active-fg);
+  font-size: 0.9em;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: nowrap;
+  cursor: default;
+  user-select: none;
+}
+
+.nova-mergetag.is-unknown {
+  outline: 1px dashed var(--nova-active-fg);
+  outline-offset: -1px;
+  background: transparent;
+}
+
+.nova-mergetag.is-selected {
+  outline: 2px solid var(--nova-accent);
+  outline-offset: 1px;
+}

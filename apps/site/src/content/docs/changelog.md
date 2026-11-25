@@ -30,6 +30,13 @@ All packages in this repository are versioned together. The format follows
   classes from your formats (and `validClasses`) are kept, so the default output is unchanged and
   pasted junk like `MsoNormal` never enters the document. Office pastes drop their classes after
   their styles are inlined.
+- New `mergetags` plugin: template variables (“Customer name”, “Order number”) as non-editable
+  chips, inserted from a grouped toolbar menu or by typing `{{`. Saved as
+  `<span data-mergetag="key">Label</span>`; the attribute is configurable (`data-var`…), labels come
+  from your list, unknown keys are kept and highlighted. See the
+  [merge tags guide](https://novaprose.com/guides/merge-tags/).
+- Plugins can define nodes from their options (`nodes: (editor) => ({…})`), and a node spec can set
+  `ignoreStyles: true` so its element's inline styles never become marks.
 - `filePicker` option: plug in your own file manager — a Browse button appears next to the address
   field in the link, image and video dialogs (`filePickerTypes` limits which ones).
 

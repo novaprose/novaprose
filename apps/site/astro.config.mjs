@@ -41,6 +41,7 @@ export default defineConfig({
             { slug: 'guides/collaboration' },
             { slug: 'guides/comments' },
             { slug: 'guides/mentions' },
+            { slug: 'guides/merge-tags' },
             { slug: 'guides/version-history' },
             { slug: 'guides/suggested-edits' },
             { slug: 'guides/custom-buttons-and-plugins' },

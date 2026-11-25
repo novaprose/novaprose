@@ -94,3 +94,29 @@ test('меню «Стили»: свой формат применяется, к�
   expect(html).toBe('<p>first</p><p class="note">second</p>');
   await expect(page.locator('.nova-prosemirror p.note')).toHaveCSS('border-left-style', 'solid');
 });
+
+test('переменные: вставка из меню, «фишка» удаляется целиком одной клавишей', async ({ page }) => {
+  await page.goto('/?lang=en&mergetags=1');
+  const html = () =>
+    page.evaluate(() => (window as unknown as { editor: { getHTML(): string } }).editor.getHTML());
+  await page.evaluate(async () => {
+    const editor = (
+      window as unknown as {
+        editor: { ready: Promise<void>; setContent(h: string, o: object): void };
+      }
+    ).editor;
+    await editor.ready;
+    editor.setContent('<p>Order</p>', { addToHistory: false });
+  });
+  await page.locator('.nova-prosemirror p').click({ position: { x: 4, y: 8 } });
+  await page.keyboard.press('End');
+  await page.keyboard.type(' ');
+  await page.locator('[data-control="mergetags"]').click();
+  await page.locator('.nova-menu-item', { hasText: 'Номер заказа' }).click();
+  expect(await html()).toBe(
+    '<p>Order <span data-mergetag="orderId" contenteditable="false">Номер заказа</span></p>',
+  );
+  await expect(page.locator('.nova-mergetag')).toHaveText('Номер заказа');
+  await page.keyboard.press('Backspace');
+  expect(await html()).toBe('<p>Order </p>');
+});

@@ -33,7 +33,7 @@ export interface NovaPlugin {
    * Новые узлы документа (с parseDOM и toDOM). Расширяют схему конкретного редактора.
    * Плагин с узлами или марками передаётся объектом, не ленивым загрузчиком: схема создаётся сразу.
    */
-  nodes?: Record<string, NodeSpec>;
+  nodes?: Record<string, NodeSpec> | ((editor: Editor) => Record<string, NodeSpec>);
   /** Новые марки (инлайн-форматирование) с parseDOM и toDOM. */
   marks?: Record<string, MarkSpec>;
   /**

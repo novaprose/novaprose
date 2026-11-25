@@ -27,15 +27,36 @@ export function preprocessDOM(root: ParentNode): void {
   });
 }
 
-/** DOMParser схемы NovaProse с предобработкой: используется и для контента, и для буфера обмена. */
+/**
+ * DOMParser схемы NovaProse с предобработкой: используется и для контента, и для буфера обмена.
+ *
+ * Узлы с `ignoreStyles: true` в спеке (переменная шаблона — нередактируемая «фишка») не должны
+ * получать марки из собственного style: ProseMirror читает стили элемента раньше, чем узнаёт,
+ * что это целый узел. Поэтому у таких элементов style снимается до разбора.
+ */
 class NovaDOMParser extends DOMParser {
-  override parse(dom: globalThis.Node, options?: ParseOptions): PMNode {
+  private atomSelector: string | undefined;
+
+  private prepare(dom: globalThis.Node): void {
     preprocessDOM(dom as ParentNode);
+    this.atomSelector ??= Object.values(this.schema.nodes)
+      .filter((type) => (type.spec as { ignoreStyles?: boolean }).ignoreStyles)
+      .flatMap((type) => (type.spec.parseDOM ?? []).map((rule) => rule.tag))
+      .filter((tag): tag is string => !!tag)
+      .join(', ');
+    if (!this.atomSelector || !('querySelectorAll' in dom)) return;
+    (dom as ParentNode).querySelectorAll(this.atomSelector).forEach((el) => {
+      el.removeAttribute('style');
+    });
+  }
+
+  override parse(dom: globalThis.Node, options?: ParseOptions): PMNode {
+    this.prepare(dom);
     return super.parse(dom, options);
   }
 
   override parseSlice(dom: globalThis.Node, options?: ParseOptions): Slice {
-    preprocessDOM(dom as ParentNode);
+    this.prepare(dom);
     return super.parseSlice(dom, options);
   }
 }

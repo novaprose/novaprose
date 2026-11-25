@@ -96,6 +96,7 @@ const editor = {
   edit: 'pencil',
   resizeHandle: 'grip-horizontal',
   browse: 'folder-open',
+  mergeTags: 'braces',
   resizeHandleBoth: 'move-diagonal-2',
   // Плагины
   anchor: 'anchor',

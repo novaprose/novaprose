@@ -42,6 +42,10 @@ const editor = createEditor({
     ? { resize: new URLSearchParams(location.search).get('resize') === 'both' ? 'both' : true }
     : {}),
   disabled: new URLSearchParams(location.search).has('disabled'),
+  // ?mergetags=1 — переменные шаблона (их гоняет e2e/editor-options.spec.ts).
+  ...(new URLSearchParams(location.search).has('mergetags')
+    ? { toolbar: 'undo redo | mergetags | bold italic' }
+    : {}),
   // ?styles=1 — меню «Стили» со своими форматами (классы + стили содержимого для них).
   ...(new URLSearchParams(location.search).has('styles')
     ? {
@@ -91,6 +95,7 @@ const editor = createEditor({
   plugins: [
     'insertdatetime',
     'quickbars',
+    ...(new URLSearchParams(location.search).has('mergetags') ? ['mergetags'] : []),
     ...(new URLSearchParams(location.search).has('parity')
       ? [
           'charmap',
@@ -113,6 +118,18 @@ const editor = createEditor({
       : []),
   ],
   pluginOptions: {
+    mergetags: {
+      list: [
+        {
+          title: 'Клиент',
+          items: [
+            { key: 'client', label: 'Имя клиента' },
+            { key: 'phone', label: 'Телефон' },
+          ],
+        },
+        { title: 'Заказ', items: [{ key: 'orderId', label: 'Номер заказа' }] },
+      ],
+    },
     comments: { author: { id: 'anna', name: 'Anna' } },
     suggestions: { author: { id: 'anna', name: 'Anna' } },
     // История версий без сервера: версии в памяти страницы («Сохранить версию» — снимок HTML).

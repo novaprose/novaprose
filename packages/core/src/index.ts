@@ -140,6 +140,7 @@ export {
   type MentionUser,
   type MentionsOptions,
 } from './plugins/mentions';
+export type { MergeTag, MergeTagGroup, MergeTagsOptions } from './plugins/mergetags';
 export type { Revision, RevisionHistoryOptions } from './plugins/revisionhistory';
 export type { PluginOptions } from './editor';
 export type { AutosaveOptions } from './plugins/autosave';

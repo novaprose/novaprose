@@ -4,6 +4,7 @@ import { attachCss, loadCss, scopeCss } from './content-css';
 import type { FilePicker, FilePickType } from './ui/file-picker';
 import type { CommentsOptions } from './plugins/comments';
 import type { MentionsOptions } from './plugins/mentions';
+import type { MergeTagsOptions } from './plugins/mergetags';
 import type { QuickbarsOptions } from './plugins/quickbars';
 import type { RevisionHistoryOptions } from './plugins/revisionhistory';
 import { dropCursor } from 'prosemirror-dropcursor';
@@ -73,6 +74,7 @@ export type EditorEvent =
 export interface PluginOptions {
   comments?: CommentsOptions;
   mentions?: MentionsOptions;
+  mergetags?: MergeTagsOptions;
   revisionhistory?: RevisionHistoryOptions;
   autosave?: AutosaveOptions;
   quickbars?: QuickbarsOptions;
@@ -476,7 +478,9 @@ export class Editor {
     const nodes: Record<string, NodeSpec> = {};
     const marks: Record<string, MarkSpec> = {};
     for (const plugin of plugins) {
-      for (const [name, spec] of Object.entries(plugin.nodes ?? {})) {
+      // Узлы могут зависеть от настроек плагина (например, имя атрибута переменной).
+      const pluginNodes = typeof plugin.nodes === 'function' ? plugin.nodes(this) : plugin.nodes;
+      for (const [name, spec] of Object.entries(pluginNodes ?? {})) {
         if (name in nodes) reportPluginError(`Node "${name}" is defined by several plugins`);
         else nodes[name] = spec;
       }
