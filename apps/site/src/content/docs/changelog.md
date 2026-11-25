@@ -9,7 +9,10 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
-## Unreleased
+## 0.6.0 — 2026-11-25
+
+Templates and documents: merge tags, formats, table styles and scoped content styles — enough to
+move a print-forms editor (receipts, acts, invoices) to NovaProse without losing a single variable.
 
 ### Editor
 
@@ -41,7 +44,6 @@ All packages in this repository are versioned together. The format follows
   properties dialogs; tables and cells keep the chosen class in HTML, your CSS (`contentCss`) draws it.
 - `filePicker` option: plug in your own file manager — a Browse button appears next to the address
   field in the link, image and video dialogs (`filePickerTypes` limits which ones).
-
 - `editor.insertContent(html)`: insert HTML at the cursor through the editor's schema (same cleanup
   as paste). Blocks become separate blocks; a table inserted while the cursor is inside a table goes
   after it instead of overwriting its cells. tinymce-compat's `insertContent` now uses it.
@@ -67,7 +69,7 @@ All packages in this repository are versioned together. The format follows
 - `block_formats`, `disabled` (including `editor.options.set('disabled', …)`) and `resize` (on by
   default, as in TinyMCE).
 
-## 0.5.3 — 2026-11-26
+## 0.5.3 — 2026-11-25
 
 ### Editor
 

@@ -1,6 +1,6 @@
 {
   "name": "@novaprose/core",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "NovaProse: embeddable rich text (WYSIWYG) editor built on ProseMirror. Secure by default, accessible, TinyMCE-compatible plugin and toolbar names.",
   "keywords": [
     "wysiwyg",
