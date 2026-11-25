@@ -9,6 +9,12 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## 0.5.2 — 2026-11-25
+
+- Package descriptions and READMEs updated; the source is now public at
+  [github.com/novaprose/novaprose](https://github.com/novaprose/novaprose).
+- First release published from the public repository.
+
 ## 0.5.1 — 2026-11-25
 
 0.5.0 was tagged but never published (the release build failed); 0.5.1 is the same release.
