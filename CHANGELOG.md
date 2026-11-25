@@ -42,6 +42,8 @@ All packages in this repository are versioned together. The format follows
 - A non-editable inline element at the end of a paragraph (merge tag, mention, image) no longer
   adds an empty line on sites whose CSS resets `img { display: block }`: the ProseMirror separator
   now has its required inline style.
+- Tables without set column widths no longer demand 100px per column, so a five-column table fits a
+  narrow editor instead of overflowing it.
 - A table or cell style made of several classes (`'pf-grid pf-plain'`) is kept whole.
 
 ### TinyMCE compatibility

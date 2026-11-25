@@ -91,7 +91,9 @@ const nextCellOrNewRow: Command = (state, dispatch, view) => {
 
 export function tablePlugins(): Plugin[] {
   return [
-    columnResizing({ cellMinWidth: 48, View: NovaTableView }),
+    // defaultCellMinWidth — минимум для столбцов без заданной ширины (по умолчанию 100px:
+    // таблица из 5+ столбцов раньше времени вылезала за край узкого редактора).
+    columnResizing({ cellMinWidth: 48, defaultCellMinWidth: 48, View: NovaTableView }),
     tableEditing(),
     keymap({
       Tab: nextCellOrNewRow,
