@@ -155,3 +155,43 @@ describe('filePicker', () => {
     expect(browse()).toBeNull();
   });
 });
+
+describe('insertContent', () => {
+  const at = (e: Editor, text: string) => {
+    let pos = -1;
+    e.view.state.doc.descendants((node, p) => {
+      if (pos < 0 && node.isText && node.text!.includes(text)) pos = p + node.text!.indexOf(text);
+    });
+    e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, pos)));
+  };
+
+  it('текст и марки — в позицию курсора, опасное вырезается', () => {
+    const e = mount('<p>ab</p>');
+    at(e, 'b');
+    expect(e.insertContent('<strong>X</strong><script>alert(1)</script>')).toBe(true);
+    expect(e.getHTML()).toBe('<p>a<strong>X</strong>b</p>');
+  });
+
+  it('блоки встают отдельными блоками', () => {
+    const e = mount('<p>ab</p>');
+    at(e, 'b');
+    e.insertContent('<p>one</p><p>two</p>');
+    expect(e.getHTML()).toBe('<p>a</p><p>one</p><p>two</p><p>b</p>');
+  });
+
+  it('таблица при курсоре внутри таблицы встаёт после неё, ячейки не затираются', () => {
+    const e = mount('<table><tbody><tr><td><p>keep</p></td></tr></tbody></table><p>end</p>');
+    at(e, 'keep');
+    e.insertContent('<table><tbody><tr><td><p>new</p></td></tr></tbody></table>');
+    expect(e.getHTML()).toBe(
+      '<table><tbody><tr><td><p>keep</p></td></tr></tbody></table>' +
+        '<table><tbody><tr><td><p>new</p></td></tr></tbody></table><p>end</p>',
+    );
+  });
+
+  it('только чтение — ничего не вставляет', () => {
+    const e = mount('<p>a</p>', { editable: false });
+    expect(e.insertContent('<p>x</p>')).toBe(false);
+    expect(e.getHTML()).toBe('<p>a</p>');
+  });
+});

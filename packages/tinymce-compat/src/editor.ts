@@ -3,35 +3,15 @@ import {
   getStyle,
   HTMLSerializer,
   icons,
-  parserFor,
   setStyle,
   type CommandName,
   type Editor,
   type StyleMark,
 } from '@novaprose/core';
 import { openSpecDialog, type DialogApi, type DialogSpec } from './dialog';
-import { Slice } from 'prosemirror-model';
 import { AllSelection, NodeSelection, TextSelection } from 'prosemirror-state';
 
 const serializer = new HTMLSerializer();
-
-const BLOCK_TAGS = new Set([
-  'P',
-  'H1',
-  'H2',
-  'H3',
-  'H4',
-  'H5',
-  'H6',
-  'UL',
-  'OL',
-  'TABLE',
-  'BLOCKQUOTE',
-  'PRE',
-  'HR',
-  'DIV',
-  'FIGURE',
-]);
 
 /**
  * Обёртка над редактором NovaProse с API редактора TinyMCE (по публичной документации): методы,
@@ -268,17 +248,7 @@ export class CompatEditor {
    * ссылок и разметки, что при загрузке содержимого.
    */
   insertContent(content: string): void {
-    const template = document.createElement('template');
-    template.innerHTML = content;
-    const container = document.createElement('div');
-    container.append(template.content);
-    const parser = parserFor(this.core.schema);
-    const hasBlocks = [...container.children].some((el) => BLOCK_TAGS.has(el.tagName));
-    const slice = hasBlocks
-      ? new Slice(parser.parse(container).content, 0, 0)
-      : parser.parseSlice(container);
-    const { state, dispatch } = this.core.view;
-    dispatch(state.tr.replaceSelection(slice).scrollIntoView());
+    this.core.insertContent(content);
   }
 
   resetContent(content?: string): void {

@@ -42,6 +42,10 @@ All packages in this repository are versioned together. The format follows
 - `filePicker` option: plug in your own file manager — a Browse button appears next to the address
   field in the link, image and video dialogs (`filePickerTypes` limits which ones).
 
+- `editor.insertContent(html)`: insert HTML at the cursor through the editor's schema (same cleanup
+  as paste). Blocks become separate blocks; a table inserted while the cursor is inside a table goes
+  after it instead of overwriting its cells. tinymce-compat's `insertContent` now uses it.
+
 ### Fixes
 
 - A non-editable inline element at the end of a paragraph (merge tag, mention, image) no longer

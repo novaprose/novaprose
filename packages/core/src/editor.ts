@@ -11,7 +11,7 @@ import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { history } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
-import { Node as PMNode, type MarkSpec, type NodeSpec } from 'prosemirror-model';
+import { Node as PMNode, Slice, type MarkSpec, type NodeSpec } from 'prosemirror-model';
 import { EditorState, type Command, type Plugin, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { commands, isCommandActive, type CommandName } from './commands';
@@ -202,6 +202,11 @@ export interface BlockFormat {
 }
 
 type Listener = (editor: Editor) => void;
+
+/** Теги, которые insertContent вставляет отдельными блоками. */
+const INSERT_BLOCK_TAGS = new Set(
+  'P H1 H2 H3 H4 H5 H6 UL OL TABLE BLOCKQUOTE PRE HR DIV FIGURE'.split(' '),
+);
 
 /** Номер области стилей содержимого (contentStyle/contentCss) — уникален на странице. */
 let contentScopeId = 0;
@@ -642,6 +647,45 @@ export class Editor {
     const tr = this.view.state.tr.replaceWith(0, this.view.state.doc.content.size, doc.content);
     if (!addToHistory) tr.setMeta('addToHistory', false);
     this.view.dispatch(tr);
+  }
+
+  /**
+   * Вставить HTML в позицию курсора (как insertContent в TinyMCE). HTML разбирается схемой
+   * редактора — как вставка: без скриптов, опасных ссылок и лишних тегов.
+   * Блоки (абзацы, таблицы) встают отдельными блоками. Таблица, вставляемая при курсоре
+   * внутри таблицы, встаёт после неё (а не заменяет её ячейки).
+   */
+  insertContent(html: string): boolean {
+    if (!this.isEditable()) return false;
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const container = document.createElement('div');
+    container.append(template.content);
+    const parser = parserFor(this.schema);
+    const hasBlocks = [...container.children].some((el) => INSERT_BLOCK_TAGS.has(el.tagName));
+    const { state } = this.view;
+    const slice = hasBlocks
+      ? new Slice(parser.parse(container).content, 0, 0)
+      : parser.parseSlice(container);
+    let hasTable = false;
+    slice.content.descendants((node) => {
+      if (node.type.spec.tableRole === 'table') hasTable = true;
+      return !hasTable;
+    });
+    const { $from } = state.selection;
+    let tableDepth = 0;
+    for (let depth = 1; depth <= $from.depth; depth++) {
+      if ($from.node(depth).type.spec.tableRole === 'table') {
+        tableDepth = depth;
+        break;
+      }
+    }
+    const tr =
+      hasTable && tableDepth
+        ? state.tr.insert($from.after(tableDepth), slice.content)
+        : state.tr.replaceSelection(slice);
+    this.view.dispatch(tr.scrollIntoView());
+    return true;
   }
 
   isEmpty(): boolean {

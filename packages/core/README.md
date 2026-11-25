@@ -91,6 +91,7 @@ editor.getJSON();
 editor.getText();
 editor.isEmpty();
 editor.setContent(html, { addToHistory: false });
+editor.insertContent('<p>Inserted</p>'); // at the cursor; a table never overwrites table cells
 editor.exec('bold');
 editor.can('undo');
 editor.isActive('h2');
