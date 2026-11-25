@@ -55,6 +55,12 @@ Provenance (подпись происхождения пакета) npm доба
 
 ## Если что-то пошло не так
 
+- **404 на `npm publish` в GitHub Actions** («could not be found or you do not have permission»): npm не
+  принял запуск как доверенный. Trusted Publisher привязан к конкретному репозиторию GitHub, а не только к его
+  имени: после переноса или пересоздания репозитория связь у **каждого** пакета нужно создать заново (Add trusted
+  publisher, те же значения). Проверить окружение (`npm`, без опечаток) и галочку «Allow npm publish». Уже
+  опубликованные пакеты при перезапуске пропускаются — перезапуск безопасен.
+
 - **409 «Cannot publish over previously staged version» / 403 «cannot publish over the previously
   published versions»** (было в 0.2.0): версия уже загружена — npm сначала держит её как «staged»
   (служебная `0.0.0-stage` в списке версий), потом публикует. Повторно не публиковать: проверить
