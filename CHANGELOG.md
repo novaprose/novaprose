@@ -4,7 +4,13 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
-## Unreleased
+## 0.5.3 — 2026-11-26
+
+### Editor
+
+- New icon set: every toolbar, menu and plugin icon now comes from [Lucide](https://lucide.dev)
+  (ISC) instead of hand-drawn SVGs — one grid, one stroke weight, clearer table and image
+  actions. License texts ship in `THIRD_PARTY_NOTICES.md`.
 
 ### Site
 

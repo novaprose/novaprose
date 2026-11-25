@@ -1,6 +1,6 @@
 {
   "name": "@novaprose/web-component",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "NovaProse rich text editor as a framework-agnostic <novaprose-editor> custom element that works as a native form field. CDN build included.",
   "keywords": [
     "web-component",
