@@ -912,6 +912,8 @@ html.nova-fullscreen-lock body {
   border-radius: 0 0 var(--nova-radius) var(--nova-radius);
   color: var(--nova-muted);
   font-size: 12px;
+  /* Служебная строка: не выделяется при перетаскивании ручки размера. */
+  user-select: none;
 }
 
 .nova-path {
@@ -923,6 +925,45 @@ html.nova-fullscreen-lock body {
 
 .nova-wordcount {
   flex: none;
+  margin-left: auto;
+}
+
+.nova-resize-handle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: -8px;
+  border-radius: 4px;
+  color: var(--nova-subtle);
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.nova-editor[data-resize='both'] .nova-resize-handle {
+  cursor: nwse-resize;
+}
+
+.nova-resize-handle:hover {
+  color: var(--nova-fg);
+}
+
+.nova-resize-handle:focus-visible {
+  outline: 2px solid var(--nova-accent);
+  outline-offset: 1px;
+}
+
+/* ======================= отключённый редактор ======================= */
+
+.nova-disabled .nova-content,
+.nova-disabled .nova-header,
+.nova-disabled .nova-statusbar {
+  opacity: 0.55;
+}
+
+.nova-disabled .nova-prosemirror {
+  cursor: not-allowed;
 }
 
 /* ======================= оверлеи ======================= */

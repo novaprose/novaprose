@@ -9,6 +9,21 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## Unreleased
+
+### Editor
+
+- `disabled` option and `editor.setDisabled()`: a disabled editor works like a disabled form field —
+  no editing, skipped by Tab, dimmed UI, `aria-disabled`.
+- `resize` option: a resize handle in the status bar (`true` — height, `'both'` — height and width),
+  usable with mouse, touch and arrow keys.
+- `blockFormats` option: your own items and order for the block menu.
+
+### TinyMCE compatibility
+
+- `block_formats`, `disabled` (including `editor.options.set('disabled', …)`) and `resize` (on by
+  default, as in TinyMCE).
+
 ## 0.5.3 — 2026-11-26
 
 ### Editor

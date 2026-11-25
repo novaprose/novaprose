@@ -92,6 +92,7 @@ export const en = {
   'image.delete': 'Remove image',
 
   'status.words': '{count} words',
+  'status.resize': 'Resize editor',
 
   pasteAsText: 'Paste as text',
 

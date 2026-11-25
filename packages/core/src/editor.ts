@@ -102,6 +102,21 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   /** Плейсхолдер для пустого документа. */
   placeholder?: string;
   editable?: boolean;
+  /**
+   * Отключённый редактор — как disabled у поля формы: текст не редактируется и не получает фокус,
+   * панели неактивны. В отличие от editable: false (только чтение) выглядит приглушённо.
+   */
+  disabled?: boolean;
+  /**
+   * Ручка изменения размера в статусбаре: true — по высоте, 'both' — по высоте и ширине.
+   * Мышь, палец или клавиатура (стрелки на ручке). По умолчанию нет.
+   */
+  resize?: boolean | 'both';
+  /**
+   * Пункты списка блоков (кнопка `blocks`) и их порядок: [{ label: 'Подзаголовок', block: 'h3' }].
+   * По умолчанию — абзац, H1–H6 и блок кода.
+   */
+  blockFormats?: BlockFormat[];
   /** Язык UI (BCP-47): 'en', 'ru'… По умолчанию 'en'. */
   language?: string;
   /** Точечная замена строк UI. */
@@ -126,6 +141,12 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   /** Вызывается до отрисовки тулбара — место для editor.ui.registry.addButton(...). */
   setup?: (editor: Editor) => void;
   onChange?: (editor: Editor) => void;
+}
+
+/** Пункт списка блоков: подпись и тег блока. */
+export interface BlockFormat {
+  label: string;
+  block: 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'pre';
 }
 
 type Listener = (editor: Editor) => void;
@@ -158,6 +179,7 @@ export class Editor {
   private readonly searchBar: SearchBarHandle;
   private destroyed = false;
   private editable: boolean;
+  private disabled: boolean;
   private pasteAsText: boolean;
 
   constructor(options: EditorOptions) {
@@ -269,11 +291,12 @@ export class Editor {
     });
 
     this.editable = options.editable ?? true;
+    this.disabled = options.disabled ?? false;
     this.pasteAsText = options.pasteAsText ?? false;
     const handleTransaction = this.handleTransaction.bind(this);
     this.view = new EditorView(contentHost, {
       state,
-      editable: () => this.editable,
+      editable: () => this.isEditable(),
       attributes: {
         class: 'nova-prosemirror',
         role: 'textbox',
@@ -298,6 +321,7 @@ export class Editor {
       },
     });
     this.root.classList.toggle('nova-readonly', !this.editable);
+    this.applyDisabled();
 
     registerBuiltins(this);
     registerMenuItems(this);
@@ -571,8 +595,36 @@ export class Editor {
     this.searchBar.close();
   }
 
+  /** Можно ли сейчас править текст: не «только чтение» и не отключён. */
   isEditable(): boolean {
-    return this.editable;
+    return this.editable && !this.disabled;
+  }
+
+  isDisabled(): boolean {
+    return this.disabled;
+  }
+
+  /** Отключить или включить редактор (как disabled у поля формы). */
+  setDisabled(value: boolean): void {
+    if (this.disabled === value) return;
+    this.disabled = value;
+    this.view.setProps({});
+    this.applyDisabled();
+    if (value) {
+      this.ui.closePopover();
+      this.view.dom.blur();
+    }
+    this.toolbar?.update();
+    this.emit('editableChange');
+  }
+
+  private applyDisabled(): void {
+    this.root.classList.toggle('nova-disabled', this.disabled);
+    if (this.disabled) this.root.setAttribute('aria-disabled', 'true');
+    else this.root.removeAttribute('aria-disabled');
+    // Отключённое поле не попадает в порядок Tab (как <textarea disabled>).
+    if (this.disabled) this.view.dom.setAttribute('tabindex', '-1');
+    else this.view.dom.removeAttribute('tabindex');
   }
 
   setEditable(value: boolean): void {

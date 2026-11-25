@@ -94,6 +94,8 @@ const editor = {
   externalLink: 'square-arrow-out-up-right',
   copy: 'copy',
   edit: 'pencil',
+  resizeHandle: 'grip-horizontal',
+  resizeHandleBoth: 'move-diagonal-2',
   // Плагины
   anchor: 'anchor',
   save: 'save',

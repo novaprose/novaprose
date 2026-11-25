@@ -5,6 +5,7 @@ export {
   type EditorOptions,
   type EditorEvent,
   type EditorMode,
+  type BlockFormat,
 } from './editor';
 export { DEFAULT_MENUS, DEFAULT_MENUBAR, type MenuDefinition } from './ui/menubar';
 export { printContent } from './ui/menu-items';

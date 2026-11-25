@@ -93,6 +93,7 @@ export const ru: Messages = {
   'image.delete': 'Удалить изображение',
 
   'status.words': 'Слов: {count}',
+  'status.resize': 'Изменить размер редактора',
 
   pasteAsText: 'Вставлять как текст',
 

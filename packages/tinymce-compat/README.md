@@ -63,7 +63,8 @@ editor.on('change', () => console.log(editor.getContent()));
 - **Events**: `init`, `input`, `change` (on blur after edits), `NodeChange`, `focus`, `blur`,
   `keydown`, `keyup`, `click`, `paste`, `SetContent`, `GetContent`, `SaveContent`, `ExecCommand`,
   `Dirty`, `remove`.
-- **Options**: `toolbar`, `menubar`, `plugins`, `statusbar`, `placeholder`, `readonly`, `language`,
+- **Options**: `toolbar`, `menubar`, `plugins`, `statusbar`, `placeholder`, `readonly`, `disabled`
+  (also `editor.options.set('disabled', …)`), `resize`, `block_formats`, `language`,
   `inline`, `height`/`min_height`/`max_height`/`width`, `content_style`, `images_upload_handler`,
   `paste_as_text`, `paste_preprocess`, `valid_elements`/`invalid_elements`/`valid_styles`,
   `font_family_formats`, `font_size_formats`, `line_height_formats`, `color_map`, `toolbar_mode`,

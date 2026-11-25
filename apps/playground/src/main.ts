@@ -37,6 +37,11 @@ const editor = createEditor({
   element: $('#editor'),
   content: localStorage.getItem(STORAGE_KEY) ?? SAMPLE.trim(),
   placeholder: 'Начните печатать…',
+  // ?resize=1 | both — ручка размера в статусбаре; ?disabled=1 — отключённый редактор.
+  ...(new URLSearchParams(location.search).has('resize')
+    ? { resize: new URLSearchParams(location.search).get('resize') === 'both' ? 'both' : true }
+    : {}),
+  disabled: new URLSearchParams(location.search).has('disabled'),
   // Встроенный плагин — грузится лениво отдельным чанком.
   // ?parity=1 — плагины паритета с TinyMCE (их гоняет e2e/plugins-parity.spec.ts).
   plugins: [

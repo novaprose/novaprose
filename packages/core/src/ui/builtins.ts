@@ -220,17 +220,39 @@ export function registerBuiltins(editor: Editor): void {
     });
   }
 
+  // blockFormats: свой набор и порядок пунктов (block_formats в конфиге TinyMCE).
+  const BLOCK_COMMANDS: Record<string, CommandName> = {
+    p: 'paragraph',
+    h1: 'h1',
+    h2: 'h2',
+    h3: 'h3',
+    h4: 'h4',
+    h5: 'h5',
+    h6: 'h6',
+    pre: 'codeBlock',
+  };
+  const blockList = (): { command: CommandName; style: string; label?: string }[] => {
+    const custom = editor.options.blockFormats;
+    if (!custom?.length) return blockItems;
+    return custom.flatMap(({ label, block }) => {
+      const command = BLOCK_COMMANDS[block];
+      const item = blockItems.find((i) => i.command === command);
+      return item ? [{ ...item, label }] : [];
+    });
+  };
   registry.addMenuButton('blocks', {
     tooltip: t('blocks'),
-    label: () => t(currentBlock() as MessageKey),
+    label: () =>
+      blockList().find((i) => i.command === currentBlock())?.label ??
+      t(currentBlock() as MessageKey),
     minChars: 11,
-    isEnabled: (e) => blockItems.some(({ command }) => e.can(command)),
+    isEnabled: (e) => blockList().some(({ command }) => e.can(command)),
     items: (e) =>
-      blockItems
+      blockList()
         .filter(({ command }) => e.isAllowed(command))
-        .map(({ command, style }) => ({
+        .map(({ command, style, label }) => ({
           id: command,
-          label: t(command as MessageKey),
+          label: label ?? t(command as MessageKey),
           labelStyle: style,
           ...(SHORTCUTS[command] ? { shortcut: SHORTCUTS[command] } : {}),
           active: currentBlock() === command,

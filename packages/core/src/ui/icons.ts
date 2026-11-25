@@ -179,6 +179,10 @@ export const icons = {
   edit: svg(
     '<path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" /><path d="m15 5 4 4" />',
   ),
+  resizeHandle: svg(
+    '<circle cx="12" cy="9" r="1" /><circle cx="19" cy="9" r="1" /><circle cx="5" cy="9" r="1" /><circle cx="12" cy="15" r="1" /><circle cx="19" cy="15" r="1" /><circle cx="5" cy="15" r="1" />',
+  ),
+  resizeHandleBoth: svg('<path d="M19 13v6h-6" /><path d="M5 11V5h6" /><path d="m5 5 14 14" />'),
   anchor: svg(
     '<path d="M12 6v16" /><path d="m19 13 2-1a9 9 0 0 1-18 0l2 1" /><path d="M9 11h6" /><circle cx="12" cy="4" r="2" />',
   ),

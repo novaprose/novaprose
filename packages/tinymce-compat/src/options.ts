@@ -1,4 +1,9 @@
-import { isPluginRegistered, type EditorOptions, type UploadImageHandler } from '@novaprose/core';
+import {
+  isPluginRegistered,
+  type BlockFormat,
+  type EditorOptions,
+  type UploadImageHandler,
+} from '@novaprose/core';
 import type { CompatEditor } from './editor';
 
 /**
@@ -88,6 +93,8 @@ const IGNORED = new Set([
   'statusbar',
   'placeholder',
   'readonly',
+  'disabled',
+  'block_formats',
   'language',
   'images_upload_handler',
   'paste_as_text',
@@ -184,6 +191,17 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.statusbar === 'boolean') options.statusbar = config.statusbar;
   if (typeof config.placeholder === 'string') options.placeholder = config.placeholder;
   if (config.readonly === true) options.editable = false;
+  if (config.disabled === true) options.disabled = true;
+  // resize: в TinyMCE по умолчанию true (по высоте), 'both' — и по ширине, false — без ручки.
+  if (config.resize !== false) options.resize = config.resize === 'both' ? 'both' : true;
+  // block_formats: 'Абзац=p; Заголовок 1=h1; Код=pre'.
+  const blocks = parseFormats(config.block_formats);
+  if (blocks) {
+    const known = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre'];
+    options.blockFormats = blocks
+      .map(({ label, value }) => ({ label, block: value.toLowerCase() }))
+      .filter((f): f is BlockFormat => known.includes(f.block));
+  }
   if (typeof config.language === 'string') options.language = config.language.replace('_', '-');
   if (config.toolbar_mode === 'sliding' || config.toolbar_mode === 'wrap') {
     options.toolbarMode = config.toolbar_mode;

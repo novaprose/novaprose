@@ -485,6 +485,8 @@ export class CompatEditor {
     get: (name: string) => this.settings[name],
     set: (name: string, value: unknown) => {
       this.settings[name] = value;
+      // Опции, которые по документации TinyMCE меняются на лету.
+      if (name === 'disabled') this.core.setDisabled(value === true);
       return true;
     },
     isSet: (name: string) => name in this.settings,

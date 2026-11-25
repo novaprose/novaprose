@@ -58,23 +58,26 @@ Svelte, Astro and server-rendered pages, with a CDN build).
 
 ## Options
 
-| Option                                               | Description                                                                      |
-| ---------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `element`                                            | container to mount into (required)                                               |
-| `content`                                            | initial HTML string or document JSON                                             |
-| `toolbar`                                            | string (`'bold italic \| link'`), array of groups, or `false`                    |
-| `toolbarMode`                                        | `'sliding'` (default) or `'wrap'`                                                |
-| `mode`                                               | `'classic'`, `'inline'` (toolbar on focus) or `'distraction-free'` (quick bars)  |
-| `menubar`, `menu`                                    | File · Edit · View · Insert · Format · Table · Help menus, customizable          |
-| `statusbar`                                          | word count and path; `false` to hide                                             |
-| `placeholder`, `editable`, `language`                | placeholder text, read-only mode, UI language (`en`, `ru` or your own)           |
-| `uploadImage`                                        | `(file, progress) => Promise<url>`                                               |
-| `fontFamilies`, `fontSizes`, `lineHeights`, `colors` | lists for the corresponding pickers                                              |
-| `plugins`, `pluginOptions`                           | plugin objects or names of built-in lazy plugins (`insertdatetime`, `quickbars`) |
-| `validElements`, `invalidElements`, `validStyles`    | restrict content, like TinyMCE `valid_elements` / `invalid_elements`             |
-| `pastePreprocess`, `pastePostprocess`, `pasteAsText` | paste hooks and plain-text mode                                                  |
-| `setup`, `onChange`                                  | access the instance before first render; change callback                         |
-| `prosemirrorPlugins`                                 | raw ProseMirror plugins for advanced use                                         |
+| Option                                               | Description                                                                               |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `element`                                            | container to mount into (required)                                                        |
+| `content`                                            | initial HTML string or document JSON                                                      |
+| `toolbar`                                            | string (`'bold italic \| link'`), array of groups, or `false`                             |
+| `toolbarMode`                                        | `'sliding'` (default) or `'wrap'`                                                         |
+| `mode`                                               | `'classic'`, `'inline'` (toolbar on focus) or `'distraction-free'` (quick bars)           |
+| `menubar`, `menu`                                    | File · Edit · View · Insert · Format · Table · Help menus, customizable                   |
+| `statusbar`                                          | word count and path; `false` to hide                                                      |
+| `placeholder`, `editable`, `language`                | placeholder text, read-only mode, UI language (`en`, `ru` or your own)                    |
+| `disabled`                                           | disabled like a form field: no editing, skipped by Tab, dimmed UI                         |
+| `resize`                                             | resize handle in the status bar: `true` (height) or `'both'`; mouse, touch and arrow keys |
+| `blockFormats`                                       | items and order of the block menu: `[{ label: 'Subheading', block: 'h3' }]`               |
+| `uploadImage`                                        | `(file, progress) => Promise<url>`                                                        |
+| `fontFamilies`, `fontSizes`, `lineHeights`, `colors` | lists for the corresponding pickers                                                       |
+| `plugins`, `pluginOptions`                           | plugin objects or names of built-in lazy plugins (`insertdatetime`, `quickbars`)          |
+| `validElements`, `invalidElements`, `validStyles`    | restrict content, like TinyMCE `valid_elements` / `invalid_elements`                      |
+| `pastePreprocess`, `pastePostprocess`, `pasteAsText` | paste hooks and plain-text mode                                                           |
+| `setup`, `onChange`                                  | access the instance before first render; change callback                                  |
+| `prosemirrorPlugins`                                 | raw ProseMirror plugins for advanced use                                                  |
 
 ## API
 
@@ -88,6 +91,7 @@ editor.exec('bold');
 editor.can('undo');
 editor.isActive('h2');
 editor.setEditable(false);
+editor.setDisabled(true);
 editor.focus();
 editor.on('change' | 'selectionChange' | 'focus' | 'blur' | 'editableChange' | 'destroy', handler);
 editor.ui.registry.addButton('signature', { text: 'Sign', onAction: (e) => e.exec('bold') });

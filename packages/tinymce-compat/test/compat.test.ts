@@ -195,6 +195,27 @@ describe('tinymce.init', () => {
     );
   });
 
+  it('опции: block_formats, disabled (и options.set на лету), resize', async () => {
+    page('<textarea id="a"></textarea><textarea id="b"></textarea>');
+    const [a] = await tinymce.init({
+      selector: '#a',
+      block_formats: 'Paragraph=p; Heading 2=h2; Weird=marquee',
+      disabled: true,
+    });
+    expect(a!.core.options.blockFormats).toEqual([
+      { label: 'Paragraph', block: 'p' },
+      { label: 'Heading 2', block: 'h2' },
+    ]);
+    expect(a!.core.isDisabled()).toBe(true);
+    a!.options.set('disabled', false);
+    expect(a!.core.isDisabled()).toBe(false);
+    expect(a!.core.isEditable()).toBe(true);
+    // resize: по умолчанию ручка по высоте, как в TinyMCE.
+    expect(a!.getContainer().querySelector('.nova-resize-handle')).not.toBeNull();
+    const [b] = await tinymce.init({ selector: '#b', resize: false });
+    expect(b!.getContainer().querySelector('.nova-resize-handle')).toBeNull();
+  });
+
   it('незнакомые опции и плагины — предупреждение, а не ошибка', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');
