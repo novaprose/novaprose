@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
 
@@ -7,8 +8,7 @@ import { pickLabels } from './shared';
  * Добавляет узел в схему, поэтому подключается сразу (не лениво).
  */
 
-const ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3v5h12V3M6 21v-5h12v5"/><path d="M3 12h2M9 12h2M15 12h2M21 12h-0"/></svg>';
+const ICON = icons.pageBreak;
 const LABELS = { en: { title: 'Page break' }, ru: { title: 'Разрыв страницы' } };
 
 export default definePlugin({

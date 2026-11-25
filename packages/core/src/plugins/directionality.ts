@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import type { Command } from 'prosemirror-state';
 import { nodesOf } from '../commands';
 import type { Editor } from '../editor';
@@ -12,8 +13,8 @@ import { pickLabels } from './shared';
  */
 
 const ICONS = {
-  ltr: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v10M13 4v10M7 4h9M5 19h14l-3-3M19 19l-3 3"/></svg>',
-  rtl: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4v10M15 4v10M9 4h9M19 19H5l3-3M5 19l3 3"/></svg>',
+  ltr: icons.ltr,
+  rtl: icons.rtl,
 };
 const LABELS = {
   en: { ltr: 'Left to right', rtl: 'Right to left' },

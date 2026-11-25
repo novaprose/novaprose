@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import type { Mark, Node as PMNode } from 'prosemirror-model';
 import { Plugin, PluginKey, type EditorState } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
@@ -106,10 +107,8 @@ const LABELS = {
 
 export type CommentsLabels = typeof LABELS.en;
 
-const ICON_ADD =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M12 8v8M8 12h8"/></svg>';
-const ICON_SHOW =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10h7M8.5 14h4"/></svg>';
+const ICON_ADD = icons.commentAdd;
+const ICON_SHOW = icons.comments;
 
 const SHORTCUT = 'Mod-Alt-m';
 

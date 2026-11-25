@@ -1,10 +1,10 @@
+import { icons } from '../ui/icons';
 import { definePlugin } from '../plugins';
 import { insertText, openSymbolDialog, pickLabels, symbolPanel, type SymbolGroup } from './shared';
 
 /** Плагин charmap: таблица специальных символов с поиском. `plugins: ['charmap']`. */
 
-const ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20h4v-3a7 7 0 1 1 6 0v3h4"/></svg>';
+const ICON = icons.charmap;
 
 const LABELS = {
   en: {

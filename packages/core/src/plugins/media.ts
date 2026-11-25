@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import type { Node as PMNode } from 'prosemirror-model';
 import { NodeSelection, Plugin } from 'prosemirror-state';
 import { definePlugin } from '../plugins';
@@ -39,8 +40,7 @@ export function parseMediaUrl(url: string): MediaSource | null {
   return null;
 }
 
-const ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/></svg>';
+const ICON = icons.media;
 
 const LABELS = {
   en: {

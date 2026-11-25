@@ -43,7 +43,8 @@
   },
   "files": [
     "dist",
-    "src/style.css"
+    "src/style.css",
+    "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap",

@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import { definePlugin } from '../plugins';
 import { insertText, openSymbolDialog, pickLabels, symbolPanel, type SymbolGroup } from './shared';
 
@@ -6,8 +7,7 @@ import { insertText, openSymbolDialog, pickLabels, symbolPanel, type SymbolGroup
  * `plugins: ['emoticons']`.
  */
 
-const ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01M15 9h.01"/></svg>';
+const ICON = icons.emoji;
 
 const LABELS = {
   en: {

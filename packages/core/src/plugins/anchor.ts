@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import { NodeSelection } from 'prosemirror-state';
 import { definePlugin } from '../plugins';
 import { textField } from '../ui/dialog';
@@ -9,8 +10,7 @@ import { pickLabels } from './shared';
  * Добавляет узел в схему, поэтому подключается сразу (не лениво).
  */
 
-const ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><path d="M12 7v14M5 12H3a9 9 0 0 0 18 0h-2"/></svg>';
+const ICON = icons.anchor;
 
 const LABELS = {
   en: {

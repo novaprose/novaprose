@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import {
   Fragment,
   Slice,
@@ -93,14 +94,10 @@ const LABELS = {
   },
 };
 
-const ICON_TOGGLE =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-const ICON_REVIEW =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>';
-const ICON_ACCEPT =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
-const ICON_REJECT =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+const ICON_TOGGLE = icons.suggest;
+const ICON_REVIEW = icons.review;
+const ICON_ACCEPT = icons.check;
+const ICON_REJECT = icons.close;
 
 export const suggestionsKey = new PluginKey<{ enabled: boolean }>('nova-suggestions');
 

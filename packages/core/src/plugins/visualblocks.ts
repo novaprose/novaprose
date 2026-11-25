@@ -1,3 +1,4 @@
+import { icons } from '../ui/icons';
 import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
 
@@ -7,8 +8,7 @@ import { pickLabels } from './shared';
  * `pluginOptions: { visualblocks: { default: true } }` — включить сразу.
  */
 
-const ICON =
-  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 3" aria-hidden="true"><rect x="3" y="4" width="18" height="6" rx="1"/><rect x="3" y="14" width="18" height="6" rx="1"/></svg>';
+const ICON = icons.visualBlocks;
 const LABELS = { en: { title: 'Show blocks' }, ru: { title: 'Показать блоки' } };
 
 export default definePlugin({
