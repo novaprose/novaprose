@@ -27,6 +27,7 @@ import { Database } from '@hocuspocus/extension-database';
 import { Server } from '@hocuspocus/server';
 import { jwtVerify } from 'jose';
 import { memoryVersions, sqliteVersions, versionHistory } from './versions.mjs';
+import { handleWaitlist, rateLimiter, waitlistStorage } from './waitlist.mjs';
 
 // Через getBuiltinModule: сборщики (vite/vitest) не знают node:sqlite как встроенный модуль.
 const { DatabaseSync } = process.getBuiltinModule('node:sqlite');
@@ -57,6 +58,7 @@ export function sqliteStorage(path) {
   );
   return {
     versions: sqliteVersions(db),
+    waitlist: waitlistStorage(db),
     fetch: async ({ documentName }) => {
       const row = select.get(documentName);
       return row ? new Uint8Array(row.state) : null;
@@ -83,6 +85,7 @@ export function createSyncServer(options = {}) {
   const publicPrefix = options.publicPrefix || '';
   const isPublic = (name) => publicPrefix !== '' && name.startsWith(publicPrefix);
   const demoVersions = memoryVersions();
+  const allowWaitlist = rateLimiter(10, 60 * 60_000);
   const history = versionHistory({
     storeFor: (name) => (isPublic(name) ? demoVersions : storage.versions),
     interval: (options.versionInterval ?? 10) * 60_000,
@@ -141,6 +144,11 @@ export function createSyncServer(options = {}) {
     },
 
     async onRequest({ request, response }) {
+      // Лист ожидания облака (форма на novaprose.com).
+      if (request.url === '/waitlist') {
+        await handleWaitlist(request, response, storage.waitlist, allowWaitlist);
+        throw null;
+      }
       // Проверка живости для мониторинга и балансировщика.
       if (request.url === '/health') {
         response.writeHead(200, { 'Content-Type': 'application/json' });

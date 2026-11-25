@@ -1,0 +1,67 @@
+---
+import Marketing from '../layouts/Marketing.astro';
+import Icon from '../components/site/Icon.astro';
+import WaitlistForm from '../components/site/WaitlistForm.astro';
+import { dict, type Lang } from '../i18n/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = dict[lang];
+---
+
+<Marketing lang={lang} path="/cloud/" title={t.cloud.title} description={t.cloud.lead}>
+  <section class="np-hero" aria-labelledby="cloud-title">
+    <div class="np-container">
+      <div class="np-hero-copy">
+        <p class="np-eyebrow"><Icon name="sparkles" size={16} />{t.pricing.plans[1]!.price}</p>
+        <h1 class="np-h1" id="cloud-title">{t.cloud.title}</h1>
+        <p class="np-lead">{t.cloud.lead}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="np-section" style="padding-top: 24px" aria-labelledby="waitlist-heading">
+    <div class="np-container">
+      <h2 class="np-sr-only" id="waitlist-heading">{t.waitlist.title}</h2>
+      <WaitlistForm lang={lang} />
+    </div>
+  </section>
+
+  <section class="np-section np-section-soft" aria-labelledby="cloud-what">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="cloud-what">{t.cloud.whatTitle}</h2>
+      </div>
+      <div class="np-grid np-grid-4">
+        {
+          t.cloud.items.map((item) => (
+            <article class="np-card">
+              <span class="np-card-icon">
+                <Icon name={item.icon} />
+              </span>
+              <h3 class="np-h3">{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="np-section" aria-labelledby="cloud-today">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="cloud-today">{t.cloud.todayTitle}</h2>
+        <p class="np-lead">{t.cloud.todayText}</p>
+        <div class="np-actions">
+          <a class="np-btn np-btn-ghost" href="/guides/collaboration/">
+            {t.cloud.todayLink}
+            <Icon name="arrow" size={18} />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Marketing>

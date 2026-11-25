@@ -105,6 +105,9 @@ importers:
       '@astrojs/starlight':
         specifier: ^0.43.0
         version: 0.43.1(astro@7.4.13(@types/node@22.20.5)(esbuild@0.28.2)(less@4.9.1)(sass-embedded@1.108.2)(sass@1.108.2)(yaml@2.9.1))(typescript@5.9.3)
+      '@fontsource-variable/plus-jakarta-sans':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@novaprose/collab':
         specifier: workspace:^
         version: link:../../packages/collab
@@ -1412,6 +1415,9 @@ packages:
 
   '@expressive-code/plugin-text-markers@0.44.4':
     resolution: {integrity: sha512-cfjqsNh4oYikxFeylXKhZ0BxvrwIIztu+g5JFFObYMO3YTmHwv66DrHCh91wTgTGz0q4+Tj/iTIYkngqCpX0Cg==}
+
+  '@fontsource-variable/plus-jakarta-sans@5.3.0':
+    resolution: {integrity: sha512-/l/4r0yyWK9JzAlmA0LiYgGgmJe/Gswt4jTJEzr5QhJfwMbvJZDmYWyW0M4X7yCK69BajMVlV/Lx8g7WDc1+sw==}
 
   '@hocuspocus/common@4.9.0':
     resolution: {integrity: sha512-lrp5gtT8kvLt9/MuRRQPKaveihv5emSsP9+sMCq2rx8xVGn33PZIv0haSGyb37CbAIlVaHb/yG22VKKMx+clYg==}
@@ -5704,6 +5710,8 @@ snapshots:
   '@expressive-code/plugin-text-markers@0.44.4':
     dependencies:
       '@expressive-code/core': 0.44.4
+
+  '@fontsource-variable/plus-jakarta-sans@5.3.0': {}
 
   '@hocuspocus/common@4.9.0':
     dependencies:

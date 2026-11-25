@@ -1,0 +1,152 @@
+---
+/**
+ * Лист ожидания NovaProse Cloud. Заявка уходит на сервер проекта в ЕС (sync.novaprose.cloud/waitlist).
+ * Подписи видимые, ошибки — рядом с полем и озвучиваются, кнопка блокируется на время отправки.
+ */
+import { dict, localePath, type Lang } from '../../i18n/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = dict[lang].waitlist;
+const teams = ['1', '2-10', '11-50', '51-200', '200+'];
+---
+
+<div class="np-form-card" id="waitlist">
+  <h2 class="np-h3">{t.title}</h2>
+  <p class="np-muted">{t.text}</p>
+  <form
+    class="np-form"
+    id="np-waitlist"
+    novalidate
+    data-lang={lang}
+    data-messages={JSON.stringify({
+      email: t.errorEmail,
+      consent: t.errorConsent,
+      rate: t.errorRate,
+      network: t.errorNetwork,
+      success: t.success,
+      sending: t.sending,
+      submit: t.submit,
+    })}
+  >
+    <div class="np-field">
+      <label for="wl-email">{t.email} <span class="np-req">({t.required})</span></label>
+      <input
+        class="np-input"
+        id="wl-email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        required
+        aria-describedby="wl-email-error"
+      />
+      <p class="np-error" id="wl-email-error" role="alert"></p>
+    </div>
+    <div class="np-row-2">
+      <div class="np-field">
+        <label for="wl-role">{t.role}</label>
+        <select class="np-input" id="wl-role" name="role">
+          {Object.entries(t.roles).map(([value, label]) => <option value={value}>{label}</option>)}
+        </select>
+      </div>
+      <div class="np-field">
+        <label for="wl-team">{t.team}</label>
+        <select class="np-input" id="wl-team" name="team">
+          {teams.map((value) => <option value={value}>{value}</option>)}
+        </select>
+      </div>
+    </div>
+    <div class="np-hp" aria-hidden="true">
+      <label for="wl-website">Website</label>
+      <input id="wl-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+    </div>
+    <div class="np-field">
+      <label class="np-consent">
+        <input id="wl-consent" name="consent" type="checkbox" required aria-describedby="wl-consent-error" />
+        <span>
+          {t.consent} <a href={localePath(lang, '/privacy/')}>{t.privacy}</a>.
+        </span>
+      </label>
+      <p class="np-error" id="wl-consent-error" role="alert"></p>
+    </div>
+    <button class="np-btn np-btn-primary" type="submit">{t.submit}</button>
+    <p class="np-status" id="wl-status" role="status" aria-live="polite"></p>
+  </form>
+</div>
+
+<script>
+  const ENDPOINT = 'https://sync.novaprose.cloud/waitlist';
+  const form = document.getElementById('np-waitlist') as HTMLFormElement | null;
+  if (form) {
+    const messages = JSON.parse(form.dataset.messages ?? '{}') as Record<string, string>;
+    const email = form.querySelector<HTMLInputElement>('#wl-email')!;
+    const consent = form.querySelector<HTMLInputElement>('#wl-consent')!;
+    const emailError = form.querySelector<HTMLElement>('#wl-email-error')!;
+    const consentError = form.querySelector<HTMLElement>('#wl-consent-error')!;
+    const status = form.querySelector<HTMLElement>('#wl-status')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+    const validEmail = () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.value.trim());
+
+    const setError = (input: HTMLInputElement, box: HTMLElement, text: string) => {
+      box.textContent = text;
+      input.setAttribute('aria-invalid', text ? 'true' : 'false');
+    };
+    // Проверяем при уходе из поля, а не на каждое нажатие.
+    email.addEventListener('blur', () => {
+      if (email.value) setError(email, emailError, validEmail() ? '' : messages.email ?? '');
+    });
+    consent.addEventListener('change', () => setError(consent, consentError, ''));
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      status.textContent = '';
+      status.className = 'np-status';
+      setError(email, emailError, validEmail() ? '' : messages.email ?? '');
+      setError(consent, consentError, consent.checked ? '' : messages.consent ?? '');
+      if (!validEmail()) return email.focus();
+      if (!consent.checked) return consent.focus();
+
+      button.disabled = true;
+      button.textContent = messages.sending ?? '';
+      const data = new FormData(form);
+      try {
+        const response = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: email.value.trim(),
+            role: data.get('role'),
+            team: data.get('team'),
+            website: data.get('website'),
+            locale: form.dataset.lang,
+            consent: true,
+          }),
+        });
+        const result = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+        if (response.ok && result.ok) {
+          status.textContent = messages.success ?? '';
+          status.classList.add('is-success');
+          form.reset();
+        } else if (result.error === 'email') {
+          setError(email, emailError, messages.email ?? '');
+          email.focus();
+        } else if (response.status === 429) {
+          status.textContent = messages.rate ?? '';
+          status.classList.add('is-error');
+        } else {
+          status.textContent = messages.network ?? '';
+          status.classList.add('is-error');
+        }
+      } catch {
+        status.textContent = messages.network ?? '';
+        status.classList.add('is-error');
+      } finally {
+        button.disabled = false;
+        button.textContent = messages.submit ?? '';
+      }
+    });
+  }
+</script>

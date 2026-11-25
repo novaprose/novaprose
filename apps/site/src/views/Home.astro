@@ -1,0 +1,229 @@
+---
+import Marketing from '../layouts/Marketing.astro';
+import LiveDemo from '../components/LiveDemo.astro';
+import Icon from '../components/site/Icon.astro';
+import Plans from '../components/site/Plans.astro';
+import Faq from '../components/site/Faq.astro';
+import { dict, type Lang } from '../i18n/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = dict[lang];
+const audienceIcons = ['blocks', 'file', 'shield'];
+---
+
+<Marketing lang={lang} path="/">
+  <section class="np-hero" aria-labelledby="hero-title">
+    <div class="np-container">
+      <div class="np-hero-copy">
+        <p class="np-eyebrow"><Icon name="sparkles" size={16} />{t.hero.eyebrow}</p>
+        <h1 class="np-h1" id="hero-title">{t.hero.title}</h1>
+        <p class="np-lead">{t.hero.lead}</p>
+        <div class="np-actions">
+          <a class="np-btn np-btn-primary" href="/getting-started/">
+            {t.hero.primary}
+            <Icon name="arrow" size={18} />
+          </a>
+          <a class="np-btn np-btn-ghost" href="/demo/collaboration/">{t.hero.secondary}</a>
+        </div>
+        <p class="np-note">{t.hero.note}</p>
+      </div>
+      <div class="np-hero-demo">
+        <span class="np-demo-label">{t.hero.editorLabel}</span>
+        <LiveDemo lang={lang} />
+      </div>
+    </div>
+  </section>
+
+  <section class="np-section" aria-labelledby="audience-title">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="audience-title">{t.audience.title}</h2>
+      </div>
+      <div class="np-grid">
+        {
+          t.audience.items.map((item, index) => (
+            <article class="np-card">
+              <span class="np-card-icon">
+                <Icon name={audienceIcons[index] ?? 'check'} />
+              </span>
+              <h3 class="np-h3">{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="np-section np-section-soft" id="features" aria-labelledby="features-title">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="features-title">{t.features.title}</h2>
+        <p class="np-lead">{t.features.lead}</p>
+      </div>
+      <div class="np-grid">
+        {
+          t.features.items.map((item) => (
+            <article class="np-card">
+              <span class="np-card-icon">
+                <Icon name={item.icon} />
+              </span>
+              <h3 class="np-h3">{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="np-section" aria-labelledby="collab-title">
+    <div class="np-container np-split">
+      <div>
+        <h2 class="np-h2" id="collab-title">{t.collab.title}</h2>
+        <p class="np-lead">{t.collab.text}</p>
+        <ul class="np-checklist">
+          {
+            t.collab.points.map((point) => (
+              <li>
+                <Icon name="check" size={20} />
+                <span>{point}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <a class="np-btn np-btn-primary" href="/demo/collaboration/">
+          {t.collab.cta}
+          <Icon name="arrow" size={18} />
+        </a>
+      </div>
+      <!-- Иллюстрация (не скриншот): как выглядят курсоры, комментарий и правка в редакторе. -->
+      <div class="np-collab-visual" aria-hidden="true">
+        {
+          lang === 'ru' ? (
+            <>
+              <p>
+                <strong>План на квартал</strong>
+              </p>
+              <p>
+                Запускаем новые тарифы в <span class="np-mark-del">мае</span>
+                <span class="np-mark-ins">июне</span>
+                <span class="np-cursor" style="--c:#db2777" data-name="Борис" /> и выходим в{' '}
+                <span class="np-mark-comment">два новых региона</span>.
+              </p>
+              <p>
+                Бюджет остаётся прежним
+                <span class="np-cursor" style="--c:#2563eb" data-name="Анна" />
+              </p>
+              <div class="np-bubble">
+                <span class="np-avatar" style="--c:#16a34a">
+                  К
+                </span>
+                <span>
+                  <strong>Карла:</strong> @Анна, юристы согласовали регионы?
+                </span>
+              </div>
+            </>
+          ) : (
+            <>
+              <p>
+                <strong>Q4 plan</strong>
+              </p>
+              <p>
+                We launch the new pricing in <span class="np-mark-del">May</span>
+                <span class="np-mark-ins">June</span>
+                <span class="np-cursor" style="--c:#db2777" data-name="Boris" /> and expand to{' '}
+                <span class="np-mark-comment">two new regions</span>.
+              </p>
+              <p>
+                The budget stays the same
+                <span class="np-cursor" style="--c:#2563eb" data-name="Anna" />
+              </p>
+              <div class="np-bubble">
+                <span class="np-avatar" style="--c:#16a34a">
+                  C
+                </span>
+                <span>
+                  <strong>Carla:</strong> @Anna, did legal approve the regions?
+                </span>
+              </div>
+            </>
+          )
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="np-section np-section-soft" aria-labelledby="integrations-title">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="integrations-title">{t.integrations.title}</h2>
+      </div>
+      <ul class="np-chips">
+        {t.integrations.items.map((item) => <li>{item}</li>)}
+      </ul>
+      <p class="np-center-note">
+        {t.integrations.note} <a href="/migrate/">{t.integrations.link}</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="np-section" aria-labelledby="trust-title">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="trust-title">{t.trust.title}</h2>
+      </div>
+      <div class="np-grid np-grid-4">
+        {
+          t.trust.items.map((item) => (
+            <article class="np-card">
+              <span class="np-card-icon">
+                <Icon name={item.icon} />
+              </span>
+              <h3 class="np-h3">{item.title}</h3>
+              <p>{item.text}</p>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="np-section np-section-soft" aria-labelledby="pricing-title">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="pricing-title">{t.pricing.title}</h2>
+        <p class="np-lead">{t.pricing.lead}</p>
+      </div>
+      <Plans lang={lang} />
+    </div>
+  </section>
+
+  <section class="np-section" aria-labelledby="faq-title">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="faq-title">{t.pricing.faqTitle}</h2>
+      </div>
+      <Faq items={t.pricing.faq} />
+    </div>
+  </section>
+
+  <section class="np-section np-section-cta" aria-labelledby="cta-title">
+    <div class="np-container">
+      <div class="np-cta">
+        <h2 class="np-h2" id="cta-title">{t.cta.title}</h2>
+        <p>{t.cta.text}</p>
+        <div class="np-actions">
+          <a class="np-btn np-btn-primary" href="/getting-started/">{t.cta.primary}</a>
+          <a class="np-btn np-btn-ghost" href="https://github.com/novaprose/novaprose">
+            <Icon name="github" size={18} />
+            {t.cta.secondary}
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Marketing>

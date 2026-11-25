@@ -4,6 +4,19 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## Unreleased
+
+### Site
+
+- New product site: home page with a live editor, features, collaboration, integrations and FAQ;
+  [pricing](https://novaprose.com/pricing/) (Open Source free forever, Cloud in early access,
+  Enterprise); [NovaProse Cloud](https://novaprose.com/cloud/) with an early-access waitlist; privacy
+  policy; English and Russian; light and dark themes.
+
+### Sync server
+
+- `POST /waitlist` stores Cloud early-access sign-ups (validated, rate-limited, no IP stored).
+
 ## 0.5.2 — 2026-11-25
 
 - Package descriptions and READMEs updated; the source is now public at

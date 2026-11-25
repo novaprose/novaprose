@@ -1,0 +1,36 @@
+---
+import Marketing from '../layouts/Marketing.astro';
+import Plans from '../components/site/Plans.astro';
+import Faq from '../components/site/Faq.astro';
+import { dict, type Lang } from '../i18n/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = dict[lang];
+---
+
+<Marketing lang={lang} path="/pricing/" title={t.pricing.pageTitle} description={t.pricing.pageLead}>
+  <section class="np-hero" aria-labelledby="pricing-title">
+    <div class="np-container">
+      <div class="np-hero-copy">
+        <h1 class="np-h1" id="pricing-title">{t.pricing.pageTitle}</h1>
+        <p class="np-lead">{t.pricing.pageLead}</p>
+      </div>
+    </div>
+  </section>
+  <section class="np-section" aria-label={t.pricing.pageTitle} style="padding-top: 16px">
+    <div class="np-container">
+      <Plans lang={lang} />
+    </div>
+  </section>
+  <section class="np-section np-section-soft" aria-labelledby="faq-title">
+    <div class="np-container">
+      <div class="np-section-head is-center">
+        <h2 class="np-h2" id="faq-title">{t.pricing.faqTitle}</h2>
+      </div>
+      <Faq items={t.pricing.faq} />
+    </div>
+  </section>
+</Marketing>

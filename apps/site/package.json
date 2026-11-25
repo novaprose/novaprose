@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.43.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@novaprose/collab": "workspace:^",
     "@novaprose/core": "workspace:^",
     "@novaprose/tinymce-compat": "workspace:^",

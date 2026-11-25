@@ -1,0 +1,121 @@
+---
+import Marketing from '../layouts/Marketing.astro';
+import { dict, type Lang } from '../i18n/site';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = dict[lang];
+---
+
+<Marketing lang={lang} path="/privacy/" title={t.privacy.title}>
+  <article class="np-container np-prose">
+    <h1 class="np-h1">{t.privacy.title}</h1>
+    <p>{t.privacy.updated}</p>
+    {
+      lang === 'ru' ? (
+        <>
+          <h2>Кто мы</h2>
+          <p>
+            NovaProse — независимый проект с открытым кодом. Сайт novaprose.com и лист ожидания NovaProse
+            Cloud ведёт основатель проекта как частное лицо (оператор данных). По любым вопросам о данных
+            пишите на <a href="mailto:hello@novaprose.com">hello@novaprose.com</a>.
+          </p>
+          <h2>Что мы собираем</h2>
+          <p>
+            <strong>Лист ожидания облака.</strong> Почта, роль, размер команды, язык сайта, время заявки и
+            версия текста согласия. IP-адрес мы не сохраняем: он используется только в памяти сервера, чтобы
+            ограничить число заявок от одного адреса.
+          </p>
+          <p>
+            <strong>Демо совместного редактирования.</strong> Текст, комментарии и имя, которые вы вводите в
+            демо, видны другим участникам той же комнаты. Демо-комнаты не сохраняются: они удаляются из памяти
+            сервера, когда комнату покидает последний участник.
+          </p>
+          <p>
+            <strong>Настройки в браузере.</strong> Выбранная тема и имя в демо хранятся в localStorage вашего
+            браузера и к нам не передаются.
+          </p>
+          <p>Мы не используем рекламные и аналитические cookie и не подключаем сторонние трекеры.</p>
+          <h2>Зачем и на каком основании</h2>
+          <p>
+            Почту из листа ожидания мы используем только чтобы сообщить об открытии раннего доступа к NovaProse
+            Cloud и его условиях. Основание — ваше согласие (ст. 6(1)(a) GDPR). Мы не продаём и не передаём
+            данные третьим лицам для их целей.
+          </p>
+          <h2>Где хранятся данные</h2>
+          <p>
+            Заявки хранятся на нашем сервере в Хельсинки (Финляндия, ЕС) у хостинг-провайдера Hetzner. Сайт
+            доставляется через Cloudflare, который обрабатывает технические данные запросов (например,
+            IP-адрес) для доставки и защиты сайта.
+          </p>
+          <h2>Сколько храним</h2>
+          <p>
+            Пока действует лист ожидания и не дольше 12 месяцев после открытия облака — или пока вы не
+            попросите удалить данные или не отзовёте согласие.
+          </p>
+          <h2>Ваши права</h2>
+          <p>
+            Вы можете запросить копию своих данных, исправить или удалить их, отозвать согласие в любой момент —
+            напишите на <a href="mailto:hello@novaprose.com">hello@novaprose.com</a> с той почты, которую
+            оставили. Вы также вправе подать жалобу в надзорный орган по защите данных вашей страны.
+          </p>
+          <h2>Изменения</h2>
+          <p>Если политика изменится, мы обновим эту страницу и дату вверху.</p>
+        </>
+      ) : (
+        <>
+          <h2>Who we are</h2>
+          <p>
+            NovaProse is an independent open-source project. The novaprose.com website and the NovaProse
+            Cloud waitlist are run by the project’s founder as a private individual (the data controller).
+            For any question about your data, write to{' '}
+            <a href="mailto:hello@novaprose.com">hello@novaprose.com</a>.
+          </p>
+          <h2>What we collect</h2>
+          <p>
+            <strong>Cloud waitlist.</strong> Your email, role, team size, site language, the time you joined
+            and the version of the consent text. We don’t store your IP address: it is only kept in server
+            memory to limit how many sign-ups come from one address.
+          </p>
+          <p>
+            <strong>Collaboration demo.</strong> Text, comments and the name you enter in the demo are visible
+            to other people in the same room. Demo rooms are not saved: they are removed from server memory
+            when the last person leaves.
+          </p>
+          <p>
+            <strong>Browser settings.</strong> Your theme and demo name are kept in your browser’s localStorage
+            and are not sent to us.
+          </p>
+          <p>We don’t use advertising or analytics cookies and don’t load third-party trackers.</p>
+          <h2>Why and on what basis</h2>
+          <p>
+            We use the waitlist email only to tell you about NovaProse Cloud early access and its terms. The
+            legal basis is your consent (GDPR Art. 6(1)(a)). We don’t sell your data or share it with third
+            parties for their own purposes.
+          </p>
+          <h2>Where data is stored</h2>
+          <p>
+            Waitlist entries are stored on our server in Helsinki (Finland, EU), hosted by Hetzner. The website
+            is delivered through Cloudflare, which processes technical request data (such as IP addresses) to
+            deliver and protect the site.
+          </p>
+          <h2>How long we keep it</h2>
+          <p>
+            While the waitlist is open and for no longer than 12 months after Cloud launches — or until you
+            ask us to delete it or withdraw your consent.
+          </p>
+          <h2>Your rights</h2>
+          <p>
+            You can ask for a copy of your data, correct or delete it, and withdraw your consent at any time —
+            write to <a href="mailto:hello@novaprose.com">hello@novaprose.com</a> from the email you signed up
+            with. You may also complain to the data protection authority in your country.
+          </p>
+          <h2>Changes</h2>
+          <p>If this policy changes, we will update this page and the date above.</p>
+        </>
+      )
+    }
+  </article>
+</Marketing>

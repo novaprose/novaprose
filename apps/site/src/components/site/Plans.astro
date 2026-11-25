@@ -1,0 +1,43 @@
+---
+/** Три тарифа: Open Source (бесплатно), Cloud (ранний доступ), Enterprise (по запросу). */
+import Icon from './Icon.astro';
+import { dict, type Lang } from '../../i18n/site';
+
+interface Props {
+  lang: Lang;
+}
+const t = dict[Astro.props.lang].pricing;
+---
+
+<div class="np-plans">
+  {
+    t.plans.map((plan) => (
+      <article
+        class:list={['np-plan', { 'is-featured': plan.id === 'cloud' }]}
+        aria-labelledby={`plan-${plan.id}`}
+      >
+        <h3 class="np-plan-name" id={`plan-${plan.id}`}>
+          {plan.name}
+        </h3>
+        <p class="np-plan-price">{plan.price}</p>
+        <p class="np-plan-period">{plan.period}</p>
+        <p class="np-plan-text">{plan.text}</p>
+        {'badge' in plan && plan.badge ? <p class="np-plan-badge">{plan.badge}</p> : null}
+        <ul>
+          {plan.features.map((feature) => (
+            <li>
+              <Icon name="check" size={18} />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+        <a
+          class:list={['np-btn', plan.id === 'cloud' ? 'np-btn-primary' : 'np-btn-ghost']}
+          href={plan.href}
+        >
+          {plan.cta}
+        </a>
+      </article>
+    ))
+  }
+</div>
