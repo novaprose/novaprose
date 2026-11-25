@@ -34,6 +34,11 @@ export const en = {
   moreFormats: 'More formatting',
 
   blocks: 'Text style',
+  styles: 'Formats',
+  'styles.headings': 'Headings',
+  'styles.inline': 'Inline',
+  'styles.blocks': 'Blocks',
+  'styles.align': 'Align',
   paragraph: 'Paragraph',
   h1: 'Heading 1',
   h2: 'Heading 2',

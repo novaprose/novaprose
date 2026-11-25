@@ -6,6 +6,7 @@ import {
   type CommandName,
 } from '../commands';
 import type { Editor } from '../editor';
+import type { StyleFormat } from '../formats';
 import type { MessageKey } from '../i18n';
 import {
   getSelectedImage,
@@ -258,6 +259,107 @@ export function registerBuiltins(editor: Editor): void {
           active: currentBlock() === command,
           onSelect: () => e.exec(command),
         })),
+  });
+
+  // ---------- «Стили» (styles): форматы из styleFormats или стандартный набор ----------
+  const ALIGN_SELECTOR = 'p,h1,h2,h3,h4,h5,h6';
+  const defaultStyleFormats = (): StyleFormat[] => [
+    {
+      title: t('styles.headings'),
+      items: ([1, 2, 3, 4, 5, 6] as const).map((level) => ({
+        title: t(`h${level}` as MessageKey),
+        block: `h${level}` as const,
+      })),
+    },
+    {
+      title: t('styles.inline'),
+      items: [
+        { title: t('bold'), inline: 'strong' },
+        { title: t('italic'), inline: 'em' },
+        { title: t('underline'), inline: 'u' },
+        { title: t('strike'), inline: 's' },
+        { title: t('superscript'), inline: 'sup' },
+        { title: t('subscript'), inline: 'sub' },
+        { title: t('code'), inline: 'code' },
+      ],
+    },
+    {
+      title: t('styles.blocks'),
+      items: [
+        { title: t('paragraph'), block: 'p' },
+        { title: t('blockquote'), block: 'blockquote' },
+        { title: t('codeBlock'), block: 'pre' },
+      ],
+    },
+    {
+      title: t('styles.align'),
+      items: (['left', 'center', 'right', 'justify'] as const).map((align) => ({
+        title: t(
+          `align${align === 'justify' ? 'Justify' : align[0]!.toUpperCase() + align.slice(1)}` as MessageKey,
+        ),
+        selector: ALIGN_SELECTOR,
+        styles: { 'text-align': align },
+      })),
+    },
+  ];
+  /** Формат пункта: ссылка на именованный или само описание. */
+  const formatOf = (item: StyleFormat): string | StyleFormat => item.format ?? item;
+  /** Превью в меню — только для того, что видно без CSS клиента. */
+  const previewStyle = (item: StyleFormat): string => {
+    const spec = item.format ? editor.formatter.get(item.format)?.[0] : item;
+    const parts: string[] = [];
+    const block = spec?.block;
+    if (block && /^h[1-6]$/.test(block)) parts.push('font-weight: 700');
+    if (spec?.inline === 'strong' || spec?.inline === 'b') parts.push('font-weight: 700');
+    if (spec?.inline === 'em' || spec?.inline === 'i') parts.push('font-style: italic');
+    if (spec?.inline === 'u') parts.push('text-decoration: underline');
+    if (spec?.inline === 's' || spec?.inline === 'strike' || spec?.inline === 'del')
+      parts.push('text-decoration: line-through');
+    if (spec?.inline === 'code' || block === 'pre')
+      parts.push('font-family: ui-monospace, monospace');
+    for (const prop of ['color', 'background-color', 'font-family'] as const) {
+      const value = spec?.styles?.[prop];
+      if (value && /^[#\w\s,'"().%-]+$/.test(value)) parts.push(`${prop}: ${value}`);
+    }
+    return parts.join('; ');
+  };
+  const flatStyles = (items: StyleFormat[]): StyleFormat[] =>
+    items.flatMap((item) => (item.items ? flatStyles(item.items) : [item]));
+  const styleFormats = () => {
+    const custom = editor.options.styleFormats;
+    if (!custom) return defaultStyleFormats();
+    return editor.options.styleFormatsMerge ? [...defaultStyleFormats(), ...custom] : custom;
+  };
+  registry.addMenuButton('styles', {
+    tooltip: t('styles'),
+    minChars: 10,
+    label: (e) =>
+      flatStyles(styleFormats()).find((item) => e.formatter.match(formatOf(item)))?.title ??
+      t('styles'),
+    items: (e) => {
+      const entries: MenuEntry[] = [];
+      const add = (items: StyleFormat[], prefix: string) => {
+        items.forEach((item, index) => {
+          if (item.items) {
+            if (entries.length) entries.push({ type: 'separator' });
+            entries.push({ type: 'heading', label: item.title });
+            add(item.items, `${prefix}${index}-`);
+            return;
+          }
+          entries.push({
+            id: `style-${prefix}${index}`,
+            label: item.title,
+            labelStyle: previewStyle(item),
+            active: e.formatter.match(formatOf(item)),
+            // Формат по селектору без подходящих элементов (картинка не выделена) — неактивен.
+            disabled: !e.formatter.canApply(formatOf(item)),
+            onSelect: () => e.formatter.toggle(formatOf(item)),
+          });
+        });
+      };
+      add(styleFormats(), '');
+      return entries;
+    },
   });
 
   // ---------- шрифт, размер, интервал ----------

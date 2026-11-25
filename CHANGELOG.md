@@ -17,6 +17,14 @@ All packages in this repository are versioned together. The format follows
   scope (no iframe needed, the rest of the page is untouched), `body` means the text area, `@import`
   and relative `url()` work, and the styles are attached as constructable stylesheets, so a strict
   CSP without `unsafe-inline` is fine. `await editor.ready` waits for the files.
+- Formats: `formats`, `styleFormats` and a Formats menu (`styles` toolbar button, grouped, with
+  previews) plus `editor.formatter` (`register`, `apply`, `remove`, `toggle`, `match`, `canApply`).
+  Formats can change the block type, mark text (span with classes, colours and fonts, or strong, em,
+  code…) or add classes and alignment to existing paragraphs, headings, quotes and images.
+- `class` on paragraphs, headings, quotes, images and text spans is now part of the document. Only
+  classes from your formats (and `validClasses`) are kept, so the default output is unchanged and
+  pasted junk like `MsoNormal` never enters the document. Office pastes drop their classes after
+  their styles are inlined.
 - `filePicker` option: plug in your own file manager — a Browse button appears next to the address
   field in the link, image and video dialogs (`filePickerTypes` limits which ones).
 
@@ -24,6 +32,9 @@ All packages in this repository are versioned together. The format follows
 
 - `content_css`; `content_style` now uses the same scoping (selectors are prefixed instead of
   relying on CSS nesting).
+- `formats`, `style_formats` (+ `style_formats_merge`), `valid_classes` and `editor.formatter.register`;
+  without `valid_classes` every class is kept, as in TinyMCE.
+- `editor.selection.setCursorLocation` and `editor.selection.select`.
 - `file_picker_callback` and `file_picker_types`.
 - `block_formats`, `disabled` (including `editor.options.set('disabled', …)`) and `resize` (on by
   default, as in TinyMCE).

@@ -195,6 +195,55 @@ describe('tinymce.init', () => {
     );
   });
 
+  it('formats, style_formats, valid_classes и formatter.register — как в документации TinyMCE', async () => {
+    page(
+      '<textarea id="a"><p class="lead">a</p><p class="other">b</p></textarea>' +
+        '<textarea id="b"><p class="lead other">x</p></textarea>',
+    );
+    const [a] = await tinymce.init({
+      selector: '#a',
+      toolbar: 'styles',
+      formats: {
+        lead: { block: 'p', classes: 'lead' },
+        red: { inline: 'span', styles: { color: '#ff0000' } },
+        boxed: [{ selector: 'p', classes: 'boxed' }],
+        wrapper: { block: 'div', wrapper: true },
+      },
+      style_formats: [
+        { title: 'Lead', format: 'lead' },
+        { title: 'Inline', items: [{ title: 'Marker', inline: 'span', classes: 'marker' }] },
+        { title: 'Callout', block: 'div', classes: 'callout' },
+      ],
+      setup: (editor) => {
+        editor.formatter.register('note', { block: 'p', classes: 'note' });
+      },
+    });
+    // Без valid_classes TinyMCE сохраняет все классы — и мы тоже.
+    expect(a!.getContent()).toBe('<p class="lead">a</p><p class="other">b</p>');
+    expect(a!.core.options.styleFormats).toEqual([
+      { title: 'Lead', format: 'lead' },
+      { title: 'Inline', items: [{ title: 'Marker', inline: 'span', classes: 'marker' }] },
+    ]);
+    expect(a!.formatter.get('wrapper')).toBeUndefined();
+    a!.selection.setCursorLocation(a!.getBody().querySelector('p')!, 0);
+    expect(a!.formatter.match('lead')).toBe(true);
+    // Формат добавляет свой класс и не трогает чужие; снятие убирает только его.
+    a!.formatter.apply('note');
+    expect(a!.getContent()).toContain('<p class="lead note">a</p>');
+    a!.formatter.toggle('note');
+    expect(a!.getContent()).toContain('<p class="lead">a</p>');
+
+    // valid_classes ограничивает классы, классы форматов разрешены всегда.
+    const [b] = await tinymce.init({
+      selector: '#b',
+      valid_classes: { p: 'other' },
+      formats: { lead: { block: 'p', classes: 'lead' } },
+    });
+    expect(b!.getContent()).toBe('<p class="lead other">x</p>');
+    b!.setContent('<p class="junk other">y</p>');
+    expect(b!.getContent()).toBe('<p class="other">y</p>');
+  });
+
   it('опции: block_formats, disabled (и options.set на лету), resize', async () => {
     page('<textarea id="a"></textarea><textarea id="b"></textarea>');
     const [a] = await tinymce.init({

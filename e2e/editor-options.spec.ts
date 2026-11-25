@@ -64,3 +64,33 @@ test('стили содержимого: файл с @import и строка д�
   expect(outside.color).not.toBe('rgb(200, 0, 0)');
   expect(outside.font).not.toMatch(/Georgia/);
 });
+
+test('меню «Стили»: свой формат применяется, класс в HTML, стиль содержимого виден', async ({
+  page,
+}) => {
+  await page.goto('/?lang=en&styles=1');
+  await page.evaluate(async () => {
+    const editor = (
+      window as unknown as {
+        editor: { ready: Promise<void>; setContent(h: string, o: object): void };
+      }
+    ).editor;
+    await editor.ready;
+    editor.setContent('<p>first</p><p>second</p>', { addToHistory: false });
+  });
+  // Клик по самому слову (как человек), а не в центр широкого абзаца.
+  await page
+    .locator('.nova-prosemirror p', { hasText: 'second' })
+    .click({ position: { x: 8, y: 8 } });
+  const styles = page.locator('[data-control="styles"]');
+  await styles.click();
+  // Картинка не выделена — формат для картинок недоступен.
+  await expect(page.locator('.nova-menu-item', { hasText: 'Картинка слева' })).toBeDisabled();
+  await page.locator('.nova-menu-item', { hasText: 'Примечание' }).click();
+  await expect(styles).toContainText('Примечание');
+  const html = await page.evaluate(() =>
+    (window as unknown as { editor: { getHTML(): string } }).editor.getHTML(),
+  );
+  expect(html).toBe('<p>first</p><p class="note">second</p>');
+  await expect(page.locator('.nova-prosemirror p.note')).toHaveCSS('border-left-style', 'solid');
+});

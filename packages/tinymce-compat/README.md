@@ -56,7 +56,9 @@ editor.on('change', () => console.log(editor.getContent()));
   `onClose`, `onTabChange`; `api.getData/setData/close/block/unblock/focus/disable/enable/showTab`.
 - **`editor.dom`** (reading): `select`, `get`, `getParent(s)`, `is`, `getAttrib`, `hasClass`, `encode`,
   `decode`, `create`, `uniqueId`. **`editor.formatter`**: `apply`/`remove`/`toggle`/`match` for built-in
-  formats (`bold`…`h1`…`alignleft`…, `forecolor`, `hilitecolor`, `fontname`, `fontsize`).
+  formats (`bold`…`h1`…`alignleft`…, `forecolor`, `hilitecolor`, `fontname`, `fontsize`) and your own
+  (`formats` option, `formatter.register`). **`editor.selection`**: `getContent`, `setContent`, `getNode`,
+  `isCollapsed`, `collapse`, `setCursorLocation`, `select`.
 - **`editor.ui.registry`**: `addButton`, `addToggleButton` (with `onSetup` and `api.setActive`),
   `addMenuButton` (`fetch`), `addMenuItem`, `addContextToolbar`, `addIcon`; TinyMCE icon names map to
   NovaProse icons.
@@ -64,7 +66,8 @@ editor.on('change', () => console.log(editor.getContent()));
   `keydown`, `keyup`, `click`, `paste`, `SetContent`, `GetContent`, `SaveContent`, `ExecCommand`,
   `Dirty`, `remove`.
 - **Options**: `toolbar`, `menubar`, `plugins`, `statusbar`, `placeholder`, `readonly`, `disabled`
-  (also `editor.options.set('disabled', …)`), `resize`, `block_formats`, `file_picker_callback`, `file_picker_types`, `language`,
+  (also `editor.options.set('disabled', …)`), `resize`, `block_formats`, `file_picker_callback`, `file_picker_types`, `formats`, `style_formats`,
+  `style_formats_merge`, `valid_classes` (without it all classes are kept, as in TinyMCE), `language`,
   `inline`, `height`/`min_height`/`max_height`/`width`, `content_style`, `content_css` (your files; skin names
   like `default` or `dark` are ignored), `images_upload_handler`,
   `paste_as_text`, `paste_preprocess`, `valid_elements`/`invalid_elements`/`valid_styles`,
@@ -77,5 +80,5 @@ nothing; optional ones (`charmap`, `emoticons`, `anchor`, `media`, `autosave`…
 Unknown options and plugins don't break initialization — they are listed in a console warning.
 
 Not yet: direct DOM edits through `editor.dom` (NovaProse redraws the text from its document model —
-use `setContent`, `insertContent` or `editor.formatter`), custom formats (`formatter.register`),
-`addContextForm`, iframe content (`content_css`). See [the migration guide](https://novaprose.com/guides/migrating-from-tinymce/).
+use `setContent`, `insertContent` or `editor.formatter`), `addContextForm`; format features beyond
+`block`/`inline`/`selector` + `classes`/`styles` (`wrapper`, `attributes`, `%value` variables, `div` blocks). See [the migration guide](https://novaprose.com/guides/migrating-from-tinymce/).

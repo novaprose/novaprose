@@ -64,6 +64,9 @@ export function cleanPastedHTML(html: string, styles: PasteStyles = 'clean'): st
   removeBreaksBetweenBlocks(root);
   normalizeEmptyParagraphs(root);
   wrapCellContent(root);
+  // Классы из Office (MsoNormal, xl65, TextRun…) вне Office ничего не значат: их стили уже в style.
+  if (source !== 'web')
+    root.querySelectorAll('[class]').forEach((el) => el.removeAttribute('class'));
   return root.innerHTML;
 }
 

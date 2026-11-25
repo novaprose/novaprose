@@ -35,6 +35,11 @@ export const ru: Messages = {
   moreFormats: 'Ещё форматирование',
 
   blocks: 'Стиль текста',
+  styles: 'Форматы',
+  'styles.headings': 'Заголовки',
+  'styles.inline': 'Текст',
+  'styles.blocks': 'Блоки',
+  'styles.align': 'Выравнивание',
   paragraph: 'Обычный текст',
   h1: 'Заголовок 1',
   h2: 'Заголовок 2',

@@ -8,7 +8,7 @@ import { isSafeImageUrl, isSafeLinkUrl } from './url';
  * поэтому HTML на входе и выходе предсказуем.
  */
 
-const ALIGNMENTS = ['left', 'center', 'right', 'justify'] as const;
+export const ALIGNMENTS = ['left', 'center', 'right', 'justify'] as const;
 export type TextAlign = (typeof ALIGNMENTS)[number];
 
 // ---------- валидация CSS-значений ----------
@@ -287,300 +287,380 @@ function buildTableNodes() {
   return specs;
 }
 
-const nodes = {
-  doc: { content: 'block+' },
+// ---------- классы (style_formats, validClasses) ----------
 
-  paragraph: {
-    group: 'block',
-    content: 'inline*',
-    attrs: { ...blockStyleSpec },
-    parseDOM: [{ tag: 'p', getAttrs: (dom) => readBlockStyle(dom as HTMLElement) }],
-    toDOM: (node): DOMOutputSpec => ['p', blockStyleAttrs(node.attrs), 0],
-  },
+/** Какие классы из HTML сохранять. По умолчанию — никакие: вывод без классов, как раньше. */
+export type ClassFilter = (className: string) => boolean;
+const NO_CLASSES: ClassFilter = () => false;
+const CLASS_TOKEN = /^-?[_a-zA-Z][\w-]*$/;
 
-  heading: {
-    group: 'block',
-    content: 'inline*',
-    defining: true,
-    attrs: { level: { default: 1 }, ...blockStyleSpec },
-    parseDOM: [1, 2, 3, 4, 5, 6].map((level) => ({
-      tag: `h${level}`,
-      getAttrs: (dom: HTMLElement) => ({ level, ...readBlockStyle(dom) }),
-    })),
-    toDOM: (node): DOMOutputSpec => [`h${node.attrs.level}`, blockStyleAttrs(node.attrs), 0],
-  },
+/** Классы элемента, которые разрешены фильтром, или null. */
+function readClass(dom: HTMLElement, allow: ClassFilter): string | null {
+  const kept = [...dom.classList].filter((c) => CLASS_TOKEN.test(c) && allow(c));
+  return kept.length ? kept.join(' ') : null;
+}
 
-  blockquote: {
-    group: 'block',
-    content: 'block+',
-    defining: true,
-    parseDOM: [{ tag: 'blockquote' }],
-    toDOM: (): DOMOutputSpec => ['blockquote', 0],
-  },
+/** Атрибут class для вывода: только корректные имена (документ мог прийти из JSON). */
+export function classAttr(value: unknown): { class?: string } {
+  if (typeof value !== 'string') return {};
+  const tokens = value.split(/\s+/).filter((c) => CLASS_TOKEN.test(c));
+  return tokens.length ? { class: tokens.join(' ') } : {};
+}
 
-  horizontal_rule: {
-    group: 'block',
-    parseDOM: [{ tag: 'hr' }],
-    toDOM: (): DOMOutputSpec => ['hr'],
-  },
+const classSpec = { class: { default: null } };
 
-  code_block: {
-    group: 'block',
-    content: 'text*',
-    marks: '',
-    code: true,
-    defining: true,
-    attrs: { language: { default: null } },
-    parseDOM: [
-      {
-        tag: 'pre',
-        preserveWhitespace: 'full',
-        getAttrs: (dom) => {
-          const code = (dom as HTMLElement).querySelector('code');
-          const match = code?.className.match(/language-([\w-]+)/);
-          return { language: match?.[1] ?? null };
+const buildNodes = (allow: ClassFilter) =>
+  ({
+    doc: { content: 'block+' },
+
+    paragraph: {
+      group: 'block',
+      content: 'inline*',
+      attrs: { ...blockStyleSpec, ...classSpec },
+      parseDOM: [
+        {
+          tag: 'p',
+          getAttrs: (dom) => ({
+            ...readBlockStyle(dom as HTMLElement),
+            class: readClass(dom as HTMLElement, allow),
+          }),
         },
-      },
-    ],
-    toDOM: (node): DOMOutputSpec => [
-      'pre',
-      ['code', node.attrs.language ? { class: `language-${node.attrs.language}` } : {}, 0],
-    ],
-  },
+      ],
+      toDOM: (node): DOMOutputSpec => [
+        'p',
+        { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs) },
+        0,
+      ],
+    },
 
-  bullet_list: {
-    group: 'block',
-    content: 'list_item+',
-    attrs: { listStyle: { default: null } },
-    parseDOM: [
-      {
-        tag: 'ul',
-        getAttrs: (dom) => ({
-          listStyle: readListStyle(dom as HTMLElement, BULLET_STYLES, 'disc'),
+    heading: {
+      group: 'block',
+      content: 'inline*',
+      defining: true,
+      attrs: { level: { default: 1 }, ...blockStyleSpec, ...classSpec },
+      parseDOM: [1, 2, 3, 4, 5, 6].map((level) => ({
+        tag: `h${level}`,
+        getAttrs: (dom: HTMLElement) => ({
+          level,
+          ...readBlockStyle(dom),
+          class: readClass(dom, allow),
         }),
-      },
-    ],
-    toDOM: (node): DOMOutputSpec => ['ul', listStyleAttrs(node.attrs.listStyle, BULLET_STYLES), 0],
-  },
-
-  ordered_list: {
-    group: 'block',
-    content: 'list_item+',
-    attrs: { start: { default: 1 }, listStyle: { default: null } },
-    parseDOM: [
-      {
-        tag: 'ol',
-        getAttrs: (dom) => {
-          const start = (dom as HTMLElement).getAttribute('start');
-          return {
-            start: start ? Number(start) : 1,
-            listStyle: readListStyle(dom as HTMLElement, ORDERED_STYLES, 'decimal'),
-          };
-        },
-      },
-    ],
-    toDOM: (node): DOMOutputSpec => [
-      'ol',
-      {
-        ...(node.attrs.start === 1 ? {} : { start: node.attrs.start }),
-        ...listStyleAttrs(node.attrs.listStyle, ORDERED_STYLES),
-      },
-      0,
-    ],
-  },
-
-  list_item: {
-    content: 'paragraph block*',
-    defining: true,
-    parseDOM: [{ tag: 'li' }],
-    toDOM: (): DOMOutputSpec => ['li', 0],
-  },
-
-  text: { group: 'inline' },
-
-  image: {
-    group: 'inline',
-    inline: true,
-    draggable: true,
-    attrs: {
-      src: {},
-      alt: { default: null },
-      title: { default: null },
-      width: { default: null },
-      height: { default: null },
-      align: { default: null },
+      })),
+      toDOM: (node): DOMOutputSpec => [
+        `h${node.attrs.level}`,
+        { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs) },
+        0,
+      ],
     },
-    parseDOM: [
-      {
-        tag: 'img[src]',
-        getAttrs: (dom) => {
-          const el = dom as HTMLElement;
-          if (!isSafeImageUrl(el.getAttribute('src') ?? '')) return false;
-          return {
-            src: el.getAttribute('src'),
-            alt: el.getAttribute('alt'),
-            title: el.getAttribute('title'),
-            width: imageSize(el.getAttribute('width') ?? el.style.width),
-            height: imageSize(el.getAttribute('height') ?? el.style.height),
-            align: readImageAlign(el),
-          };
-        },
-      },
-    ],
-    toDOM: (node): DOMOutputSpec => {
-      const { alt, title } = node.attrs;
-      // Документ мог прийти из JSON в обход parseDOM — проверяем и на выходе.
-      const src = isSafeImageUrl(node.attrs.src) ? node.attrs.src : '';
-      const width = imageSize(node.attrs.width);
-      const height = imageSize(node.attrs.height);
-      const style = IMAGE_ALIGN_STYLES[node.attrs.align as ImageAlign];
-      return [
-        'img',
+
+    blockquote: {
+      group: 'block',
+      content: 'block+',
+      defining: true,
+      attrs: { ...classSpec },
+      parseDOM: [
         {
-          src,
-          ...(alt ? { alt } : {}),
-          ...(title ? { title } : {}),
-          ...(width ? { width: String(width) } : {}),
-          ...(height ? { height: String(height) } : {}),
-          ...(style ? { style } : {}),
+          tag: 'blockquote',
+          getAttrs: (dom) => ({ class: readClass(dom as HTMLElement, allow) }),
         },
-      ];
+      ],
+      toDOM: (node): DOMOutputSpec => ['blockquote', classAttr(node.attrs.class), 0],
     },
-  },
 
-  hard_break: {
-    group: 'inline',
-    inline: true,
-    selectable: false,
-    parseDOM: [{ tag: 'br' }],
-    toDOM: (): DOMOutputSpec => ['br'],
-  },
+    horizontal_rule: {
+      group: 'block',
+      parseDOM: [{ tag: 'hr' }],
+      toDOM: (): DOMOutputSpec => ['hr'],
+    },
 
-  ...buildTableNodes(),
-} satisfies Record<string, NodeSpec>;
-
-const marks = {
-  link: {
-    attrs: { href: {}, title: { default: null }, target: { default: null } },
-    inclusive: false,
-    parseDOM: [
-      {
-        tag: 'a[href]',
-        getAttrs: (dom) => {
-          const el = dom as HTMLElement;
-          if (!isSafeLinkUrl(el.getAttribute('href') ?? '')) return false;
-          return {
-            href: el.getAttribute('href'),
-            title: el.getAttribute('title'),
-            target: el.getAttribute('target'),
-          };
-        },
-      },
-    ],
-    toDOM: (mark): DOMOutputSpec => {
-      const { title, target } = mark.attrs;
-      const href = isSafeLinkUrl(mark.attrs.href) ? mark.attrs.href : '#';
-      return [
-        'a',
+    code_block: {
+      group: 'block',
+      content: 'text*',
+      marks: '',
+      code: true,
+      defining: true,
+      attrs: { language: { default: null } },
+      parseDOM: [
         {
-          href,
-          ...(title ? { title } : {}),
-          ...(target ? { target, rel: 'noopener noreferrer' } : {}),
+          tag: 'pre',
+          preserveWhitespace: 'full',
+          getAttrs: (dom) => {
+            const code = (dom as HTMLElement).querySelector('code');
+            const match = code?.className.match(/language-([\w-]+)/);
+            return { language: match?.[1] ?? null };
+          },
+        },
+      ],
+      toDOM: (node): DOMOutputSpec => [
+        'pre',
+        ['code', node.attrs.language ? { class: `language-${node.attrs.language}` } : {}, 0],
+      ],
+    },
+
+    bullet_list: {
+      group: 'block',
+      content: 'list_item+',
+      attrs: { listStyle: { default: null } },
+      parseDOM: [
+        {
+          tag: 'ul',
+          getAttrs: (dom) => ({
+            listStyle: readListStyle(dom as HTMLElement, BULLET_STYLES, 'disc'),
+          }),
+        },
+      ],
+      toDOM: (node): DOMOutputSpec => [
+        'ul',
+        listStyleAttrs(node.attrs.listStyle, BULLET_STYLES),
+        0,
+      ],
+    },
+
+    ordered_list: {
+      group: 'block',
+      content: 'list_item+',
+      attrs: { start: { default: 1 }, listStyle: { default: null } },
+      parseDOM: [
+        {
+          tag: 'ol',
+          getAttrs: (dom) => {
+            const start = (dom as HTMLElement).getAttribute('start');
+            return {
+              start: start ? Number(start) : 1,
+              listStyle: readListStyle(dom as HTMLElement, ORDERED_STYLES, 'decimal'),
+            };
+          },
+        },
+      ],
+      toDOM: (node): DOMOutputSpec => [
+        'ol',
+        {
+          ...(node.attrs.start === 1 ? {} : { start: node.attrs.start }),
+          ...listStyleAttrs(node.attrs.listStyle, ORDERED_STYLES),
         },
         0,
-      ];
+      ],
     },
-  },
 
-  bold: {
-    parseDOM: [
-      { tag: 'strong' },
-      // <b style="font-weight: normal"> встречается при вставке из Google Docs — это не жирный.
-      {
-        tag: 'b',
-        getAttrs: (dom) => (dom as HTMLElement).style.fontWeight !== 'normal' && null,
+    list_item: {
+      content: 'paragraph block*',
+      defining: true,
+      parseDOM: [{ tag: 'li' }],
+      toDOM: (): DOMOutputSpec => ['li', 0],
+    },
+
+    text: { group: 'inline' },
+
+    image: {
+      group: 'inline',
+      inline: true,
+      draggable: true,
+      attrs: {
+        src: {},
+        alt: { default: null },
+        title: { default: null },
+        width: { default: null },
+        height: { default: null },
+        align: { default: null },
+        ...classSpec,
       },
-      {
-        style: 'font-weight',
-        getAttrs: (value) => /^(bold(er)?|[5-9]\d{2,})$/.test(value as string) && null,
+      parseDOM: [
+        {
+          tag: 'img[src]',
+          getAttrs: (dom) => {
+            const el = dom as HTMLElement;
+            if (!isSafeImageUrl(el.getAttribute('src') ?? '')) return false;
+            return {
+              src: el.getAttribute('src'),
+              alt: el.getAttribute('alt'),
+              title: el.getAttribute('title'),
+              width: imageSize(el.getAttribute('width') ?? el.style.width),
+              height: imageSize(el.getAttribute('height') ?? el.style.height),
+              align: readImageAlign(el),
+              class: readClass(el, allow),
+            };
+          },
+        },
+      ],
+      toDOM: (node): DOMOutputSpec => {
+        const { alt, title } = node.attrs;
+        // Документ мог прийти из JSON в обход parseDOM — проверяем и на выходе.
+        const src = isSafeImageUrl(node.attrs.src) ? node.attrs.src : '';
+        const width = imageSize(node.attrs.width);
+        const height = imageSize(node.attrs.height);
+        const style = IMAGE_ALIGN_STYLES[node.attrs.align as ImageAlign];
+        return [
+          'img',
+          {
+            src,
+            ...classAttr(node.attrs.class),
+            ...(alt ? { alt } : {}),
+            ...(title ? { title } : {}),
+            ...(width ? { width: String(width) } : {}),
+            ...(height ? { height: String(height) } : {}),
+            ...(style ? { style } : {}),
+          },
+        ];
       },
-    ],
-    toDOM: (): DOMOutputSpec => ['strong', 0],
-  },
+    },
 
-  italic: {
-    parseDOM: [{ tag: 'em' }, { tag: 'i' }, { style: 'font-style=italic' }],
-    toDOM: (): DOMOutputSpec => ['em', 0],
-  },
+    hard_break: {
+      group: 'inline',
+      inline: true,
+      selectable: false,
+      parseDOM: [{ tag: 'br' }],
+      toDOM: (): DOMOutputSpec => ['br'],
+    },
 
-  underline: {
-    parseDOM: [{ tag: 'u' }, { style: 'text-decoration=underline' }],
-    toDOM: (): DOMOutputSpec => ['u', 0],
-  },
+    ...buildTableNodes(),
+  }) satisfies Record<string, NodeSpec>;
 
-  strike: {
-    parseDOM: [
-      { tag: 's' },
-      { tag: 'del' },
-      { tag: 'strike' },
-      { style: 'text-decoration=line-through' },
-    ],
-    toDOM: (): DOMOutputSpec => ['s', 0],
-  },
+const nodes = buildNodes(NO_CLASSES);
 
-  code: {
-    parseDOM: [{ tag: 'code' }],
-    toDOM: (): DOMOutputSpec => ['code', 0],
-  },
-
-  subscript: {
-    excludes: 'superscript',
-    // vertical-align — так нижний индекс передают Google Docs и Word.
-    parseDOM: [{ tag: 'sub' }, { style: 'vertical-align=sub' }],
-    toDOM: (): DOMOutputSpec => ['sub', 0],
-  },
-
-  superscript: {
-    excludes: 'subscript',
-    parseDOM: [{ tag: 'sup' }, { style: 'vertical-align=super' }],
-    toDOM: (): DOMOutputSpec => ['sup', 0],
-  },
-
-  // ---------- текстовые стили (PRD §4.2): <span style="…"> как у TinyMCE ----------
-
-  color: {
-    attrs: { value: {} },
-    parseDOM: [
-      { style: 'color', getAttrs: (v) => styleAttr(cssValue.color(v)) },
-      {
-        tag: 'font[color]',
-        getAttrs: (dom) => styleAttr(cssValue.color((dom as HTMLElement).getAttribute('color'))),
+const buildMarks = (allow: ClassFilter) =>
+  ({
+    link: {
+      attrs: { href: {}, title: { default: null }, target: { default: null } },
+      inclusive: false,
+      parseDOM: [
+        {
+          tag: 'a[href]',
+          getAttrs: (dom) => {
+            const el = dom as HTMLElement;
+            if (!isSafeLinkUrl(el.getAttribute('href') ?? '')) return false;
+            return {
+              href: el.getAttribute('href'),
+              title: el.getAttribute('title'),
+              target: el.getAttribute('target'),
+            };
+          },
+        },
+      ],
+      toDOM: (mark): DOMOutputSpec => {
+        const { title, target } = mark.attrs;
+        const href = isSafeLinkUrl(mark.attrs.href) ? mark.attrs.href : '#';
+        return [
+          'a',
+          {
+            href,
+            ...(title ? { title } : {}),
+            ...(target ? { target, rel: 'noopener noreferrer' } : {}),
+          },
+          0,
+        ];
       },
-    ],
-    toDOM: (mark): DOMOutputSpec => styleSpan('color', cssValue.color(mark.attrs.value)),
-  },
+    },
 
-  background: {
-    attrs: { value: {} },
-    parseDOM: [
-      { style: 'background-color', getAttrs: (v) => styleAttr(cssValue.color(v)) },
-      { tag: 'mark', getAttrs: () => ({ value: 'yellow' }) },
-    ],
-    toDOM: (mark): DOMOutputSpec => styleSpan('background-color', cssValue.color(mark.attrs.value)),
-  },
+    bold: {
+      parseDOM: [
+        { tag: 'strong' },
+        // <b style="font-weight: normal"> встречается при вставке из Google Docs — это не жирный.
+        {
+          tag: 'b',
+          getAttrs: (dom) => (dom as HTMLElement).style.fontWeight !== 'normal' && null,
+        },
+        {
+          style: 'font-weight',
+          getAttrs: (value) => /^(bold(er)?|[5-9]\d{2,})$/.test(value as string) && null,
+        },
+      ],
+      toDOM: (): DOMOutputSpec => ['strong', 0],
+    },
 
-  font_family: {
-    attrs: { value: {} },
-    parseDOM: [{ style: 'font-family', getAttrs: (v) => styleAttr(cssValue.fontFamily(v)) }],
-    toDOM: (mark): DOMOutputSpec => styleSpan('font-family', cssValue.fontFamily(mark.attrs.value)),
-  },
+    italic: {
+      parseDOM: [{ tag: 'em' }, { tag: 'i' }, { style: 'font-style=italic' }],
+      toDOM: (): DOMOutputSpec => ['em', 0],
+    },
 
-  font_size: {
-    attrs: { value: {} },
-    parseDOM: [{ style: 'font-size', getAttrs: (v) => styleAttr(cssValue.length(v)) }],
-    toDOM: (mark): DOMOutputSpec => styleSpan('font-size', cssValue.length(mark.attrs.value)),
-  },
-} satisfies Record<string, MarkSpec>;
+    underline: {
+      parseDOM: [{ tag: 'u' }, { style: 'text-decoration=underline' }],
+      toDOM: (): DOMOutputSpec => ['u', 0],
+    },
+
+    strike: {
+      parseDOM: [
+        { tag: 's' },
+        { tag: 'del' },
+        { tag: 'strike' },
+        { style: 'text-decoration=line-through' },
+      ],
+      toDOM: (): DOMOutputSpec => ['s', 0],
+    },
+
+    code: {
+      parseDOM: [{ tag: 'code' }],
+      toDOM: (): DOMOutputSpec => ['code', 0],
+    },
+
+    subscript: {
+      excludes: 'superscript',
+      // vertical-align — так нижний индекс передают Google Docs и Word.
+      parseDOM: [{ tag: 'sub' }, { style: 'vertical-align=sub' }],
+      toDOM: (): DOMOutputSpec => ['sub', 0],
+    },
+
+    superscript: {
+      excludes: 'subscript',
+      parseDOM: [{ tag: 'sup' }, { style: 'vertical-align=super' }],
+      toDOM: (): DOMOutputSpec => ['sup', 0],
+    },
+
+    // ---------- текстовые стили (PRD §4.2): <span style="…"> как у TinyMCE ----------
+
+    color: {
+      attrs: { value: {} },
+      parseDOM: [
+        { style: 'color', getAttrs: (v) => styleAttr(cssValue.color(v)) },
+        {
+          tag: 'font[color]',
+          getAttrs: (dom) => styleAttr(cssValue.color((dom as HTMLElement).getAttribute('color'))),
+        },
+      ],
+      toDOM: (mark): DOMOutputSpec => styleSpan('color', cssValue.color(mark.attrs.value)),
+    },
+
+    background: {
+      attrs: { value: {} },
+      parseDOM: [
+        { style: 'background-color', getAttrs: (v) => styleAttr(cssValue.color(v)) },
+        { tag: 'mark', getAttrs: () => ({ value: 'yellow' }) },
+      ],
+      toDOM: (mark): DOMOutputSpec =>
+        styleSpan('background-color', cssValue.color(mark.attrs.value)),
+    },
+
+    font_family: {
+      attrs: { value: {} },
+      parseDOM: [{ style: 'font-family', getAttrs: (v) => styleAttr(cssValue.fontFamily(v)) }],
+      toDOM: (mark): DOMOutputSpec =>
+        styleSpan('font-family', cssValue.fontFamily(mark.attrs.value)),
+    },
+
+    font_size: {
+      attrs: { value: {} },
+      parseDOM: [{ style: 'font-size', getAttrs: (v) => styleAttr(cssValue.length(v)) }],
+      toDOM: (mark): DOMOutputSpec => styleSpan('font-size', cssValue.length(mark.attrs.value)),
+    },
+
+    /** <span class="…"> — инлайн-стиль из style_formats. Только разрешённые классы. */
+    span_class: {
+      attrs: { class: {} },
+      parseDOM: [
+        {
+          tag: 'span[class]',
+          // Не «съедает» span: его style-атрибуты разбирают марки цвета и шрифта.
+          consuming: false,
+          getAttrs: (dom) => {
+            const value = readClass(dom as HTMLElement, allow);
+            return value ? { class: value } : false;
+          },
+        },
+      ],
+      toDOM: (mark): DOMOutputSpec => ['span', classAttr(mark.attrs.class), 0],
+    },
+  }) satisfies Record<string, MarkSpec>;
+
+const marks = buildMarks(NO_CLASSES);
 
 function styleAttr(value: string | null): { value: string } | false {
   return value ? { value } : false;
@@ -613,10 +693,16 @@ export interface SchemaExtensions {
  * Новые узлы и марки добавляются в конец: базовые правила разбора HTML остаются в приоритете,
  * если плагин не задал свой `priority` в parseDOM.
  */
-export function createSchema(extensions: SchemaExtensions = {}): NovaSchema {
+export function createSchema(
+  extensions: SchemaExtensions = {},
+  /** Какие классы сохранять (style_formats, validClasses). Без фильтра — никакие. */
+  classFilter?: ClassFilter,
+): NovaSchema {
   const extraNodes = Object.entries(extensions.nodes ?? {});
   const extraMarks = Object.entries(extensions.marks ?? {});
-  if (!extraNodes.length && !extraMarks.length) return schema;
+  if (!extraNodes.length && !extraMarks.length && !classFilter) return schema;
+  const baseNodes = classFilter ? buildNodes(classFilter) : nodes;
+  const baseMarks = classFilter ? buildMarks(classFilter) : marks;
   for (const [name] of extraNodes) {
     if (name in nodes) throw new Error(`[nova] node "${name}" already exists in the base schema`);
   }
@@ -624,7 +710,7 @@ export function createSchema(extensions: SchemaExtensions = {}): NovaSchema {
     if (name in marks) throw new Error(`[nova] mark "${name}" already exists in the base schema`);
   }
   return new Schema({
-    nodes: { ...nodes, ...Object.fromEntries(extraNodes) },
-    marks: { ...marks, ...Object.fromEntries(extraMarks) },
+    nodes: { ...baseNodes, ...Object.fromEntries(extraNodes) },
+    marks: { ...baseMarks, ...Object.fromEntries(extraMarks) },
   }) as unknown as NovaSchema;
 }

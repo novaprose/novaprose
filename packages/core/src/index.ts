@@ -9,6 +9,14 @@ export {
 } from './editor';
 export { DEFAULT_MENUS, DEFAULT_MENUBAR, type MenuDefinition } from './ui/menubar';
 export type { FilePicker, FilePickResult, FilePickType } from './ui/file-picker';
+export {
+  Formatter,
+  type FormatSpec,
+  type StyleFormat,
+  type BlockTag,
+  type InlineTag,
+} from './formats';
+export type { ClassFilter } from './schema';
 export { printContent } from './ui/menu-items';
 export {
   schema,

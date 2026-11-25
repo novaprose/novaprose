@@ -1,4 +1,5 @@
 import type { AutosaveOptions } from './plugins/autosave';
+import { Formatter, formatClasses, type FormatSpec, type StyleFormat } from './formats';
 import { attachCss, loadCss, scopeCss } from './content-css';
 import type { FilePicker, FilePickType } from './ui/file-picker';
 import type { CommentsOptions } from './plugins/comments';
@@ -40,7 +41,7 @@ import {
 import { searchPlugin } from './search';
 import { createSearchBar, type SearchBarHandle } from './ui/search-bar';
 import { openHelp, toggleFullscreen } from './ui/views';
-import { createSchema, type NovaSchema } from './schema';
+import { createSchema, type ClassFilter, type NovaSchema } from './schema';
 import { HTMLSerializer } from './serializer';
 import { registerBuiltins, type FontOption } from './ui/builtins';
 import { linkBubblePlugin } from './ui/link-bubble';
@@ -129,6 +130,23 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
    * этого редактора; относительные url() и @import работают. `await editor.ready` ждёт загрузки.
    */
   contentCss?: string | string[];
+  /**
+   * Именованные форматы (как formats в TinyMCE): { note: { block: 'p', classes: 'note' } }.
+   * Применяются через editor.formatter.apply('note'); их классы сохраняются при разборе HTML.
+   */
+  formats?: Record<string, FormatSpec | FormatSpec[]>;
+  /**
+   * Пункты меню «Стили» (кнопка `styles`): свои форматы, ссылки на именованные и группы.
+   * По умолчанию — заголовки, текст, блоки и выравнивание.
+   */
+  styleFormats?: StyleFormat[];
+  /** true — добавить styleFormats к стандартному набору, а не заменить его. */
+  styleFormatsMerge?: boolean;
+  /**
+   * Какие классы сохранять в HTML кроме классов из форматов: список или true — все.
+   * По умолчанию только классы форматов (вставленный мусор вроде MsoNormal не попадает в документ).
+   */
+  validClasses?: string[] | true;
   /** Язык UI (BCP-47): 'en', 'ru'… По умолчанию 'en'. */
   language?: string;
   /** Точечная замена строк UI. */
@@ -197,6 +215,8 @@ export class Editor {
   readonly contentRules: ContentRules | null;
   /** Схема документа этого редактора: базовая + узлы и марки синхронных плагинов. */
   readonly schema: NovaSchema;
+  /** Форматы: register / apply / remove / toggle / match. */
+  readonly formatter: Formatter;
   private readonly statusbar: ReturnType<typeof createStatusbar> | null;
   private readonly searchBar: SearchBarHandle;
   private destroyed = false;
@@ -283,7 +303,20 @@ export class Editor {
       options.invalidElements !== undefined ||
       options.validStyles !== undefined;
     this.contentRules = hasRules ? new ContentRules(options) : null;
-    this.schema = this.buildSchema(syncPlugins);
+    // Классы, которые схема сохраняет при разборе: из форматов, стилей и validClasses.
+    // Набор живой — formatter.register() в setup тоже пополняет его.
+    const allowedClasses = new Set([
+      ...formatClasses(Object.values(options.formats ?? {}).flat()),
+      ...formatClasses(options.styleFormats ?? []),
+      ...(Array.isArray(options.validClasses) ? options.validClasses : []),
+    ]);
+    this.schema = this.buildSchema(
+      syncPlugins,
+      options.validClasses === true ? () => true : (name) => allowedClasses.has(name),
+    );
+    this.formatter = new Formatter(this, allowedClasses);
+    for (const [name, spec] of Object.entries(options.formats ?? {}))
+      this.formatter.register(name, spec);
     syncPlugins.forEach((plugin) => this.registerCommands(plugin));
     const initialDoc = parseContent(this.schema, options.content ?? '');
 
@@ -439,7 +472,7 @@ export class Editor {
    * Схема с узлами и марками плагинов. Конфликт имён — ошибка конфигурации: сообщаем и работаем
    * на базовой схеме, чтобы редактор всё равно открылся.
    */
-  private buildSchema(plugins: NovaPlugin[]): NovaSchema {
+  private buildSchema(plugins: NovaPlugin[], classFilter: ClassFilter): NovaSchema {
     const nodes: Record<string, NodeSpec> = {};
     const marks: Record<string, MarkSpec> = {};
     for (const plugin of plugins) {
@@ -453,10 +486,10 @@ export class Editor {
       }
     }
     try {
-      return createSchema({ nodes, marks });
+      return createSchema({ nodes, marks }, classFilter);
     } catch (error) {
       reportPluginError('Failed to build the document schema from plugins', error);
-      return createSchema();
+      return createSchema({}, classFilter);
     }
   }
 

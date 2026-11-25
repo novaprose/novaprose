@@ -2,7 +2,7 @@ import type { Node as PMNode } from 'prosemirror-model';
 import { NodeSelection } from 'prosemirror-state';
 import type { EditorView, NodeView } from 'prosemirror-view';
 import type { Editor } from '../editor';
-import { imageSize } from '../schema';
+import { classAttr, imageSize } from '../schema';
 import { isSafeImageUrl } from '../url';
 
 const MIN_WIDTH = 24;
@@ -48,6 +48,7 @@ export class ImageView implements NodeView {
     if (this.img.getAttribute('src') !== safeSrc) this.img.setAttribute('src', safeSrc);
     this.setAttr('alt', alt);
     this.setAttr('title', title);
+    this.setAttr('class', classAttr(this.node.attrs.class).class ?? null);
     const w = imageSize(width);
     const h = imageSize(height);
     this.img.style.width = w ? `${w}px` : '';

@@ -2,6 +2,8 @@ import {
   isPluginRegistered,
   type BlockFormat,
   type FilePickType,
+  type FormatSpec,
+  type StyleFormat,
   type EditorOptions,
   type UploadImageHandler,
 } from '@novaprose/core';
@@ -97,6 +99,10 @@ const IGNORED = new Set([
   'disabled',
   'block_formats',
   'file_picker_callback',
+  'formats',
+  'style_formats',
+  'style_formats_merge',
+  'valid_classes',
   'file_picker_types',
   'language',
   'images_upload_handler',
@@ -165,6 +171,64 @@ function blobInfo(file: File) {
   };
 }
 
+const BLOCKS = new Set(['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'pre']);
+const INLINES = new Set([
+  'span',
+  'strong',
+  'b',
+  'em',
+  'i',
+  'u',
+  's',
+  'strike',
+  'del',
+  'code',
+  'sub',
+  'sup',
+]);
+
+/** Формат TinyMCE (объект или массив вариантов) → описания NovaProse; неподдерживаемые пропускаются. */
+export function toFormatSpecs(value: unknown): FormatSpec[] {
+  const list = Array.isArray(value) ? value : [value];
+  const out: FormatSpec[] = [];
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const raw = item as Record<string, unknown>;
+    const spec: FormatSpec = {};
+    if (typeof raw.block === 'string' && BLOCKS.has(raw.block.toLowerCase()))
+      spec.block = raw.block.toLowerCase() as FormatSpec['block'];
+    if (typeof raw.inline === 'string' && INLINES.has(raw.inline.toLowerCase()))
+      spec.inline = raw.inline.toLowerCase() as FormatSpec['inline'];
+    if (typeof raw.selector === 'string') spec.selector = raw.selector;
+    if (typeof raw.classes === 'string' || Array.isArray(raw.classes))
+      spec.classes = raw.classes as string | string[];
+    if (raw.styles && typeof raw.styles === 'object')
+      spec.styles = Object.fromEntries(
+        Object.entries(raw.styles as Record<string, unknown>)
+          .filter(([, v]) => typeof v === 'string' && !v.includes('%'))
+          // TinyMCE допускает camelCase: textAlign → text-align.
+          .map(([k, v]) => [k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), v as string]),
+      );
+    if (spec.block || spec.inline || spec.selector) out.push(spec);
+  }
+  return out;
+}
+
+/** style_formats TinyMCE → styleFormats (та же форма: title, format, items, block/inline/selector). */
+function toStyleFormats(value: unknown): StyleFormat[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item): StyleFormat[] => {
+    if (!item || typeof item !== 'object') return [];
+    const raw = item as Record<string, unknown>;
+    const title = String(raw.title ?? '');
+    if (!title) return [];
+    if (Array.isArray(raw.items)) return [{ title, items: toStyleFormats(raw.items) }];
+    if (typeof raw.format === 'string') return [{ title, format: raw.format }];
+    const [spec] = toFormatSpecs(raw);
+    return spec ? [{ title, ...spec }] : [];
+  });
+}
+
 export interface MappedOptions {
   options: Omit<EditorOptions, 'element'>;
   /** Опции, которые NovaProse пока не понимает (для предупреждения). */
@@ -195,6 +259,25 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.placeholder === 'string') options.placeholder = config.placeholder;
   if (config.readonly === true) options.editable = false;
   if (typeof config.content_style === 'string') options.contentStyle = config.content_style;
+  // Форматы: formats — именованные, style_formats — меню «Стили».
+  if (config.formats && typeof config.formats === 'object') {
+    options.formats = Object.fromEntries(
+      Object.entries(config.formats as Record<string, unknown>)
+        .map(([name, value]) => [name, toFormatSpecs(value)] as const)
+        .filter(([, specs]) => specs.length),
+    );
+  }
+  if (Array.isArray(config.style_formats)) {
+    options.styleFormats = toStyleFormats(config.style_formats);
+    if (config.style_formats_merge === true) options.styleFormatsMerge = true;
+  }
+  // valid_classes: строка или объект по тегам; без неё TinyMCE сохраняет все классы — и мы тоже.
+  if (typeof config.valid_classes === 'string') options.validClasses = list(config.valid_classes);
+  else if (config.valid_classes && typeof config.valid_classes === 'object')
+    options.validClasses = Object.values(config.valid_classes as Record<string, unknown>).flatMap(
+      (v) => list(v),
+    );
+  else options.validClasses = true;
   // content_css: адрес, список через запятую или массив; имена встроенных скинов TinyMCE пропускаем.
   if (config.content_css !== undefined && config.content_css !== false) {
     const skins = new Set(['default', 'dark', 'document', 'writer', 'tinymce-5', 'tinymce-5-dark']);

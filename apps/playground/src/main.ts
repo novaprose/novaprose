@@ -42,6 +42,37 @@ const editor = createEditor({
     ? { resize: new URLSearchParams(location.search).get('resize') === 'both' ? 'both' : true }
     : {}),
   disabled: new URLSearchParams(location.search).has('disabled'),
+  // ?styles=1 — меню «Стили» со своими форматами (классы + стили содержимого для них).
+  ...(new URLSearchParams(location.search).has('styles')
+    ? {
+        toolbar: 'undo redo | styles | bold italic | link image',
+        styleFormats: [
+          {
+            title: 'Оформление',
+            items: [
+              { title: 'Вводный абзац', block: 'p', classes: 'lead' },
+              { title: 'Примечание', block: 'p', classes: 'note' },
+              { title: 'Цитата-выноска', block: 'blockquote', classes: 'pull' },
+            ],
+          },
+          {
+            title: 'Текст',
+            items: [
+              { title: 'Маркер', inline: 'span', classes: 'marker' },
+              { title: 'Красный', inline: 'span', styles: { color: '#d1242f' } },
+            ],
+          },
+          { title: 'Картинка слева', selector: 'img', classes: 'float-left' },
+        ],
+        contentStyle: [
+          '.lead { font-size: 1.2em; color: #57606a; }',
+          '.note { padding: 8px 12px; border-left: 3px solid #0969da; background: rgba(9,105,218,.08); }',
+          '.pull { font-size: 1.3em; font-style: italic; }',
+          '.marker { background: #fff8c5; }',
+          '.float-left { float: left; margin: 0 12px 8px 0; }',
+        ].join('\n'),
+      }
+    : {}),
   // ?contentcss=1 — стили содержимого из файла (+ @import) и строкой (их гоняет e2e/editor-options.spec.ts).
   ...(new URLSearchParams(location.search).has('contentcss')
     ? { contentCss: '/test-css/content.css', contentStyle: 'h2 { color: rgb(0, 128, 0) }' }

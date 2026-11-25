@@ -1,3 +1,4 @@
+import { toFormatSpecs } from './options';
 import {
   getStyle,
   HTMLSerializer,
@@ -10,7 +11,7 @@ import {
 } from '@novaprose/core';
 import { openSpecDialog, type DialogApi, type DialogSpec } from './dialog';
 import { Slice } from 'prosemirror-model';
-import { AllSelection, TextSelection } from 'prosemirror-state';
+import { AllSelection, NodeSelection, TextSelection } from 'prosemirror-state';
 
 const serializer = new HTMLSerializer();
 
@@ -535,6 +536,26 @@ export class CompatEditor {
       const pos = toStart ? state.selection.from : state.selection.to;
       dispatch(state.tr.setSelection(TextSelection.near(state.doc.resolve(pos))));
     },
+    /** Курсор в узел DOM редактора (по умолчанию — в начало). */
+    setCursorLocation: (node?: Node, offset = 0) => {
+      const { view } = this.core;
+      if (!node || !view.dom.contains(node)) return;
+      const pos = view.posAtDOM(node, offset);
+      view.dispatch(view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(pos))));
+    },
+    /** Выделить элемент: content = true — только его содержимое. */
+    select: (node: Node, content = false) => {
+      const { view } = this.core;
+      if (!view.dom.contains(node)) return;
+      const from = view.posAtDOM(node, 0);
+      const to = view.posAtDOM(node, node.childNodes.length);
+      const { doc } = view.state;
+      const selection =
+        !content && node instanceof HTMLImageElement
+          ? NodeSelection.create(doc, Math.max(0, from - (doc.resolve(from).nodeAfter ? 0 : 1)))
+          : TextSelection.between(doc.resolve(from), doc.resolve(to));
+      view.dispatch(view.state.tr.setSelection(selection));
+    },
   };
 
   readonly notificationManager = {
@@ -747,6 +768,8 @@ export class CompatEditor {
     toggle: (name: string, vars: { value?: string } = {}) =>
       this.applyFormat(name, vars, this.formatter.match(name) ? 'remove' : 'apply'),
     match: (name: string): boolean => {
+      // Свои форматы (formats, formatter.register) — формат-движок ядра.
+      if (this.core.formatter.has(name)) return this.core.formatter.match(name);
       const key = name.toLowerCase();
       // Блок (p, h1…h6, blockquote, pre) — по модели документа: блок, где начинается выделение.
       if (TAG_FORMATS.has(key)) return this.blockMatches(key);
@@ -763,10 +786,20 @@ export class CompatEditor {
         : state.doc.rangeHasMark(from, to, type);
     },
     canApply: (name: string) =>
-      name.toLowerCase() in FORMAT_COMMANDS || name.toLowerCase() in STYLE_FORMATS,
-    register: (name: string) => {
-      console.warn(`[nova] tinymce-compat: formatter.register("${name}") is not supported yet`);
+      this.core.formatter.has(name) ||
+      name.toLowerCase() in FORMAT_COMMANDS ||
+      name.toLowerCase() in STYLE_FORMATS,
+    register: (name: string | Record<string, unknown>, spec?: unknown) => {
+      // register('name', spec) или register({ name: spec, … }).
+      const entries = typeof name === 'string' ? [[name, spec] as const] : Object.entries(name);
+      for (const [key, value] of entries) {
+        const specs = toFormatSpecs(value);
+        if (specs.length) this.core.formatter.register(key, specs);
+        else console.warn(`[nova] tinymce-compat: format "${key}" is not supported yet`);
+      }
     },
+    unregister: (name: string) => this.core.formatter.unregister(name),
+    get: (name: string) => this.core.formatter.get(name),
   };
 
   private blockMatches(key: string): boolean {
@@ -797,6 +830,11 @@ export class CompatEditor {
   }
 
   private applyFormat(name: string, vars: { value?: string }, action: 'apply' | 'remove'): void {
+    if (this.core.formatter.has(name)) {
+      if (action === 'apply') this.core.formatter.apply(name);
+      else this.core.formatter.remove(name);
+      return;
+    }
     const key = name.toLowerCase();
     const command = FORMAT_COMMANDS[key];
     if (command) {

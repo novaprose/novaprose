@@ -57,7 +57,9 @@ describe('Схема редактора с узлами и марками пла
     expect(withPlugin.getHTML()).toBe('<div class="callout" data-tone="info"><p>текст</p></div>');
     // Без плагина узла нет — остаётся содержимое.
     expect(plain.getHTML()).toBe('<p>текст</p>');
-    expect(plain.schema).toBe(baseSchema);
+    // У каждого редактора своя схема (фильтр классов), но набор узлов — базовый.
+    expect(plain.schema.nodes.callout).toBeUndefined();
+    expect(Object.keys(plain.schema.nodes)).toEqual(Object.keys(baseSchema.nodes));
   });
 
   it('встроенные команды, правила ввода и таблицы работают на расширенной схеме', () => {
@@ -110,7 +112,9 @@ describe('Схема редактора с узлами и марками пла
       nodes: { paragraph: { content: 'text*', toDOM: () => ['p', 0] } },
     });
     const editor = mount('<p>a</p>', { plugins: [broken] });
-    expect(editor.schema).toBe(baseSchema);
+    // Узлы плагина не подключены: paragraph — базовый, а не из плагина.
+    expect(Object.keys(editor.schema.nodes)).toEqual(Object.keys(baseSchema.nodes));
+    expect(editor.schema.nodes.paragraph.spec.content).toBe('inline*');
     expect(editor.getHTML()).toBe('<p>a</p>');
     expect(error).toHaveBeenCalled();
   });

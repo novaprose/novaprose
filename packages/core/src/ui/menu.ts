@@ -21,7 +21,13 @@ export interface MenuSeparator {
   type: 'separator';
 }
 
-export type MenuEntry = MenuItem | MenuSeparator;
+/** Заголовок группы пунктов (не нажимается). */
+export interface MenuHeading {
+  type: 'heading';
+  label: string;
+}
+
+export type MenuEntry = MenuItem | MenuSeparator | MenuHeading;
 
 /**
  * Меню с клавиатурной навигацией по WAI-ARIA: стрелки, Home/End, Enter/Пробел,
@@ -30,11 +36,17 @@ export type MenuEntry = MenuItem | MenuSeparator;
 export function createMenu(entries: MenuEntry[], onDone: () => void, label: string): HTMLElement {
   const items: HTMLButtonElement[] = [];
   const menu = h('div', { className: 'nova-menu', role: 'menu', 'aria-label': label });
-  const hasChecks = entries.some((e) => e.type !== 'separator' && e.active !== undefined);
+  const hasChecks = entries.some(
+    (e) => (e.type === undefined || e.type === 'item') && e.active !== undefined,
+  );
 
   for (const entry of entries) {
     if (entry.type === 'separator') {
       menu.append(h('div', { className: 'nova-menu-sep', role: 'separator' }));
+      continue;
+    }
+    if (entry.type === 'heading') {
+      menu.append(h('div', { className: 'nova-menu-heading', role: 'presentation' }, entry.label));
       continue;
     }
     const labelEl = h('span', { className: 'nova-menu-label' }, entry.label);
