@@ -135,6 +135,22 @@ export function registerTableUi(editor: Editor): void {
   });
 }
 
+/** Выбор стиля из списка (tableClassList / tableCellClassList); без списка — поля нет. */
+function classSelect(
+  editor: Editor,
+  list: { title: string; value: string }[] | undefined,
+  current: string | null,
+) {
+  if (!list?.length) return null;
+  const { t } = editor.ui;
+  const options = [{ value: '', label: t('table.styleDefault') }];
+  for (const o of list) if (o.value) options.push({ value: o.value, label: o.title });
+  // Класс не из списка (пришёл с HTML) — показываем как есть, чтобы не потерять при сохранении.
+  if (current && !options.some((o) => o.value === current))
+    options.push({ value: current, label: current });
+  return selectField({ label: t('table.style'), value: current ?? '', options });
+}
+
 function openTableProps(editor: Editor): void {
   const { t } = editor.ui;
   const current = getTableProps(editor.view.state);
@@ -153,9 +169,10 @@ function openTableProps(editor: Editor): void {
       { value: 'right', label: t('table.alignRight') },
     ],
   });
+  const styles = classSelect(editor, editor.options.tableClassList, current.class ?? null);
   editor.ui.openDialog({
     title: t('table.props'),
-    body: h('div', { className: 'nova-form' }, width.el, align.el),
+    body: h('div', { className: 'nova-form' }, styles?.el ?? null, width.el, align.el),
     submitLabel: t('dialog.save'),
     onSubmit: () => {
       // «600» без единиц — пиксели.
@@ -163,6 +180,7 @@ function openTableProps(editor: Editor): void {
       const props = {
         width: raw || null,
         align: (align.select.value || null) as 'center' | 'right' | null,
+        ...(styles ? { class: styles.select.value || null } : {}),
       };
       return editor.exec(setTableProps(props)) || t('table.invalidWidth');
     },
@@ -196,9 +214,10 @@ function openCellProps(editor: Editor): void {
     hint: t('table.colWidthHint'),
     value: current.width ? String(current.width) : '',
   });
+  const styles = classSelect(editor, editor.options.tableCellClassList, current.class ?? null);
   editor.ui.openDialog({
     title: t('table.cellProps'),
-    body: h('div', { className: 'nova-form' }, valign.el, type.el, width.el),
+    body: h('div', { className: 'nova-form' }, styles?.el ?? null, valign.el, type.el, width.el),
     submitLabel: t('dialog.save'),
     onSubmit: () => {
       const rawWidth = width.input.value.trim();
@@ -210,6 +229,7 @@ function openCellProps(editor: Editor): void {
           valign: (valign.select.value || null) as 'top' | 'middle' | 'bottom' | null,
           header: type.select.value === 'th',
           width: px,
+          ...(styles ? { class: styles.select.value || null } : {}),
         }),
       );
       return true;

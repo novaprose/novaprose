@@ -166,6 +166,8 @@ export const en = {
   'table.sortAsc': 'Sort A → Z, 1 → 9',
   'table.sortDesc': 'Sort Z → A, 9 → 1',
   'table.props': 'Table properties',
+  'table.style': 'Style',
+  'table.styleDefault': 'Default',
   'table.width': 'Width',
   'table.widthHint': 'For example 100% or 600px. Leave empty to fit the content.',
   'table.invalidWidth': 'Enter a width such as 100% or 600px',

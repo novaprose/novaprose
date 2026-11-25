@@ -167,6 +167,8 @@ export const ru: Messages = {
   'table.sortAsc': 'Сортировать А → Я, 1 → 9',
   'table.sortDesc': 'Сортировать Я → А, 9 → 1',
   'table.props': 'Свойства таблицы',
+  'table.style': 'Стиль',
+  'table.styleDefault': 'Обычный',
   'table.width': 'Ширина',
   'table.widthHint': 'Например, 100% или 600px. Пусто — по содержимому.',
   'table.invalidWidth': 'Укажите ширину, например 100% или 600px',

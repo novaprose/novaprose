@@ -149,6 +149,13 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
    * По умолчанию только классы форматов (вставленный мусор вроде MsoNormal не попадает в документ).
    */
   validClasses?: string[] | true;
+  /**
+   * Стили таблиц на выбор в свойствах таблицы (как table_class_list в TinyMCE):
+   * [{ title: 'С рамками', value: 'grid' }]. Внешний вид задаёт ваш CSS (contentCss).
+   */
+  tableClassList?: ClassOption[];
+  /** Стили ячеек на выбор в свойствах ячейки (как table_cell_class_list). */
+  tableCellClassList?: ClassOption[];
   /** Язык UI (BCP-47): 'en', 'ru'… По умолчанию 'en'. */
   language?: string;
   /** Точечная замена строк UI. */
@@ -180,6 +187,12 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   /** Вызывается до отрисовки тулбара — место для editor.ui.registry.addButton(...). */
   setup?: (editor: Editor) => void;
   onChange?: (editor: Editor) => void;
+}
+
+/** Пункт списка стилей таблицы или ячейки: подпись и класс. */
+export interface ClassOption {
+  title: string;
+  value: string;
 }
 
 /** Пункт списка блоков: подпись и тег блока. */
@@ -311,6 +324,9 @@ export class Editor {
       ...formatClasses(Object.values(options.formats ?? {}).flat()),
       ...formatClasses(options.styleFormats ?? []),
       ...(Array.isArray(options.validClasses) ? options.validClasses : []),
+      ...[...(options.tableClassList ?? []), ...(options.tableCellClassList ?? [])].flatMap((o) =>
+        o.value.split(/s+/).filter(Boolean),
+      ),
     ]);
     this.schema = this.buildSchema(
       syncPlugins,

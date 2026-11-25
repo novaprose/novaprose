@@ -103,6 +103,8 @@ const IGNORED = new Set([
   'style_formats',
   'style_formats_merge',
   'valid_classes',
+  'table_class_list',
+  'table_cell_class_list',
   'file_picker_types',
   'language',
   'images_upload_handler',
@@ -259,6 +261,20 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.placeholder === 'string') options.placeholder = config.placeholder;
   if (config.readonly === true) options.editable = false;
   if (typeof config.content_style === 'string') options.contentStyle = config.content_style;
+  // table_class_list / table_cell_class_list: [{ title, value }] (вложенные menu не поддерживаем).
+  const classList = (value: unknown) =>
+    Array.isArray(value)
+      ? value
+          .filter(
+            (o): o is { title: string; value: string } =>
+              !!o && typeof o.title === 'string' && typeof o.value === 'string',
+          )
+          .map(({ title, value }) => ({ title, value }))
+      : undefined;
+  const tableClasses = classList(config.table_class_list);
+  if (tableClasses) options.tableClassList = tableClasses;
+  const cellClasses = classList(config.table_cell_class_list);
+  if (cellClasses) options.tableCellClassList = cellClasses;
   // Форматы: formats — именованные, style_formats — меню «Стили».
   if (config.formats && typeof config.formats === 'object') {
     options.formats = Object.fromEntries(

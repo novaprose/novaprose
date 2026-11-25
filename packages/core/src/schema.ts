@@ -200,11 +200,20 @@ export function tableStyle(attrs: Record<string, unknown>): string {
 const MAX_SPAN = 100;
 
 /** Узлы таблицы с защитой от вредных значений из вставки и шириной колонок в style. */
-function buildTableNodes() {
+function buildTableNodes(allow: ClassFilter) {
   const specs = tableNodes({
     tableGroup: 'block',
     cellContent: 'block+',
     cellAttributes: {
+      // Стиль ячейки из списка (tableCellClassList) — рамки, отступы задаёт CSS сайта.
+      class: {
+        default: null,
+        getFromDOM: (dom) => readClass(dom as HTMLElement, allow),
+        setDOMAttr: (value, attrs) => {
+          const cls = classAttr(value).class;
+          if (cls) attrs.class = cls;
+        },
+      },
       background: {
         default: null,
         // Фон заранее перенесён в data-атрибут (parser.ts → preprocessDOM); style — запасной путь.
@@ -235,7 +244,12 @@ function buildTableNodes() {
   });
 
   // Таблица: ширина (px или %) и выравнивание на странице (по центру / справа).
-  specs.table.attrs = { width: { default: null }, align: { default: null } };
+  specs.table.attrs = {
+    width: { default: null },
+    align: { default: null },
+    // Стиль таблицы из списка (tableClassList): «с рамками», «раскладка без рамок»…
+    class: { default: null },
+  };
   specs.table.parseDOM = [
     {
       tag: 'table',
@@ -251,13 +265,13 @@ function buildTableNodes() {
             : el.getAttribute('align') === 'right' || auto(el.style.marginLeft)
               ? 'right'
               : null;
-        return { width, align };
+        return { width, align, class: readClass(el, allow) };
       },
     },
   ];
   specs.table.toDOM = (node) => {
     const style = tableStyle(node.attrs);
-    return ['table', style ? { style } : {}, ['tbody', 0]];
+    return ['table', { ...classAttr(node.attrs.class), ...(style ? { style } : {}) }, ['tbody', 0]];
   };
   for (const name of ['table_cell', 'table_header'] as const) {
     const spec = specs[name];
@@ -512,7 +526,7 @@ const buildNodes = (allow: ClassFilter) =>
       toDOM: (): DOMOutputSpec => ['br'],
     },
 
-    ...buildTableNodes(),
+    ...buildTableNodes(allow),
   }) satisfies Record<string, NodeSpec>;
 
 const nodes = buildNodes(NO_CLASSES);

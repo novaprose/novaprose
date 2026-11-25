@@ -67,7 +67,7 @@ editor.on('change', () => console.log(editor.getContent()));
   `Dirty`, `remove`.
 - **Options**: `toolbar`, `menubar`, `plugins`, `statusbar`, `placeholder`, `readonly`, `disabled`
   (also `editor.options.set('disabled', …)`), `resize`, `block_formats`, `file_picker_callback`, `file_picker_types`, `formats`, `style_formats`,
-  `style_formats_merge`, `valid_classes` (without it all classes are kept, as in TinyMCE), `language`,
+  `style_formats_merge`, `valid_classes`, `table_class_list`, `table_cell_class_list` (without it all classes are kept, as in TinyMCE), `language`,
   `inline`, `height`/`min_height`/`max_height`/`width`, `content_style`, `content_css` (your files; skin names
   like `default` or `dark` are ignored), `images_upload_handler`,
   `paste_as_text`, `paste_preprocess`, `valid_elements`/`invalid_elements`/`valid_styles`,

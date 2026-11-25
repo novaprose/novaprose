@@ -6,6 +6,7 @@ export {
   type EditorEvent,
   type EditorMode,
   type BlockFormat,
+  type ClassOption,
 } from './editor';
 export { DEFAULT_MENUS, DEFAULT_MENUBAR, type MenuDefinition } from './ui/menubar';
 export type { FilePicker, FilePickResult, FilePickType } from './ui/file-picker';

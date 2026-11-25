@@ -32,6 +32,8 @@ All packages in this repository are versioned together. The format follows
   [merge tags guide](https://novaprose.com/guides/merge-tags/).
 - Plugins can define nodes from their options (`nodes: (editor) => ({…})`), and a node spec can set
   `ignoreStyles: true` so its element's inline styles never become marks.
+- `tableClassList` and `tableCellClassList` options: a Style select in the table and cell
+  properties dialogs; tables and cells keep the chosen class in HTML, your CSS (`contentCss`) draws it.
 - `filePicker` option: plug in your own file manager — a Browse button appears next to the address
   field in the link, image and video dialogs (`filePickerTypes` limits which ones).
 
@@ -42,6 +44,7 @@ All packages in this repository are versioned together. The format follows
 - `formats`, `style_formats` (+ `style_formats_merge`), `valid_classes` and `editor.formatter.register`;
   without `valid_classes` every class is kept, as in TinyMCE.
 - `editor.selection.setCursorLocation` and `editor.selection.select`.
+- `table_class_list` and `table_cell_class_list`.
 - `file_picker_callback` and `file_picker_types`.
 - `block_formats`, `disabled` (including `editor.options.set('disabled', …)`) and `resize` (on by
   default, as in TinyMCE).

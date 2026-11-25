@@ -24,6 +24,7 @@ import {
 } from 'prosemirror-tables';
 import type { Editor } from './editor';
 import {
+  classAttr,
   cssValue,
   schema as baseSchema,
   type CellVAlign,
@@ -341,18 +342,28 @@ class NovaTableView extends TableView {
     const align = node.attrs.align as TableAlign | null;
     this.table.style.marginLeft = align ? 'auto' : '';
     this.table.style.marginRight = align === 'center' ? 'auto' : '';
+    // Стиль таблицы (класс) — чтобы CSS сайта (contentCss) показал рамки так же, как на печати.
+    const cls = classAttr(node.attrs.class).class;
+    if (cls) this.table.setAttribute('class', cls);
+    else this.table.removeAttribute('class');
   }
 }
 
 export interface TableProps {
   width: string | null;
   align: TableAlign | null;
+  /** Стиль таблицы (класс из tableClassList); null — без стиля. Не задан — не меняется. */
+  class?: string | null;
 }
 
 export function getTableProps(state: EditorState): TableProps | null {
   const found = findTable(state.selection.$from);
   return found
-    ? { width: found.node.attrs.width ?? null, align: found.node.attrs.align ?? null }
+    ? {
+        width: found.node.attrs.width ?? null,
+        align: found.node.attrs.align ?? null,
+        class: found.node.attrs.class ?? null,
+      }
     : null;
 }
 
@@ -362,7 +373,13 @@ export function setTableProps(props: TableProps): Command {
     const found = findTable(state.selection.$from);
     if (!found) return false;
     if (props.width !== null && !cssValue.length(props.width)) return false;
-    dispatch?.(state.tr.setNodeMarkup(found.pos, undefined, { ...found.node.attrs, ...props }));
+    const attrs: Record<string, unknown> = {
+      ...found.node.attrs,
+      width: props.width,
+      align: props.align,
+    };
+    if (props.class !== undefined) attrs.class = classAttr(props.class).class ?? null;
+    dispatch?.(state.tr.setNodeMarkup(found.pos, undefined, attrs));
     return true;
   };
 }
@@ -373,6 +390,8 @@ export interface CellProps {
   header?: boolean;
   /** Ширина столбца(ов) выделения в px; null — по содержимому. */
   width?: number | null;
+  /** Стиль ячейки (класс из tableCellClassList); null — без стиля. */
+  class?: string | null;
 }
 
 /** Позиции выделенных ячеек (или ячейки с курсором). */
@@ -402,6 +421,7 @@ export function getCellProps(state: EditorState): Required<CellProps> | null {
     valign: cell.node.attrs.valign ?? null,
     header: cell.node.type === (state.schema as NovaSchema).nodes.table_header,
     width: widths?.[0] ?? null,
+    class: cell.node.attrs.class ?? null,
   };
 }
 
@@ -424,6 +444,7 @@ export function setCellProps(props: CellProps): Command {
       const attrs = {
         ...node.attrs,
         ...(props.valign !== undefined ? { valign: props.valign } : {}),
+        ...(props.class !== undefined ? { class: classAttr(props.class).class ?? null } : {}),
       };
       tr.setNodeMarkup(pos, type, attrs);
     }
