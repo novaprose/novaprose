@@ -37,6 +37,13 @@ All packages in this repository are versioned together. The format follows
 - `filePicker` option: plug in your own file manager — a Browse button appears next to the address
   field in the link, image and video dialogs (`filePickerTypes` limits which ones).
 
+### Fixes
+
+- A non-editable inline element at the end of a paragraph (merge tag, mention, image) no longer
+  adds an empty line on sites whose CSS resets `img { display: block }`: the ProseMirror separator
+  now has its required inline style.
+- A table or cell style made of several classes (`'pf-grid pf-plain'`) is kept whole.
+
 ### TinyMCE compatibility
 
 - `content_css`; `content_style` now uses the same scoping (selectors are prefixed instead of

@@ -1606,6 +1606,17 @@ html.nova-fullscreen-lock body {
 
 /* ======================= обязательные стили ProseMirror ======================= */
 
+/* Служебная картинка ProseMirror после нередактируемого элемента в конце абзаца (переменная,
+   упоминание, картинка). Обязательный стиль ProseMirror: иначе общий сброс сайта вроде
+   img { display: block } превращает её в лишнюю пустую строку. */
+.nova-prosemirror img.ProseMirror-separator {
+  display: inline !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
 .ProseMirror-hideselection *::selection {
   background: transparent;
 }

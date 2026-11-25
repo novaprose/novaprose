@@ -325,7 +325,7 @@ export class Editor {
       ...formatClasses(options.styleFormats ?? []),
       ...(Array.isArray(options.validClasses) ? options.validClasses : []),
       ...[...(options.tableClassList ?? []), ...(options.tableCellClassList ?? [])].flatMap((o) =>
-        o.value.split(/s+/).filter(Boolean),
+        o.value.split(/\s+/).filter(Boolean),
       ),
     ]);
     this.schema = this.buildSchema(

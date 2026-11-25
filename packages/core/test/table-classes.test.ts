@@ -49,6 +49,15 @@ describe('классы таблиц и ячеек', () => {
     );
   });
 
+  it('стиль из нескольких классов («pf-grid pf-plain») сохраняется целиком', () => {
+    const html =
+      '<table class="pf-grid pf-plain"><tbody><tr><td><p>a</p></td></tr></tbody></table>';
+    const e = mount(html, {
+      tableClassList: [{ title: 'Сетка, обычные заголовки', value: 'pf-grid pf-plain' }],
+    });
+    expect(e.getHTML()).toBe(html);
+  });
+
   it('без списков классы не сохраняются — вывод как раньше', () => {
     const e = mount(TABLE, {});
     expect(e.getHTML()).toBe(

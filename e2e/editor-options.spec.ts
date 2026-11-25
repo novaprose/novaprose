@@ -120,3 +120,25 @@ test('переменные: вставка из меню, «фишка» уда�
   await page.keyboard.press('Backspace');
   expect(await html()).toBe('<p>Order </p>');
 });
+
+test('переменная в конце абзаца не добавляет пустую строку, даже при img { display: block } на сайте', async ({
+  page,
+}) => {
+  await page.goto('/?lang=en&mergetags=1');
+  await page.addStyleTag({ content: 'img, svg, canvas { display: block; max-width: 100%; }' });
+  await page.evaluate(async () => {
+    const editor = (
+      window as unknown as {
+        editor: { ready: Promise<void>; setContent(h: string, o: object): void };
+      }
+    ).editor;
+    await editor.ready;
+    editor.setContent('<p>a</p><p>Order <span data-mergetag="orderId">x</span></p>', {
+      addToHistory: false,
+    });
+  });
+  const [plain, withTag] = await page
+    .locator('.nova-prosemirror p')
+    .evaluateAll((ps) => ps.map((p) => p.getBoundingClientRect().height));
+  expect(withTag).toBeLessThan(plain! * 1.5);
+});
