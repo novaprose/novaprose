@@ -118,6 +118,8 @@ function MyEditor() {
 - `useEditorState(editor, selector, isEqual?)` re-renders only when the selector result changes
   (shallow comparison by default).
 - `useCommand(editor, name)` returns `{ active, enabled, run }` for a named command.
+- More: block type lists, links, colors, a menu over the selection —
+  [Your own toolbar](https://novaprose.com/guides/headless/).
 
 ## Node views: draw a node with a component
 

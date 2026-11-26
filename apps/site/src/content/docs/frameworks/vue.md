@@ -84,6 +84,8 @@ const words = useEditorState(editor, (e) => e.getText().split(/\s+/).filter(Bool
 - `useEditorState(editor, selector, isEqual?)` returns a `ShallowRef` that updates only when the
   selector result changes (shallow comparison by default).
 - `useCommand(editor, name)` returns `{ active, enabled, run }`; `editor` can be a ref or a getter.
+- More: block type lists, links, colors, a menu over the selection —
+  [Your own toolbar](https://novaprose.com/guides/headless/).
 
 ## Node views: draw a node with a component
 

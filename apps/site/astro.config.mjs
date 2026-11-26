@@ -35,6 +35,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { slug: 'guides/toolbar-and-menus' },
+            { slug: 'guides/headless' },
             { slug: 'guides/images' },
             { slug: 'guides/pasting-from-office' },
             { slug: 'guides/markdown' },

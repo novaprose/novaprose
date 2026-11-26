@@ -65,6 +65,8 @@ All packages in this repository are versioned together. The format follows
 
 ### API
 
+- Guide: [Your own toolbar](https://novaprose.com/guides/headless/) — a headless editor with React
+  hooks, Vue composables or plain JavaScript, including a menu over the selection.
 - Command chains: `editor.chain().exec('h2').exec('alignCenter').run()` applies several commands
   as one edit — one undo step, one `change` event. Steps are named commands, ProseMirror commands
   (`setStyle(…)`, `applyLink(…)`) or `insertContent(html)`, and each sees the result of the
