@@ -293,6 +293,9 @@ function insertContentCommand(html: string): Command {
 /** Номер области стилей содержимого (contentStyle/contentCss) — уникален на странице. */
 let contentScopeId = 0;
 
+/** Неизвестные имена команд, о которых уже предупредили (по одному разу на страницу). */
+const unknownCommands = new Set<string>();
+
 /**
  * Публичный API редактора NovaProse.
  * Обёртки (React, Vue…) работают только через этот класс, а не через ProseMirror напрямую.
@@ -782,7 +785,16 @@ export class Editor {
   /** Выполнить именованную команду или произвольную ProseMirror-команду. */
   /** Команда по имени: переопределение плагина или встроенная. */
   resolveCommand(name: CommandName): Command {
-    return this.commandOverrides.get(name) ?? commands[name];
+    const command =
+      this.commandOverrides.get(name) ??
+      (Object.prototype.hasOwnProperty.call(commands, name) ? commands[name] : undefined);
+    if (command) return command;
+    // Имя из JavaScript без типов (CDN): не исключение, а «не выполнено» и подсказка в консоли.
+    if (!unknownCommands.has(name)) {
+      unknownCommands.add(name);
+      console.warn(`[nova] unknown command "${String(name)}": editor.exec() returns false`);
+    }
+    return () => false;
   }
 
   private registerCommands(plugin: NovaPlugin): void {

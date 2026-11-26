@@ -121,3 +121,25 @@ describe('editor.chain()', () => {
     expect(chain.can()).toBe(false);
   });
 });
+
+describe('неизвестная команда (вызов из JavaScript без типов, из CDN)', () => {
+  it('exec, can и шаг цепочки — false и одно предупреждение, а не исключение', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const e = mount();
+    const before = e.getHTML();
+    expect(e.exec('selectAll' as never)).toBe(false);
+    expect(e.exec('selectAll' as never)).toBe(false);
+    expect(e.can('toString' as never)).toBe(false);
+    expect(
+      e
+        .chain()
+        .exec('bold')
+        .exec('nope' as never)
+        .run(),
+    ).toBe(false);
+    expect(e.getHTML()).toBe(before);
+    const messages = warn.mock.calls.map((call) => String(call[0]));
+    expect(messages.filter((m) => m.includes('"selectAll"'))).toHaveLength(1);
+    expect(messages.some((m) => m.includes('"toString"'))).toBe(true);
+  });
+});

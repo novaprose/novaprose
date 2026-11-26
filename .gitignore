@@ -25,3 +25,6 @@ i18n-template.json
 
 # Примеры ставятся заново (StackBlitz, проверка перед релизом) — без своих lock-файлов.
 examples/*/package-lock.json
+
+# Результаты замеров скорости (pnpm perf)
+perf-results/

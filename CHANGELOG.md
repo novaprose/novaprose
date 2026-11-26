@@ -112,6 +112,9 @@ All packages in this repository are versioned together. The format follows
   editor's options that shape the HTML: plugins and their settings, formats and classes, content
   restrictions, direction. The output is checked against `getHTML()` on thousands of random
   documents.
+- **Fixed:** `editor.exec()`, `editor.can()` and chain steps threw a `TypeError` for a command name
+  the editor doesn't have (possible from JavaScript without types, such as the CDN build); they now
+  return `false` and log a hint once.
 - Languages on demand: `registerLanguage('de', () => import('@novaprose/core/i18n/de'))` registers
   a pack that is downloaded only when needed; `await loadLanguage('de')` loads it before the editor
   is created, and `hasLanguage(code)` tells whether a language is ready.
@@ -168,6 +171,11 @@ All packages in this repository are versioned together. The format follows
 
 ### Performance
 
+- Speed is measured on every change, with limits: a 100-page document (about 50,000 words) on the
+  production CDN build in Chromium — creating the editor, typing, Enter and Backspace, pasting from
+  Word, formatting the whole document, typing with page layout and in suggesting mode, typing in a
+  large table, and memory after creating and destroying editors. On a developer laptop a keystroke
+  takes about 5 ms in that document and the editor opens in about 90 ms.
 - `style.css` shrinks from 11.9 to 10.3 KB gzip: styles of the comments panel, version history, plugin
   dialogs and the TinyMCE-compatible dialogs now come with their lazily loaded code. If you override
   these styles in your own CSS, use a selector at least as specific as ours.

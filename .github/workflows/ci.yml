@@ -57,6 +57,8 @@ jobs:
       # Примеры (examples/) из этих архивов: сборка Vite (React, Vue), CDN-файл, Node; проверка в Chromium.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify:examples
+      # Замеры скорости на этой же CDN-сборке (Chromium): пороги ловят поломки, таблица — в сводку.
+      - run: pnpm perf
       - name: Размер в сводку прогона
         if: always()
         run: |

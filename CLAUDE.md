@@ -60,6 +60,9 @@ apps/playground     Vite-песочница (по исходникам). ?lang=e
 apps/site           сайт novaprose.com (Astro + Starlight, английский). Страницы фреймворков и changelog
                     генерируются из README/CHANGELOG: правьте источник и запускайте sync-docs
 e2e/                Playwright: Chromium, Firefox, WebKit, мобильный Chrome
+perf/               замеры скорости (pnpm perf) на CDN-сборке в Chromium: 100 страниц, ввод, вставка, утечки;
+                    пороги ~5× к машине разработчика. Время нажатия — keydown→keyup: таймеры при потоке
+                    клавиш Chrome откладывает до конца ввода (замер через setTimeout давал «500 мс»)
 examples/           примеры для StackBlitz (react, vue, cdn, server-render) — вне workspace, на npm-версии;
                     они же — чистые проекты проверки архивов: pnpm verify:examples (CI и релиз)
 docs/               RELEASING.md — как выпускать релизы (публичное)
@@ -90,12 +93,13 @@ pnpm check          # формат, линт, типы, юнит-тесты — 
 pnpm test:coverage  # юнит-тесты + покрытие; пороги («храповик») в vitest.config.ts — поднимать вслед за ростом
 pnpm test:deep [N]  # property-based тесты на N случайных документов (по умолчанию 5000; в CI ночью — 20 000)
 pnpm size           # бюджет размера в gzip (нужна сборка); падает при превышении
+pnpm perf           # замеры скорости с порогами (нужна сборка); таблица — в выводе и в сводке CI
 pnpm check:packages # publint + типы ESM/CJS в архивах .release/ (нужен release:pack)
 pnpm verify:release # сборка + архивы + size + check:packages — то же, что CI и релиз
 pnpm verify:examples # примеры из архивов .release/: сборка Vite, запуск в Chromium, Node (--strict в релизе)
 ```
 
-CI (`.github/workflows`): ci.yml — check с покрытием, сборка/размер/пакеты, e2e во всех браузерах + a11y;
+CI (`.github/workflows`): ci.yml — check с покрытием, сборка/размер/пакеты/замеры скорости, e2e во всех браузерах + a11y;
 nightly.yml — глубокие property-тесты; codeql.yml — статический анализ безопасности; dependabot.yml —
 обновления зависимостей. Действия закреплены по SHA коммита (версия в комментарии) — новые добавлять так же.
 Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-push — `pnpm check`, commit-msg — Conventional Commits.
