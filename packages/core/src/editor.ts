@@ -834,11 +834,64 @@ function reportPluginError(message: string, error?: unknown): void {
   console.error(`[nova] ${message}`, ...(error === undefined ? [] : [error]));
 }
 
+type AttrSpecs = Record<string, { validate?: string | ((value: unknown) => void) }>;
+
+/** Проходит ли значение проверку `validate` атрибута схемы ("number", "string|null", функция). */
+function attrValid(spec: AttrSpecs[string] | undefined, value: unknown): boolean {
+  const validate = spec?.validate;
+  if (!validate) return true;
+  if (typeof validate === 'function') {
+    try {
+      validate(value);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  const type = value === null ? 'null' : typeof value;
+  return validate.split('|').includes(type);
+}
+
+function sanitizeAttrs(specs: AttrSpecs | undefined, attrs: unknown): unknown {
+  if (!attrs || typeof attrs !== 'object' || !specs) return attrs;
+  // Значение не того типа заменяем значением по умолчанию (просто убираем — подставит схема).
+  return Object.fromEntries(
+    Object.entries(attrs).filter(([name, value]) => attrValid(specs[name], value)),
+  );
+}
+
+/**
+ * Документ из JSON (БД, API, старые версии) мог сохраниться с атрибутами не того типа:
+ * `colspan: null` и т.п. ProseMirror в таком случае отвергает ВЕСЬ документ — пользователь не
+ * открыл бы его из-за одной ячейки. Здесь неверные значения атрибутов заменяются умолчаниями.
+ */
+function sanitizeJSON(schema: NovaSchema, json: Record<string, unknown>): Record<string, unknown> {
+  const type = schema.nodes[json.type as string];
+  const out: Record<string, unknown> = { ...json };
+  if (type) out.attrs = sanitizeAttrs(type.spec.attrs as AttrSpecs, json.attrs);
+  if (Array.isArray(json.marks)) {
+    out.marks = json.marks.map((mark: Record<string, unknown>) => {
+      const markType = mark && schema.marks[mark.type as string];
+      return markType
+        ? { ...mark, attrs: sanitizeAttrs(markType.spec.attrs as AttrSpecs, mark.attrs) }
+        : mark;
+    });
+  }
+  if (Array.isArray(json.content)) {
+    out.content = json.content.map((child: unknown) =>
+      child && typeof child === 'object'
+        ? sanitizeJSON(schema, child as Record<string, unknown>)
+        : child,
+    );
+  }
+  return out;
+}
+
 export function parseContent(
   schema: NovaSchema,
   content: string | Record<string, unknown>,
 ): PMNode {
-  if (typeof content !== 'string') return PMNode.fromJSON(schema, content);
+  if (typeof content !== 'string') return PMNode.fromJSON(schema, sanitizeJSON(schema, content));
   const container = document.createElement('div');
   // Разбор через <template>: скрипты и обработчики не исполняются при парсинге.
   // Полноценный санитайзер (PRD §4.1, P1) появится отдельным модулем.

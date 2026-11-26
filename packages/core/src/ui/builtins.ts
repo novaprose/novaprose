@@ -100,7 +100,8 @@ const GENERIC_FONTS: Record<string, string> = {
 };
 
 function prettyFontName(family: string): string {
-  const first = family.split(',')[0]!.trim().replace(/["']/g, '');
+  // Значение марки могло прийти из JSON не строкой.
+  const first = String(family).split(',')[0]!.trim().replace(/["']/g, '');
   return GENERIC_FONTS[first.toLowerCase()] ?? first;
 }
 
@@ -113,7 +114,8 @@ function pxToPt(px: string): string | null {
 
 /** Сравнение значений шрифта без учёта кавычек и пробелов. */
 const sameFont = (a: string | null, b: string) =>
-  a !== null && a.replace(/["'\s]/g, '').toLowerCase() === b.replace(/["'\s]/g, '').toLowerCase();
+  typeof a === 'string' &&
+  a.replace(/["'\s]/g, '').toLowerCase() === b.replace(/["'\s]/g, '').toLowerCase();
 
 /**
  * Регистрирует все встроенные контролы. Имена — как в привычных конфигах тулбара

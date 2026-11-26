@@ -220,7 +220,7 @@ function buildTableNodes(allow: ClassFilter) {
         getFromDOM: (dom) =>
           cssValue.color(
             (dom as HTMLElement).getAttribute('data-nova-cell-bg') ??
-              (dom as HTMLElement).style.backgroundColor,
+              (dom as HTMLElement).style?.backgroundColor,
           ),
         setDOMAttr: (value, attrs) => {
           const color = cssValue.color(value);
@@ -308,6 +308,12 @@ export type ClassFilter = (className: string) => boolean;
 const NO_CLASSES: ClassFilter = () => false;
 const CLASS_TOKEN = /^-?[_a-zA-Z][\w-]*$/;
 
+/** Уровень заголовка 1–6 (значение могло прийти из JSON строкой, числом вне диапазона, null). */
+function headingLevel(value: unknown): number {
+  const level = Math.trunc(Number(value));
+  return level >= 1 && level <= 6 ? level : 1;
+}
+
 /** Классы элемента, которые разрешены фильтром, или null. */
 function readClass(dom: HTMLElement, allow: ClassFilter): string | null {
   const kept = [...dom.classList].filter((c) => CLASS_TOKEN.test(c) && allow(c));
@@ -361,7 +367,8 @@ const buildNodes = (allow: ClassFilter) =>
         }),
       })),
       toDOM: (node): DOMOutputSpec => [
-        `h${node.attrs.level}`,
+        // Уровень мог прийти из JSON чем угодно — в имя тега попадает только 1–6.
+        `h${headingLevel(node.attrs.level)}`,
         { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs) },
         0,
       ],
@@ -571,7 +578,7 @@ const buildMarks = (allow: ClassFilter) =>
         // <b style="font-weight: normal"> встречается при вставке из Google Docs — это не жирный.
         {
           tag: 'b',
-          getAttrs: (dom) => (dom as HTMLElement).style.fontWeight !== 'normal' && null,
+          getAttrs: (dom) => (dom as HTMLElement).style?.fontWeight !== 'normal' && null,
         },
         {
           style: 'font-weight',

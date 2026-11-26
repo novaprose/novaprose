@@ -109,7 +109,9 @@ function buildNodes(editor: Editor): Record<string, NodeSpec> {
       // Документ мог прийти из JSON — ключ проверяем и на выходе.
       toDOM: (node) => {
         const key = KEY_RE.test(node.attrs.key as string) ? (node.attrs.key as string) : '';
-        const label = (node.attrs.label as string) || key;
+        // JSON приходит снаружи: метка может быть числом или null — выводим как строку.
+        const label =
+          node.attrs.label == null || node.attrs.label === '' ? key : String(node.attrs.label);
         return ['span', { [attribute]: key, contenteditable: 'false' }, label];
       },
     },

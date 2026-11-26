@@ -10,6 +10,26 @@ import { schema } from './schema';
 /** Атрибут, в который переносим фон ячейки до разбора (см. preprocessDOM). */
 export const CELL_BG_ATTR = 'data-nova-cell-bg';
 
+const HTML_NS = 'http://www.w3.org/1999/xhtml';
+const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
+
+/**
+ * MathML и SVG схема не поддерживает. Внутри них встречаются элементы с именами HTML-тегов
+ * (`<math><td>`), но без `style` и прочего HTML-API — правила разбора на них падали.
+ * Формулу (MathML, в т.ч. из Word) заменяем её текстом, чтобы текст не пропал; SVG убираем.
+ * Найдено property-based тестом (packages/core/test/security.property.test.ts).
+ */
+function replaceForeignElements(root: ParentNode): void {
+  const foreign = [...root.querySelectorAll('*')].filter(
+    // Только самые внешние: родитель — HTML-элемент или сам фрагмент (parentElement = null).
+    (el) => el.namespaceURI !== HTML_NS && (el.parentElement?.namespaceURI ?? HTML_NS) === HTML_NS,
+  );
+  for (const el of foreign) {
+    const text = el.namespaceURI === MATHML_NS ? (el.textContent ?? '') : '';
+    el.replaceWith(el.ownerDocument.createTextNode(text));
+  }
+}
+
 /**
  * Предобработка DOM перед разбором схемой — общая для setContent и вставки.
  *
@@ -18,7 +38,10 @@ export const CELL_BG_ATTR = 'data-nova-cell-bg';
  * Переносим значение в служебный атрибут и убираем из style.
  */
 export function preprocessDOM(root: ParentNode): void {
+  replaceForeignElements(root);
   root.querySelectorAll<HTMLElement>('td, th').forEach((cell) => {
+    // Внутри <math>/<svg> «td» — элемент чужого пространства имён, у него может не быть style.
+    if (!cell.style) return;
     const bg = cell.style.backgroundColor;
     if (!bg) return;
     cell.setAttribute(CELL_BG_ATTR, bg);

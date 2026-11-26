@@ -70,6 +70,22 @@ describe('HTML на входе и выходе', () => {
 });
 
 describe('безопасность', () => {
+  // Найдено property-based тестом (security.property.test.ts): у элементов MathML/SVG
+  // может не быть .style — разбор не должен падать.
+  it('не падает на ячейках внутри MathML и SVG', () => {
+    const e = mount('<p>a</p>');
+    expect(() =>
+      e.setContent('<math><td style="background-color: red">x</td></math>'),
+    ).not.toThrow();
+    expect(() => e.setContent('<svg><th>y</th></svg><p>z</p>')).not.toThrow();
+    expect(e.getHTML()).toContain('z');
+    // Текст формулы сохраняется, разметка SVG — нет.
+    e.setContent('<p>E = <math><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></math></p>');
+    expect(e.getHTML()).toBe('<p>E = mc2</p>');
+    e.setContent('<p>a<svg><text>icon</text></svg>b</p>');
+    expect(e.getHTML()).toBe('<p>ab</p>');
+  });
+
   it('выбрасывает javascript:-ссылки при разборе HTML', () => {
     expect(mount('<p><a href="javascript:alert(1)">x</a></p>').getHTML()).toBe('<p>x</p>');
     expect(mount('<p><a href=" java\tscript:alert(1)">x</a></p>').getHTML()).toBe('<p>x</p>');

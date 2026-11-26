@@ -54,6 +54,26 @@ const key = (e: Editor, k: string) =>
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 describe('mergetags: HTML', () => {
+  // Найдено property-based тестом: JSON приходит снаружи, метка может оказаться числом.
+  it('getHTML не падает, если в JSON метка — не строка', () => {
+    const e = mount('<p>a</p>');
+    e.setContent({
+      type: 'doc',
+      content: [
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'mergetag', attrs: { key: 'client', label: 1 } },
+            { type: 'mergetag', attrs: { key: 'phone', label: null } },
+          ],
+        },
+      ],
+    });
+    expect(e.getHTML()).toBe(
+      '<p><span data-mergetag="client" contenteditable="false">1</span><span data-mergetag="phone" contenteditable="false">phone</span></p>',
+    );
+  });
+
   it('туда-обратно без изменений (атрибут по умолчанию)', () => {
     const html =
       '<p>Клиент: <span data-mergetag="client" contenteditable="false">Имя клиента</span>, заказ № <span data-mergetag="orderId" contenteditable="false">Номер заказа</span></p>';

@@ -588,6 +588,8 @@ function normalizeEmptyParagraphs(root: HTMLElement): void {
  */
 function wrapCellContent(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>('td, th').forEach((cell) => {
+    // Формулы Word приходят в MathML: там «td» без style — не ячейка таблицы.
+    if (!cell.style) return;
     const align = cell.style.textAlign;
     const hasBlock = [...cell.children].some((c) => BLOCK.test(c.tagName));
     if (!align || hasBlock || !cell.textContent?.trim()) return;

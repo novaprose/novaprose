@@ -109,7 +109,7 @@ const PALETTE = ['#1a7f37', '#8250df', '#bf3989', '#0969da', '#bc4c00', '#1b7c83
 /** Цвет автора правок — один и тот же у одного человека. */
 function colorFor(key: string): string {
   let hash = 0;
-  for (const ch of key) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
+  for (const ch of String(key ?? '')) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
   return PALETTE[Math.abs(hash) % PALETTE.length]!;
 }
 

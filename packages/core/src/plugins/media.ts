@@ -31,6 +31,7 @@ const VIDEO_FILE = /^https:\/\/[^\s"'<>]+\.(?:mp4|webm|ogv|ogg)(?:\?[^\s"'<>#]*)
 
 /** Распознать адрес видео; null — не поддерживается (и не будет встроен). */
 export function parseMediaUrl(url: string): MediaSource | null {
+  if (typeof url !== 'string') return null; // из JSON может прийти что угодно
   const value = url.trim();
   const youtube = value.match(YOUTUBE);
   if (youtube)
