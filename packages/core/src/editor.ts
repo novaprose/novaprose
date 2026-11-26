@@ -24,6 +24,7 @@ import { EditorView } from 'prosemirror-view';
 import { commands, isCommandActive, type CommandName } from './commands';
 import { createTranslator, type LanguagePack } from './i18n';
 import { embeddedImageUploadPlugin, imageDropPastePlugin, type UploadImageHandler } from './image';
+import { firstClickPlugin } from './first-click';
 import { buildInputRules, codeFenceKeymap } from './inputrules';
 import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
@@ -460,6 +461,8 @@ export class Editor {
       linkBubblePlugin(this),
       contextToolbarPlugin(this),
       ...(this.contentRules ? [contentRulesPlugin(this.contentRules)] : []),
+      // После плагинов со своими щелчками (ссылка, панели): первый щелчок без фокуса — по месту.
+      firstClickPlugin(),
       ...pluginPm,
       ...(options.prosemirrorPlugins ?? []),
     ];

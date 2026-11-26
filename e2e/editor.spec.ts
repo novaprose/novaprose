@@ -609,3 +609,34 @@ test('подпись к картинке: кнопка в панели карт�
     `<p><img src="${png}" width="120" height="80"></p><p>Sunset</p><p>Next</p>`,
   );
 });
+
+test('первый щелчок в редактор без фокуса — туда, куда щёлкнули, а не в начало документа', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(isMobile, 'на телефоне — касание, не щелчок мышью справа от строки');
+  // Было в Chromium и WebKit: щелчок справа от ПОСЛЕДНЕЙ строки (не по тексту) при первом фокусе
+  // ставил курсор в начало документа — содержимое загружено через setContent, как у приложений.
+  await page.goto('/?lang=en');
+  await page.evaluate(async () => {
+    await window.editor.ready;
+    window.editor.setContent('<p>First line</p><p>Second line</p><p>Third line</p>');
+  });
+  const lines = content(page).locator(':scope > p');
+  const box = (await lines.nth(2).boundingBox())!;
+  await page.mouse.click(box.x + box.width - 8, box.y + box.height / 2);
+  await page.keyboard.type('!');
+  expect(await html(page)).toBe('<p>First line</p><p>Second line</p><p>Third line!</p>');
+
+  // Ниже последней строки (поле области текста), снова без фокуса — в последнюю строку.
+  await page.evaluate(() => window.editor.setContent('<p>First line</p><p></p>'));
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  const last = (await lines.nth(1).boundingBox())!;
+  const area = (await content(page).boundingBox())!;
+  await page.mouse.click(
+    last.x + 20,
+    Math.min(area.y + area.height - 4, last.y + last.height + 10),
+  );
+  await page.keyboard.type('?');
+  expect(await html(page)).toBe('<p>First line</p><p>?</p>');
+});

@@ -24,6 +24,9 @@ All packages in this repository are versioned together. The format follows
   text or as a stream shown while it is written; closing the dialog cancels it. The answer is
   inserted as text, never HTML. Guide with a server example:
   [AI assistant](https://novaprose.com/guides/ai-assistant/).
+- **Fixed:** the first click into an editor without focus, beside the text rather than on it — to the
+  right of the last line, or below it — put the cursor at the start of the document (Chromium, Safari
+  and Firefox, with content loaded through `setContent`). The cursor now goes where you clicked.
 - **Fixed:** in suggesting mode, rejecting the text of a new paragraph left an empty line, and so
   did accepting the deletion of a paragraph's whole text — the paragraph now goes with it (unless
   it is the only one where a paragraph is required, such as a table cell).
