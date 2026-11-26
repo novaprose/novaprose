@@ -304,6 +304,7 @@ const ru: LanguagePack = {
   'math.hint': 'Например: E = mc^2, \\frac{a}{b}, \\sqrt{x}',
   'math.block': 'Отдельной строкой',
   'math.preview': 'Просмотр',
+  'pagelayout.page': 'Страница {page}',
   'pagebreak.title': 'Разрыв страницы',
   'revisionhistory.button': 'История версий',
   'revisionhistory.title': 'История версий',

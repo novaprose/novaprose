@@ -13,14 +13,16 @@ Exceptions with runtime setters are noted below.
 
 ## Content and behavior
 
-| Option        | Type               | Default | Description                                               |
-| ------------- | ------------------ | ------- | --------------------------------------------------------- |
-| `element`     | `HTMLElement`      | —       | container to mount the editor into                        |
-| `content`     | `string \| object` | `''`    | initial HTML, or document JSON from `getJSON()`           |
-| `editable`    | `boolean`          | `true`  | `false` for read-only; change later with `setEditable()`  |
-| `placeholder` | `string`           | —       | shown while the document is empty                         |
-| `onChange`    | `(editor) => void` | —       | called after every content change                         |
-| `setup`       | `(editor) => void` | —       | runs before the UI renders; register custom controls here |
+| Option         | Type               | Default   | Description                                                                        |
+| -------------- | ------------------ | --------- | ---------------------------------------------------------------------------------- |
+| `element`      | `HTMLElement`      | —         | container to mount the editor into                                                 |
+| `content`      | `string \| object` | `''`      | initial HTML, or document JSON from `getJSON()`                                    |
+| `editable`     | `boolean`          | `true`    | `false` for read-only; change later with `setEditable()`                           |
+| `placeholder`  | `string`           | —         | shown while the document is empty                                                  |
+| `onChange`     | `(editor) => void` | —         | called after every content change                                                  |
+| `setup`        | `(editor) => void` | —         | runs before the UI renders; register custom controls here                          |
+| `contentStyle` | `string`           | —         | CSS for the text of this editor only (as `content_style`); also used when printing |
+| `contentCss`   | `string            | string[]` | —                                                                                  | style sheet files for the text (as `content_css`); `await editor.ready` waits for them |
 
 ## Interface
 

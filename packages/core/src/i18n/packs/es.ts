@@ -302,6 +302,7 @@ const es: LanguagePack = {
   'math.hint': 'Por ejemplo: E = mc^2, \\frac{a}{b}, \\sqrt{x}',
   'math.block': 'En su propia línea',
   'math.preview': 'Vista previa',
+  'pagelayout.page': 'Página {page}',
   'pagebreak.title': 'Salto de página',
   'revisionhistory.button': 'Historial de versiones',
   'revisionhistory.title': 'Historial de versiones',

@@ -8,6 +8,16 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Page layout (`plugins: ['pagelayout']`): the text sits on a sheet of the real paper size
+  (`size`: A3–A6, Letter, Legal or your own in mm; `orientation`; `margins` in mm), so lines wrap
+  as on paper, and a dashed line with the page number marks where each page ends — including after
+  a page break. `pageLayout(editor)` changes the sheet and reports the page count. The sheet stays
+  white in the dark theme. Printing uses the same sheet, so pages break where the editor shows
+  (checked against a PDF in Chromium).
+- **Changed:** printing prints what the editor shows — formulas, highlighted code and node views
+  included — with the page's styles and `contentStyle` / `contentCss`; it used to print simplified
+  HTML with its own styles. Without page layout the margins are 20 mm, as before.
+
 - Formulas (`plugins: ['math']`, button `math`): LaTeX in a line (type `$E=mc^2$`) and on its own
   line (`$$` and a space), with a dialog and live preview. Drawn as MathML by the browser; the
   converter (Temml, about 58 KB gzip) downloads only when a document has a formula. The HTML keeps

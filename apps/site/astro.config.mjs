@@ -42,6 +42,7 @@ export default defineConfig({
             { slug: 'guides/server-rendering' },
             { slug: 'guides/code-blocks' },
             { slug: 'guides/math' },
+            { slug: 'guides/pages-and-printing' },
             { slug: 'guides/content-restrictions' },
             { slug: 'guides/collaboration' },
             { slug: 'guides/comments' },

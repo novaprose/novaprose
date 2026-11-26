@@ -303,6 +303,7 @@ const ptBR: LanguagePack = {
   'math.hint': 'Por exemplo: E = mc^2, \\frac{a}{b}, \\sqrt{x}',
   'math.block': 'Em linha própria',
   'math.preview': 'Pré-visualização',
+  'pagelayout.page': 'Página {page}',
   'pagebreak.title': 'Quebra de página',
   'revisionhistory.button': 'Histórico de versões',
   'revisionhistory.title': 'Histórico de versões',

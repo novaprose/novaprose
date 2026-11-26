@@ -1,0 +1,48 @@
+/* Режим страниц (плагин pagelayout): лист точного размера с полями на «столе». Лист остаётся
+   бумажным и в тёмной теме — светлые токены задаёт style.css (.nova-pages .nova-prosemirror). */
+.nova-pages {
+  --nova-desk: #e6e9ed;
+}
+
+[data-theme='dark'] .nova-pages {
+  --nova-desk: #010409;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nova-pages:not([data-theme='light'] *) {
+    --nova-desk: #010409;
+  }
+}
+
+.nova-pages .nova-content {
+  position: relative;
+  padding: 24px 12px 32px;
+  background: var(--nova-desk);
+}
+
+.nova-pages .nova-prosemirror {
+  box-sizing: border-box;
+  width: var(--nova-page-width);
+  max-width: 100%;
+  /* Не меньше листа; при нескольких страницах — до конца последней (считает pagelayout-ui). */
+  min-height: max(var(--nova-page-height), var(--nova-pages-height, 0px));
+  margin: 0 auto;
+  padding: var(--nova-page-margins);
+  background: var(--nova-bg);
+  color: var(--nova-fg);
+  box-shadow:
+    0 1px 3px rgb(0 0 0 / 0.18),
+    0 8px 24px rgb(0 0 0 / 0.08);
+}
+
+/* Телефон: лист шире экрана — обычное поле ввода без миллиметровых полей. */
+@media (max-width: 600px) {
+  .nova-pages .nova-content {
+    padding: 0;
+  }
+
+  .nova-pages .nova-prosemirror {
+    padding: 16px;
+    box-shadow: none;
+  }
+}

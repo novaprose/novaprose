@@ -9,6 +9,7 @@ import mergetags from './mergetags';
 import suggestions from './suggestions';
 import media from './media';
 import pagebreak from './pagebreak';
+import pagelayout from './pagelayout';
 
 /**
  * Каталог встроенных плагинов NovaProse. Каждый подключается по имени (`plugins: ['insertdatetime']`)
@@ -34,6 +35,7 @@ registerPlugin('accordion', accordion);
 registerPlugin('tableofcontents', tableofcontents);
 registerPlugin('math', math);
 registerPlugin('pagebreak', pagebreak);
+registerPlugin('pagelayout', pagelayout);
 registerPlugin('media', media);
 registerPlugin('comments', comments);
 registerPlugin('mentions', mentions);

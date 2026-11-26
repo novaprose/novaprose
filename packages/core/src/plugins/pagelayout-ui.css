@@ -1,0 +1,27 @@
+/* Границы страниц поверх листа (pagelayout-ui). Лист всегда бумажный — цвета светлые. */
+.nova-page-breaks {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.nova-page-break {
+  position: absolute;
+  inset-inline: 0;
+  border-top: 1px dashed #8c959f;
+}
+
+.nova-page-break > span {
+  position: absolute;
+  inset-inline-end: 6px;
+  top: 0;
+  transform: translateY(-50%);
+  padding: 0 6px;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #59636e;
+  font:
+    11px/1.6 system-ui,
+    sans-serif;
+  white-space: nowrap;
+}

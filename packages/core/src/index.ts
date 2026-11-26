@@ -170,6 +170,16 @@ export {
 } from './comments';
 export { getComments, type CommentsOptions, type CommentsController } from './plugins/comments';
 export {
+  pageLayout,
+  resolvePageLayout,
+  PAGE_SIZES,
+  type PageLayout,
+  type PageLayoutController,
+  type PageLayoutOptions,
+  type PageMargins,
+  type PageSizeName,
+} from './plugins/pagelayout';
+export {
   getMentions,
   MENTION_ID_RE,
   type MentionUser,

@@ -6,7 +6,9 @@
 
 /* ======================= токены ======================= */
 
-.nova-editor {
+/* Лист режима страниц (pagelayout) — бумага: светлые токены и в тёмной теме. */
+.nova-editor,
+.nova-pages .nova-prosemirror {
   --nova-bg: #ffffff;
   --nova-fg: #1f2328;
   --nova-muted: #59636e; /* ≥4.5:1 на всех поверхностях, включая hover/pressed */

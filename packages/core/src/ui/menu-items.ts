@@ -1,4 +1,3 @@
-import { DOMSerializer } from 'prosemirror-model';
 import { AllSelection } from 'prosemirror-state';
 import type { Editor } from '../editor';
 import { insertTable } from '../tables';
@@ -6,39 +5,15 @@ import { textField } from './dialog';
 import { h } from './dom';
 import { icons } from './icons';
 
-/** Базовые стили для печати — печатается только содержимое редактора, а не вся страница. */
-const PRINT_CSS = `
-  body { font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #000; margin: 2cm; }
-  img { max-width: 100%; height: auto; }
-  table { border-collapse: collapse; width: 100%; }
-  td, th { border: 1px solid #999; padding: 4px 8px; vertical-align: top; }
-  pre { white-space: pre-wrap; background: #f5f5f5; padding: 8px; }
-  blockquote { border-left: 3px solid #ccc; margin-left: 0; padding-left: 1em; color: #444; }
-`;
-
-/** Печать содержимого через скрытый iframe (HTML уже очищен схемой). */
+/**
+ * Печать как на экране (с видами узлов и стилями страницы; в режиме страниц — тот же лист).
+ * Модуль печати ленивый: грузится при первой печати.
+ */
 export function printContent(editor: Editor): void {
-  const iframe = h('iframe', { title: 'print', 'aria-hidden': 'true', tabindex: '-1' });
-  iframe.style.cssText =
-    'position:fixed;width:0;height:0;border:0;right:0;bottom:0;visibility:hidden';
-  document.body.append(iframe);
-  const doc = iframe.contentDocument;
-  if (!doc) return iframe.remove();
-  const style = doc.createElement('style');
-  style.textContent = PRINT_CSS;
-  doc.head.append(style);
-  // DOM строим сериализатором схемы прямо в документе iframe — без разбора HTML-строки.
-  doc.body.append(
-    DOMSerializer.fromSchema(editor.schema).serializeFragment(editor.view.state.doc.content, {
-      document: doc,
-    }),
+  void import('./print').then(
+    (module) => module.print(editor),
+    (error: unknown) => console.error('[nova] print: could not load the print module', error),
   );
-  const win = iframe.contentWindow;
-  const cleanup = () => setTimeout(() => iframe.remove(), 1000);
-  win?.addEventListener('afterprint', cleanup);
-  win?.focus();
-  win?.print();
-  cleanup();
 }
 
 /** Диалог «Вставить таблицу» для меню (в тулбаре — сетка). */

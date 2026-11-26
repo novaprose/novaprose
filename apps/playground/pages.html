@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaProse — Pages playground</title>
+    <script type="module" src="/src/pages/main.ts"></script>
+  </head>
+  <body>
+    <main class="pg-react pg-pages">
+      <h1>NovaProse <span class="pg-badge">Pages</span></h1>
+      <div class="pg-react-toolbar" role="group" aria-label="Page setup">
+        <label
+          >Size
+          <select id="size">
+            <option>A4</option>
+            <option selected>A5</option>
+            <option>A6</option>
+            <option>Letter</option>
+          </select>
+        </label>
+        <label
+          >Orientation
+          <select id="orientation">
+            <option value="portrait">Portrait</option>
+            <option value="landscape">Landscape</option>
+          </select>
+        </label>
+        <label>Margins, mm <input id="margins" type="number" min="0" max="50" value="15" /></label>
+        <button id="print" type="button">Print</button>
+        <output id="count" aria-live="polite"></output>
+      </div>
+      <div id="editor"></div>
+    </main>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 import type { AccordionOptions } from './plugins/accordion';
 import type { TableOfContentsOptions } from './plugins/tableofcontents';
+import type { PageLayoutOptions } from './plugins/pagelayout';
 import type { AutosaveOptions } from './plugins/autosave';
 import type { CodeSampleOptions } from './plugins/codesample';
 import { Formatter, type FormatSpec, type StyleFormat } from './formats';
@@ -114,6 +115,7 @@ export interface PluginOptions {
   codesample?: CodeSampleOptions;
   accordion?: AccordionOptions;
   tableofcontents?: TableOfContentsOptions;
+  pagelayout?: PageLayoutOptions;
   [plugin: string]: unknown;
 }
 
