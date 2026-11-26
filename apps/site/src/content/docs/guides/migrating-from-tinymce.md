@@ -40,6 +40,7 @@ When you're ready, move to the native API below — it is smaller, typed and fra
 | `inline: true`                          | `mode: 'inline'`                                              |
 | `placeholder`                           | `placeholder`                                                 |
 | `language`                              | `language`                                                    |
+| `directionality: 'rtl'`                 | `direction: 'rtl'` (automatic for Arabic, Hebrew, Persian)    |
 | read-only mode                          | `editable: false`, `editor.setEditable(false)`                |
 | `images_upload_handler`                 | `uploadImage(file, progress) => Promise<url>`                 |
 | `font_family_formats`                   | `fontFamilies: [{ label, value }]`                            |

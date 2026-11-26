@@ -180,6 +180,10 @@ const editor = createEditor({
     ? { validStyles: new URLSearchParams(location.search).get('styles')! }
     : {}),
   language: new URLSearchParams(location.search).get('lang') ?? 'ru',
+  // ?dir=rtl — интерфейс и текст справа налево (для ?lang=he|ar включается сам).
+  ...(new URLSearchParams(location.search).get('dir') === 'rtl'
+    ? { direction: 'rtl' as const }
+    : {}),
   // Имитация загрузки на сервер: ?upload=slow — с задержкой, ?upload=fail — с ошибкой.
   ...(new URLSearchParams(location.search).has('upload')
     ? {

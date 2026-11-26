@@ -1,4 +1,4 @@
-import { activeElement, listenDocument } from './dom';
+import { activeElement, isRtl, listenDocument } from './dom';
 
 export type Placement = 'bottom-start' | 'bottom-end' | 'top-start' | 'bottom';
 
@@ -18,7 +18,10 @@ export function positionFloating(
 ): void {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const { width, height } = floating.getBoundingClientRect();
+  // Размер без трансформаций: панель появляется с анимацией (scale 0.98), и getBoundingClientRect
+  // в этот момент меньше настоящего — край, выровненный по правому краю кнопки, уезжал на 2%.
+  const width = floating.offsetWidth;
+  const height = floating.offsetHeight;
 
   const spaceBelow = vh - anchorRect.bottom;
   const spaceAbove = anchorRect.top;
@@ -28,11 +31,14 @@ export function positionFloating(
     : spaceBelow < height + GAP && spaceAbove > spaceBelow;
 
   let top = placeTop ? anchorRect.top - height - GAP : anchorRect.bottom + GAP;
+  // start/end — края начала и конца строки: справа налево «начало» — правый край.
+  const rtl = isRtl(floating);
+  const alignEnd = (placement === 'bottom-end') !== rtl;
   let left =
-    placement === 'bottom-end'
-      ? anchorRect.right - width
-      : placement === 'bottom'
-        ? anchorRect.left + anchorRect.width / 2 - width / 2
+    placement === 'bottom'
+      ? anchorRect.left + anchorRect.width / 2 - width / 2
+      : alignEnd
+        ? anchorRect.right - width
         : anchorRect.left;
 
   left = Math.max(VIEWPORT_PADDING, Math.min(left, vw - width - VIEWPORT_PADDING));

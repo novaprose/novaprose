@@ -1,6 +1,6 @@
 import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
-import { activeElement, h } from './dom';
+import { activeElement, h, logicalKey } from './dom';
 import { createMenu, focusMenu, type MenuEntry } from './menu';
 import type { Popover } from './popover';
 
@@ -103,10 +103,10 @@ export function createMenubar(
     const menu = createMenu(items, () => editor.ui.closePopover(), title(def));
     // ←/→ внутри открытого меню — соседнее меню (стандартное поведение менюбара).
     menu.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      const key = logicalKey(event, menu);
+      if (key !== 'ArrowLeft' && key !== 'ArrowRight') return;
       event.preventDefault();
-      const next =
-        (index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+      const next = (index + (key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
       openMenu(next, true);
     });
     button.setAttribute('aria-expanded', 'true');
@@ -165,8 +165,9 @@ export function createMenubar(
         buttons.forEach((b, i) => (b.tabIndex = i === next ? 0 : -1));
         buttons[next]!.focus();
       };
-      if (event.key === 'ArrowRight') move(index + 1);
-      else if (event.key === 'ArrowLeft') move(index - 1);
+      const key = logicalKey(event, host);
+      if (key === 'ArrowRight') move(index + 1);
+      else if (key === 'ArrowLeft') move(index - 1);
       else if (event.key === 'Home') move(0);
       else if (event.key === 'End') move(buttons.length - 1);
       else if (event.key === 'ArrowDown') {

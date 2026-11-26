@@ -102,21 +102,26 @@ function readDir(dom: HTMLElement): TextDirection | null {
   return dir === 'rtl' || dir === 'ltr' ? dir : null;
 }
 
-function readBlockStyle(dom: HTMLElement): BlockStyle {
+/**
+ * `rtl` — направление редактора по умолчанию (опция direction): у блока без своего dir отступ
+ * со стороны начала строки, то есть справа.
+ */
+function readBlockStyle(dom: HTMLElement, rtl = false): BlockStyle {
   const align = dom.style.textAlign;
   const dir = readDir(dom);
   return {
     align: (ALIGNMENTS as readonly string[]).includes(align) ? (align as TextAlign) : null,
     lineHeight: cssValue.lineHeight(dom.style.lineHeight),
     dir,
-    indent: readIndent(dom, dir),
+    indent: readIndent(dom, dir ?? (rtl ? 'rtl' : null)),
   };
 }
 
-function blockStyleAttrs(attrs: Record<string, unknown>): Record<string, string> {
+function blockStyleAttrs(attrs: Record<string, unknown>, rtl = false): Record<string, string> {
   const out: Record<string, string> = {};
   // Направление — атрибутом dir (так его понимают и браузер, и экранные дикторы).
   if (attrs.dir === 'rtl' || attrs.dir === 'ltr') out.dir = attrs.dir;
+  const end = attrs.dir === 'rtl' || (rtl && attrs.dir !== 'ltr');
   const parts: string[] = [];
   const align = attrs.align as string | null;
   if (align && (ALIGNMENTS as readonly string[]).includes(align))
@@ -126,7 +131,7 @@ function blockStyleAttrs(attrs: Record<string, unknown>): Record<string, string>
   const indent = indentLevel(attrs.indent);
   // Отступ — со стороны начала строки: для текста справа налево это правый край.
   if (indent) {
-    parts.push(`margin-${attrs.dir === 'rtl' ? 'right' : 'left'}: ${indent * INDENT_STEP}px;`);
+    parts.push(`margin-${end ? 'right' : 'left'}: ${indent * INDENT_STEP}px;`);
   }
   if (parts.length) out.style = parts.join(' ');
   return out;
@@ -363,7 +368,7 @@ export function classAttr(value: unknown): { class?: string } {
 
 const classSpec = { class: { default: null } };
 
-const buildNodes = (allow: ClassFilter) =>
+const buildNodes = (allow: ClassFilter, rtl = false) =>
   ({
     doc: { content: 'block+' },
 
@@ -375,14 +380,14 @@ const buildNodes = (allow: ClassFilter) =>
         {
           tag: 'p',
           getAttrs: (dom) => ({
-            ...readBlockStyle(dom as HTMLElement),
+            ...readBlockStyle(dom as HTMLElement, rtl),
             class: readClass(dom as HTMLElement, allow),
           }),
         },
       ],
       toDOM: (node): DOMOutputSpec => [
         'p',
-        { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs) },
+        { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs, rtl) },
         0,
       ],
     },
@@ -396,14 +401,14 @@ const buildNodes = (allow: ClassFilter) =>
         tag: `h${level}`,
         getAttrs: (dom: HTMLElement) => ({
           level,
-          ...readBlockStyle(dom),
+          ...readBlockStyle(dom, rtl),
           class: readClass(dom, allow),
         }),
       })),
       toDOM: (node): DOMOutputSpec => [
         // Уровень мог прийти из JSON чем угодно — в имя тега попадает только 1–6.
         `h${headingLevel(node.attrs.level)}`,
-        { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs) },
+        { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs, rtl) },
         0,
       ],
     },
@@ -837,11 +842,15 @@ export function createSchema(
   classFilter?: ClassFilter,
   /** Правила элементов и атрибутов (validElements с атрибутами, extendedValidElements…). */
   htmlRules?: HtmlRulesInstance | null,
+  /** Направление редактора: справа налево отступ блока — margin-right. */
+  direction: 'ltr' | 'rtl' = 'ltr',
 ): NovaSchema {
+  const rtl = direction === 'rtl';
   const extraNodes = Object.entries(extensions.nodes ?? {});
   const extraMarks = Object.entries(extensions.marks ?? {});
-  if (!extraNodes.length && !extraMarks.length && !classFilter && !htmlRules) return schema;
-  let baseNodes: Record<string, NodeSpec> = classFilter ? buildNodes(classFilter) : nodes;
+  if (!extraNodes.length && !extraMarks.length && !classFilter && !htmlRules && !rtl) return schema;
+  let baseNodes: Record<string, NodeSpec> =
+    classFilter || rtl ? buildNodes(classFilter ?? NO_CLASSES, rtl) : nodes;
   let baseMarks: Record<string, MarkSpec> = classFilter ? buildMarks(classFilter) : marks;
   const ref: { schema?: Schema } = {};
   if (htmlRules) {

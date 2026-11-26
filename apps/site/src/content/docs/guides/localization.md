@@ -76,6 +76,24 @@ registerLanguage('de', {
 createEditor({ element, language: 'de' });
 ```
 
+## Right-to-left languages
+
+Arabic, Hebrew, Persian and Urdu switch the editor to right-to-left automatically. You can also set
+the direction yourself:
+
+```ts
+createEditor({ element, language: 'he' }); // right-to-left
+createEditor({ element, direction: 'rtl' }); // any language
+```
+
+Without either, the editor follows the page (`<html dir="rtl">`). In right-to-left mode the whole
+interface is mirrored: the toolbar starts on the right, menus open aligned to the right edge of their
+button, arrow keys move focus in the visible order, the resize handle is in the bottom-left corner,
+and undo, redo, indent and list icons are flipped. Text, list bullets and quote bars are on the right,
+and indentation is written as `margin-right`. A single paragraph can still be switched with the
+`ltr` / `rtl` buttons of the `directionality` plugin. `editor.direction` tells you which one is
+active.
+
 ## Plugin strings
 
 Plugins (comments, merge tags, media, special characters…) use the same system. Their keys are

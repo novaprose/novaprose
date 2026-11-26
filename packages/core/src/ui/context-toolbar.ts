@@ -1,7 +1,7 @@
 import { NodeSelection, Plugin, PluginKey } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { Editor } from '../editor';
-import { activeElement, h, listenDocument } from './dom';
+import { activeElement, h, listenDocument, logicalKey } from './dom';
 import { positionFloating } from './popover';
 import type { ContextToolbarSpec } from './registry';
 import { parseToolbar, renderControl, type RenderedControl } from './toolbar';
@@ -123,7 +123,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
           editor.focus();
         } else if (index >= 0 && (event.key === 'ArrowRight' || event.key === 'ArrowLeft')) {
           event.preventDefault();
-          const step = event.key === 'ArrowRight' ? 1 : -1;
+          const step = logicalKey(event, container) === 'ArrowRight' ? 1 : -1;
           buttons[(index + step + buttons.length) % buttons.length]!.focus();
         }
       });

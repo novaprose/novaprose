@@ -1,4 +1,4 @@
-import { activeElement, h, icon } from './dom';
+import { activeElement, h, icon, logicalKey } from './dom';
 import { icons } from './icons';
 
 /** Палитра по умолчанию: 8 оттенков × (тёмный, основной, светлый) + шкала серого. */
@@ -94,7 +94,7 @@ export function createColorPanel(options: ColorPanelOptions): HTMLElement {
       ArrowDown: COLUMNS,
       ArrowUp: -COLUMNS,
     };
-    const step = delta[event.key];
+    const step = delta[logicalKey(event, grid)];
     if (step === undefined) return;
     event.preventDefault();
     const next = swatches[Math.min(swatches.length - 1, Math.max(0, index + step))]!;

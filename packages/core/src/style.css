@@ -312,12 +312,12 @@
 }
 
 .nova-tb-group + .nova-tb-group {
-  padding-left: 4px;
-  border-left: 1px solid var(--nova-border);
+  padding-inline-start: 4px;
+  border-inline-start: 1px solid var(--nova-border);
 }
 
 .nova-tb-more {
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .nova-tb-overflow {
@@ -376,7 +376,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 14ch;
-  text-align: left;
+  text-align: start;
 }
 
 .nova-chevron {
@@ -395,7 +395,7 @@
 
 .nova-color-bar {
   position: absolute;
-  left: 8px;
+  inset-inline-start: 8px;
   bottom: 4px;
   width: 18px;
   height: 3px;
@@ -473,8 +473,8 @@
 
 .nova-prosemirror blockquote {
   margin: 0 0 0.75em;
-  padding-left: 1em;
-  border-left: 3px solid var(--nova-quote);
+  padding-inline-start: 1em;
+  border-inline-start: 3px solid var(--nova-quote);
   color: var(--nova-muted);
 }
 
@@ -505,7 +505,7 @@
 .nova-prosemirror ul,
 .nova-prosemirror ol {
   margin: 0 0 0.75em;
-  padding-left: 1.5em;
+  padding-inline-start: 1.5em;
 }
 
 .nova-prosemirror li > p {
@@ -592,7 +592,7 @@
 .nova-prosemirror th {
   background: var(--nova-toolbar-bg);
   font-weight: 600;
-  text-align: left;
+  text-align: start;
 }
 
 .nova-prosemirror td > :last-child,
@@ -755,7 +755,7 @@
 .nova-image[data-size]::after {
   content: attr(data-size);
   position: absolute;
-  right: 6px;
+  inset-inline-end: 6px;
   bottom: 6px;
   padding: 2px 6px;
   border-radius: 4px;
@@ -932,7 +932,7 @@ html.nova-fullscreen-lock body {
 }
 
 .nova-help-table td:last-child {
-  text-align: right;
+  text-align: end;
 }
 
 .nova-help kbd {
@@ -970,9 +970,13 @@ html.nova-fullscreen-lock body {
   font-family: var(--nova-mono);
 }
 
+.nova-path-item {
+  unicode-bidi: isolate;
+}
+
 .nova-wordcount {
   flex: none;
-  margin-left: auto;
+  margin-inline-start: auto;
 }
 
 .nova-resize-handle {
@@ -981,7 +985,7 @@ html.nova-fullscreen-lock body {
   place-items: center;
   width: 20px;
   height: 20px;
-  margin-right: -8px;
+  margin-inline-end: -8px;
   border-radius: 4px;
   color: var(--nova-subtle);
   cursor: ns-resize;
@@ -990,6 +994,34 @@ html.nova-fullscreen-lock body {
 
 .nova-editor[data-resize='both'] .nova-resize-handle {
   cursor: nwse-resize;
+}
+
+/* ---------- справа налево ---------- */
+
+/* Ручка размера — в левом нижнем углу: иконку и курсор отражаем. */
+[dir='rtl'] .nova-editor[data-resize='both'] .nova-resize-handle,
+.nova-editor[dir='rtl'][data-resize='both'] .nova-resize-handle {
+  cursor: nesw-resize;
+}
+[dir='rtl'] .nova-resize-handle svg,
+.nova-editor[dir='rtl'] .nova-resize-handle svg {
+  transform: scaleX(-1);
+}
+
+/* Иконки со смыслом направления (стрелки отмены, отступы, списки) отражаем,
+   как принято в интерфейсах справа налево. Остальные (жирный, ссылка, картинка) — как есть. */
+:is([dir='rtl'] .nova-editor, .nova-editor[dir='rtl'])
+  :is(
+    [data-control='undo'],
+    [data-control='redo'],
+    [data-control='indent'],
+    [data-control='outdent'],
+    [data-control='bullist'],
+    [data-control='numlist']
+  )
+  > .nova-icon
+  svg {
+  transform: scaleX(-1);
 }
 
 .nova-resize-handle:hover {
@@ -1060,7 +1092,7 @@ html.nova-fullscreen-lock body {
   background: transparent;
   color: inherit;
   font: inherit;
-  text-align: left;
+  text-align: start;
   cursor: pointer;
 }
 
@@ -1092,7 +1124,7 @@ html.nova-fullscreen-lock body {
 }
 
 .nova-menu-shortcut {
-  margin-left: 16px;
+  margin-inline-start: 16px;
   /* Текст — контраст AA (4.5:1), поэтому muted, а не subtle. */
   color: var(--nova-muted);
   font-family: var(--nova-font);
@@ -1321,7 +1353,7 @@ html.nova-fullscreen-lock body {
 
 .nova-notifications {
   position: absolute;
-  right: 12px;
+  inset-inline-end: 12px;
   bottom: 40px;
   z-index: 3;
   display: flex;

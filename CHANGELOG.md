@@ -36,6 +36,15 @@ All packages in this repository are versioned together. The format follows
   toolbar buttons, and focus that leaves a dialog comes back. Tested in Chromium, Firefox and
   WebKit. See [Shadow DOM and web components](https://novaprose.com/guides/shadow-dom/).
 
+### Right-to-left languages
+
+- `direction: 'rtl'` (automatic for Arabic, Hebrew, Persian and Urdu, otherwise following the page)
+  mirrors the whole interface: toolbar order, menus aligned to the right edge of their button, arrow
+  keys in the visible order, the resize handle in the bottom-left corner, flipped undo/redo, indent
+  and list icons, quote bars and list bullets on the right. Paragraph indentation is written as
+  `margin-right`. `editor.direction` returns the active direction; `directionality` in
+  `@novaprose/tinymce-compat` maps to it.
+
 ### Chinese, Japanese and Korean
 
 - The word count counts each Chinese character and each Japanese kana as a word, as word processors
@@ -105,6 +114,8 @@ All packages in this repository are versioned together. The format follows
 
 ### Fixes
 
+- Menus aligned to the end of their button (and centered ones) were placed a few pixels off: their
+  size was measured during the opening animation.
 - With several editors on a page, `getHTML()` could render a formatting mark (a link, for example)
   the way another editor with different settings had rendered it.
 - When a lazily loaded part of the editor finishes loading (for example the `autolink` plugin),

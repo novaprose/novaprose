@@ -103,3 +103,23 @@ export function listenDocument<K extends keyof DocumentEventMap>(
     shadow?.removeEventListener(type, onRoot, true);
   };
 }
+
+// ---------- направление письма ----------
+
+/**
+ * Интерфейс справа налево: ближайший dir — у редактора (опция direction) или у страницы.
+ * По атрибуту, а не по вычисленному стилю: работает и без вёрстки (SSR, тесты), и дёшево.
+ */
+export function isRtl(el: Element): boolean {
+  return el.closest('[dir]')?.getAttribute('dir')?.toLowerCase() === 'rtl';
+}
+
+/**
+ * Клавиша с учётом направления: в интерфейсе справа налево стрелки «вправо» и «влево» меняются
+ * местами — фокус идёт по видимому порядку (первая кнопка тулбара там справа).
+ */
+export function logicalKey(event: KeyboardEvent, context: Element): string {
+  if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return event.key;
+  if (!isRtl(context)) return event.key;
+  return event.key === 'ArrowLeft' ? 'ArrowRight' : 'ArrowLeft';
+}

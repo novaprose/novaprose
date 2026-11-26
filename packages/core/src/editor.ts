@@ -23,6 +23,12 @@ import { openLinkDialog } from './link';
 import { loadPasteCleaner, pastePlugin, type PasteOptions } from './paste';
 import { loadTables } from './tables';
 import { activeElement } from './ui/dom';
+
+/** Языки, которые пишут справа налево (по основной части кода: ar-EG → ar). */
+const RTL_LANGUAGES = new Set(['ar', 'he', 'iw', 'fa', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb']);
+function isRtlLanguage(language: string | undefined): boolean {
+  return !!language && RTL_LANGUAGES.has(language.toLowerCase().split(/[-_]/)[0]!);
+}
 import { keepPluginViews, reconfigurePlugins } from './plugin-views';
 import { parserFor } from './parser';
 import {
@@ -190,6 +196,11 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   tableCellClassList?: ClassOption[];
   /** Язык UI (BCP-47): 'en', 'ru'… По умолчанию 'en'. */
   language?: string;
+  /**
+   * Направление письма — интерфейса и текста. По умолчанию справа налево для арабского, иврита,
+   * персидского и урду (по `language`), иначе как у страницы.
+   */
+  direction?: 'ltr' | 'rtl';
   /** Точечная замена строк UI. */
   translations?: LanguagePack;
   /** Загрузка изображений на ваш сервер. Без неё картинки встраиваются как data:URL. */
@@ -257,6 +268,8 @@ export class Editor {
   private readonly toolbarHost: HTMLElement;
   private readonly menubar: MenubarHandle | null;
   readonly mode: EditorMode;
+  /** Направление письма редактора (опция direction, язык или dir страницы). */
+  readonly direction: 'ltr' | 'rtl';
   private readonly pluginsByName = new Map<string, NovaPlugin>();
   private readonly commandOverrides = new Map<CommandName, Command>();
   private readonly transactionTransforms: NonNullable<NovaPlugin['transformTransaction']>[] = [];
@@ -278,6 +291,12 @@ export class Editor {
     this.options = options;
     this.root = document.createElement('div');
     this.root.className = 'nova-editor';
+    const direction = options.direction ?? (isRtlLanguage(options.language) ? 'rtl' : undefined);
+    if (direction) this.root.dir = direction;
+    // Без явного направления — как у страницы (dir на <html> или контейнере).
+    this.direction =
+      direction ??
+      (options.element.closest('[dir]')?.getAttribute('dir') === 'rtl' ? 'rtl' : 'ltr');
     options.element.appendChild(this.root);
 
     const toolbarHost = document.createElement('div');
@@ -586,10 +605,10 @@ export class Editor {
       }
     }
     try {
-      return createSchema({ nodes, marks }, classFilter, htmlRules);
+      return createSchema({ nodes, marks }, classFilter, htmlRules, this.direction);
     } catch (error) {
       reportPluginError('Failed to build the document schema from plugins', error);
-      return createSchema({}, classFilter, htmlRules);
+      return createSchema({}, classFilter, htmlRules, this.direction);
     }
   }
 

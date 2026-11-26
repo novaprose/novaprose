@@ -1,6 +1,6 @@
 import type { Node as PMNode } from 'prosemirror-model';
 import type { Editor } from '../editor';
-import { h, icon } from './dom';
+import { h, icon, isRtl, logicalKey } from './dom';
 import { icons } from './icons';
 
 const TAGS: Record<string, (node: PMNode) => string> = {
@@ -73,7 +73,14 @@ export function createStatusbar(editor: Editor, host: HTMLElement) {
       const tag = MARK_TAGS[mark.type.name];
       if (tag) parts.push(tag);
     }
-    path.textContent = parts.join(' › ');
+    // Каждый тег — отдельный изолированный фрагмент: справа налево путь идёт справа налево
+    // (латинские имена подряд иначе склеились бы в одну строку слева направо), «›» браузер отразит.
+    path.replaceChildren(
+      ...parts.flatMap((tag, i) => [
+        ...(i ? [' › '] : []),
+        h('span', { className: 'nova-path-item' }, tag),
+      ]),
+    );
     // Подсчёт слов на большом документе — не на каждое нажатие клавиши.
     if (docChanged) {
       if (timer) clearTimeout(timer);
@@ -140,7 +147,9 @@ function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): (
   };
   const onMove = (event: PointerEvent) => {
     if (!start) return;
-    setSize(start.height + event.clientY - start.y, start.width + event.clientX - start.x);
+    // Справа налево ручка в левом углу: ширина растёт при движении влево.
+    const dx = (event.clientX - start.x) * (isRtl(root) ? -1 : 1);
+    setSize(start.height + event.clientY - start.y, start.width + dx);
   };
   const onUp = (event: PointerEvent) => {
     if (!start) return;
@@ -149,13 +158,8 @@ function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): (
   };
   const onKey = (event: KeyboardEvent) => {
     const dy = event.key === 'ArrowDown' ? KEY_STEP : event.key === 'ArrowUp' ? -KEY_STEP : 0;
-    const dx = both
-      ? event.key === 'ArrowRight'
-        ? KEY_STEP
-        : event.key === 'ArrowLeft'
-          ? -KEY_STEP
-          : 0
-      : 0;
+    const key = logicalKey(event, root);
+    const dx = both ? (key === 'ArrowRight' ? KEY_STEP : key === 'ArrowLeft' ? -KEY_STEP : 0) : 0;
     if (!dx && !dy) return;
     event.preventDefault();
     setSize(root.offsetHeight + dy, root.offsetWidth + dx);

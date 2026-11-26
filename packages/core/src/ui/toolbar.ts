@@ -1,5 +1,5 @@
 import type { Editor } from '../editor';
-import { activeElement, h, icon } from './dom';
+import { activeElement, h, icon, logicalKey } from './dom';
 import { icons } from './icons';
 import { createMenu, focusMenu } from './menu';
 import { Popover } from './popover';
@@ -193,8 +193,9 @@ export function createToolbar(
       const index = list.indexOf(activeElement(host) as HTMLButtonElement);
       if (index < 0) return;
       let next: number | null = null;
-      if (event.key === 'ArrowRight') next = index + 1;
-      else if (event.key === 'ArrowLeft') next = index - 1;
+      const key = logicalKey(event, host);
+      if (key === 'ArrowRight') next = index + 1;
+      else if (key === 'ArrowLeft') next = index - 1;
       else if (event.key === 'Home') next = 0;
       else if (event.key === 'End') next = list.length - 1;
       else if (event.key === 'Escape') {
@@ -222,10 +223,11 @@ export function createToolbar(
     );
     const index = list.indexOf(activeElement(overflowBox) as HTMLButtonElement);
     if (index < 0) return;
-    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    const key = logicalKey(event, overflowBox);
+    if (key === 'ArrowRight' || key === 'ArrowDown') {
       event.preventDefault();
       list[(index + 1) % list.length]!.focus();
-    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    } else if (key === 'ArrowLeft' || key === 'ArrowUp') {
       event.preventDefault();
       list[(index - 1 + list.length) % list.length]!.focus();
     }

@@ -1,5 +1,5 @@
 import type { Editor } from '../editor';
-import { activeElement, h } from '../ui/dom';
+import { activeElement, h, logicalKey } from '../ui/dom';
 import { registerPluginMessages, type PluginLabels } from '../i18n';
 
 /**
@@ -117,9 +117,10 @@ export function symbolPanel(options: {
       ArrowDown: perRow,
       ArrowUp: -perRow,
     };
-    if (!(event.key in step)) return;
+    const key = logicalKey(event, list);
+    if (!(key in step)) return;
     event.preventDefault();
-    const next = index + step[event.key]!;
+    const next = index + step[key]!;
     if (next < 0) search.focus();
     else cells[Math.min(cells.length - 1, next)]?.focus();
   });
