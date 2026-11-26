@@ -41,6 +41,14 @@ All packages in this repository are versioned together. The format follows
   toolbar buttons, and focus that leaves a dialog comes back. Tested in Chromium, Firefox and
   WebKit. See [Shadow DOM and web components](https://novaprose.com/guides/shadow-dom/).
 
+### Chinese, Japanese and Korean
+
+- The word count counts each Chinese character and each Japanese kana as a word, as word processors
+  do ( is 8, not 1). Korean, written with spaces, is counted by words as before.
+- Input through an IME (composition) is covered by browser tests: intermediate candidates never stay
+  in the text, one undo removes the committed word, Enter that confirms a candidate doesn't pick a
+  slash command, and composition works inside bold text, lists and table cells.
+
 ### Content rules
 
 - Keep markup the editor doesn't create itself, or restrict attributes further:

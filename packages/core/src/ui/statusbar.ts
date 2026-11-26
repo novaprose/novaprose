@@ -28,10 +28,17 @@ const MARK_TAGS: Record<string, string> = {
   superscript: 'sup',
 };
 
-/** Считает слова так же, как пользователь: числа и слова с дефисом/апострофом — одно слово. */
+/**
+ * Считает слова так же, как пользователь: числа и слова с дефисом/апострофом — одно слово.
+ * В китайском и японском слова не разделяются пробелами: каждый иероглиф, знак хираганы и катаканы
+ * считается словом (как в текстовых процессорах). Корейский пишется с пробелами — как обычно.
+ */
+const CJK = String.raw`\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}`;
+const LETTER = String.raw`(?:(?![${CJK}])[\p{L}\p{N}])`;
+const WORD = new RegExp(`[${CJK}]|${LETTER}+(?:['’-]${LETTER}+)*`, 'gu');
+
 export function countWords(text: string): number {
-  const matches = text.match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu);
-  return matches ? matches.length : 0;
+  return text.match(WORD)?.length ?? 0;
 }
 
 /** Статусбар: путь к элементу под курсором (p › strong) и счётчик слов. */
