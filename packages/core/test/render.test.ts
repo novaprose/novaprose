@@ -10,9 +10,9 @@ import {
 } from '../src';
 
 /**
- * HTML документа без редактора (createRenderer / renderHTML) — тот же, что getHTML() редактора с
- * теми же настройками: сравниваем на документах со всеми видами узлов. На любых случайных документах
- * то же свойство проверяет security.property.test.ts; без DOM — render-server.test.ts.
+ * Document HTML without an editor (createRenderer / renderHTML) is the same as the editor's getHTML() with
+ * the same settings: compared on documents with every kind of node. On any random documents
+ * security.property.test.ts checks the same property; render-server.test.ts checks it without a DOM.
  */
 
 let editor: Editor | null = null;
@@ -30,7 +30,7 @@ async function mount(content: string, options: Partial<EditorOptions> = {}): Pro
   return editor;
 }
 
-/** JSON из редактора → отрисовщик с теми же настройками: HTML и текст совпадают с редактором. */
+/** JSON from the editor → a renderer with the same settings: the HTML and text match the editor's. */
 async function expectSame(content: string, options: DocumentOptions = {}): Promise<Editor> {
   const e = await mount(content, options as Partial<EditorOptions>);
   const json = e.getJSON();
@@ -65,13 +65,13 @@ const RICH = [
   '<hr><p>end<br>line</p>',
 ].join('');
 
-describe('HTML без редактора — как getHTML()', () => {
-  it('документ со всеми встроенными узлами и марками', async () => {
+describe('HTML without an editor, like getHTML()', () => {
+  it('a document with every built-in node and mark', async () => {
     const e = await expectSame(RICH);
     expect(e.getHTML()).not.toContain('javascript:');
   });
 
-  it('плагины со своими узлами (и их настройки)', async () => {
+  it('plugins with their own nodes (and their settings)', async () => {
     const content = [
       '<nav class="nova-toc" data-toc=""></nav>',
       '<h2>First</h2><h3>Second</h3>',
@@ -114,21 +114,21 @@ describe('HTML без редактора — как getHTML()', () => {
       'media',
     ])
       expect(types, type).toContain(type);
-    // Настройки плагинов влияют на HTML и у отрисовщика: блок сохраняется свёрнутым,
-    // в оглавлении — только h2 (depth: 2).
+    // Plugin settings affect the renderer's HTML too: the block is saved collapsed,
+    // the table of contents has only h2 (depth: 2).
     expect(e.getHTML()).toContain('<details><summary>Title</summary>');
     expect(e.getHTML()).toMatch(/<ul><li><a href="#[^"]+">First<\/a><\/li><\/ul>/);
     expect(e.getHTML()).toContain('<span data-var="client" contenteditable="false">');
   });
 
-  it('направление письма и классы из форматов', async () => {
+  it('writing direction and classes from formats', async () => {
     await expectSame('<p style="margin-right: 40px">שלום</p>', { language: 'he' });
     await expectSame('<p class="lead other">x</p>', {
       styleFormats: [{ title: 'Lead', block: 'p', classes: 'lead' }],
     });
   });
 
-  it('правила разметки (invalidElements, validStyles) применяются и к JSON', async () => {
+  it('markup rules (invalidElements, validStyles) apply to JSON too', async () => {
     const options: DocumentOptions = { invalidElements: 'em', validStyles: { '*': 'color' } };
     const e = await mount('<p></p>', options as Partial<EditorOptions>);
     const json = {
@@ -156,8 +156,8 @@ describe('HTML без редактора — как getHTML()', () => {
   });
 });
 
-describe('устойчивость', () => {
-  it('атрибуты не того типа из JSON — умолчания, а не исключение', () => {
+describe('robustness', () => {
+  it('attributes of the wrong type from JSON get the defaults, not an exception', () => {
     const html = renderHTML({
       type: 'doc',
       content: [
@@ -187,7 +187,7 @@ describe('устойчивость', () => {
     expect(html).toContain('<td><p></p></td>');
   });
 
-  it('плагин, чьи узлы падают, — без узлов, но редактор и отрисовщик работают', async () => {
+  it('a plugin whose nodes crash goes without nodes, but the editor and the renderer work', async () => {
     const broken = definePlugin({
       name: 'broken-nodes',
       nodes: () => {
@@ -203,7 +203,7 @@ describe('устойчивость', () => {
     expect(errors).toContain('[nova] Plugin "broken-nodes" failed to define its nodes');
   });
 
-  it('один отрисовщик — много документов; схема доступна', () => {
+  it('one renderer, many documents; the schema is available', () => {
     const renderer = createRenderer({ plugins: ['mentions'] });
     expect(renderer.schema.nodes.mention).toBeDefined();
     const doc = (text: string) => ({

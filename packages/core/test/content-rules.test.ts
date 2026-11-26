@@ -18,19 +18,19 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('ContentRules: разбор опций', () => {
-  it('validElements: синонимы через /, модификаторы и атрибуты отбрасываются', () => {
+describe('ContentRules: parsing the options', () => {
+  it('validElements: synonyms through /, modifiers and attributes are dropped', () => {
     const rules = new ContentRules({ validElements: '-p,strong/b,#em/i,a[href|target=_blank],ul' });
     expect(rules.isTagAllowed('strong')).toBe(true);
     expect(rules.isTagAllowed('b')).toBe(true);
     expect(rules.isTagAllowed('em')).toBe(true);
     expect(rules.isTagAllowed('a')).toBe(true);
-    expect(rules.isTagAllowed('li')).toBe(true); // ul тянет li
+    expect(rules.isTagAllowed('li')).toBe(true); // ul pulls in li
     expect(rules.isTagAllowed('img')).toBe(false);
-    expect(rules.isTagAllowed('p')).toBe(true); // абзац всегда
+    expect(rules.isTagAllowed('p')).toBe(true); // a paragraph always
   });
 
-  it('invalidElements поверх всего разрешённого', () => {
+  it('invalidElements over everything allowed', () => {
     const rules = new ContentRules({ invalidElements: 'img, table ,h1' });
     expect(rules.isTagAllowed('img')).toBe(false);
     expect(rules.isTagAllowed('table')).toBe(false);
@@ -38,7 +38,7 @@ describe('ContentRules: разбор опций', () => {
     expect(rules.isTagAllowed('h2')).toBe(true);
   });
 
-  it('validStyles: строкой и объектом', () => {
+  it('validStyles: as a string and as an object', () => {
     expect(new ContentRules({ validStyles: 'color, text-align' }).isStyleAllowed('font-size')).toBe(
       false,
     );
@@ -48,31 +48,31 @@ describe('ContentRules: разбор опций', () => {
     expect(rules.isStyleAllowed('line-height')).toBe(false);
   });
 
-  it('isAllowed по именам контролов', () => {
+  it('isAllowed by control names', () => {
     const rules = new ContentRules({ invalidElements: 'a,span', validStyles: 'text-align' });
     expect(rules.isAllowed('link')).toBe(false);
     expect(rules.isAllowed('forecolor')).toBe(false);
     expect(rules.isAllowed('aligncenter')).toBe(true);
     expect(rules.isAllowed('lineheight')).toBe(false);
     expect(rules.isAllowed('bold')).toBe(true);
-    expect(rules.isAllowed('my-custom-button')).toBe(true); // неизвестное — не ограничиваем
+    expect(rules.isAllowed('my-custom-button')).toBe(true); // unknown ones aren't restricted
   });
 });
 
-describe('нормализация контента', () => {
-  it('запрещённые марки снимаются, текст остаётся', () => {
+describe('content normalization', () => {
+  it('forbidden marks are removed, the text stays', () => {
     const e = mount('<p><strong>a</strong><em>b</em><a href="https://x.io">c</a></p>', {
       invalidElements: 'strong,a',
     });
     expect(e.getHTML()).toBe('<p>a<em>b</em>c</p>');
   });
 
-  it('запрещённый уровень заголовка → абзац, выравнивание сохраняется', () => {
+  it('a forbidden heading level → a paragraph, the alignment is kept', () => {
     const e = mount('<h1 style="text-align: center;">T</h1><h2>S</h2>', { invalidElements: 'h1' });
     expect(e.getHTML()).toBe('<p style="text-align: center;">T</p><h2>S</h2>');
   });
 
-  it('списки, цитата, блок кода, таблица, hr, картинка, br', () => {
+  it('lists, quote, code block, table, hr, image, br', () => {
     const e = mount(
       '<ul><li><p>one</p></li><li><p>two</p></li></ul>' +
         '<blockquote><p>quote</p></blockquote>' +
@@ -86,7 +86,7 @@ describe('нормализация контента', () => {
     );
   });
 
-  it('th запрещён — ячейки заголовка становятся обычными', () => {
+  it('th forbidden: header cells become regular ones', () => {
     const e = mount('<table><tr><th><p>h</p></th></tr><tr><td><p>d</p></td></tr></table>', {
       invalidElements: 'th',
     });
@@ -95,7 +95,7 @@ describe('нормализация контента', () => {
     );
   });
 
-  it('validStyles: недопустимые стили убираются, допустимые остаются', () => {
+  it('validStyles: invalid styles are removed, valid ones stay', () => {
     const e = mount(
       '<p style="text-align: right; line-height: 2;"><span style="color: #ff0000;">r</span><span style="font-size: 18pt;">s</span></p>',
       { validStyles: 'color,text-align' },
@@ -105,7 +105,7 @@ describe('нормализация контента', () => {
     );
   });
 
-  it('validElements: разрешён только белый список', () => {
+  it('validElements: only the allowlist is allowed', () => {
     const e = mount('<h1>T</h1><p><strong>b</strong> <u>u</u> <img src="https://x.io/i.png"></p>', {
       validElements: 'p,strong/b',
     });
@@ -113,14 +113,14 @@ describe('нормализация контента', () => {
   });
 });
 
-describe('ограничения на всех путях изменения', () => {
+describe('restrictions on every path of change', () => {
   it('setContent', () => {
     const e = mount('<p>a</p>', { invalidElements: 'em' });
     e.setContent('<p><em>x</em></p>');
     expect(e.getHTML()).toBe('<p>x</p>');
   });
 
-  it('вставка из буфера', () => {
+  it('pasting from the clipboard', () => {
     const e = mount('<p></p>', { invalidElements: 'table,h2' });
     e.view.pasteHTML('<h2>Title</h2><table><tr><td>cell</td></tr></table>');
     expect(e.getHTML()).not.toContain('<h2');
@@ -129,19 +129,19 @@ describe('ограничения на всех путях изменения', (
     expect(e.getText()).toContain('cell');
   });
 
-  it('команда и горячая клавиша: запрещённый жирный не применяется', () => {
+  it("a command and a keyboard shortcut: forbidden bold isn't applied", () => {
     const e = mount('<p>text</p>', { invalidElements: 'strong' });
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1, 5)));
     e.exec('bold');
     expect(e.getHTML()).toBe('<p>text</p>');
   });
 
-  it('Markdown-шорткат запрещённого уровня не срабатывает, разрешённый — да', () => {
+  it("the Markdown shortcut of a forbidden level doesn't fire, an allowed one does", () => {
     const e = mount('<p></p>', { invalidElements: 'h1' });
     const typeAndTrigger = (text: string) => {
       const { state } = e.view;
       const pos = state.selection.from;
-      // Эмулируем ввод: input rules срабатывают через handleTextInput.
+      // Emulate typing: input rules fire through handleTextInput.
       const handled = e.view.someProp('handleTextInput', (f) =>
         f(e.view, pos, pos, text, () => state.tr.insertText(text, pos)),
       );
@@ -159,8 +159,8 @@ describe('ограничения на всех путях изменения', (
   });
 });
 
-describe('UI учитывает ограничения', () => {
-  it('тулбар не показывает запрещённые кнопки', () => {
+describe('the UI respects the restrictions', () => {
+  it("the toolbar doesn't show forbidden buttons", () => {
     const e = mount('<p>a</p>', {
       toolbar: 'bold italic link image table forecolor',
       invalidElements: 'a,img,table,span',
@@ -171,7 +171,7 @@ describe('UI учитывает ограничения', () => {
     expect(names).toEqual(['bold', 'italic']);
   });
 
-  it('меню «Стиль текста» и слэш-команды без запрещённого', () => {
+  it('the "Text style" menu and slash commands without the forbidden items', () => {
     const e = mount('<p>a</p>', { toolbar: 'blocks', invalidElements: 'h1,h2,pre,table' });
     e.root.querySelector<HTMLButtonElement>('[data-control="blocks"]')!.click();
     const ids = [...e.root.querySelectorAll('.nova-menu [data-id]')].map((b) =>
@@ -186,7 +186,7 @@ describe('UI учитывает ограничения', () => {
     expect(names).toContain('h3');
   });
 
-  it('без ограничений всё разрешено и плагин не подключается', () => {
+  it("without restrictions everything is allowed and the plugin isn't attached", () => {
     const e = mount('<p>a</p>');
     expect(e.contentRules).toBeNull();
     expect(e.isAllowed('table')).toBe(true);

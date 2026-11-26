@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, type Editor, type EditorOptions } from '../src';
 
-/** Направление письма редактора: опция direction, язык, dir страницы; отступ и стрелки. */
+/** The editor's writing direction: the direction option, the language, the page's dir; indent and arrows. */
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -17,8 +17,8 @@ function mount(options: Partial<EditorOptions> = {}, content = '<p>x</p>', paren
   return editor;
 }
 
-describe('направление письма', () => {
-  it('direction: rtl — dir у редактора; арабский и иврит включают его сами', () => {
+describe('writing direction', () => {
+  it('direction: rtl puts dir on the editor; Arabic and Hebrew turn it on by themselves', () => {
     expect(mount({ direction: 'rtl' }).root.dir).toBe('rtl');
     editor!.destroy();
     expect(mount({ language: 'ar-EG' }).direction).toBe('rtl');
@@ -28,7 +28,7 @@ describe('направление письма', () => {
     expect(mount({ language: 'en' }).direction).toBe('ltr');
   });
 
-  it('без опции — как у страницы', () => {
+  it('without the option, as the page', () => {
     const page = document.createElement('div');
     page.dir = 'rtl';
     document.body.append(page);
@@ -37,7 +37,7 @@ describe('направление письма', () => {
     expect(e.root.hasAttribute('dir')).toBe(false);
   });
 
-  it('отступ абзаца справа налево — margin-right, и читается обратно', () => {
+  it('a right-to-left paragraph indent is margin-right, and it is read back', () => {
     const e = mount({ direction: 'rtl' }, '<p style="margin-right: 80px">x</p>');
     expect(e.getHTML()).toBe('<p style="margin-right: 80px;">x</p>');
     e.setContent('<p>y</p>');
@@ -45,18 +45,18 @@ describe('направление письма', () => {
     expect(e.getHTML()).toBe('<p style="margin-right: 40px;">y</p>');
   });
 
-  it('блок со своим dir="ltr" в редакторе справа налево — отступ слева', () => {
+  it('a block with its own dir="ltr" in a right-to-left editor is indented on the left', () => {
     const html = '<p dir="ltr" style="margin-left: 40px;">x</p>';
     expect(mount({ direction: 'rtl' }, html).getHTML()).toBe(html);
   });
 
-  it('слева направо отступ, как и раньше, margin-left', () => {
+  it('left to right, the indent is margin-left as before', () => {
     const e = mount({}, '<p>y</p>');
     e.exec('indent');
     expect(e.getHTML()).toBe('<p style="margin-left: 40px;">y</p>');
   });
 
-  it('тулбар: ← — следующая кнопка, → — предыдущая', () => {
+  it('toolbar: ← is the next button, → the previous one', () => {
     const e = mount({ direction: 'rtl', toolbar: 'bold italic underline' });
     const [bold, italic] = [...e.root.querySelectorAll<HTMLButtonElement>('.nova-toolbar button')];
     bold!.focus();

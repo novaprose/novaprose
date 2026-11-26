@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, type Editor } from '../src';
 import { setCellProps, setTableProps, sortTable } from '../src/table';
 
-/** Сортировка таблиц, свойства таблицы и ячеек. */
+/** Table sorting, table and cell properties. */
 
 const editors: Editor[] = [];
 function mount(content: string): Editor {
@@ -19,7 +19,7 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-/** Курсор в ячейку с текстом text. */
+/** The cursor into the cell with the text text. */
 function cursorIn(editor: Editor, text: string): void {
   let pos = -1;
   editor.view.state.doc.descendants((node, p) => {
@@ -38,8 +38,8 @@ const table = (...rows: string[]) => `<table><tbody>${rows.join('')}</tbody></ta
 const column = (editor: Editor, index: number) =>
   [...editor.root.querySelectorAll('tbody tr')].map((tr) => tr.children[index]?.textContent);
 
-describe('сортировка', () => {
-  it('числа — как числа, заголовок остаётся сверху, в обе стороны', () => {
+describe('sorting', () => {
+  it('numbers as numbers, the header stays on top, both directions', () => {
     const editor = mount(
       table(
         head('Item', 'Cost'),
@@ -55,14 +55,14 @@ describe('сортировка', () => {
     expect(column(editor, 1)).toEqual(['Cost', '$1,200', '$310.50', '$45']);
   });
 
-  it('текст — по алфавиту с учётом языка; пустые ячейки в конце', () => {
-    const editor = mount(table(row('Яблоко'), row(''), row('арбуз'), row('Ёжик'), row('банан')));
-    cursorIn(editor, 'банан');
+  it('text alphabetically by the language; empty cells last', () => {
+    const editor = mount(table(row('Zebra'), row(''), row('apple'), row('Éclair'), row('banana')));
+    cursorIn(editor, 'banana');
     editor.exec(sortTable('asc', 'ru'));
-    expect(column(editor, 0)).toEqual(['арбуз', 'банан', 'Ёжик', 'Яблоко', '']);
+    expect(column(editor, 0)).toEqual(['apple', 'banana', 'Éclair', 'Zebra', '']);
   });
 
-  it('таблица с объединёнными ячейками не сортируется', () => {
+  it("a table with merged cells isn't sorted", () => {
     const editor = mount(
       '<table><tbody><tr><td colspan="2"><p>merged</p></td></tr>' +
         row('b', '2') +
@@ -73,7 +73,7 @@ describe('сортировка', () => {
     expect(editor.can(sortTable('asc'))).toBe(false);
   });
 
-  it('сортировка отменяется одним undo', () => {
+  it('sorting is undone with one undo', () => {
     const editor = mount(table(row('b'), row('a')));
     cursorIn(editor, 'a');
     editor.exec(sortTable('asc'));
@@ -82,14 +82,14 @@ describe('сортировка', () => {
   });
 });
 
-describe('свойства таблицы', () => {
-  it('ширина и выравнивание: HTML туда-обратно', () => {
+describe('table properties', () => {
+  it('width and alignment: HTML round trip', () => {
     const html =
       '<table style="width: 100%;"><tbody><tr><td><p>a</p></td></tr></tbody></table><table style="width: 600px; margin-left: auto; margin-right: auto;"><tbody><tr><td><p>b</p></td></tr></tbody></table><table style="margin-left: auto;"><tbody><tr><td><p>c</p></td></tr></tbody></table>';
     expect(mount(html).getHTML()).toBe(html);
   });
 
-  it('старый атрибут align и недопустимая ширина', () => {
+  it('the old align attribute and an invalid width', () => {
     const editor = mount(
       '<table align="center" style="width: calc(100% - 1px)"><tbody><tr><td><p>a</p></td></tr></tbody></table>',
     );
@@ -98,7 +98,7 @@ describe('свойства таблицы', () => {
     );
   });
 
-  it('команда задаёт ширину и выравнивание; в редакторе видно то же', () => {
+  it('the command sets the width and alignment; the editor shows the same', () => {
     const editor = mount(table(row('a')));
     cursorIn(editor, 'a');
     expect(editor.exec(setTableProps({ width: '80%', align: 'center' }))).toBe(true);
@@ -112,11 +112,11 @@ describe('свойства таблицы', () => {
   });
 });
 
-describe('свойства ячеек', () => {
-  it('вертикальное выравнивание и тип ячейки для выделения', () => {
+describe('cell properties', () => {
+  it('vertical alignment and cell type for a selection', () => {
     const editor = mount(table(row('a', 'b'), row('c', 'd')));
     const { state } = editor.view;
-    // Выделяем первую строку целиком.
+    // Select the whole first row.
     let first = -1;
     let second = -1;
     state.doc.descendants((node, pos) => {
@@ -133,18 +133,18 @@ describe('свойства ячеек', () => {
     );
   });
 
-  it('ширина столбца задаётся у всех его ячеек', () => {
+  it('a column width is set on all of its cells', () => {
     const editor = mount(table(row('a', 'b'), row('c', 'd')));
     cursorIn(editor, 'b');
     expect(editor.exec(setCellProps({ width: 200 }))).toBe(true);
     const html = editor.getHTML();
-    // Оба ячейки столбца получают ширину — и для редактора (data-colwidth), и для сайта (style).
+    // Both cells of the column get the width, for the editor (data-colwidth) and for the site (style).
     expect(html.match(/style="width: 200px;"/g)?.length).toBe(2);
     expect(html.match(/data-colwidth="200"/g)?.length).toBe(2);
     expect(editor.exec(setCellProps({ width: 5 }))).toBe(false);
   });
 
-  it('valign из старого атрибута и опасные значения', () => {
+  it('valign from the old attribute and dangerous values', () => {
     const editor = mount(
       '<table><tbody><tr><td valign="bottom"><p>a</p></td><td style="vertical-align: expression(1)"><p>b</p></td></tr></tbody></table>',
     );
@@ -154,8 +154,8 @@ describe('свойства ячеек', () => {
   });
 });
 
-describe('интерфейс', () => {
-  it('кнопки сортировки и свойств есть в контекстном тулбаре таблицы', () => {
+describe('interface', () => {
+  it('the sort and properties buttons are in the table context toolbar', () => {
     const editor = mount(table(row('a')));
     const items = editor.ui.registry.getContextToolbars().find(([name]) => name === 'table')![1]
       .items;

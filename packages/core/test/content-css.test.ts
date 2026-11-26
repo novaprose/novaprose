@@ -2,13 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor } from '../src';
 import { absolutizeUrls, scopeCss } from '../src/content-css';
 
-/** contentStyle / contentCss: CSS клиента действует только на текст своего редактора. */
+/** contentStyle / contentCss: the customer's CSS affects only the text of its own editor. */
 
 const S = '.scope';
 const norm = (css: string) => css.replace(/\s+/g, ' ').trim();
 
 describe('scopeCss', () => {
-  it('body/html/:root — сама область текста; остальное — внутри неё', () => {
+  it('body/html/:root are the text area itself; the rest goes inside it', () => {
     expect(norm(scopeCss('body { color: red } p, h1 > a { margin: 0 }', S))).toBe(
       '.scope{ color: red } .scope p, .scope h1 > a{ margin: 0 }',
     );
@@ -18,13 +18,13 @@ describe('scopeCss', () => {
     expect(norm(scopeCss('body.dark p { color: #fff }', S))).toBe('.scope.dark p{ color: #fff }');
   });
 
-  it('не путает похожие имена и не режет запятые внутри :is() и атрибутов', () => {
+  it("doesn't confuse similar names and doesn't cut commas inside :is() and attributes", () => {
     expect(norm(scopeCss('.body-text, bodyx {} :is(p, li) {} a[title="a,b"] {}', S))).toBe(
       '.scope .body-text, .scope bodyx{} .scope :is(p, li){} .scope a[title="a,b"]{}',
     );
   });
 
-  it('@media/@supports — правила внутри тоже в области; @font-face/@keyframes — как есть', () => {
+  it('@media/@supports: the rules inside are scoped too; @font-face/@keyframes as they are', () => {
     const out = norm(
       scopeCss(
         '@media print { p { color: black } } @font-face { font-family: X; src: url(x.woff) } @keyframes fade { from { opacity: 0 } }',
@@ -36,13 +36,13 @@ describe('scopeCss', () => {
     );
   });
 
-  it('комментарии и @charset/@import выбрасываются, строки со скобками не ломают разбор', () => {
+  it("comments and @charset/@import are dropped, strings with brackets don't break parsing", () => {
     expect(norm(scopeCss('@charset "utf-8"; /* body { } */ p::before { content: "}{;" }', S))).toBe(
       '.scope p::before{ content: "}{;" }',
     );
   });
 
-  it('относительные url() — от адреса файла стилей', () => {
+  it("relative url() resolve against the style file's address", () => {
     expect(
       absolutizeUrls(
         'a { background: url(img/x.png) } b { background: url("data:image/png;base64,AA") }',
@@ -54,7 +54,7 @@ describe('scopeCss', () => {
   });
 });
 
-describe('опции редактора', () => {
+describe('editor options', () => {
   let editors: Editor[] = [];
   afterEach(() => {
     editors.forEach((e) => e.destroy());
@@ -69,7 +69,7 @@ describe('опции редактора', () => {
     editors.push(e);
     return e;
   };
-  /** Весь CSS, подключённый к документу: <style> и конструируемые таблицы. */
+  /** All CSS attached to the document: <style> and constructable sheets. */
   const allCss = () =>
     [
       ...[...document.querySelectorAll('style')].map((s) => s.textContent ?? ''),
@@ -78,7 +78,7 @@ describe('опции редактора', () => {
       ),
     ].join('\n');
 
-  it('contentStyle: у каждого редактора своя область, destroy убирает стили', () => {
+  it('contentStyle: each editor has its own scope, destroy removes the styles', () => {
     const a = mount({ contentStyle: 'body { font-family: Georgia }' });
     const b = mount({ contentStyle: 'p { color: red }' });
     const scopeA = [...a.root.classList].find((c) => c.startsWith('nova-cs-'))!;
@@ -90,7 +90,7 @@ describe('опции редактора', () => {
     expect(allCss()).not.toContain(scopeA);
   });
 
-  it('contentCss: загружает файлы, встраивает @import, ready ждёт загрузки; contentStyle — последним', async () => {
+  it('contentCss loads files, inlines @import, ready waits for loading; contentStyle comes last', async () => {
     const files: Record<string, string> = {
       'https://cdn.example.com/css/content.css': '@import "base.css"; h1 { color: navy }',
       'https://cdn.example.com/css/base.css': 'p { margin: 0 }',

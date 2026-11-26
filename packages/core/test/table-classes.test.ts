@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, type Editor, type EditorOptions } from '../src';
 import { getCellProps, getTableProps, setCellProps, setTableProps } from '../src/table';
 
-/** Стили таблиц и ячеек из списка (tableClassList / tableCellClassList). */
+/** Table and cell styles from the list (tableClassList / tableCellClassList). */
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -14,10 +14,10 @@ afterEach(() => {
 
 const LISTS: Partial<EditorOptions> = {
   tableClassList: [
-    { title: 'С рамками', value: 'grid' },
-    { title: 'Раскладка', value: 'layout' },
+    { title: 'With borders', value: 'grid' },
+    { title: 'Layout', value: 'layout' },
   ],
-  tableCellClassList: [{ title: 'Подпись', value: 'label-cell' }],
+  tableCellClassList: [{ title: 'Label', value: 'label-cell' }],
 };
 
 function mount(content: string, options: Partial<EditorOptions> = LISTS) {
@@ -27,7 +27,7 @@ function mount(content: string, options: Partial<EditorOptions> = LISTS) {
   return editor;
 }
 
-/** Курсор в первую ячейку. */
+/** The cursor into the first cell. */
 function inFirstCell(e: Editor) {
   let pos = -1;
   e.view.state.doc.descendants((node, p) => {
@@ -39,8 +39,8 @@ function inFirstCell(e: Editor) {
 const TABLE =
   '<table class="grid"><tbody><tr><td class="label-cell"><p>a</p></td><td><p>b</p></td></tr></tbody></table>';
 
-describe('классы таблиц и ячеек', () => {
-  it('HTML туда-обратно без изменений; в редакторе таблица с тем же классом', () => {
+describe('table and cell classes', () => {
+  it('HTML round trip without changes; in the editor the table has the same class', () => {
     const e = mount(TABLE);
     expect(e.getHTML()).toBe(TABLE);
     expect(e.root.querySelector('.nova-prosemirror table')!.classList.contains('grid')).toBe(true);
@@ -49,23 +49,23 @@ describe('классы таблиц и ячеек', () => {
     );
   });
 
-  it('стиль из нескольких классов («pf-grid pf-plain») сохраняется целиком', () => {
+  it('a style of several classes ("pf-grid pf-plain") is kept whole', () => {
     const html =
       '<table class="pf-grid pf-plain"><tbody><tr><td><p>a</p></td></tr></tbody></table>';
     const e = mount(html, {
-      tableClassList: [{ title: 'Сетка, обычные заголовки', value: 'pf-grid pf-plain' }],
+      tableClassList: [{ title: 'Grid, plain headers', value: 'pf-grid pf-plain' }],
     });
     expect(e.getHTML()).toBe(html);
   });
 
-  it('без списков классы не сохраняются — вывод как раньше', () => {
+  it("without the lists classes aren't kept: the output is as before", () => {
     const e = mount(TABLE, {});
     expect(e.getHTML()).toBe(
       '<table><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>',
     );
   });
 
-  it('команды: стиль таблицы и ячейки меняется и снимается, ширина не теряется', () => {
+  it("commands: the table and cell style change and get removed, the width isn't lost", () => {
     const e = mount(
       '<table style="width: 100%;"><tbody><tr><td><p>a</p></td></tr></tbody></table>',
     );
@@ -83,7 +83,7 @@ describe('классы таблиц и ячеек', () => {
     );
   });
 
-  it('диалог свойств таблицы: выбор стиля из списка', async () => {
+  it('the table properties dialog: picking a style from the list', async () => {
     const e = mount('<table><tbody><tr><td><p>a</p></td></tr></tbody></table>', {
       ...LISTS,
       toolbar: 'tableprops',
@@ -93,8 +93,8 @@ describe('классы таблиц и ячеек', () => {
     const select = document.querySelector<HTMLSelectElement>('[role="dialog"] select')!;
     expect([...select.options].map((o) => o.textContent)).toEqual([
       'Default',
-      'С рамками',
-      'Раскладка',
+      'With borders',
+      'Layout',
     ]);
     select.value = 'grid';
     document.querySelector<HTMLButtonElement>('.nova-button-primary')!.click();

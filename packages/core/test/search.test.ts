@@ -30,7 +30,7 @@ const opts = (
   ...extra,
 });
 
-/** Текст по найденным диапазонам — так проверяем, что позиции указывают куда надо. */
+/** The text at the found ranges: this checks that the positions point to the right place. */
 const texts = (e: Editor, query: string, extra = {}) =>
   findMatches(e.view.state.doc, opts(query, extra)).map((m) =>
     e.view.state.doc.textBetween(m.from, m.to),
@@ -44,39 +44,39 @@ afterEach(() => {
 });
 
 describe('findMatches', () => {
-  it('без учёта регистра по умолчанию, с учётом — по флагу', () => {
+  it('case-insensitive by default, case-sensitive with the flag', () => {
     const e = mount('<p>Cat cat CAT</p>');
     expect(texts(e, 'cat')).toEqual(['Cat', 'cat', 'CAT']);
     expect(texts(e, 'cat', { caseSensitive: true })).toEqual(['cat']);
   });
 
-  it('целые слова, включая кириллицу', () => {
-    const e = mount('<p>кот котик кот, скот</p>');
-    expect(texts(e, 'кот')).toHaveLength(4);
-    expect(texts(e, 'кот', { wholeWord: true })).toEqual(['кот', 'кот']);
+  it('whole words, non-Latin scripts included', () => {
+    const e = mount('<p>γατα γατακι γατα, σγατα</p>');
+    expect(texts(e, 'γατα')).toHaveLength(4);
+    expect(texts(e, 'γατα', { wholeWord: true })).toEqual(['γατα', 'γατα']);
   });
 
-  it('совпадение через границу форматирования и после картинки — позиции верные', () => {
+  it('a match across a formatting boundary and after an image: the positions are right', () => {
     const e = mount(
       '<p>a<img src="https://a.io/x.png"><strong>he</strong>llo world</p><h2>hello</h2>',
     );
     expect(texts(e, 'hello')).toEqual(['hello', 'hello']);
   });
 
-  it('спецсимволы в запросе ищутся буквально', () => {
+  it('special characters in the query are searched literally', () => {
     const e = mount('<p>1+1=2 (a.b) [x]</p>');
     expect(texts(e, '1+1')).toEqual(['1+1']);
     expect(texts(e, '(a.b)')).toEqual(['(a.b)']);
     expect(texts(e, '.')).toEqual(['.']);
   });
 
-  it('пустой запрос — нет совпадений', () => {
+  it('an empty query has no matches', () => {
     expect(findMatches(mount('<p>a</p>').view.state.doc, opts(''))).toEqual([]);
   });
 });
 
-describe('команды поиска', () => {
-  it('findNext переходит по кругу и выделяет совпадение', () => {
+describe('search commands', () => {
+  it('findNext wraps around and selects the match', () => {
     const e = mount('<p>one two one two one</p>');
     e.exec(setSearch(opts('one')));
     const sel = () =>
@@ -93,7 +93,7 @@ describe('команды поиска', () => {
     expect(getSearchState(e.view.state).current).toBe(2);
   });
 
-  it('replaceCurrent сохраняет форматирование и пересчитывает совпадения', () => {
+  it('replaceCurrent keeps the formatting and recounts the matches', () => {
     const e = mount('<p><strong>foo</strong> foo</p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1)));
     e.exec(setSearch(opts('foo')));
@@ -102,7 +102,7 @@ describe('команды поиска', () => {
     expect(getSearchState(e.view.state).matches).toHaveLength(1);
   });
 
-  it('replaceAll — один шаг отмены', () => {
+  it('replaceAll is one undo step', () => {
     const e = mount('<p>a-a-a</p><p>a</p>');
     e.exec(setSearch(opts('a')));
     e.exec(replaceAll('bb'));
@@ -111,7 +111,7 @@ describe('команды поиска', () => {
     expect(e.getHTML()).toBe('<p>a-a-a</p><p>a</p>');
   });
 
-  it('совпадения подсвечиваются декорациями и пересчитываются при правке', () => {
+  it('matches are highlighted with decorations and recounted on edit', () => {
     const e = mount('<p>x y x</p>');
     e.exec(setSearch(opts('x')));
     expect(e.view.dom.querySelectorAll('.nova-search-match')).toHaveLength(2);
@@ -120,8 +120,8 @@ describe('команды поиска', () => {
   });
 });
 
-describe('панель поиска', () => {
-  it('Mod-f открывает, выделенный текст становится запросом, счётчик, Esc закрывает', async () => {
+describe('the search bar', () => {
+  it('Mod-f opens it, selected text becomes the query, the counter, Esc closes it', async () => {
     const e = mount('<p>alpha beta alpha</p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1, 6)));
     e.openSearch();
@@ -135,7 +135,7 @@ describe('панель поиска', () => {
     expect(e.view.dom.querySelectorAll('.nova-search-match')).toHaveLength(0);
   });
 
-  it('«Заменить все» из панели', () => {
+  it('"Replace all" from the bar', () => {
     const e = mount('<p>cat cat</p>');
     e.openSearch();
     const bar = e.root.querySelector<HTMLElement>('.nova-search')!;
@@ -151,14 +151,14 @@ describe('панель поиска', () => {
   });
 });
 
-describe('режимы просмотра', () => {
-  it('formatHTML переносит строки после блоков', () => {
+describe('view modes', () => {
+  it('formatHTML breaks lines after blocks', () => {
     expect(formatHTML('<h1>a</h1><ul><li><p>b</p></li></ul><p>c</p>')).toBe(
       '<h1>a</h1>\n<ul>\n<li><p>b</p>\n</li>\n</ul>\n<p>c</p>',
     );
   });
 
-  it('HTML-код: правка в диалоге применяется через схему', async () => {
+  it('HTML source: an edit in the dialog is applied through the schema', async () => {
     const e = mount('<p>a</p>');
     (await import('../src/ui/views')).openSourceCode(e);
     const dialog = e.root.querySelector<HTMLFormElement>('.nova-dialog')!;
@@ -170,19 +170,19 @@ describe('режимы просмотра', () => {
     expect(e.getHTML()).toBe('<h2>new</h2>');
   });
 
-  it('предпросмотр показывает содержимое без редактирования', async () => {
+  it('the preview shows the content without editing', async () => {
     const e = mount('<p><a href="https://a.io">link</a></p>');
     (await import('../src/ui/views')).openPreview(e);
     const preview = e.root.querySelector('.nova-preview')!;
     expect(preview.querySelector('a')!.getAttribute('target')).toBe('_blank');
     expect(preview.getAttribute('contenteditable')).toBeNull();
-    // Нет кнопки «сохранить» — только «закрыть».
+    // No "save" button, only "close".
     expect(e.root.querySelector<HTMLButtonElement>('.nova-dialog [type="submit"]')!.hidden).toBe(
       true,
     );
   });
 
-  it('справка по горячим клавишам', async () => {
+  it('keyboard shortcuts help', async () => {
     const e = mount('<p>a</p>');
     (await import('../src/ui/views')).openHelp(e);
     const rows = e.root.querySelectorAll('.nova-help-table tr');
@@ -190,7 +190,7 @@ describe('режимы просмотра', () => {
     expect(e.root.querySelector('.nova-help')!.textContent).toContain('Bold');
   });
 
-  it('полноэкранный режим включается и выключается', () => {
+  it('fullscreen turns on and off', () => {
     const e = mount('<p>a</p>');
     toggleFullscreen(e);
     expect(isFullscreen(e)).toBe(true);
@@ -200,7 +200,7 @@ describe('режимы просмотра', () => {
     expect(document.documentElement.classList.contains('nova-fullscreen-lock')).toBe(false);
   });
 
-  it('schema экспортирована (sanity)', () => {
+  it('schema is exported (sanity)', () => {
     expect(schema.nodes.table).toBeDefined();
   });
 });

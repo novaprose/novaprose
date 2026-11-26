@@ -5,8 +5,8 @@ import { markdownToHTML, toMarkdown } from '../src/markdown';
 import { toggleChecklist, toggleChecklistItem } from '../src/plugins/checklist';
 
 /**
- * Чек-листы: маркированный список с флагом checklist и пункты с checked. HTML — как у Tiptap
- * (data-type="taskList"/"taskItem", data-checked); разбираем и TinyMCE (tox-checklist), и GitHub.
+ * Checklists: a bulleted list with the checklist flag and items with checked. The HTML is Tiptap's
+ * (data-type="taskList"/"taskItem", data-checked); TinyMCE (tox-checklist) and GitHub are parsed too.
  */
 
 let editor: Editor | null = null;
@@ -21,12 +21,12 @@ async function mount(content: string, options: Partial<EditorOptions> = {}): Pro
   document.body.append(element);
   editor = createEditor({ element, content, plugins: ['checklist'], ...options });
   editor.focus();
-  // Плагин грузится лениво: галочки, кнопка и ввод «[ ]» — после editor.ready.
+  // The plugin loads lazily: the checkboxes, the button and typing "[ ]" work after editor.ready.
   await editor.ready;
   return editor;
 }
 
-/** Курсор в конец текста `text`. */
+/** The cursor to the end of the text `text`. */
 function cursorAfter(e: Editor, text: string): void {
   let pos = -1;
   e.view.state.doc.descendants((node, at) => {
@@ -43,12 +43,12 @@ const TASKS =
   '<li data-type="taskItem" data-checked="false"><p>Call Anna</p></li>' +
   '</ul>';
 
-describe('HTML чек-листов', () => {
-  it('туда и обратно без изменений (формат Tiptap)', async () => {
+describe('checklist HTML', () => {
+  it('round trip without changes (the Tiptap format)', async () => {
     expect((await mount(TASKS)).getHTML()).toBe(TASKS);
   });
 
-  it('чек-лист TinyMCE и задачи GitHub становятся чек-листом', async () => {
+  it('a TinyMCE checklist and GitHub tasks become a checklist', async () => {
     const tiny =
       '<ul class="tox-checklist"><li class="tox-checklist--checked">Buy milk</li><li>Call Anna</li></ul>';
     expect((await mount(tiny)).getHTML()).toBe(TASKS);
@@ -59,13 +59,13 @@ describe('HTML чек-листов', () => {
     expect((await mount(github)).getHTML()).toBe(TASKS);
   });
 
-  it('data-checked в обычном списке не делает его чек-листом', async () => {
+  it("data-checked in a regular list doesn't make it a checklist", async () => {
     expect((await mount('<ul><li data-checked="true"><p>a</p></li></ul>')).getHTML()).toBe(
       '<ul><li><p>a</p></li></ul>',
     );
   });
 
-  it('без плагина содержимое не теряется (схема ядра)', async () => {
+  it("without the plugin the content isn't lost (the core schema)", async () => {
     const element = document.createElement('div');
     document.body.append(element);
     editor = createEditor({ element, content: TASKS });
@@ -73,8 +73,8 @@ describe('HTML чек-листов', () => {
   });
 });
 
-describe('редактирование', () => {
-  it('Enter в отмеченном пункте — новый неотмеченный пункт', async () => {
+describe('editing', () => {
+  it('Enter in a checked item makes a new unchecked item', async () => {
     const e = await mount(TASKS);
     cursorAfter(e, 'Buy milk');
     e.view.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
@@ -85,7 +85,7 @@ describe('редактирование', () => {
     );
   });
 
-  it('Ctrl/Cmd+Enter и нажатие на галочку отмечают пункт', async () => {
+  it('Ctrl/Cmd+Enter and a click on the checkbox check the item', async () => {
     const e = await mount(TASKS);
     cursorAfter(e, 'Call Anna');
     expect(e.exec(toggleChecklistItem)).toBe(true);
@@ -98,7 +98,7 @@ describe('редактирование', () => {
     expect(e.getHTML()).toContain('data-checked="false"><p>Buy milk');
   });
 
-  it('только для чтения — галочки не переключаются', async () => {
+  it("read only: the checkboxes don't toggle", async () => {
     const e = await mount(TASKS, { editable: false });
     e.root
       .querySelector<HTMLElement>('.nova-check')!
@@ -107,8 +107,8 @@ describe('редактирование', () => {
   });
 });
 
-describe('кнопка «Чек-лист» и смена вида списка', () => {
-  it('абзац → чек-лист; повторно — снимает список', async () => {
+describe('the "Checklist" button and changing the list kind', () => {
+  it('a paragraph → a checklist; pressing again removes the list', async () => {
     const e = await mount('<p>Plan</p>');
     expect(e.exec(toggleChecklist)).toBe(true);
     expect(e.getHTML()).toBe(
@@ -122,7 +122,7 @@ describe('кнопка «Чек-лист» и смена вида списка',
     expect(e.getHTML()).toBe('<p>Plan</p>');
   });
 
-  it('маркированный и нумерованный список становятся чек-листом и обратно', async () => {
+  it('bulleted and numbered lists become a checklist and back', async () => {
     const e = await mount('<ol><li><p>a</p></li><li><p>b</p></li></ol>');
     cursorAfter(e, 'a');
     e.exec(toggleChecklist);
@@ -130,12 +130,12 @@ describe('кнопка «Чек-лист» и смена вида списка',
       '<ul data-type="taskList"><li data-type="taskItem" data-checked="false"><p>a</p></li>' +
         '<li data-type="taskItem" data-checked="false"><p>b</p></li></ul>',
     );
-    // Кнопка маркированного списка внутри чек-листа делает его обычным списком.
+    // The bulleted list button inside a checklist turns it into a regular list.
     e.exec('bulletList');
     expect(e.getHTML()).toBe('<ul><li><p>a</p></li><li><p>b</p></li></ul>');
   });
 
-  it('маркированный → нумерованный меняет вид списка (раньше кнопка не делала ничего)', async () => {
+  it('bulleted → numbered changes the list kind (the button used to do nothing)', async () => {
     const e = await mount('<ul><li><p>a</p></li></ul>');
     cursorAfter(e, 'a');
     expect(e.exec('orderedList')).toBe(true);
@@ -144,14 +144,14 @@ describe('кнопка «Чек-лист» и смена вида списка',
     expect(e.getHTML()).toBe('<ul><li><p>a</p></li></ul>');
   });
 
-  it('правила контента без ul: кнопка недоступна, чек-лист — абзацы', async () => {
+  it('content rules without ul: the button is unavailable, a checklist becomes paragraphs', async () => {
     const e = await mount(TASKS, { validElements: 'p' });
     expect(e.getHTML()).toBe('<p>Buy milk</p><p>Call Anna</p>');
     expect(e.isAllowed('checklist')).toBe(false);
   });
 });
 
-describe('ввод «[ ]» и «[x]»', () => {
+describe('typing "[ ]" and "[x]"', () => {
   const type = (e: Editor, text: string) => {
     for (const ch of text) {
       const { from, to } = e.view.state.selection;
@@ -162,7 +162,7 @@ describe('ввод «[ ]» и «[x]»', () => {
     }
   };
 
-  it('в начале абзаца — пункт чек-листа; [x] — отмеченный; продолжает предыдущий чек-лист', async () => {
+  it('at the start of a paragraph: a checklist item; [x] is checked; it continues the previous checklist', async () => {
     const e = await mount('<p></p>');
     type(e, '[ ] Milk');
     expect(e.getHTML()).toBe(
@@ -170,7 +170,7 @@ describe('ввод «[ ]» и «[x]»', () => {
     );
   });
 
-  it('в первом пункте обычного списка — весь список становится чек-листом', async () => {
+  it('in the first item of a regular list: the whole list becomes a checklist', async () => {
     const e = await mount('<ul><li><p>a</p></li><li><p></p></li></ul>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.atEnd(e.view.state.doc)));
     type(e, '[x] b');
@@ -182,7 +182,7 @@ describe('ввод «[ ]» и «[x]»', () => {
 });
 
 describe('Markdown', () => {
-  it('экспорт и импорт задач GFM', async () => {
+  it('exporting and importing GFM tasks', async () => {
     const e = await mount(TASKS);
     const md = toMarkdown(e);
     expect(md).toBe('* [x] Buy milk\n* [ ] Call Anna');
@@ -190,14 +190,14 @@ describe('Markdown', () => {
     expect(e.getHTML()).toBe(TASKS);
   });
 
-  it('обычный пункт, начинающийся с «[x]», не становится задачей', async () => {
+  it('a regular item starting with "[x]" doesn\'t become a task', async () => {
     const e = await mount('<ul><li><p>[x] literally</p></li></ul>');
     const md = toMarkdown(e);
     e.setContent(markdownToHTML(md));
     expect(e.getHTML()).toBe('<ul><li><p>[x] literally</p></li></ul>');
   });
 
-  it('нумерованные «задачи» остаются текстом (нумерованных чек-листов нет)', async () => {
+  it('numbered "tasks" stay text (there are no numbered checklists)', async () => {
     expect(markdownToHTML('1. [ ] a')).toBe('<ol>\n<li>[ ] a</li>\n</ol>\n');
   });
 });

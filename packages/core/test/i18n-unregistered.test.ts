@@ -2,17 +2,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor } from '../src';
 
 /**
- * Язык без подключённого пакета: интерфейс на английском (целиком, без смеси с плагинами) и одно
- * понятное предупреждение в консоли с подсказкой, как подключить пакет. Отдельный файл — чистое
- * состояние: здесь никто не вызывал registerLanguage.
+ * A language without an attached pack: the interface is in English (entirely, without a mix with plugins) with one
+ * clear warning in the console that hints how to attach the pack. A separate file means a clean
+ * state: nobody called registerLanguage here.
  */
 afterEach(() => {
   document.body.innerHTML = '';
   vi.restoreAllMocks();
 });
 
-describe('язык не подключён', () => {
-  it('английский интерфейс и подсказка в консоли (один раз)', async () => {
+describe('the language is not attached', () => {
+  it('an English interface and a hint in the console (once)', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     for (let i = 0; i < 2; i++) {
       const element = document.createElement('div');
@@ -27,7 +27,7 @@ describe('язык не подключён', () => {
       expect(element.querySelector('[data-control="bold"]')?.getAttribute('aria-label')).toBe(
         'Bold',
       );
-      // Плагин тоже по-английски — без смеси языков.
+      // The plugin is in English too: no mix of languages.
       expect(element.querySelector('[data-control="anchor"]')?.getAttribute('aria-label')).toBe(
         'Anchor',
       );
@@ -37,7 +37,7 @@ describe('язык не подключён', () => {
     expect(String(warn.mock.calls[0]![0])).toContain('@novaprose/core/i18n/ru');
   });
 
-  it('английский — без предупреждения', () => {
+  it('English gives no warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const element = document.createElement('div');
     createEditor({ element, language: 'en-GB' }).destroy();

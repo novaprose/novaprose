@@ -3,37 +3,37 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { createEditor } from '../src';
 import { markdownToHTML, toMarkdown } from '../src/markdown';
 
-/** Markdown на входе и выходе: @novaprose/core/markdown. */
+/** Markdown in and out: @novaprose/core/markdown. */
 
 const element = document.createElement('div');
 document.body.appendChild(element);
 const editor = createEditor({ element, plugins: ['mergetags', 'mentions', 'pagebreak'] });
 afterAll(() => editor.destroy());
 
-/** Markdown → документ редактора → Markdown. */
+/** Markdown → editor document → Markdown. */
 const roundTrip = (md: string) => {
   editor.setContent(markdownToHTML(md), { addToHistory: false });
   return toMarkdown(editor);
 };
 
-describe('Markdown → редактор → Markdown', () => {
+describe('Markdown → editor → Markdown', () => {
   it.each([
-    ['заголовки', '# H1\n\n## H2\n\n###### H6'],
-    ['оформление', 'Text **bold** *italic* ~~strike~~ `code`'],
-    ['ссылка с заголовком', '[NovaProse](https://novaprose.com "Editor")'],
-    ['картинка', '![Logo](https://example.com/a.png)'],
-    ['маркированный список', '* one\n* two\n  * nested'],
-    ['нумерованный список с началом', '3. three\n4. four'],
-    ['цитата', '> quoted text\n>\n> second paragraph'],
-    ['блок кода с языком', '```ts\nconst a = 1;\n```'],
-    ['линия', 'before\n\n---\n\nafter'],
-    ['таблица GFM', '| A | B |\n| --- | --- |\n| 1 | 2 |'],
+    ['headings', '# H1\n\n## H2\n\n###### H6'],
+    ['formatting', 'Text **bold** *italic* ~~strike~~ `code`'],
+    ['a link with a title', '[NovaProse](https://novaprose.com "Editor")'],
+    ['an image', '![Logo](https://example.com/a.png)'],
+    ['a bulleted list', '* one\n* two\n  * nested'],
+    ['a numbered list with a start', '3. three\n4. four'],
+    ['a quote', '> quoted text\n>\n> second paragraph'],
+    ['a code block with a language', '```ts\nconst a = 1;\n```'],
+    ['a rule', 'before\n\n---\n\nafter'],
+    ['a GFM table', '| A | B |\n| --- | --- |\n| 1 | 2 |'],
   ])('%s', (_name, md) => {
     expect(roundTrip(md)).toBe(md);
   });
 
-  // Найдено property-based тестом: адрес без ссылки становился ссылкой после второго сохранения.
-  it('адрес без ссылки остаётся текстом, ссылка — ссылкой', () => {
+  // Found by a property-based test: an address without a link became a link after the second save.
+  it('an address without a link stays text, a link stays a link', () => {
     editor.setContent(
       '<p>site example.com and https://example.com_ and <a href="https://a.io">https://a.io</a></p>',
     );
@@ -45,39 +45,39 @@ describe('Markdown → редактор → Markdown', () => {
     expect(roundTrip(once)).toBe(once);
   });
 
-  // Найдено property-based тестом: служебный перевод строки markdown-it давал пустую строку
-  // внизу блока кода, а в цитате размножался с каждым сохранением.
-  it('блок кода без лишней пустой строки, в том числе в цитате', () => {
+  // Found by a property-based test: markdown-it's service line break gave an empty line
+  // at the bottom of a code block, and inside a quote it multiplied with every save.
+  it('a code block without an extra empty line, inside a quote too', () => {
     editor.setContent(markdownToHTML('```\nx\n```'));
     expect(editor.getHTML()).toBe('<pre><code>x</code></pre>');
     expect(roundTrip('> ```\n> x \n> ```')).toBe('> ```\n> x \n> ```');
   });
 
-  it('заголовок, текст которого кончается на «#», не теряет его', () => {
-    // «#» без пробела перед ним — не закрытие заголовка, экранировать не нужно.
+  it('a heading whose text ends with "#" keeps it', () => {
+    // "#" without a space before it doesn't close the heading, so it needs no escaping.
     expect(roundTrip('# C#')).toBe('# C#');
     editor.setContent('<h2>Tag #</h2>');
     editor.setContent(markdownToHTML(toMarkdown(editor)));
     expect(editor.getHTML()).toBe('<h2>Tag #</h2>');
   });
 
-  it('пустой блок кода не растёт', () => {
+  it("an empty code block doesn't grow", () => {
     expect(roundTrip('> ```\n> ```')).toBe('> ```\n> ```');
   });
 
-  it('в ячейке таблицы «|» экранируется', () => {
+  it('"|" is escaped in a table cell', () => {
     editor.setContent(
       '<table><tbody><tr><th><p>a|b</p></th></tr><tr><td><p>c</p></td></tr></tbody></table>',
     );
     expect(toMarkdown(editor)).toBe('| a\\|b |\n| --- |\n| c |');
   });
 
-  it('оформление без аналога в Markdown снимается, текст остаётся', () => {
+  it('formatting with no Markdown equivalent is removed, the text stays', () => {
     editor.setContent('<p><u>under</u> <span style="color: #ff0000">red</span> H<sub>2</sub>O</p>');
     expect(toMarkdown(editor)).toBe('under red H2O');
   });
 
-  it('переменные шаблона — {{key}}, упоминания — @Имя', () => {
+  it('template variables become {{key}}, mentions become @Name', () => {
     editor.setContent(
       '<p>Hi <span data-mergetag="client" contenteditable="false">Client</span> and <span data-mention="u1">@Anna</span></p>',
     );
@@ -85,8 +85,8 @@ describe('Markdown → редактор → Markdown', () => {
   });
 });
 
-describe('безопасность Markdown на входе', () => {
-  it('javascript:-ссылки и картинки не становятся ссылками (остаются текстом)', () => {
+describe('Markdown input security', () => {
+  it("javascript: links and images don't become links (they stay text)", () => {
     editor.setContent(markdownToHTML('[x](javascript:alert(1)) ![y](javascript:alert(1))'));
     const html = editor.getHTML();
     expect(html).not.toContain('<a');
@@ -94,14 +94,14 @@ describe('безопасность Markdown на входе', () => {
     expect(html).not.toMatch(/(href|src)="javascript/i);
   });
 
-  it('data:text/html и vbscript: — тоже', () => {
+  it('data:text/html and vbscript: too', () => {
     editor.setContent(
       markdownToHTML('[a](data:text/html,<script>alert(1)</script>) [b](vbscript:x)'),
     );
     expect(editor.getHTML()).not.toMatch(/href="(data|vbscript)/i);
   });
 
-  it('сырой HTML не исполняется — остаётся текстом', () => {
+  it("raw HTML doesn't run: it stays text", () => {
     editor.setContent(markdownToHTML('<img src=x onerror=alert(1)> <script>alert(1)</script>'));
     const html = editor.getHTML();
     expect(html).not.toContain('<img');
@@ -110,7 +110,7 @@ describe('безопасность Markdown на входе', () => {
   });
 });
 
-describe('стабильность (property-based)', () => {
+describe('stability (property-based)', () => {
   const RUNS = Number(process.env.FC_RUNS) || 200;
   const piece = fc.oneof(
     fc.constantFrom(
@@ -144,7 +144,7 @@ describe('стабильность (property-based)', () => {
       '\n\n',
       'https://example.com',
       'text',
-      'Слово',
+      'Λέξη',
       '1) ',
       '+ ',
       '- ',
@@ -165,39 +165,39 @@ describe('стабильность (property-based)', () => {
   );
   const markdown = fc.array(piece, { maxLength: 25 }).map((parts) => parts.join(''));
 
-  /** Документ без марок: текст и структура блоков. */
+  /** A document without marks: the text and the block structure. */
   const structure = () =>
     JSON.stringify(editor.getJSON(), (key, value) => (key === 'marks' ? undefined : value));
 
-  it('текст и структура блоков не меняются после одного круга (любой вход)', () => {
+  it("the text and block structure don't change after one round (any input)", () => {
     fc.assert(
       fc.property(markdown, (md) => {
         editor.setContent(markdownToHTML(roundTrip(md)), { addToHistory: false });
         const before = structure();
         roundTrip(toMarkdown(editor));
-        expect(structure(), `вход: ${JSON.stringify(md)}`).toBe(before);
+        expect(structure(), `input: ${JSON.stringify(md)}`).toBe(before);
       }),
       { numRuns: RUNS },
     );
   });
 
   /**
-   * Полная стабильность, включая оформление, — для входов без «*» и «_». Известное ограничение:
-   * жирный/курсив вплотную к пунктуации («**{текст**») по правилам CommonMark о «фланкировании»
-   * иногда не распознаётся при чтении — теряется оформление, но не текст (проверка выше).
+   * Full stability, formatting included, for inputs without "*" and "_". A known limitation:
+   * bold/italic right next to punctuation ("**{text**"), by CommonMark's "flanking" rules,
+   * is sometimes not recognized on reading: the formatting is lost, but not the text (checked above).
    */
-  it('после одного круга Markdown не меняется (экранирование корректно)', () => {
+  it("after one round the Markdown doesn't change (escaping is correct)", () => {
     const noEmphasis = markdown.filter((md) => !/[*_]/.test(md));
     fc.assert(
       fc.property(noEmphasis, (md) => {
         const once = roundTrip(md);
-        expect(roundTrip(once), `вход: ${JSON.stringify(md)}`).toBe(once);
+        expect(roundTrip(once), `input: ${JSON.stringify(md)}`).toBe(once);
       }),
       { numRuns: RUNS },
     );
   });
 
-  it('перенос строки, за которым «#», не превращается в заголовок', () => {
+  it('a line break followed by "#" doesn\'t turn into a heading', () => {
     editor.setContent('<p>$<br># tag</p>');
     editor.setContent(markdownToHTML(toMarkdown(editor)));
     expect(editor.getHTML()).toBe('<p>$<br># tag</p>');

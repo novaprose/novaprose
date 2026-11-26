@@ -1,16 +1,16 @@
 /**
- * Property-based тесты: вместо ручных примеров fast-check генерирует тысячи случайных
- * HTML-фрагментов и JSON-документов с заведомо опасными конструкциями и проверяет свойства,
- * которые должны выполняться для ЛЮБОГО входа:
- *  1. на выходе getHTML() нет способа выполнить скрипт (обработчики on*, опасные теги, URL);
- *  2. HTML стабилен: getHTML → setContent → getHTML даёт то же самое (идемпотентность);
- *  3. редактор не падает ни на каком входе;
- *  4. HTML на сервере (createRenderer из JSON) совпадает с getHTML() редактора.
- * Оракул безопасности независим от кода редактора: он не вызывает isSafeLinkUrl,
- * а сам разбирает выход как браузер.
+ * Property-based tests: instead of hand-written examples, fast-check generates thousands of random
+ * HTML fragments and JSON documents with deliberately dangerous constructs and checks properties
+ * that must hold for ANY input:
+ *  1. the output of getHTML() has no way to run a script (on* handlers, dangerous tags, URLs);
+ *  2. the HTML is stable: getHTML → setContent → getHTML gives the same thing (idempotence);
+ *  3. the editor doesn't crash on any input;
+ *  4. the HTML on the server (createRenderer from JSON) matches the editor's getHTML().
+ * The security oracle is independent of the editor's code: it doesn't call isSafeLinkUrl
+ * but parses the output itself, as a browser would.
  *
- * При падении fast-check печатает минимальный воспроизводимый пример и seed:
- * его стоит превратить в обычный тест-регрессию.
+ * On a failure fast-check prints the minimal reproducible example and the seed:
+ * turn it into a regular regression test.
  */
 import fc from 'fast-check';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -21,7 +21,7 @@ registerHtmlRules(htmlRules);
 
 const RUNS = Number(process.env.FC_RUNS) || 300;
 
-// Все плагины со своими узлами схемы — максимальная поверхность разбора.
+// Every plugin with its own schema nodes: the largest parsing surface.
 const SCHEMA_PLUGINS = [
   'accordion',
   'math',
@@ -36,7 +36,7 @@ const SCHEMA_PLUGINS = [
 ];
 
 let editor: Editor;
-/** Редактор с максимально разрешающими правилами элементов и атрибутов. */
+/** An editor with the most permissive element and attribute rules. */
 let ruled: Editor;
 const PERMISSIVE = {
   extendedValidElements:
@@ -54,8 +54,8 @@ beforeAll(() => {
   console.warn = () => {};
   ruled = createEditor({ element: second, plugins: SCHEMA_PLUGINS, ...PERMISSIVE } as never);
   console.warn = warn;
-  // Ленивые части плагинов (оглавление обновляет HTML) — до первой проверки, а не посреди неё:
-  // иначе один и тот же документ выводился бы по-разному до и после их загрузки.
+  // Lazy parts of plugins (the table of contents updates the HTML) load before the first check, not in the middle of it:
+  // otherwise the same document would be output differently before and after they load.
   return Promise.all([editor.ready, ruled.ready]);
 });
 afterAll(() => {
@@ -63,7 +63,7 @@ afterAll(() => {
   ruled.destroy();
 });
 
-/* ------------------------------ генераторы ------------------------------ */
+/* ------------------------------ generators ------------------------------ */
 
 const DANGEROUS_URLS = [
   'javascript:alert(1)',
@@ -255,7 +255,7 @@ const htmlDocument = fc
   .array(htmlTree, { minLength: 1, maxLength: 4 })
   .map((parts) => parts.join(''));
 
-/* ------------------------- независимый оракул XSS ------------------------- */
+/* ------------------------- independent XSS oracle ------------------------- */
 
 const FORBIDDEN_TAGS = new Set([
   'script',
@@ -291,7 +291,7 @@ const URL_ATTRS = [
 ];
 const SAFE_DATA_IMAGE = /^data:image\/(png|jpe?g|gif|webp|avif|bmp);base64,/i;
 
-/** Протокол так, как его увидит браузер: без управляющих символов и пробелов. */
+/** The protocol as a browser sees it: without control characters and spaces. */
 function scheme(url: string): string | null {
   // eslint-disable-next-line no-control-regex
   const m = url.replace(/[\u0000- \u007f-\u009f]/g, '').match(/^([a-z][a-z0-9+.-]*):/i);
@@ -304,85 +304,85 @@ function unsafeUrl(url: string): boolean {
   return s !== null && !['http', 'https', 'mailto', 'tel', 'blob'].includes(s);
 }
 
-/** Возвращает список нарушений в HTML (пустой — безопасно). */
+/** Returns the list of violations in the HTML (empty means safe). */
 function xssViolations(html: string): string[] {
   const out: string[] = [];
   const doc = new DOMParser().parseFromString(`<body>${html}</body>`, 'text/html');
   for (const el of doc.body.querySelectorAll('*')) {
     const tag = el.tagName.toLowerCase();
-    if (FORBIDDEN_TAGS.has(tag)) out.push(`тег <${tag}>`);
+    if (FORBIDDEN_TAGS.has(tag)) out.push(`tag <${tag}>`);
     for (const attr of el.attributes) {
       const name = attr.name.toLowerCase();
-      if (name.startsWith('on')) out.push(`обработчик ${name} на <${tag}>`);
+      if (name.startsWith('on')) out.push(`handler ${name} on <${tag}>`);
       if (URL_ATTRS.includes(name)) {
         const urls =
           name === 'srcset'
             ? attr.value.split(',').map((x) => x.trim().split(/\s+/)[0] ?? '')
             : [attr.value];
-        for (const u of urls) if (unsafeUrl(u)) out.push(`${name}="${attr.value}" на <${tag}>`);
+        for (const u of urls) if (unsafeUrl(u)) out.push(`${name}="${attr.value}" on <${tag}>`);
       }
       if (
         name === 'style' &&
         /expression\s*\(|javascript:|behavior\s*:|-moz-binding|url\s*\(/i.test(attr.value)
       ) {
-        out.push(`опасный style="${attr.value}" на <${tag}>`);
+        out.push(`dangerous style="${attr.value}" on <${tag}>`);
       }
     }
     if (tag === 'iframe') {
       const src = el.getAttribute('src') ?? '';
-      if (!/^https:\/\//i.test(src)) out.push(`iframe с src="${src}"`);
+      if (!/^https:\/\//i.test(src)) out.push(`iframe with src="${src}"`);
     }
   }
   return out;
 }
 
-/* --------------------------------- свойства -------------------------------- */
+/* --------------------------------- properties -------------------------------- */
 
-describe('безопасность и стабильность HTML (property-based)', () => {
-  it('оракул ловит то, что должен (самопроверка)', () => {
+describe('HTML security and stability (property-based)', () => {
+  it('the oracle catches what it should (self-check)', () => {
     expect(xssViolations('<p onclick="x">a</p>')).not.toEqual([]);
     expect(xssViolations('<a href="java\tscript:alert(1)">a</a>')).not.toEqual([]);
     expect(xssViolations('<p style="background:url(javascript:x)">a</p>')).not.toEqual([]);
     expect(xssViolations('<p><a href="https://a.io">a</a></p>')).toEqual([]);
   });
 
-  it('getHTML() безопасен для любого входного HTML', () => {
+  it('getHTML() is safe for any input HTML', () => {
     fc.assert(
       fc.property(htmlDocument, (input) => {
         editor.setContent(input, { addToHistory: false });
         const violations = xssViolations(editor.getHTML());
-        expect(violations, `вход: ${input}`).toEqual([]);
+        expect(violations, `input: ${input}`).toEqual([]);
       }),
       { numRuns: RUNS },
     );
   });
 
-  it('HTML стабилен: повторный разбор собственного вывода ничего не меняет', () => {
+  it('the HTML is stable: parsing its own output again changes nothing', () => {
     fc.assert(
       fc.property(htmlDocument, (input) => {
         editor.setContent(input, { addToHistory: false });
         const first = editor.getHTML();
         editor.setContent(first, { addToHistory: false });
-        expect(editor.getHTML(), `вход: ${input}`).toBe(first);
+        expect(editor.getHTML(), `input: ${input}`).toBe(first);
       }),
       { numRuns: RUNS },
     );
   });
 
-  it('HTML на сервере из JSON совпадает с getHTML() редактора', () => {
+  it("the server's HTML from JSON matches the editor's getHTML()", () => {
     const renderer = createRenderer({ plugins: SCHEMA_PLUGINS });
     fc.assert(
       fc.property(htmlDocument, (input) => {
         editor.setContent(input, { addToHistory: false });
-        expect(renderer.html(editor.getJSON()), `вход: ${input}`).toBe(editor.getHTML());
+        expect(renderer.html(editor.getJSON()), `input: ${input}`).toBe(editor.getHTML());
       }),
       { numRuns: RUNS },
     );
   });
 
-  it('JSON-документ с опасными атрибутами не даёт XSS на выходе', () => {
-    // Все атрибуты всех узлов и марок схемы (лишние ProseMirror игнорирует). Значения — в т.ч.
-    // не того типа: JSON приходит снаружи (БД, API), его никто не обязан проверять до нас.
+  it('a JSON document with dangerous attributes gives no XSS on output', () => {
+    // Every attribute of every node and mark of the schema (ProseMirror ignores extra ones). Values include
+    // the wrong types: JSON comes from outside (a database, an API), and nobody has to check it before us.
     const anyValue = fc.oneof(attrValue, fc.integer({ min: -2, max: 9 }), fc.constant(null));
     const attrs = fc.record({
       src: anyValue,
@@ -414,9 +414,9 @@ describe('безопасность и стабильность HTML (property-ba
       checked: anyValue,
       checklist: anyValue,
       open: anyValue,
-      // Исходник формулы идёт в data-latex и в текст — что угодно из JSON.
+      // The formula source goes into data-latex and the text: anything from JSON.
       latex: fc.oneof(anyValue, attrValue),
-      // Пункты оглавления: уровень, id и текст — тоже чем угодно (id идёт в href).
+      // Table of contents items: level, id and text can be anything too (the id goes into href).
       entries: fc.oneof(
         anyValue,
         fc.array(fc.record({ level: anyValue, id: attrValue, text: attrValue }), { maxLength: 3 }),
@@ -463,7 +463,7 @@ describe('безопасность и стабильность HTML (property-ba
       attrs,
       content: fc.array(textblock, { minLength: 1, maxLength: 1 }),
     });
-    // Списки, в т.ч. чек-листы: checked/checklist из JSON — чем угодно.
+    // Lists, checklists included: checked/checklist from JSON can be anything.
     const list = fc.record({
       type: fc.constantFrom('bullet_list', 'ordered_list'),
       attrs,
@@ -471,7 +471,7 @@ describe('безопасность и стабильность HTML (property-ba
         fc.record({
           type: fc.constant('list_item'),
           attrs,
-          // Пункт списка начинается с абзаца (иначе JSON отвергается целиком — тест проверял бы меньше).
+          // A list item starts with a paragraph (otherwise the whole JSON is rejected and the test would check less).
           content: fc.array(
             fc.record({
               type: fc.constant('paragraph'),
@@ -498,7 +498,7 @@ describe('безопасность и стабильность HTML (property-ba
         },
       ),
     });
-    // Раскрывающийся блок: open из JSON — чем угодно, заголовок со строчными узлами.
+    // A collapsible block: open from JSON can be anything, the title has inline nodes.
     const details = fc.record({
       type: fc.constant('details'),
       attrs,
@@ -522,44 +522,44 @@ describe('безопасность и стабильность HTML (property-ba
           try {
             editor.setContent(json as never, { addToHistory: false });
           } catch {
-            return; // отказ принять неверный JSON — допустимое поведение
+            return; // refusing invalid JSON is acceptable behavior
           }
           accepted++;
           const violations = xssViolations(editor.getHTML());
-          expect(violations, `вход: ${JSON.stringify(json)}`).toEqual([]);
+          expect(violations, `input: ${JSON.stringify(json)}`).toEqual([]);
         },
       ),
       { numRuns: RUNS },
     );
-    // Защита от «пустого» теста: генератор должен давать в основном валидные документы.
+    // Guard against an "empty" test: the generator must produce mostly valid documents.
     expect(accepted / RUNS).toBeGreaterThan(0.9);
   });
 });
 
-describe('правила элементов и атрибутов не открывают дыр (property-based)', () => {
-  it('getHTML() безопасен при правилах «разрешить всё»', () => {
+describe("element and attribute rules don't open holes (property-based)", () => {
+  it('getHTML() is safe with "allow everything" rules', () => {
     fc.assert(
       fc.property(htmlDocument, (input) => {
         ruled.setContent(input, { addToHistory: false });
-        expect(xssViolations(ruled.getHTML()), `вход: ${input}`).toEqual([]);
+        expect(xssViolations(ruled.getHTML()), `input: ${input}`).toEqual([]);
       }),
       { numRuns: RUNS },
     );
   });
 
-  it('HTML стабилен при правилах «разрешить всё»', () => {
+  it('the HTML is stable with "allow everything" rules', () => {
     fc.assert(
       fc.property(htmlDocument, (input) => {
         ruled.setContent(input, { addToHistory: false });
         const first = ruled.getHTML();
         ruled.setContent(first, { addToHistory: false });
-        expect(ruled.getHTML(), `вход: ${input}`).toBe(first);
+        expect(ruled.getHTML(), `input: ${input}`).toBe(first);
       }),
       { numRuns: RUNS },
     );
   });
 
-  it('HTML на сервере совпадает с getHTML() и при правилах «разрешить всё»', () => {
+  it('the server HTML matches getHTML() with "allow everything" rules too', () => {
     const warn = console.warn;
     console.warn = () => {};
     const renderer = createRenderer({ plugins: SCHEMA_PLUGINS, ...PERMISSIVE });
@@ -567,13 +567,13 @@ describe('правила элементов и атрибутов не откр�
     fc.assert(
       fc.property(htmlDocument, (input) => {
         ruled.setContent(input, { addToHistory: false });
-        expect(renderer.html(ruled.getJSON()), `вход: ${input}`).toBe(ruled.getHTML());
+        expect(renderer.html(ruled.getJSON()), `input: ${input}`).toBe(ruled.getHTML());
       }),
       { numRuns: RUNS },
     );
   });
 
-  it('JSON с чужими тегами и атрибутами в узлах правил не даёт XSS', () => {
+  it('JSON with foreign tags and attributes in rule nodes gives no XSS', () => {
     const anyValue = fc.oneof(attrValue, fc.integer(), fc.constant(null), fc.constant({}));
     const htmlAttrs = fc.oneof(
       fc.dictionary(fc.constantFrom(...ATTRS, 'srcdoc', 'is', 'ONCLICK', 'a b', ''), anyValue, {
@@ -582,7 +582,7 @@ describe('правила элементов и атрибутов не откр�
       anyValue,
     );
     const tag = fc.constantFrom('div', 'section', 'script', 'iframe', 'img', 'abbr', 7, null);
-    // href — обязательный атрибут ссылки: без него JSON отвергается целиком, тест проверял бы меньше.
+    // href is a required attribute of a link: without it the whole JSON is rejected and the test would check less.
     const attrs = fc.record({ tag, htmlAttrs, href: attrValue });
     const text = fc.record({
       type: fc.constant('text'),
@@ -614,7 +614,7 @@ describe('правила элементов и атрибутов не откр�
             return;
           }
           accepted++;
-          expect(xssViolations(ruled.getHTML()), `вход: ${JSON.stringify(json)}`).toEqual([]);
+          expect(xssViolations(ruled.getHTML()), `input: ${JSON.stringify(json)}`).toEqual([]);
         },
       ),
       { numRuns: RUNS },

@@ -11,8 +11,8 @@ import {
 } from '../src';
 
 /**
- * Виды узлов из своего отрисовщика (defineNodeView): ядро ведёт ProseMirror, отрисовщик — разметку.
- * Здесь — обычный DOM; React и Vue проверяют свои пакеты и e2e/node-views.spec.ts.
+ * Node views from your own renderer (defineNodeView): the core drives ProseMirror, the renderer the markup.
+ * Here it is plain DOM; React and Vue are checked by their packages and e2e/node-views.spec.ts.
  */
 
 let editor: Editor | null = null;
@@ -26,7 +26,7 @@ afterEach(() => {
 const log: string[] = [];
 let lastProps: NodeViewProps | null = null;
 
-/** Блок-выноска: список «тон» и редактируемое содержимое в своей обёртке. */
+/** A callout block: a "tone" list and editable content in its own wrapper. */
 const calloutView = defineNodeView(() => {
   let select: HTMLSelectElement;
   let current: NodeViewProps;
@@ -54,7 +54,7 @@ const calloutView = defineNodeView(() => {
   };
 });
 
-/** Значок без содержимого (атом). */
+/** A badge without content (an atom). */
 const badgeView = defineNodeView(
   () => ({
     mount(dom, props) {
@@ -114,12 +114,12 @@ function mount(content = CONTENT): Editor {
 }
 
 function viewOf(dom: Element): NodeView {
-  // Внутреннее поле ProseMirror: описание вида у его корня — только чтобы проверить решения вида.
+  // An internal ProseMirror field: the view's description at its root, only to check the view's decisions.
   return (dom as unknown as { pmViewDesc: { spec: NodeView } }).pmViewDesc.spec;
 }
 
 describe('defineNodeView', () => {
-  it('рисует узел своей разметкой; содержимое — в её месте; HTML — из toDOM', () => {
+  it('draws the node with its own markup; the content goes in its place; the HTML comes from toDOM', () => {
     const e = mount();
     const dom = e.root.querySelector('[data-node-view="callout"]')!;
     expect(dom.querySelector('select')!.value).toBe('info');
@@ -129,7 +129,7 @@ describe('defineNodeView', () => {
     expect(log).toEqual(['mount', 'update:info:Hello']);
   });
 
-  it('updateAttributes — одна правка с отменой; ввод в содержимое обновляет вид', () => {
+  it('updateAttributes is one undoable edit; typing in the content updates the view', () => {
     const e = mount();
     const select = e.root.querySelector('select')!;
     select.value = 'warning';
@@ -143,7 +143,7 @@ describe('defineNodeView', () => {
     expect(log.at(-1)).toBe('update:info:Hello!');
   });
 
-  it('выделение узла и deleteNode', () => {
+  it('node selection and deleteNode', () => {
     const e = mount();
     let badgePos = -1;
     e.view.state.doc.descendants((node, pos) => {
@@ -156,12 +156,12 @@ describe('defineNodeView', () => {
     expect(e.getHTML()).toBe(
       '<div data-callout="" data-tone="info"><p>Hello</p></div><p>Tag&nbsp;</p>',
     );
-    // Уже удалённый узел: действия молча ничего не делают.
+    // An already deleted node: the actions silently do nothing.
     lastProps!.updateAttributes({ label: 'x' });
     expect(lastProps!.getPos()).toBeUndefined();
   });
 
-  it('события своих полей вида — его; содержимое и перетаскивание — редактора', () => {
+  it("events of the view's own fields are its own; the content and dragging belong to the editor", () => {
     const e = mount();
     const dom = e.root.querySelector('[data-node-view="callout"]')!;
     const view = viewOf(dom);
@@ -174,14 +174,14 @@ describe('defineNodeView', () => {
     expect(on(dom.querySelector('select')!, 'dragstart')).toBe(false);
     expect(on(dom.querySelector('.body p')!, 'keydown')).toBe(false);
     expect(on(dom, 'mousedown')).toBe(false);
-    // Мутации своей разметки — не правка документа; внутри содержимого — правка.
+    // Mutations of its own markup aren't document edits; inside the content they are.
     const mutation = (target: Node) => ({ type: 'childList', target }) as unknown as MutationRecord;
     expect(view.ignoreMutation!(mutation(dom.querySelector('.body')!))).toBe(true);
     expect(view.ignoreMutation!(mutation(dom.querySelector('.body p')!))).toBe(false);
     expect(viewOf(e.root.querySelector('.badge-view')!).ignoreMutation!(mutation(dom))).toBe(true);
   });
 
-  it('сбой отрисовщика не ломает редактор; destroy зовётся при уничтожении', () => {
+  it("a renderer failure doesn't break the editor; destroy is called on teardown", () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
     const broken = definePlugin({
       ...callout,

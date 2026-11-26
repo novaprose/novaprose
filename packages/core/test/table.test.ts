@@ -19,7 +19,7 @@ function mount(content = '<p></p>') {
   return editor;
 }
 
-/** Позиция начала содержимого n-й ячейки (по порядку в документе). */
+/** The position of the start of the n-th cell's content (in document order). */
 function cellPos(e: Editor, index: number): number {
   let found = -1;
   let i = 0;
@@ -35,7 +35,7 @@ function cellPos(e: Editor, index: number): number {
 }
 
 function cursorInCell(e: Editor, index: number) {
-  const pos = cellPos(e, index) + 2; // cell → paragraph → текст
+  const pos = cellPos(e, index) + 2; // cell → paragraph → text
   e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, pos)));
 }
 
@@ -48,36 +48,36 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('таблицы: HTML', () => {
-  it('сохраняет простую таблицу', () => {
+describe('tables: HTML', () => {
+  it('keeps a simple table', () => {
     expect(mount(T2x2).getHTML()).toBe(T2x2);
   });
 
-  it('сохраняет th, colspan/rowspan и фон ячейки', () => {
+  it('keeps th, colspan/rowspan and the cell background', () => {
     const html =
       '<table><tbody><tr><th colspan="2"><p>head</p></th></tr><tr><td rowspan="2" style="background-color: #fef08a;"><p>x</p></td><td><p>y</p></td></tr><tr><td><p>z</p></td></tr></tbody></table>';
     expect(mount(html).getHTML()).toBe(html);
   });
 
-  it('ширина колонки дублируется в style', () => {
+  it('the column width is duplicated in style', () => {
     const html = '<table><tbody><tr><td data-colwidth="120"><p>a</p></td></tr></tbody></table>';
     expect(mount(html).getHTML()).toBe(
       '<table><tbody><tr><td data-colwidth="120" style="width: 120px;"><p>a</p></td></tr></tbody></table>',
     );
   });
 
-  it('ячейки без <p> (HTML из других редакторов) оборачиваются в абзацы', () => {
+  it('cells without <p> (HTML from other editors) are wrapped in paragraphs', () => {
     expect(mount('<table><tr><td>a</td></tr></table>').getHTML()).toBe(
       '<table><tbody><tr><td><p>a</p></td></tr></tbody></table>',
     );
   });
 
-  it('огромный colspan из вставки ограничивается', () => {
+  it('a huge colspan from pasted content is capped', () => {
     const html = mount('<table><tr><td colspan="99999">a</td></tr></table>').getHTML();
     expect(html).toContain('colspan="100"');
   });
 
-  it('вставка таблицы с фоном ячейки: фон на ячейке, без марки на тексте', () => {
+  it('pasting a table with a cell background: the background on the cell, no mark on the text', () => {
     const e = mount('<p></p>');
     e.view.pasteHTML(
       '<table><tr><td style="background-color: rgb(254, 240, 138)">a</td></tr></table>',
@@ -86,7 +86,7 @@ describe('таблицы: HTML', () => {
     expect(e.getHTML()).not.toContain('<span');
   });
 
-  it('невалидный фон ячейки отбрасывается', () => {
+  it('an invalid cell background is dropped', () => {
     expect(
       mount(
         '<table><tr><td style="background-color: url(javascript:x)">a</td></tr></table>',
@@ -95,8 +95,8 @@ describe('таблицы: HTML', () => {
   });
 });
 
-describe('таблицы: команды', () => {
-  it('insertTable вставляет таблицу с заголовком и ставит курсор в первую ячейку', () => {
+describe('tables: commands', () => {
+  it('insertTable inserts a table with a header and puts the cursor into the first cell', () => {
     const e = mount('<p>x</p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 2)));
     expect(e.exec(insertTable(2, 3))).toBe(true);
@@ -104,18 +104,18 @@ describe('таблицы: команды', () => {
     expect(html.match(/<th>/g)).toHaveLength(3);
     expect(html.match(/<td>/g)).toHaveLength(3);
     expect(e.view.state.selection.$from.node(-1).type.name).toBe('table_header');
-    // Внутри таблицы новую таблицу не вставляем.
+    // A new table isn't inserted inside a table.
     expect(e.can(insertTable(2, 2))).toBe(false);
   });
 
-  it('строки и столбцы', () => {
+  it('rows and columns', () => {
     const e = mount(T2x2);
     cursorInCell(e, 0);
     e.exec(tableCommands.addRowAfter);
     e.exec(tableCommands.addColumnAfter);
     expect(e.getHTML().match(/<tr>/g)).toHaveLength(3);
     expect(e.getHTML().match(/<td>/g)).toHaveLength(9);
-    // Курсор в новую (пустую) ячейку на пересечении добавленных строки и столбца — и удаляем их.
+    // The cursor into the new (empty) cell where the added row and column cross, then delete them.
     cursorInCell(e, 4);
     e.exec(tableCommands.deleteRow);
     cursorInCell(e, 1);
@@ -123,7 +123,7 @@ describe('таблицы: команды', () => {
     expect(e.getHTML()).toBe(T2x2);
   });
 
-  it('заголовки строки и столбца', () => {
+  it('row and column headers', () => {
     const e = mount(T2x2);
     cursorInCell(e, 0);
     expect(hasHeaderRow(e.view.state)).toBe(false);
@@ -134,7 +134,7 @@ describe('таблицы: команды', () => {
     expect(hasHeaderColumn(e.view.state)).toBe(true);
   });
 
-  it('объединение и разделение ячеек', () => {
+  it('merging and splitting cells', () => {
     const e = mount(T2x2);
     const doc = e.view.state.doc;
     e.view.dispatch(
@@ -147,27 +147,27 @@ describe('таблицы: команды', () => {
     expect(e.getHTML()).not.toContain('colspan');
   });
 
-  it('фон ячейки', () => {
+  it('the cell background', () => {
     const e = mount(T2x2);
     cursorInCell(e, 3);
     e.exec(setCellBackground('#bbf7d0'));
     expect(e.getHTML()).toContain('<td style="background-color: #bbf7d0;"><p>d</p></td>');
   });
 
-  it('удаление таблицы', () => {
+  it('deleting the table', () => {
     const e = mount(`<p>before</p>${T2x2}`);
     cursorInCell(e, 0);
     e.exec(tableCommands.deleteTable);
     expect(e.getHTML()).not.toContain('<table');
   });
 
-  it('контекстный тулбар таблицы и кнопка table зарегистрированы', () => {
+  it('the table context toolbar and the table button are registered', () => {
     const e = mount();
     expect(e.ui.registry.getContextToolbars().map(([n]) => n)).toContain('table');
     expect(e.root.querySelector('[data-control="table"]')).not.toBeNull();
   });
 
-  it('панель-сетка вставляет таблицу выбранного размера', () => {
+  it('the grid panel inserts a table of the chosen size', () => {
     const e = mount();
     e.root.querySelector<HTMLButtonElement>('[data-control="table"]')!.click();
     const cell = e.root.querySelector<HTMLButtonElement>(

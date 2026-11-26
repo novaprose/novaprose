@@ -4,7 +4,7 @@ import { createEditor, type Editor } from '../src';
 import { INSTRUCTIONS, type AiRequest } from '../src/plugins/ai';
 import { listSuggestions, suggestionsResult } from '../src/plugins/suggestions';
 
-/** Помощник ИИ: окно, быстрые действия, свой запрос, поток ответа, отмена, правки предложениями. */
+/** The AI assistant: the window, quick actions, a custom request, a streamed answer, cancelling, edits as suggestions. */
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -37,7 +37,7 @@ function selectAll(e: Editor): void {
 
 function openDialog(e: Editor): HTMLElement {
   const button = e.ui.registry.get('aidialog');
-  if (button?.type !== 'button') throw new Error('нет кнопки aidialog');
+  if (button?.type !== 'button') throw new Error('no aidialog button');
   button.onAction(e);
   return e.root.querySelector<HTMLElement>('.nova-dialog')!;
 }
@@ -52,8 +52,8 @@ const accepted = (e: Editor) => {
   return doc.textBetween(0, doc.content.size, '\n\n');
 };
 
-describe('помощник ИИ', () => {
-  it('без подключённой модели — сообщение в окне, текст не меняется', async () => {
+describe('the AI assistant', () => {
+  it("without a connected model: a message in the window, the text doesn't change", async () => {
     const e = await mount('<p>Some text</p>');
     selectAll(e);
     const dialog = openDialog(e);
@@ -66,7 +66,7 @@ describe('помощник ИИ', () => {
     expect(e.getHTML()).toBe('<p>Some text</p>');
   });
 
-  it('быстрое действие: запрос с выделенным текстом, правки — предложениями от «AI»', async () => {
+  it('a quick action: a request with the selected text, edits as suggestions from "AI"', async () => {
     const request = vi.fn(async (r: AiRequest) => {
       expect(r).toMatchObject({
         action: 'shorter',
@@ -93,7 +93,7 @@ describe('помощник ИИ', () => {
     );
   });
 
-  it('свой запрос и ответ потоком: текст виден по мере написания', async () => {
+  it('a custom request and a streamed answer: the text shows as it is written', async () => {
     let seen = '';
     const e = await mount('<p>Hello world</p>', async function* (r) {
       expect(r).toMatchObject({ action: 'custom', instruction: 'Translate into German' });
@@ -112,7 +112,7 @@ describe('помощник ИИ', () => {
     expect(accepted(e)).toBe('Hallo Welt');
   });
 
-  it('без выделения — только «Продолжить»: текст у курсора предложением', async () => {
+  it('without a selection only "Continue": text at the cursor as a suggestion', async () => {
     const e = await mount('<p>Start.</p>', async () => 'Next sentence.');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.atEnd(e.view.state.doc)));
     const dialog = openDialog(e);
@@ -124,7 +124,7 @@ describe('помощник ИИ', () => {
     expect(listSuggestions(e.view.state.doc).every((c) => c.kind === 'insert')).toBe(true);
   });
 
-  it('пересказ — новым абзацем после выделенного', async () => {
+  it('a summary as a new paragraph after the selection', async () => {
     const e = await mount('<p>Long text here.</p><p>Tail.</p>', async () => 'Short.');
     const { doc } = e.view.state;
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(doc, 1, 16)));
@@ -134,7 +134,7 @@ describe('помощник ИИ', () => {
     expect(accepted(e)).toBe('Long text here.\n\nShort.\n\nTail.');
   });
 
-  it('закрыть окно — отмена запроса, текст не меняется', async () => {
+  it("closing the window cancels the request, the text doesn't change", async () => {
     let signal: AbortSignal | undefined;
     let finish: (text: string) => void = () => {};
     const e = await mount(

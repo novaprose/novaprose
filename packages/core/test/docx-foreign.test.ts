@@ -20,8 +20,8 @@ import { describe, expect, it } from 'vitest';
 import { fromDocx } from '../src/docx';
 
 /**
- * Импорт файла, который написали не мы: библиотека docx (её файлы открывают Word и LibreOffice).
- * Свой экспорт и свой импорт могли бы ошибаться одинаково — здесь независимый автор.
+ * Importing a file we didn't write: the docx library (Word and LibreOffice open its files).
+ * Our own export and import could be wrong in the same way: here the author is independent.
  */
 
 const PNG = Buffer.from(
@@ -29,8 +29,8 @@ const PNG = Buffer.from(
   'base64',
 );
 
-describe('импорт файла другой программы (библиотека docx)', () => {
-  it('заголовки, оформление, ссылки, списки, таблица, картинка, лист', async () => {
+describe("importing another program's file (the docx library)", () => {
+  it('headings, formatting, links, lists, a table, an image, the sheet', async () => {
     const doc = new Document({
       numbering: {
         config: [
@@ -124,45 +124,43 @@ describe('импорт файла другой программы (библио�
   });
 });
 
-describe('файл, который сохранил сам Microsoft Word', () => {
+describe('a file saved by Microsoft Word itself', () => {
   /**
-   * test/fixtures/docx/saved-by-word.docx — наш экспорт, открытый и пересохранённый Word
-   * (русский интерфейс): его собственный XML — стили, нумерация, rsid, тема. Свойства файла
-   * (автор) удалены из архива.
+   * test/fixtures/docx/saved-by-word.docx is our export, opened and saved again by Word: its own
+   * XML (styles, numbering, rsid, theme). The file properties (author) were removed from the archive,
+   * and the text runs were later translated to English; Word's markup around them is untouched.
    */
-  it('всё на месте: заголовки, форматирование, ссылки, списки, таблица, исправления, лист', async () => {
+  it('everything is in place: headings, formatting, links, lists, a table, revisions, the sheet', async () => {
     const { readFileSync } = await import('node:fs');
     const { fileURLToPath } = await import('node:url');
     const file = fileURLToPath(new URL('./fixtures/docx/saved-by-word.docx', import.meta.url));
     const { html, page, warnings } = await fromDocx(new Uint8Array(readFileSync(file)));
-    expect(html).toContain('<h1 id="top">Проверка экспорта в Word</h1>');
+    expect(html).toContain('<h1 id="top">Word export check</h1>');
     expect(html).toContain(
-      '<strong>жирный</strong>, <em>курсив</em>, <u>подчёркнутый</u>, <s>зачёркнутый</s>',
+      '<strong>bold</strong>, <em>italic</em>, <u>underlined</u>, <s>struck</s>',
     );
-    expect(html).toContain('<span style="color: #e03e2d">красный</span>');
-    expect(html).toContain('<code>код</code>');
+    expect(html).toContain('<span style="color: #e03e2d">red</span>');
+    expect(html).toContain('<code>code</code>');
     expect(html).toContain(
-      '<p style="text-align: center">Ссылка на <a href="https://novaprose.com">сайт</a> и <a href="#top">к началу</a>.</p>',
+      '<p style="text-align: center">A link to <a href="https://novaprose.com">the site</a> and <a href="#top">the top</a>.</p>',
     );
     expect(html).toContain(
-      '<ul><li><p>Пункт</p><ul><li><p>Вложенный</p></li></ul></li><li><p>Второй</p></li></ul>',
+      '<ul><li><p>Item</p><ul><li><p>Nested</p></li></ul></li><li><p>Second</p></li></ul>',
     );
-    expect(html).toContain('<ol start="3"><li><p>Третий</p></li><li><p>Четвёртый</p></li></ol>');
+    expect(html).toContain('<ol start="3"><li><p>Third</p></li><li><p>Fourth</p></li></ol>');
     expect(html).toContain(
-      '<ul data-type="checklist"><li data-checked="true"><p>Сделано</p></li><li data-checked="false"><p>Не сделано</p></li></ul>',
+      '<ul data-type="checklist"><li data-checked="true"><p>Done</p></li><li data-checked="false"><p>Not done</p></li></ul>',
     );
-    expect(html).toMatch(
-      /<td rowspan="2"[^>]*background-color: #dafbe1[^>]*><p>Объединена<\/p><\/td>/,
-    );
-    expect(html).toContain('<blockquote><p>Цитата</p></blockquote>');
+    expect(html).toMatch(/<td rowspan="2"[^>]*background-color: #dafbe1[^>]*><p>Merged<\/p><\/td>/);
+    expect(html).toContain('<blockquote><p>Quote</p></blockquote>');
     expect(html).toContain('<hr>');
-    // Исправления приняты: вставка осталась, удаление ушло.
+    // Revisions are accepted: the insertion stays, the deletion is gone.
     expect(html).toContain(
-      'Правка: добавлено и формула <span data-type="inline-math" data-latex="E=mc^2">',
+      'Edit: added and a formula <span data-type="inline-math" data-latex="E=mc^2">',
     );
-    expect(html).not.toContain('удалено');
+    expect(html).not.toContain('deleted');
     expect(html).toContain(
-      '<div class="nova-pagebreak" style="break-after: page;"></div><h2>Вторая страница</h2>',
+      '<div class="nova-pagebreak" style="break-after: page;"></div><h2>Second page</h2>',
     );
     expect(html).not.toContain('<p></p>');
     expect(page).toEqual({

@@ -3,7 +3,7 @@ import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, setStyle, type Editor } from '../src';
 
-/** Цепочки команд: одна правка, «всё или ничего», честная проверка can(). */
+/** Command chains: one edit, "all or nothing", an honest can() check. */
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -25,11 +25,11 @@ function selectAll(e: Editor): void {
   e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(doc, 1, doc.content.size - 1)));
 }
 
-/** Шаг, который проходит только в заголовке: видит ли он результат предыдущих шагов. */
+/** A step that succeeds only in a heading: does it see the result of the previous steps. */
 const inHeading: Command = (state) => state.selection.$from.parent.type.name === 'heading';
 
 describe('editor.chain()', () => {
-  it('шаги — одной правкой: одно событие change, одна отмена', () => {
+  it('steps make one edit: one change event, one undo', () => {
     const e = mount();
     const changes = vi.fn();
     e.on('change', changes);
@@ -40,7 +40,7 @@ describe('editor.chain()', () => {
     expect(e.getHTML()).toBe('<p>text</p>');
   });
 
-  it('каждый шаг видит результат предыдущих; команды с параметрами', () => {
+  it('each step sees the result of the previous ones; commands with parameters', () => {
     const e = mount();
     selectAll(e);
     const ok = e.chain().exec(setStyle('color', '#ff0000')).exec('bold').exec('h3').run();
@@ -49,7 +49,7 @@ describe('editor.chain()', () => {
     expect(e.chain().exec('h2').exec(inHeading).run()).toBe(true);
   });
 
-  it('insertContent — шаг цепочки: следующие шаги применяются к вставленному', () => {
+  it('insertContent is a chain step: the next steps apply to what was inserted', () => {
     const e = mount('<p>a</p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.atEnd(e.view.state.doc)));
     expect(e.chain().insertContent('<p>new</p>').exec('h3').run()).toBe(true);
@@ -58,7 +58,7 @@ describe('editor.chain()', () => {
     expect(e.getHTML()).toBe('<p>a</p>');
   });
 
-  it('всё или ничего: шаг не удался — документ и история не меняются', () => {
+  it("all or nothing: a step failed, so the document and the history don't change", () => {
     const e = mount();
     const changes = vi.fn();
     e.on('change', changes);
@@ -75,20 +75,20 @@ describe('editor.chain()', () => {
     expect(e.can('undo')).toBe(false);
   });
 
-  it('can() проверяет цепочку по шагам и ничего не меняет', () => {
+  it('can() checks the chain step by step and changes nothing', () => {
     const e = mount();
     expect(e.chain().exec(inHeading).can()).toBe(false);
     expect(e.chain().exec('h2').exec(inHeading).can()).toBe(true);
     expect(e.getHTML()).toBe('<p>text</p>');
     expect(e.can('undo')).toBe(false);
-    // Одну и ту же цепочку можно проверить и выполнить.
+    // The same chain can be checked and run.
     const chain = e.chain().exec('h2').exec(inHeading);
     expect(chain.can()).toBe(true);
     expect(chain.run()).toBe(true);
     expect(e.getHTML()).toBe('<h2>text</h2>');
   });
 
-  it('отмена и повтор — не шаги цепочки; своя транзакция в шаге — отказ', () => {
+  it('undo and redo are not chain steps; a step with its own transaction is refused', () => {
     const e = mount();
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     e.exec('bold');
@@ -108,7 +108,7 @@ describe('editor.chain()', () => {
     expect(e.getHTML()).toBe('<p>text</p>');
   });
 
-  it('только чтение: insertContent в цепочке не проходит; после destroy — false', () => {
+  it("read only: insertContent in a chain doesn't go through; after destroy, false", () => {
     const e = mount();
     e.setEditable(false);
     expect(e.chain().insertContent('<p>x</p>').run()).toBe(false);
@@ -122,8 +122,8 @@ describe('editor.chain()', () => {
   });
 });
 
-describe('неизвестная команда (вызов из JavaScript без типов, из CDN)', () => {
-  it('exec, can и шаг цепочки — false и одно предупреждение, а не исключение', () => {
+describe('an unknown command (a call from untyped JavaScript, from the CDN)', () => {
+  it('exec, can and a chain step give false and one warning, not an exception', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const e = mount();
     const before = e.getHTML();

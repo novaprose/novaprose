@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor } from '../src';
 
 /**
- * Публичный UI для плагинов: диалог по описанию полей (editor.ui.dialog) и боковые панели
+ * The public UI for plugins: a dialog from a field description (editor.ui.dialog) and sidebars
  * (registry.addSidebar + editor.ui.sidebar).
  */
 
@@ -31,11 +31,11 @@ const submit = async (e: Editor) => {
   dialogEl(e).requestSubmit();
   await flush();
 };
-/** Реализация диалога грузится при первом открытии — ждём, пока он появится. */
+/** The dialog implementation loads on first open: wait for it to appear. */
 const opened = (e: Editor) => vi.waitFor(() => expect(dialogEl(e)).not.toBeNull());
 
-describe('editor.ui.dialog — диалог по описанию полей', () => {
-  it('поля с подписями, начальные данные, типы значений; результат — данные', async () => {
+describe('editor.ui.dialog: a dialog from a field description', () => {
+  it('fields with labels, initial data, value types; the result is the data', async () => {
     const e = mount();
     const result = e.ui.dialog({
       title: 'Insert video',
@@ -57,7 +57,7 @@ describe('editor.ui.dialog — диалог по описанию полей', (
       ],
     });
     await opened(e);
-    // Подпись связана с полем, подсказка — через aria-describedby.
+    // The label is linked to the field, the hint through aria-describedby.
     const src = input(e, 'src');
     expect(dialogEl(e).querySelector(`label[for="${src.id}"]`)?.textContent).toBe('Video URL');
     expect(document.getElementById(src.getAttribute('aria-describedby')!)?.textContent).toBe(
@@ -74,7 +74,7 @@ describe('editor.ui.dialog — диалог по описанию полей', (
     expect(e.root.querySelector('.nova-dialog')).toBeNull();
   });
 
-  it('обязательное поле и формат: ошибка у поля, aria-invalid, фокус на первом неверном', async () => {
+  it('a required field and a format: an error at the field, aria-invalid, focus on the first invalid one', async () => {
     const e = mount();
     const onSubmit = vi.fn();
     void e.ui.dialog({
@@ -86,7 +86,7 @@ describe('editor.ui.dialog — диалог по описанию полей', (
       onSubmit,
     });
     await opened(e);
-    // Звёздочка видна, но не входит в имя поля для дикторов.
+    // The asterisk is visible but isn't part of the field name for screen readers.
     expect(dialogEl(e).querySelector('.nova-required')?.getAttribute('aria-hidden')).toBe('true');
     input(e, 'mail').value = 'not an email';
     await submit(e);
@@ -97,13 +97,13 @@ describe('editor.ui.dialog — диалог по описанию полей', (
     const errorId = title.getAttribute('aria-describedby')!;
     expect(document.getElementById(errorId)?.textContent).toBe('This field is required');
     expect(document.activeElement).toBe(title);
-    // Ввод убирает ошибку поля.
+    // Typing clears the field error.
     title.value = 'x';
     title.dispatchEvent(new Event('input'));
     expect(title.getAttribute('aria-invalid')).toBe('false');
   });
 
-  it('своя проверка, ошибка из onSubmit оставляет диалог открытым, закрытие — null', async () => {
+  it('a custom check, an error from onSubmit keeps the dialog open, closing gives null', async () => {
     const e = mount();
     const controller = new AbortController();
     const result = e.ui.dialog({
@@ -126,13 +126,13 @@ describe('editor.ui.dialog — диалог по описанию полей', (
     input(e, 'slug').value = 'taken';
     await submit(e);
     expect(dialogEl(e).querySelector('.nova-dialog-error')?.textContent).toBe('Already taken');
-    // Закрытие снаружи (AbortSignal) — как «Отмена».
+    // Closing from outside (AbortSignal) works like "Cancel".
     controller.abort();
     expect(await result).toBeNull();
     expect(e.root.querySelector('.nova-dialog')).toBeNull();
   });
 
-  it('onChange получает данные и управление диалогом; сообщение', async () => {
+  it('onChange gets the data and control over the dialog; a message', async () => {
     const e = mount();
     const onChange = vi.fn();
     const result = e.ui.dialog({
@@ -162,7 +162,7 @@ describe('editor.ui.dialog — диалог по описанию полей', (
   });
 });
 
-describe('editor.ui.dialog — вкладки', () => {
+describe('editor.ui.dialog: tabs', () => {
   const tabsSpec = (onSubmit = vi.fn()) => ({
     title: 'Image',
     tabs: [
@@ -175,7 +175,7 @@ describe('editor.ui.dialog — вкладки', () => {
     onSubmit,
   });
 
-  it('роли WAI-ARIA, данные всех вкладок, стрелки и Home/End переключают', async () => {
+  it('WAI-ARIA roles, data from all tabs, arrows and Home/End switch', async () => {
     const e = mount();
     const result = e.ui.dialog(tabsSpec());
     await opened(e);
@@ -185,7 +185,7 @@ describe('editor.ui.dialog — вкладки', () => {
     expect(tabs.map((t) => t.getAttribute('aria-selected'))).toEqual(['true', 'false']);
     expect(panels.map((p) => p.hidden)).toEqual([false, true]);
     expect(panels[1]!.getAttribute('aria-labelledby')).toBe(tabs[1]!.id);
-    // Только выбранная вкладка в порядке Tab (roving tabindex).
+    // Only the selected tab is in the Tab order (roving tabindex).
     expect(tabs.map((t) => t.tabIndex)).toEqual([0, -1]);
     tabs[0]!.focus();
     tabs[0]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
@@ -199,7 +199,7 @@ describe('editor.ui.dialog — вкладки', () => {
     expect(await result).toEqual({ src: 'https://a.io/x.png', alt: 'Cat' });
   });
 
-  it('ошибка на скрытой вкладке: диалог переключается на неё и ставит фокус на поле', async () => {
+  it('an error on a hidden tab: the dialog switches to it and focuses the field', async () => {
     const e = mount();
     const onSubmit = vi.fn();
     void e.ui.dialog(tabsSpec(onSubmit));
@@ -212,7 +212,7 @@ describe('editor.ui.dialog — вкладки', () => {
   });
 });
 
-describe('editor.ui.dialog — поле файлов', () => {
+describe('editor.ui.dialog: a file field', () => {
   const png = (name = 'cat.png', size = 10) =>
     new File([new Uint8Array(size)], name, { type: 'image/png' });
   const fileSpec = (extra: object = {}) => ({
@@ -238,13 +238,13 @@ describe('editor.ui.dialog — поле файлов', () => {
     zone(e).dispatchEvent(event);
   };
 
-  it('перетаскивание и выбор: подходящие файлы в списке, данные — массив File', async () => {
+  it('dropping and choosing: matching files in the list, the data is an array of File', async () => {
     const e = mount();
     const onChange = vi.fn();
     const result = e.ui.dialog({ ...fileSpec(), onChange });
     await opened(e);
     const fileInput = input(e, 'files');
-    // Имя поля для дикторов — подпись поля.
+    // The field name for screen readers is the field label.
     expect(document.getElementById(fileInput.getAttribute('aria-labelledby')!)?.textContent).toBe(
       'Attachments *',
     );
@@ -254,7 +254,7 @@ describe('editor.ui.dialog — поле файлов', () => {
     const names = [...dialogEl(e).querySelectorAll('.nova-file-name')].map((n) => n.textContent);
     expect(names).toEqual(['a.png', 'doc.pdf', 'b.png']);
     expect(onChange).toHaveBeenCalledTimes(2);
-    // Убрать — кнопка у файла (с именем файла для дикторов).
+    // Removing: a button by the file (with the file name for screen readers).
     const remove = dialogEl(e).querySelector<HTMLButtonElement>('.nova-file-remove')!;
     expect(remove.getAttribute('aria-label')).toBe('Remove: a.png');
     remove.click();
@@ -263,7 +263,7 @@ describe('editor.ui.dialog — поле файлов', () => {
     expect((data!.files as File[]).map((f) => f.name)).toEqual(['doc.pdf', 'b.png']);
   });
 
-  it('чужой тип и слишком большой файл отклоняются с ошибкой у поля; обязательное поле', async () => {
+  it('a wrong type and a too large file are rejected with an error at the field; a required field', async () => {
     const e = mount();
     void e.ui.dialog(fileSpec());
     await opened(e);
@@ -283,7 +283,7 @@ describe('editor.ui.dialog — поле файлов', () => {
     expect(document.activeElement).toBe(input(e, 'files'));
   });
 
-  it('без multiple новый файл заменяет прежний', async () => {
+  it('without multiple a new file replaces the previous one', async () => {
     const e = mount();
     const result = e.ui.dialog(fileSpec({ multiple: false }));
     await opened(e);
@@ -294,7 +294,7 @@ describe('editor.ui.dialog — поле файлов', () => {
   });
 });
 
-describe('боковые панели', () => {
+describe('sidebars', () => {
   const outline = (render = vi.fn()) => ({
     title: 'Outline',
     render: (container: HTMLElement) => {
@@ -304,7 +304,7 @@ describe('боковые панели', () => {
     },
   });
 
-  it('регистрация добавляет кнопку-переключатель; панель рисуется один раз', async () => {
+  it('registering adds a toggle button; the panel renders once', async () => {
     const render = vi.fn();
     const e = mount({
       toolbar: 'bold outline',
@@ -330,7 +330,7 @@ describe('боковые панели', () => {
     expect(render).toHaveBeenLastCalledWith('cleanup');
   });
 
-  it('одна панель за раз; Esc закрывает и возвращает фокус в текст', async () => {
+  it('one panel at a time; Esc closes it and returns focus to the text', async () => {
     const e = mount({
       setup: (ed) => {
         ed.ui.registry.addSidebar('a', outline());
@@ -352,7 +352,7 @@ describe('боковые панели', () => {
     ).toBe(true);
   });
 
-  it('без панелей разметка не меняется; панель — в колонке рядом с текстом', async () => {
+  it("without panels the markup doesn't change; a panel goes into a column next to the text", async () => {
     const e = mount({ setup: (ed) => ed.ui.registry.addSidebar('a', outline()) });
     expect(e.root.querySelector('.nova-body')).toBeNull();
     await e.ui.sidebar.show('a');
@@ -361,7 +361,7 @@ describe('боковые панели', () => {
     expect(body.querySelector('.nova-sidebar')).not.toBeNull();
   });
 
-  it('ошибка отрисовки не ломает редактор; неизвестная панель — предупреждение', async () => {
+  it("a rendering error doesn't break the editor; an unknown panel gives a warning", async () => {
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const e = mount({

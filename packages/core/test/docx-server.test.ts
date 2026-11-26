@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { exportDocx, fromDocx } from '../src/docx';
 import { unzip } from '../src/docx/zip';
 
-/** Word на сервере: сохранённый JSON → .docx и .docx → HTML без DOM. */
+/** Word on the server: saved JSON → .docx and .docx → HTML without a DOM. */
 
-describe('Word на сервере, без DOM', () => {
+describe('Word on the server, without a DOM', () => {
   it('JSON → .docx → HTML', async () => {
     expect(typeof document).toBe('undefined');
     const json = {

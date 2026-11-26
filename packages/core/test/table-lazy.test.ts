@@ -3,9 +3,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, tableCommands, type Editor } from '../src';
 
 /**
- * Механика таблиц (prosemirror-tables) грузится лениво: в первой загрузке — только схема и
- * вставка, команды — «заместители». Проверяем поведение до и после догрузки и то, что
- * перестройка набора плагинов не теряет правки, выделение и историю отмены.
+ * Table mechanics (prosemirror-tables) load lazily: the first load has only the schema and
+ * insertion, the commands are stand-ins. This checks the behavior before and after loading, and that
+ * rebuilding the plugin set doesn't lose edits, the selection or the undo history.
  */
 
 let editor: Editor | null = null;
@@ -25,20 +25,20 @@ function mount(content: string): Editor {
 
 const TABLE = '<table><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>';
 
-describe('ленивая механика таблиц', () => {
-  it('до загрузки команды недоступны (false), после editor.ready — работают', async () => {
+describe('lazy table mechanics', () => {
+  it('before loading the commands are unavailable (false), after editor.ready they work', async () => {
     const e = mount(TABLE);
-    // Курсор в первой ячейке: table(0) > row(1) > cell(2) > p(3) > «a».
+    // The cursor in the first cell: table(0) > row(1) > cell(2) > p(3) > "a".
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 4)));
     expect(tableCommands.addRowAfter(e.view.state)).toBe(false);
-    // Таблица из контента отображается сразу, ещё до загрузки механики.
+    // A table from the content shows right away, before the mechanics load.
     expect(e.view.dom.querySelectorAll('td')).toHaveLength(2);
     await e.ready;
     expect(tableCommands.addRowAfter(e.view.state, e.view.dispatch)).toBe(true);
     expect(e.view.dom.querySelectorAll('tr')).toHaveLength(2);
   });
 
-  it('правка до загрузки сохраняется вместе с выделением и отменяется после неё', async () => {
+  it('an edit before loading is kept together with the selection and can be undone afterwards', async () => {
     const e = mount('<p>start</p>');
     const end = TextSelection.atEnd(e.view.state.doc);
     e.view.dispatch(e.view.state.tr.setSelection(end).insertText(' typed'));
@@ -49,7 +49,7 @@ describe('ленивая механика таблиц', () => {
     expect(e.getHTML()).toBe('<p>start</p>');
   });
 
-  it('после загрузки подключены плагины механики (изменение ширины колонок)', async () => {
+  it('after loading the mechanics plugins are attached (column resizing)', async () => {
     const e = mount(TABLE);
     await e.ready;
     const keys = e.view.state.plugins.map((p) => (p as unknown as { key: string }).key);
@@ -57,7 +57,7 @@ describe('ленивая механика таблиц', () => {
     expect(keys.some((k) => k.startsWith('selectingCells'))).toBe(true);
   });
 
-  it('уничтожение до загрузки не падает и не трогает закрытый редактор', async () => {
+  it("destroying before loading doesn't crash and doesn't touch the closed editor", async () => {
     const e = mount(TABLE);
     const ready = e.ready;
     e.destroy();

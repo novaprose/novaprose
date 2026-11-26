@@ -1,12 +1,12 @@
 import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, defaultSlashCommands, type Editor } from '../src';
-import ruPack from '../src/i18n/packs/ru';
+import dePack from '../src/i18n/packs/de';
 import { createTranslator, registerLanguage } from '../src/i18n';
 import { rankSlashCommands } from '../src/ui/slash';
 
-// Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
-registerLanguage('ru', ruPack);
+// A language pack (not built into the core): registered the way a customer does it.
+registerLanguage('de', dePack);
 
 let editor: Editor | null = null;
 
@@ -21,7 +21,7 @@ function mount(
   return editor;
 }
 
-/** Набрать текст в конце документа (как ввод с клавиатуры — через транзакцию). */
+/** Types text at the end of the document (like keyboard input, through a transaction). */
 function type(e: Editor, text: string) {
   const { state } = e.view;
   const end = state.doc.content.size - 1;
@@ -44,35 +44,35 @@ afterEach(() => {
 
 describe('rankSlashCommands', () => {
   const tEn = createTranslator('en');
-  const tRu = createTranslator('ru');
+  const tDe = createTranslator('de');
   const names = (q: string, t = tEn) =>
     rankSlashCommands(defaultSlashCommands, q, t).map((c) => c.name);
 
-  it('пустой запрос — все команды по порядку', () => {
+  it('an empty query lists all commands in order', () => {
     expect(names('')).toEqual(defaultSlashCommands.map((c) => c.name));
   });
 
-  it('ищет по подписи и ключевым словам; начало важнее середины', () => {
+  it('searches labels and keywords; the start beats the middle', () => {
     expect(names('head').slice(0, 3)).toEqual(['h1', 'h2', 'h3']);
     expect(names('h2')[0]).toBe('h2');
     expect(names('quote')).toEqual(['blockquote']);
     expect(names('zzz')).toEqual([]);
   });
 
-  it('русские подписи и английские ключевые слова работают в русском UI', () => {
-    expect(names('загол', tRu).slice(0, 3)).toEqual(['h1', 'h2', 'h3']);
-    expect(names('цит', tRu)).toEqual(['blockquote']);
-    expect(names('quote', tRu)).toEqual(['blockquote']);
+  it('translated labels and English keywords work in a translated UI', () => {
+    expect(names('übers', tDe).slice(0, 3)).toEqual(['h1', 'h2', 'h3']);
+    expect(names('zit', tDe)).toEqual(['blockquote']);
+    expect(names('quote', tDe)).toEqual(['blockquote']);
   });
 });
 
-describe('слэш-команды в редакторе', () => {
-  it('«/» показывает список, Enter применяет команду и убирает «/запрос»', async () => {
+describe('slash commands in the editor', () => {
+  it('"/" shows the list, Enter runs the command and removes "/query"', async () => {
     const e = mount();
     type(e, '/hea');
     await flush();
     expect(list(e).hidden).toBe(false);
-    // Список связан с полем через aria-controls (aria-expanded у role=textbox не разрешён).
+    // The list is linked to the field through aria-controls (aria-expanded isn't allowed on role=textbox).
     expect(e.view.dom.getAttribute('aria-controls')).toBe(list(e).id);
     expect(e.view.dom.hasAttribute('aria-expanded')).toBe(false);
     const options = [...list(e).querySelectorAll('[role="option"]')].map((o) => o.textContent);
@@ -83,7 +83,7 @@ describe('слэш-команды в редакторе', () => {
     expect(list(e).hidden).toBe(true);
   });
 
-  it('Escape закрывает и не открывает снова для того же «/»', async () => {
+  it('Escape closes it and doesn\'t open it again for the same "/"', async () => {
     const e = mount();
     type(e, '/');
     await flush();
@@ -95,39 +95,39 @@ describe('слэш-команды в редакторе', () => {
     expect(e.getHTML()).toBe('<p>/q</p>');
   });
 
-  it('не срабатывает посреди слова (адреса, дроби)', async () => {
+  it("doesn't fire in the middle of a word (addresses, fractions)", async () => {
     const e = mount();
     type(e, 'and/or');
     await flush();
     expect(list(e).hidden).toBe(true);
   });
 
-  it('после пробела срабатывает', async () => {
+  it('fires after a space', async () => {
     const e = mount();
     type(e, 'text /quo');
     await flush();
     expect(list(e).hidden).toBe(false);
   });
 
-  it('не срабатывает в блоке кода', async () => {
+  it("doesn't fire in a code block", async () => {
     const e = mount('<pre><code></code></pre>');
     type(e, '/');
     await flush();
     expect(list(e).hidden).toBe(true);
   });
 
-  it('пустой результат показывает текст «ничего не найдено»', async () => {
+  it('an empty result shows the "nothing found" text', async () => {
     const e = mount();
     type(e, '/zzzz');
     await flush();
     expect(list(e).hidden).toBe(false);
     expect(list(e).textContent).toBe('No matching commands');
-    // Enter при пустом списке не перехватывается — обычный перенос строки.
+    // Enter with an empty list isn't intercepted: a regular line break.
     key(e, 'Enter');
     expect(e.getHTML()).toBe('<p>/zzzz</p><p></p>');
   });
 
-  it('свои команды через опцию и выключение', async () => {
+  it('custom commands through the option, and turning it off', async () => {
     const run = vi.fn();
     const e = mount('<p></p>', {
       slashCommands: [{ name: 'sig', label: 'link', icon: '', keywords: ['signature'], run }],

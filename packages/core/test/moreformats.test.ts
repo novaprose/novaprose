@@ -10,8 +10,8 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('меню «Ещё формат»', () => {
-  it('есть в тулбаре по умолчанию и включает надстрочный', () => {
+describe('the "More formatting" menu', () => {
+  it('is in the default toolbar and turns superscript on', () => {
     const element = document.createElement('div');
     document.body.append(element);
     editor = createEditor({ element, content: '<p>x2</p>' });
@@ -29,7 +29,7 @@ describe('меню «Ещё формат»', () => {
     expect(e.getHTML()).toBe('<p>x<sup>2</sup></p>');
     expect(button.classList.contains('is-active')).toBe(true);
 
-    // Пункт без состояния (очистка) — обычный menuitem.
+    // An item without state (clear) is a regular menuitem.
     button.click();
     const clear = e.root.querySelector('.nova-menu [data-id="clearFormatting"]')!;
     expect(clear.getAttribute('role')).toBe('menuitem');

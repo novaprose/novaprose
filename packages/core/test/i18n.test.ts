@@ -11,17 +11,17 @@ import {
   type LanguagePack,
 } from '../src';
 import { getPluginMessages } from '../src/i18n';
-import ruPack from '../src/i18n/packs/ru';
+import frPack from '../src/i18n/packs/fr';
 
-// Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
-registerLanguage('ru', ruPack);
+// A language pack (not built into the core): registered the way a customer does it.
+registerLanguage('fr', frPack);
 
 /**
- * Единая система переводов: строки ядра и плагинов переводятся одинаково — через registerLanguage
- * и опцию `translations`. Плюс проверка полноты: ни в одном встроенном языке не пропущена строка.
+ * One translation system: core and plugin strings are translated the same way, through registerLanguage
+ * and the `translations` option. Plus a completeness check: no built-in language misses a string.
  */
 
-// Все модули плагинов с подписями: проверка полноты не зависит от того, какие плагины загружены.
+// Every plugin module with labels: the completeness check doesn't depend on which plugins are loaded.
 type Labels = Record<string, Record<string, unknown>>;
 const PLUGIN_DIR = join(__dirname, '../src/plugins');
 const PLUGIN_MODULES: [string, { LABELS?: Labels }][] = await Promise.all(
@@ -54,63 +54,63 @@ async function mount(options: Partial<Parameters<typeof createEditor>[0]> = {}) 
 const tooltip = (e: Editor, control: string) =>
   e.root.querySelector(`[data-control="${control}"]`)?.getAttribute('aria-label');
 
-describe('переводы плагинов через общую систему', () => {
-  it('русский пакет переводит и ядро, и плагины', async () => {
-    const e = await mount({ language: 'ru', toolbar: 'bold anchor charmap' });
-    expect(tooltip(e, 'bold')).toBe('Жирный');
-    expect(tooltip(e, 'anchor')).toBe('Якорь');
+describe('plugin translations through the shared system', () => {
+  it('a language pack translates both the core and the plugins', async () => {
+    const e = await mount({ language: 'fr', toolbar: 'bold anchor charmap' });
+    expect(tooltip(e, 'bold')).toBe('Gras');
+    expect(tooltip(e, 'anchor')).toBe('Ancre');
     expect(e.ui.t('charmap.groups.0')).not.toBe('charmap.groups.0');
   });
 
-  it('свой язык (registerLanguage) переводит и строки плагинов', async () => {
+  it('a custom language (registerLanguage) translates plugin strings too', async () => {
     registerLanguage('de', { bold: 'Fett', 'anchor.title': 'Anker', 'charmap.groups.0': 'Häufig' });
     const e = await mount({ language: 'de-AT', toolbar: 'bold anchor charmap' });
     expect(tooltip(e, 'bold')).toBe('Fett');
     expect(tooltip(e, 'anchor')).toBe('Anker');
     expect(e.ui.t('charmap.groups.0')).toBe('Häufig');
-    // Чего нет в пакете — по-английски, а не ключ.
+    // What the pack lacks is in English, not the key.
     expect(tooltip(e, 'charmap')).toBe('Special character');
   });
 
-  it('опция translations точечно меняет строку плагина', async () => {
+  it('the translations option replaces a plugin string', async () => {
     const e = await mount({
-      language: 'ru',
+      language: 'fr',
       toolbar: 'anchor',
-      translations: { 'anchor.title': 'Закладка' },
+      translations: { 'anchor.title': 'Bookmark' },
     });
-    expect(tooltip(e, 'anchor')).toBe('Закладка');
+    expect(tooltip(e, 'anchor')).toBe('Bookmark');
   });
 
-  it('неизвестный ключ возвращается как есть (видно, что перевода нет)', async () => {
+  it('an unknown key comes back as is (so a missing translation shows)', async () => {
     const e = await mount();
     expect(e.ui.t('nosuch.key')).toBe('nosuch.key');
   });
 });
 
-describe('полнота встроенных переводов', () => {
+describe('completeness of the built-in translations', () => {
   const plugins = PLUGIN_MODULES.filter(([, mod]) => mod.LABELS).map(
     ([file, mod]) => [file.replace('.ts', ''), mod.LABELS!] as const,
   );
 
-  it('все плагины с подписями найдены', () => {
+  it('every plugin with labels is found', () => {
     expect(plugins.length).toBeGreaterThanOrEqual(16);
   });
 
-  it.each(plugins)('плагин %s: в каждом языке те же ключи, что в en', (_name, labels) => {
+  it.each(plugins)('plugin %s: every language has the same keys as en', (_name, labels) => {
     const shape = (pack: Record<string, unknown>) =>
       Object.entries(pack)
         .map(([k, v]) => (Array.isArray(v) ? `${k}[${v.length}]` : k))
         .sort();
     for (const [lang, pack] of Object.entries(labels)) {
-      expect(shape(pack), `язык ${lang}`).toEqual(shape(labels.en!));
+      expect(shape(pack), `language ${lang}`).toEqual(shape(labels.en!));
     }
   });
 
-  it('у плагинов нет встроенных переводов — только en (остальное в пакетах)', () => {
+  it('plugins have no built-in translations, only en (the rest is in the packs)', () => {
     for (const [name, labels] of plugins) expect(Object.keys(labels), name).toEqual(['en']);
   });
 
-  it('зарегистрированные плагины видны для шаблона переводчиков', async () => {
+  it('registered plugins are visible to the translators’ template', async () => {
     await mount({ toolbar: 'anchor charmap' });
     const messages = getPluginMessages();
     expect(messages.anchor?.en?.title).toBe('Anchor');
@@ -118,17 +118,17 @@ describe('полнота встроенных переводов', () => {
   });
 });
 
-describe('языковые пакеты @novaprose/core/i18n/*', () => {
+describe('language packs @novaprose/core/i18n/*', () => {
   const PACK_DIR = join(__dirname, '../src/i18n/packs');
   const codes = readdirSync(PACK_DIR)
     .filter((f) => f.endsWith('.ts'))
     .map((f) => f.replace('.ts', ''));
 
-  it('пакеты есть', () => {
+  it('the packs exist', () => {
     expect(codes.length).toBeGreaterThanOrEqual(5);
   });
 
-  it.each(codes)('%s: подключается и переводит ядро и плагины', async (code) => {
+  it.each(codes)('%s: attaches and translates the core and plugins', async (code) => {
     const pack = ((await import(join(PACK_DIR, `${code}.ts`))) as { default: LanguagePack })
       .default;
     registerLanguage(code, pack);
@@ -136,13 +136,13 @@ describe('языковые пакеты @novaprose/core/i18n/*', () => {
     expect(tooltip(e, 'bold')).toBe(pack.bold);
     expect(tooltip(e, 'anchor')).toBe(pack['anchor.title']);
     expect(tooltip(e, 'charmap')).toBe(pack['charmap.title']);
-    // Перевод отличается от английского — пакет не пустышка.
+    // The translation differs from English: the pack isn't a dummy.
     expect(pack.bold).not.toBe(en.bold);
   });
 });
 
-describe('языки по требованию: registerLanguage(code, загрузчик) + loadLanguage', () => {
-  it('загрузчик вызывается один раз; после загрузки язык готов для редактора', async () => {
+describe('languages on demand: registerLanguage(code, loader) + loadLanguage', () => {
+  it('the loader is called once; after loading the language is ready for an editor', async () => {
     const loader = vi.fn(async () => ({ default: { bold: 'Fett (qa)' } as LanguagePack }));
     registerLanguage('qa', loader);
     expect(hasLanguage('qa')).toBe(false);
@@ -150,12 +150,12 @@ describe('языки по требованию: registerLanguage(code, загр�
     expect([a, b]).toEqual([true, true]);
     expect(loader).toHaveBeenCalledTimes(1);
     expect(hasLanguage('qa')).toBe(true);
-    expect(await loadLanguage('qa-BE')).toBe(true); // базовый язык
+    expect(await loadLanguage('qa-BE')).toBe(true); // the base language
     const e = await mount({ language: 'qa', toolbar: 'bold' });
     expect(tooltip(e, 'bold')).toBe('Fett (qa)');
   });
 
-  it('пакет можно вернуть и без default; неизвестный язык — false; английский готов всегда', async () => {
+  it('a pack can be returned without default; an unknown language gives false; English is always ready', async () => {
     registerLanguage('qb', async () => ({ italic: 'Kursiv (qb)' }));
     expect(await loadLanguage('qb')).toBe(true);
     expect(await loadLanguage('zz-unknown')).toBe(false);
@@ -163,7 +163,7 @@ describe('языки по требованию: registerLanguage(code, загр�
     expect(hasLanguage('en')).toBe(true);
   });
 
-  it('ошибка загрузки не запоминается: следующий вызов пробует снова', async () => {
+  it("a load error isn't remembered: the next call tries again", async () => {
     let attempt = 0;
     registerLanguage('qc', async () => {
       attempt++;
@@ -175,16 +175,16 @@ describe('языки по требованию: registerLanguage(code, загр�
     expect(attempt).toBe(2);
   });
 
-  it('загруженный пакет не затирает строки, зарегистрированные раньше', async () => {
-    registerLanguage('qd', { bold: 'Своя (qd)' });
-    registerLanguage('qd', async () => ({ bold: 'Из пакета (qd)', italic: 'Курсив (qd)' }));
+  it("a loaded pack doesn't overwrite strings registered earlier", async () => {
+    registerLanguage('qd', { bold: 'Custom (qd)' });
+    registerLanguage('qd', async () => ({ bold: 'From the pack (qd)', italic: 'Italic (qd)' }));
     expect(await loadLanguage('qd')).toBe(true);
     const e = await mount({ language: 'qd', toolbar: 'bold italic' });
-    expect(tooltip(e, 'bold')).toBe('Своя (qd)');
-    expect(tooltip(e, 'italic')).toBe('Курсив (qd)');
+    expect(tooltip(e, 'bold')).toBe('Custom (qd)');
+    expect(tooltip(e, 'italic')).toBe('Italic (qd)');
   });
 
-  it('редактор до загрузки — английский и подсказка: await loadLanguage', async () => {
+  it('an editor before loading: English and a hint, await loadLanguage', async () => {
     registerLanguage('qe', async () => ({ bold: 'B (qe)' }));
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const e = await mount({ language: 'qe', toolbar: 'bold' });
@@ -193,7 +193,7 @@ describe('языки по требованию: registerLanguage(code, загр�
     warn.mockRestore();
   });
 
-  it('CDN-сборки подключают загрузчиком каждый пакет из i18n/packs', () => {
+  it('the CDN builds register every pack in i18n/packs as a loader', () => {
     const codes = readdirSync(join(__dirname, '../src/i18n/packs')).map((f) =>
       f.replace('.ts', ''),
     );

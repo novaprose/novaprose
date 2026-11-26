@@ -2,7 +2,7 @@ import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, type Editor } from '../src';
 
-/** Атрибуты схемы dir и listStyle + плагины directionality и advlist. */
+/** The dir and listStyle schema attributes + the directionality and advlist plugins. */
 
 const editors: Editor[] = [];
 async function mount(
@@ -21,17 +21,17 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('схема: dir и стиль списков', () => {
+describe('schema: dir and list style', () => {
   it.each([
     '<p dir="rtl">مرحبا</p><h2 dir="rtl" style="text-align: center;">عنوان</h2><p dir="ltr">left</p>',
     '<ul style="list-style-type: square;"><li><p>a</p></li></ul>',
     '<ol start="3" style="list-style-type: upper-roman;"><li><p>a</p></li></ol>',
     '<ol style="list-style-type: lower-greek;"><li><p>a</p></li></ol>',
-  ])('HTML туда-обратно: %s', async (html) => {
+  ])('HTML round trip: %s', async (html) => {
     expect((await mount(html)).getHTML()).toBe(html);
   });
 
-  it('старый <ol type>, стили по умолчанию и мусор нормализуются', async () => {
+  it('an old <ol type>, default styles and garbage are normalized', async () => {
     const editor = await mount(
       '<ol type="a"><li><p>a</p></li></ol><ul style="list-style-type: disc"><li><p>b</p></li></ul><ul style="list-style-type: url(x)"><li><p>c</p></li></ul><p dir="auto">d</p>',
     );
@@ -40,13 +40,13 @@ describe('схема: dir и стиль списков', () => {
     );
   });
 
-  it('смена типа блока сохраняет направление', async () => {
+  it('changing the block type keeps the direction', async () => {
     const editor = await mount('<p dir="rtl">x</p>');
     editor.exec('h2');
     expect(editor.getHTML()).toBe('<h2 dir="rtl">x</h2>');
   });
 
-  it('validStyles без list-style-type убирает стиль списка', async () => {
+  it('validStyles without list-style-type removes the list style', async () => {
     const editor = await mount('<ol style="list-style-type: upper-alpha;"><li><p>a</p></li></ol>', {
       validStyles: 'color',
     });
@@ -55,7 +55,7 @@ describe('схема: dir и стиль списков', () => {
 });
 
 describe('directionality', () => {
-  it('rtl и повторное нажатие снимает направление', async () => {
+  it('rtl, and pressing again removes the direction', async () => {
     const editor = await mount('<p>a</p><p>b</p>', {
       plugins: ['directionality'],
       toolbar: 'ltr rtl',
@@ -72,7 +72,7 @@ describe('directionality', () => {
 });
 
 describe('advlist', () => {
-  it('bullist становится составной: действие + меню стилей', async () => {
+  it('bullist becomes a split button: the action + a menu of styles', async () => {
     const editor = await mount('<p>item</p>', { plugins: ['advlist'], toolbar: 'bullist numlist' });
     const split = editor.root.querySelector('.nova-tb-split')!;
     expect(split.querySelector('[data-control="bullist"]')).not.toBeNull();
@@ -80,11 +80,11 @@ describe('advlist', () => {
       split.querySelector('[data-control="bullist-options"]')!.getAttribute('aria-haspopup'),
     ).toBe('menu');
 
-    // Основная часть — как раньше: просто список.
+    // The main part works as before: just a list.
     editor.root.querySelector<HTMLButtonElement>('[data-control="bullist"]')!.click();
     expect(editor.getHTML()).toBe('<ul><li><p>item</p></li></ul>');
 
-    // Стрелка — выбор стиля.
+    // The arrow picks a style.
     editor.root.querySelector<HTMLButtonElement>('[data-control="bullist-options"]')!.click();
     const square = [
       ...document.querySelectorAll<HTMLElement>(
@@ -95,7 +95,7 @@ describe('advlist', () => {
     expect(editor.getHTML()).toBe('<ul style="list-style-type: square;"><li><p>item</p></li></ul>');
   });
 
-  it('стиль нумерации создаёт список, если его ещё нет; «по умолчанию» снимает стиль', async () => {
+  it('a numbering style creates a list if there is none yet; "default" removes the style', async () => {
     const editor = await mount('<p>step</p>', { plugins: ['advlist'], toolbar: 'numlist' });
     const pick = (label: string) => {
       editor.root.querySelector<HTMLButtonElement>('[data-control="numlist-options"]')!.click();

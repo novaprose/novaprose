@@ -25,26 +25,26 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('менюбар', () => {
-  it('по умолчанию выключен', () => {
+describe('menubar', () => {
+  it('off by default', () => {
     expect(menubar(mount())).toBeNull();
   });
 
-  it('menubar: true — стандартные меню по порядку', () => {
+  it('menubar: true gives the standard menus in order', () => {
     const e = mount({ menubar: true });
     const names = [...menubar(e)!.querySelectorAll('[data-menu]')].map((b) => b.textContent);
     expect(names).toEqual(['File', 'Edit', 'View', 'Insert', 'Format', 'Table', 'Help']);
     expect(menubar(e)!.getAttribute('role')).toBe('menubar');
   });
 
-  it('пункты строятся из кнопок, если нет своего пункта меню; разделители не дублируются', () => {
+  it("items are built from buttons when there is no menu item of its own; separators aren't duplicated", () => {
     const e = mount({ menubar: true });
     menuButton(e, 'format').click();
     const ids = openItems(e);
     expect(ids.slice(0, 3)).toEqual(['bold', 'italic', 'underline']);
     expect(ids).toContain('paragraph');
     expect(ids).toContain('removeformat');
-    // Insert: insertdatetime без плагина — пропущен, разделитель в конце убран.
+    // Insert: insertdatetime without the plugin is skipped, the trailing separator is removed.
     menuButton(e, 'insert').click();
     expect(openItems(e)).toEqual(['image', 'link', 'inserttable', 'hr']);
     expect(
@@ -52,7 +52,7 @@ describe('менюбар', () => {
     ).toBe(false);
   });
 
-  it('пункт меню выполняет действие и показывает состояние (галочку)', () => {
+  it('a menu item runs its action and shows its state (a check mark)', () => {
     const e = mount({ menubar: true }, '<p>text</p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1, 5)));
     menuButton(e, 'format').click();
@@ -67,7 +67,7 @@ describe('менюбар', () => {
     );
   });
 
-  it('свой набор меню и переопределение', () => {
+  it('a custom set of menus and overrides', () => {
     const onAction = vi.fn();
     const e = mount({
       menubar: 'insert custom',
@@ -83,13 +83,13 @@ describe('менюбар', () => {
     expect(onAction).toHaveBeenCalledWith(e);
   });
 
-  it('учитывает ограничения контента', () => {
+  it('respects the content restrictions', () => {
     const e = mount({ menubar: true, invalidElements: 'table,img' });
     menuButton(e, 'insert').click();
     expect(openItems(e)).toEqual(['link', 'hr']);
   });
 
-  it('диалог вставки таблицы из меню проверяет размер', async () => {
+  it('the insert table dialog from the menu validates the size', async () => {
     const e = mount({ menubar: true }, '<p></p>');
     menuButton(e, 'table').click();
     e.root.querySelector<HTMLButtonElement>('.nova-menu [data-id="inserttable"]')!.click();
@@ -110,15 +110,15 @@ describe('менюбар', () => {
   });
 });
 
-describe('режимы', () => {
-  it('classic: шапка, тулбар и статусбар', () => {
+describe('modes', () => {
+  it('classic: header, toolbar and statusbar', () => {
     const e = mount();
     expect(e.root.classList.contains('nova-mode-classic')).toBe(true);
     expect(e.root.querySelector('.nova-header .nova-toolbar')).not.toBeNull();
     expect(e.root.querySelector('.nova-statusbar')).not.toBeNull();
   });
 
-  it('inline: тулбар есть, статусбара нет, класс is-focused при фокусе', async () => {
+  it('inline: a toolbar, no statusbar, the is-focused class on focus', async () => {
     const e = mount({ mode: 'inline' });
     expect(e.root.querySelector('.nova-toolbar')).not.toBeNull();
     expect(e.root.querySelector('.nova-statusbar')).toBeNull();
@@ -126,7 +126,7 @@ describe('режимы', () => {
     expect(e.root.classList.contains('is-focused')).toBe(true);
   });
 
-  it('distraction-free: без шапки и статусбара, quickbars подключаются сами', async () => {
+  it('distraction-free: no header and no statusbar, quickbars attach by themselves', async () => {
     const e = mount({ mode: 'distraction-free' });
     expect(e.root.querySelector('.nova-header')).toBeNull();
     expect(e.root.querySelector('.nova-statusbar')).toBeNull();
@@ -134,7 +134,7 @@ describe('режимы', () => {
     expect(e.hasPlugin('quickbars')).toBe(true);
   });
 
-  it('distraction-free с явным тулбаром — тулбар показывается', () => {
+  it('distraction-free with an explicit toolbar shows the toolbar', () => {
     const e = mount({ mode: 'distraction-free', toolbar: 'bold italic' });
     expect(e.root.querySelector('.nova-toolbar')).not.toBeNull();
   });

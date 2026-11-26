@@ -23,84 +23,84 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('HTML на входе и выходе', () => {
+describe('HTML in and out', () => {
   it.each([
-    '<p>Простой абзац</p>',
-    '<h2>Заголовок</h2><p>Текст</p>',
-    '<p><strong>жирный</strong> <em>курсив</em> <u>подчёркнутый</u> <s>зачёркнутый</s></p>',
-    '<p>H<sub>2</sub>O и E=mc<sup>2</sup></p>',
-    '<ul><li><p>один</p></li><li><p>два</p></li></ul>',
-    '<ol start="3"><li><p>три</p></li></ol>',
-    '<blockquote><p>цитата</p></blockquote>',
+    '<p>A simple paragraph</p>',
+    '<h2>Heading</h2><p>Text</p>',
+    '<p><strong>bold</strong> <em>italic</em> <u>underlined</u> <s>struck</s></p>',
+    '<p>H<sub>2</sub>O and E=mc<sup>2</sup></p>',
+    '<ul><li><p>one</p></li><li><p>two</p></li></ul>',
+    '<ol start="3"><li><p>three</p></li></ol>',
+    '<blockquote><p>quote</p></blockquote>',
     '<pre><code class="language-ts">const a = 1;</code></pre>',
-    '<p style="text-align: center;">по центру</p>',
-    '<p><a href="https://example.com">ссылка</a></p>',
-    '<p><img src="https://example.com/a.png" alt="картинка"></p>',
+    '<p style="text-align: center;">centered</p>',
+    '<p><a href="https://example.com">link</a></p>',
+    '<p><img src="https://example.com/a.png" alt="image"></p>',
     '<hr>',
-  ])('сохраняет %s без изменений', (html) => {
+  ])('keeps %s unchanged', (html) => {
     expect(mount(html).getHTML()).toBe(html);
   });
 
-  it('нормализует синонимы тегов', () => {
+  it('normalizes tag synonyms', () => {
     expect(mount('<p><b>a</b><i>b</i><strike>c</strike></p>').getHTML()).toBe(
       '<p><strong>a</strong><em>b</em><s>c</s></p>',
     );
   });
 
-  it('не считает жирным <b style="font-weight:normal"> из Google Docs', () => {
-    expect(mount('<b style="font-weight:normal"><p>текст</p></b>').getHTML()).toBe('<p>текст</p>');
+  it('treats <b style="font-weight:normal"> from Google Docs as not bold', () => {
+    expect(mount('<b style="font-weight:normal"><p>text</p></b>').getHTML()).toBe('<p>text</p>');
   });
 
-  it('setContent заменяет документ и генерирует change', () => {
-    const e = mount('<p>старое</p>');
+  it('setContent replaces the document and emits change', () => {
+    const e = mount('<p>old</p>');
     const onChange = vi.fn();
     e.on('change', onChange);
-    e.setContent('<p>новое</p>');
-    expect(e.getHTML()).toBe('<p>новое</p>');
+    e.setContent('<p>new</p>');
+    expect(e.getHTML()).toBe('<p>new</p>');
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 
-  it('JSON туда и обратно', () => {
-    const e = mount('<h1>Привет</h1><p>мир</p>');
+  it('JSON round trip', () => {
+    const e = mount('<h1>Hello</h1><p>world</p>');
     const json = e.getJSON();
     const e2 = mount();
     e2.setContent(json);
-    expect(e2.getHTML()).toBe('<h1>Привет</h1><p>мир</p>');
+    expect(e2.getHTML()).toBe('<h1>Hello</h1><p>world</p>');
   });
 });
 
-describe('безопасность', () => {
-  // Найдено property-based тестом (security.property.test.ts): у элементов MathML/SVG
-  // может не быть .style — разбор не должен падать.
-  it('не падает на ячейках внутри MathML и SVG', () => {
+describe('security', () => {
+  // Found by a property-based test (security.property.test.ts): MathML/SVG elements
+  // may have no .style, and parsing must not crash.
+  it("doesn't crash on cells inside MathML and SVG", () => {
     const e = mount('<p>a</p>');
     expect(() =>
       e.setContent('<math><td style="background-color: red">x</td></math>'),
     ).not.toThrow();
     expect(() => e.setContent('<svg><th>y</th></svg><p>z</p>')).not.toThrow();
     expect(e.getHTML()).toContain('z');
-    // Текст формулы сохраняется, разметка SVG — нет.
+    // The formula text is kept, the SVG markup isn't.
     e.setContent('<p>E = <math><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></math></p>');
     expect(e.getHTML()).toBe('<p>E = mc2</p>');
     e.setContent('<p>a<svg><text>icon</text></svg>b</p>');
     expect(e.getHTML()).toBe('<p>ab</p>');
   });
 
-  it('выбрасывает javascript:-ссылки при разборе HTML', () => {
+  it('drops javascript: links when parsing HTML', () => {
     expect(mount('<p><a href="javascript:alert(1)">x</a></p>').getHTML()).toBe('<p>x</p>');
     expect(mount('<p><a href=" java\tscript:alert(1)">x</a></p>').getHTML()).toBe('<p>x</p>');
   });
 
-  it('выбрасывает опасные src у картинок', () => {
+  it('drops dangerous image src values', () => {
     expect(mount('<p><img src="javascript:alert(1)"></p>').getHTML()).toBe('<p></p>');
   });
 
-  it('не исполняет скрипты и обработчики при разборе', () => {
+  it("doesn't run scripts and handlers while parsing", () => {
     const html = mount('<p onclick="alert(1)">a</p><script>alert(1)</script>').getHTML();
     expect(html).toBe('<p>a</p>');
   });
 
-  it('не выводит опасный href, пришедший через JSON', () => {
+  it("doesn't output a dangerous href that came through JSON", () => {
     const e = mount();
     e.setContent({
       type: 'doc',
@@ -120,11 +120,11 @@ describe('безопасность', () => {
     expect(e.getHTML()).toBe('<p><a href="#">x</a></p>');
   });
 
-  it('setLink отказывается от опасного URL', () => {
-    const e = mount('<p>текст</p>');
+  it('setLink refuses a dangerous URL', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     expect(e.exec(setLink('javascript:alert(1)'))).toBe(false);
-    expect(e.getHTML()).toBe('<p>текст</p>');
+    expect(e.getHTML()).toBe('<p>text</p>');
   });
 
   it.each([
@@ -140,56 +140,56 @@ describe('безопасность', () => {
     expect(isSafeLinkUrl(url)).toBe(safe);
   });
 
-  it('isSafeImageUrl разрешает data:image, но не data:text', () => {
+  it('isSafeImageUrl allows data:image but not data:text', () => {
     expect(isSafeImageUrl('data:image/png;base64,AAAA')).toBe(true);
     expect(isSafeImageUrl('data:text/html;base64,AAAA')).toBe(false);
     expect(isSafeImageUrl('data:image/svg+xml;base64,AAAA')).toBe(false);
   });
 });
 
-describe('команды', () => {
-  it('bold переключает марку на выделении', () => {
-    const e = mount('<p>текст</p>');
+describe('commands', () => {
+  it('bold toggles the mark on the selection', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     expect(e.exec('bold')).toBe(true);
-    expect(e.getHTML()).toBe('<p><strong>текст</strong></p>');
+    expect(e.getHTML()).toBe('<p><strong>text</strong></p>');
     e.exec('bold');
-    expect(e.getHTML()).toBe('<p>текст</p>');
+    expect(e.getHTML()).toBe('<p>text</p>');
   });
 
-  it('заголовок, выравнивание и списки', () => {
-    const e = mount('<p>текст</p>');
+  it('heading, alignment and lists', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     e.exec('h2');
     e.exec('alignCenter');
-    expect(e.getHTML()).toBe('<h2 style="text-align: center;">текст</h2>');
+    expect(e.getHTML()).toBe('<h2 style="text-align: center;">text</h2>');
     e.exec('paragraph');
     e.exec('bulletList');
-    expect(e.getHTML()).toBe('<ul><li><p style="text-align: center;">текст</p></li></ul>');
+    expect(e.getHTML()).toBe('<ul><li><p style="text-align: center;">text</p></li></ul>');
     e.exec('bulletList');
-    expect(e.getHTML()).toBe('<p style="text-align: center;">текст</p>');
+    expect(e.getHTML()).toBe('<p style="text-align: center;">text</p>');
   });
 
   it('undo/redo', () => {
-    const e = mount('<p>текст</p>');
+    const e = mount('<p>text</p>');
     selectAll(e);
     e.exec('italic');
     expect(e.can('undo')).toBe(true);
     e.exec('undo');
-    expect(e.getHTML()).toBe('<p>текст</p>');
+    expect(e.getHTML()).toBe('<p>text</p>');
     e.exec('redo');
-    expect(e.getHTML()).toBe('<p><em>текст</em></p>');
+    expect(e.getHTML()).toBe('<p><em>text</em></p>');
   });
 
-  it('setContent без истории нельзя отменить', () => {
+  it("setContent without history can't be undone", () => {
     const e = mount('<p>a</p>');
     e.setContent('<p>b</p>', { addToHistory: false });
     expect(e.can('undo')).toBe(false);
   });
 });
 
-describe('жизненный цикл', () => {
-  it('рендерит тулбар по умолчанию и убирает его при toolbar: false', () => {
+describe('lifecycle', () => {
+  it('renders the toolbar by default and removes it with toolbar: false', () => {
     const e = mount('<p>a</p>');
     expect(e.root.querySelector('.nova-toolbar')).not.toBeNull();
     e.destroy();
@@ -197,12 +197,12 @@ describe('жизненный цикл', () => {
     expect(headless.root.querySelector('.nova-toolbar')).toBeNull();
   });
 
-  it('isEmpty для пустого документа', () => {
+  it('isEmpty for an empty document', () => {
     expect(mount('').isEmpty()).toBe(true);
     expect(mount('<p>a</p>').isEmpty()).toBe(false);
   });
 
-  it('read-only отключает редактирование и кнопки', () => {
+  it('read-only disables editing and buttons', () => {
     const e = mount('<p>a</p>', { editable: false });
     expect(e.view.dom.getAttribute('contenteditable')).toBe('false');
     const bold = e.root.querySelector<HTMLButtonElement>('[data-control="bold"]');
@@ -211,7 +211,7 @@ describe('жизненный цикл', () => {
     expect(e.view.dom.getAttribute('contenteditable')).toBe('true');
   });
 
-  it('destroy удаляет DOM и снимает слушателей', () => {
+  it('destroy removes the DOM and the listeners', () => {
     const e = mount('<p>a</p>');
     const onDestroy = vi.fn();
     e.on('destroy', onDestroy);
@@ -219,12 +219,12 @@ describe('жизненный цикл', () => {
     e.destroy();
     expect(root.isConnected).toBe(false);
     expect(onDestroy).toHaveBeenCalledOnce();
-    e.destroy(); // повторный вызов безопасен
+    e.destroy(); // calling it again is safe
   });
 });
 
-describe('isActive и editableChange (для headless UI)', () => {
-  it('isActive отражает марки, блоки, списки и выравнивание', () => {
+describe('isActive and editableChange (for a headless UI)', () => {
+  it('isActive reflects marks, blocks, lists and alignment', () => {
     const e = mount(
       '<h2 style="text-align: center"><strong>a</strong></h2><ul><li><p>b</p></li></ul>',
     );
@@ -244,7 +244,7 @@ describe('isActive и editableChange (для headless UI)', () => {
     expect(e.isActive('paragraph')).toBe(true);
   });
 
-  it('setEditable шлёт editableChange только при реальном изменении', () => {
+  it('setEditable sends editableChange only on a real change', () => {
     const e = mount('<p>a</p>');
     const listener = vi.fn();
     e.on('editableChange', listener);

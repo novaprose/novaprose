@@ -5,8 +5,8 @@ import { duplicateBlock } from '../src/blocks';
 import { moveBlockTo } from '../src/plugins/draghandle';
 
 /**
- * Перемещение блоков: Alt+Shift+↑/↓ (команды moveBlockUp / moveBlockDown) и копия блока.
- * Единица — пункт списка или блок верхнего уровня; выделение через несколько блоков двигает их вместе.
+ * Moving blocks: Alt+Shift+↑/↓ (the moveBlockUp / moveBlockDown commands) and duplicating a block.
+ * The unit is a list item or a top-level block; a selection across several blocks moves them together.
  */
 
 let editor: Editor | null = null;
@@ -24,7 +24,7 @@ function mount(content: string, options: Partial<EditorOptions> = {}): Editor {
   return editor;
 }
 
-/** Позиция сразу после текста `text`. */
+/** The position right after the text `text`. */
 function posAfter(e: Editor, text: string): number {
   let pos = -1;
   e.view.state.doc.descendants((node, at) => {
@@ -32,7 +32,7 @@ function posAfter(e: Editor, text: string): number {
       pos = at + node.text!.indexOf(text) + text.length;
     }
   });
-  if (pos < 0) throw new Error(`нет текста ${text}`);
+  if (pos < 0) throw new Error(`no text ${text}`);
   return pos;
 }
 
@@ -48,8 +48,8 @@ function press(e: Editor, key: 'ArrowUp' | 'ArrowDown'): void {
   );
 }
 
-describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
-  it('абзац меняется местами с соседом, курсор остаётся в нём', () => {
+describe('Alt+Shift+↑/↓ moves a block up or down', () => {
+  it('a paragraph swaps places with its neighbor, the cursor stays in it', () => {
     const e = mount('<p>one</p><p>two</p><p>three</p>');
     cursorAfter(e, 'tw');
     press(e, 'ArrowUp');
@@ -61,7 +61,7 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     expect(e.getHTML()).toBe('<p>one</p><p>three</p><p>tw!o</p>');
   });
 
-  it('первый блок вверх и последний вниз — ничего не происходит', () => {
+  it('the first block up and the last block down: nothing happens', () => {
     const e = mount('<p>one</p><p>two</p>');
     cursorAfter(e, 'one');
     expect(e.exec('moveBlockUp')).toBe(false);
@@ -70,7 +70,7 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     expect(e.getHTML()).toBe('<p>one</p><p>two</p>');
   });
 
-  it('одна отмена возвращает порядок', () => {
+  it('one undo restores the order', () => {
     const e = mount('<h2>Title</h2><p>text</p>');
     cursorAfter(e, 'text');
     e.exec('moveBlockUp');
@@ -79,7 +79,7 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     expect(e.getHTML()).toBe('<h2>Title</h2><p>text</p>');
   });
 
-  it('пункт списка — среди своих пунктов, вложенный — среди вложенных', () => {
+  it('a list item moves among its siblings, a nested one among the nested ones', () => {
     const e = mount(
       '<ul><li><p>a</p></li><li><p>b</p><ul><li><p>b1</p></li><li><p>b2</p></li></ul></li></ul>',
     );
@@ -88,7 +88,7 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     expect(e.getHTML()).toBe(
       '<ul><li><p>a</p></li><li><p>b</p><ul><li><p>b2</p></li><li><p>b1</p></li></ul></li></ul>',
     );
-    // Первый во вложенном списке — выше некуда (из списка не выносим).
+    // The first item of a nested list has nowhere to go up (it isn't moved out of the list).
     expect(e.exec('moveBlockUp')).toBe(false);
     cursorAfter(e, 'a');
     e.exec('moveBlockDown');
@@ -97,7 +97,7 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     );
   });
 
-  it('выделение через несколько абзацев двигает их вместе', () => {
+  it('a selection across several paragraphs moves them together', () => {
     const e = mount('<p>one</p><p>two</p><p>three</p><p>four</p>');
     const { doc } = e.view.state;
     e.view.dispatch(
@@ -105,12 +105,12 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     );
     e.exec('moveBlockDown');
     expect(e.getHTML()).toBe('<p>one</p><p>four</p><p>two</p><p>three</p>');
-    // Выделение переехало вместе с абзацами.
+    // The selection moved along with the paragraphs.
     const { from, to } = e.view.state.selection;
     expect(e.view.state.doc.textBetween(from, to, '|')).toBe('wo|thr');
   });
 
-  it('в ячейке таблицы — нет (строки не блоки); список в ячейке — да', () => {
+  it('not in a table cell (rows are not blocks); a list in a cell, yes', () => {
     const e = mount(
       '<p>before</p><table><tbody><tr><td><p>cell</p><ul><li><p>x</p></li><li><p>y</p></li></ul></td></tr></tbody></table>',
     );
@@ -121,7 +121,7 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     expect(e.getHTML()).toContain('<ul><li><p>y</p></li><li><p>x</p></li></ul>');
   });
 
-  it('выделенная таблица или картинка двигается целиком', () => {
+  it('a selected table or image moves as a whole', () => {
     const e = mount(
       '<p>top</p><table><tbody><tr><td><p>cell</p></td></tr></tbody></table><p>bottom</p>',
     );
@@ -135,7 +135,7 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     expect(e.view.state.selection).toBeInstanceOf(NodeSelection);
   });
 
-  it('копия блока — сразу под ним и выделена; таблица из ячейки — только выделенная', () => {
+  it('a duplicate goes right below the block and is selected; a table from a cell only when selected', () => {
     const e = mount('<p>one</p><p>two</p>');
     e.view.dispatch(e.view.state.tr.setSelection(NodeSelection.create(e.view.state.doc, 0)));
     expect(e.exec(duplicateBlock)).toBe(true);
@@ -146,10 +146,10 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
     expect(e.can(duplicateBlock)).toBe(false);
   });
 
-  it('справка по клавишам показывает сочетания стрелками', () => {
+  it('the keyboard help shows the shortcuts with arrows', () => {
     const e = mount('<p>a</p>');
     e.exec('undo');
-    // Подписи команд переводятся (ключи ядра), сочетание — со стрелками, не «ArrowUp».
+    // Command labels are translated (core keys), the shortcut uses arrows, not "ArrowUp".
     expect(e.ui.t('moveBlockUp')).toBe('Move block up');
     return import('../src/ui/dom').then(({ formatShortcut }) => {
       expect(formatShortcut('Alt-Shift-ArrowUp')).toMatch(/↑$/);
@@ -157,8 +157,8 @@ describe('Alt+Shift+↑/↓ — блок выше или ниже', () => {
   });
 });
 
-describe('сброс блока ручкой (moveBlockTo)', () => {
-  /** Узел, содержащий текст `text` (самый внутренний пункт списка или блок верхнего уровня). */
+describe('dropping a block with the handle (moveBlockTo)', () => {
+  /** The node containing the text `text` (the innermost list item or a top-level block). */
   function source(e: Editor, text: string) {
     const $pos = e.view.state.doc.resolve(posAfter(e, text));
     for (let depth = $pos.depth; depth > 0; depth--) {
@@ -173,7 +173,7 @@ describe('сброс блока ручкой (moveBlockTo)', () => {
     }
     throw new Error(text);
   }
-  /** Позиция перед блоком верхнего уровня с номером index. */
+  /** The position before the top-level block number index. */
   const before = (e: Editor, index: number) => {
     let pos = 0;
     for (let i = 0; i < index; i++) pos += e.view.state.doc.child(i).nodeSize;
@@ -185,52 +185,52 @@ describe('сброс блока ручкой (moveBlockTo)', () => {
     return tr;
   };
 
-  it('абзац — между блоками; на своё место — без изменений', () => {
+  it('a paragraph between blocks; onto its own place, no change', () => {
     const e = mount('<p>one</p><p>two</p><p>three</p>');
     drop(e, 'one', before(e, 3));
     expect(e.getHTML()).toBe('<p>two</p><p>three</p><p>one</p>');
     expect(drop(e, 'three', before(e, 1))).toBeNull();
     expect(drop(e, 'three', before(e, 2))).toBeNull();
-    // Перенесённый блок выделен.
+    // The moved block is selected.
     expect(e.view.state.selection).toBeInstanceOf(NodeSelection);
   });
 
-  it('копия (с Ctrl) оставляет исходный блок', () => {
+  it('a copy (with Ctrl) keeps the original block', () => {
     const e = mount('<p>one</p><p>two</p>');
     drop(e, 'one', before(e, 2), true);
     expect(e.getHTML()).toBe('<p>one</p><p>two</p><p>one</p>');
   });
 
-  it('пункт чек-листа вне списка — снова чек-лист; рядом с таким же списком — в него', () => {
+  it('a checklist item outside a list is a checklist again; next to the same kind of list it joins it', () => {
     const tasks =
       '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>done</p></li>' +
       '<li data-type="taskItem" data-checked="false"><p>todo</p></li></ul>';
     const done = '<li data-type="taskItem" data-checked="true"><p>done</p></li>';
     const todo = '<li data-type="taskItem" data-checked="false"><p>todo</p></li>';
     const e = mount(`${tasks}<p>after</p><p>end</p>`);
-    // Между абзацами «after» и «end».
+    // Between the "after" and "end" paragraphs.
     drop(e, 'done', before(e, 2));
     expect(e.getHTML()).toBe(
       `<ul data-type="taskList">${todo}</ul><p>after</p><ul data-type="taskList">${done}</ul><p>end</p>`,
     );
-    // Сразу после первого чек-листа — пункт уходит в его конец, а не в новый список;
-    // опустевший список исчезает.
+    // Right after the first checklist the item goes to its end instead of a new list;
+    // the emptied list disappears.
     drop(e, 'done', before(e, 1));
     expect(e.getHTML()).toBe(`<ul data-type="taskList">${todo}${done}</ul><p>after</p><p>end</p>`);
   });
 
-  it('последний пункт уносится — пустой список исчезает; абзац между пунктами — новый пункт', () => {
+  it('the last item is carried off and the empty list disappears; a paragraph between items becomes a new item', () => {
     const e = mount('<ol><li><p>only</p></li></ol><p>text</p>');
     drop(e, 'only', before(e, 2));
     expect(e.getHTML()).toBe('<p>text</p><ol><li><p>only</p></li></ol>');
-    const listItemEnd = posAfter(e, 'only') + 2; // после </p></li> — внутри списка
+    const listItemEnd = posAfter(e, 'only') + 2; // after </p></li>, inside the list
     drop(e, 'text', listItemEnd);
     expect(e.getHTML()).toBe('<ol><li><p>only</p></li><li><p>text</p></li></ol>');
   });
 });
 
-describe('плагин draghandle', () => {
-  it('подключается лениво: место под ручку и скрытая ручка в области текста', async () => {
+describe('the draghandle plugin', () => {
+  it('attaches lazily: room for the handle and a hidden handle in the text area', async () => {
     const e = mount('<p>one</p>', { plugins: ['draghandle'] });
     await e.ready;
     expect(e.root.classList.contains('nova-has-draghandle')).toBe(true);

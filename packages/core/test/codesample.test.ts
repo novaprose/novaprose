@@ -6,9 +6,9 @@ import { toSegments } from '../src/plugins/code-highlight';
 import { codeHighlightIdle, setCodeLanguage } from '../src/plugins/codesample';
 
 /**
- * Блоки кода: язык в HTML (свой, TinyMCE, Prism, Prettify), подсветка плагином codesample
- * (только оформление — на выходе HTML без изменений), выбор языка, диалог, забор «```js»,
- * вставка из VS Code.
+ * Code blocks: the language in HTML (ours, TinyMCE, Prism, Prettify), highlighting by the codesample plugin
+ * (decorations only: the output HTML doesn't change), language choice, the dialog, the "```js" fence,
+ * paste from VS Code.
  */
 
 let editor: Editor | null = null;
@@ -29,12 +29,12 @@ async function mount(content: string, options: Partial<EditorOptions> = {}): Pro
   return editor;
 }
 
-/** Грамматики загрузились, подсветка нарисована. */
+/** The grammars have loaded and the highlighting is drawn. */
 async function highlighted(e: Editor): Promise<void> {
   await codeHighlightIdle(e.view.state);
 }
 
-/** Классы подсвеченных кусков текста в первом блоке кода: «const» → hljs-keyword. */
+/** Classes of the highlighted pieces of text in the first code block: "const" → hljs-keyword. */
 function tokens(e: Editor, index = 0): Record<string, string> {
   const pre = e.root.querySelectorAll('.nova-prosemirror pre')[index]!;
   const out: Record<string, string> = {};
@@ -54,7 +54,7 @@ function cursorAfter(e: Editor, text: string): void {
   e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, pos)));
 }
 
-/** Ввод по буквам через handleTextInput — так срабатывают input rules. */
+/** Typing letter by letter through handleTextInput: that is how input rules fire. */
 function type(e: Editor, text: string): void {
   for (const ch of text) {
     const { from, to } = e.view.state.selection;
@@ -71,7 +71,7 @@ function pressEnter(e: Editor): void {
 
 const JS = '<pre><code class="language-javascript">const answer = 42; // ok</code></pre>';
 
-describe('язык блока кода в HTML (ядро, без плагина)', () => {
+describe('code block language in HTML (core, without the plugin)', () => {
   const plain = (content: string) => {
     const element = document.createElement('div');
     document.body.append(element);
@@ -79,11 +79,11 @@ describe('язык блока кода в HTML (ядро, без плагина)
     return editor.getHTML();
   };
 
-  it('туда и обратно без изменений', () => {
+  it('round trip without changes', () => {
     expect(plain(JS)).toBe(JS);
   });
 
-  it('TinyMCE и Prism (класс у <pre>), Prettify (lang-x), data-language', () => {
+  it('TinyMCE and Prism (class on <pre>), Prettify (lang-x), data-language', () => {
     expect(plain('<pre class="language-markup"><code>&lt;b&gt;</code></pre>')).toBe(
       '<pre><code class="language-markup">&lt;b&gt;</code></pre>',
     );
@@ -101,7 +101,7 @@ describe('язык блока кода в HTML (ядро, без плагина)
     );
   });
 
-  it('мусор в языке из HTML и JSON не попадает в класс и в забор Markdown', () => {
+  it("garbage in the language from HTML and JSON doesn't reach the class or the Markdown fence", () => {
     expect(plain('<pre><code class="language-a&quot;onclick">x</code></pre>')).toBe(
       '<pre><code>x</code></pre>',
     );
@@ -118,8 +118,8 @@ describe('язык блока кода в HTML (ядро, без плагина)
   });
 });
 
-describe('подсветка (plugins: codesample)', () => {
-  it('рисует токены highlight.js, а HTML на выходе не меняет', async () => {
+describe('highlighting (plugins: codesample)', () => {
+  it("draws highlight.js tokens and doesn't change the output HTML", async () => {
     const e = await mount(JS);
     const t = tokens(e);
     expect(t.const).toBe('hljs-keyword');
@@ -131,14 +131,14 @@ describe('подсветка (plugins: codesample)', () => {
     expect(pre.getAttribute('spellcheck')).toBe('false');
   });
 
-  it('синонимы: js, html (с <script> внутри), markup из TinyMCE', async () => {
+  it('aliases: js, html (with <script> inside), markup from TinyMCE', async () => {
     const e = await mount(
       '<pre><code class="language-js">let a</code></pre>' +
         '<pre><code class="language-html">&lt;script&gt;let b&lt;/script&gt;</code></pre>' +
         '<pre class="language-markup"><code>&lt;i&gt;</code></pre>',
     );
     expect(tokens(e, 0).let).toBe('hljs-keyword');
-    // Внутри <script> — подсветка JavaScript (грамматика HTML тянет её за собой).
+    // Inside <script>, JavaScript highlighting (the HTML grammar pulls it in).
     expect(tokens(e, 1).let).toBe('hljs-keyword');
     expect(tokens(e, 1).script).toBe('hljs-tag hljs-name');
     expect(tokens(e, 2).i).toBe('hljs-tag hljs-name');
@@ -148,7 +148,7 @@ describe('подсветка (plugins: codesample)', () => {
     expect(labels).toEqual(['JavaScript', 'HTML', 'HTML/XML']);
   });
 
-  it('незнакомый язык и простой текст — без подсветки; подпись — как есть', async () => {
+  it('an unknown language and plain text: no highlighting; the label as is', async () => {
     const e = await mount(
       '<pre><code class="language-brainfuck">+++</code></pre><pre><code>let x</code></pre>',
     );
@@ -159,20 +159,20 @@ describe('подсветка (plugins: codesample)', () => {
     expect(plain!.hasAttribute('data-language')).toBe(false);
   });
 
-  it('набор перекрашивает только свой блок; соседний блок не теряет подсветку', async () => {
+  it('typing recolors only its own block; the neighboring block keeps its highlighting', async () => {
     const e = await mount(JS + '<pre><code class="language-python">def f(): pass</code></pre>');
     cursorAfter(e, 'const answer = 42;');
     e.view.dispatch(e.view.state.tr.insertText(' return'));
     expect(tokens(e, 0).return).toBe('hljs-keyword');
     expect(tokens(e, 1).def).toBe('hljs-keyword');
-    // Блоки вплотную: правка второго не трогает оформление первого.
+    // Blocks right next to each other: editing the second doesn't touch the first one's decorations.
     cursorAfter(e, 'pass');
     e.view.dispatch(e.view.state.tr.insertText(' # done'));
     expect(tokens(e, 1)['# done']).toBe('hljs-comment');
     expect(tokens(e, 0).const).toBe('hljs-keyword');
   });
 
-  it('смена языка: команда, подпись, подсветка, класс в HTML', async () => {
+  it('changing the language: the command, the label, highlighting, the class in HTML', async () => {
     const e = await mount('<pre><code>SELECT 1</code></pre>');
     cursorAfter(e, 'SELECT');
     expect(e.exec(setCodeLanguage('sql'))).toBe(true);
@@ -182,16 +182,16 @@ describe('подсветка (plugins: codesample)', () => {
     e.exec(setCodeLanguage(null));
     expect(tokens(e)).toEqual({});
     expect(e.getHTML()).toBe('<pre><code>SELECT 1</code></pre>');
-    // Не в блоке кода — команда недоступна.
+    // Outside a code block the command isn't available.
     e.setContent('<p>text</p>');
     expect(e.can(setCodeLanguage('sql'))).toBe(false);
   });
 
-  it('меню языка: текущий отмечен, выбор меняет язык; язык не из списка — первым', async () => {
+  it('language menu: the current one is checked, a choice changes the language; a language not in the list goes first', async () => {
     const e = await mount('<pre><code class="language-ts">let a</code></pre>');
     cursorAfter(e, 'let');
     const control = e.ui.registry.get('codelanguage')!;
-    if (control.type !== 'menu') throw new Error('codelanguage — не меню');
+    if (control.type !== 'menu') throw new Error('codelanguage is not a menu');
     expect(control.label!(e)).toBe('TypeScript');
     const items = control.items(e).filter((i) => i.type !== 'separator' && i.type !== 'heading');
     expect(items.slice(0, 2).map((i) => 'label' in i && i.label)).toEqual([
@@ -205,7 +205,7 @@ describe('подсветка (plugins: codesample)', () => {
     expect(control.label!(e)).toBe('Python');
   });
 
-  it('контекстная панель: в блоке кода, над его правым углом — и в документе справа налево', async () => {
+  it('context toolbar: in a code block, above its right corner, in a right-to-left document too', async () => {
     const spec = async (direction: 'ltr' | 'rtl') => {
       const e = await mount('<pre><code>x</code></pre><p>text</p>', { direction });
       const [name, found] = e.ui.registry.getContextToolbars()[0]!;
@@ -219,24 +219,24 @@ describe('подсветка (plugins: codesample)', () => {
       e.destroy();
       return placement;
     };
-    // Код всегда слева направо: правый угол — «конец» строки слева направо и «начало» справа налево.
+    // Code is always left to right: the right corner is the line "end" left to right and the "start" right to left.
     expect(await spec('ltr')).toBe('top-end');
     expect(await spec('rtl')).toBe('top-start');
   });
 
-  it('большой блок перекрашивается после паузы в наборе, а не на каждую букву', async () => {
-    const big = 'let x = 1;\n'.repeat(1900); // > 20 000 символов
+  it('a large block is recolored after a pause in typing, not on every letter', async () => {
+    const big = 'let x = 1;\n'.repeat(1900); // > 20,000 characters
     const e = await mount(`<pre><code class="language-javascript">${big}</code></pre>`);
     expect(e.root.querySelectorAll('.nova-prosemirror pre .hljs-keyword')).toHaveLength(1900);
     vi.useFakeTimers();
     e.view.dispatch(e.view.state.tr.insertText('const ', 1));
-    // Сразу — старое оформление (сдвинутое), новое слово ещё не покрашено.
+    // Right away: the old decorations (shifted), the new word isn't colored yet.
     expect(tokens(e)['const']).toBeUndefined();
     vi.advanceTimersByTime(400);
     expect(tokens(e)['const']).toBe('hljs-keyword');
   });
 
-  it('отрезки: вложенные области склеены, неожиданная разметка — без подсветки', () => {
+  it('ranges: nested scopes are merged, unexpected markup gets no highlighting', () => {
     expect(
       toSegments('<span class="hljs-string">`a <span class="hljs-subst">${b}</span>`</span>', 8),
     ).toEqual([
@@ -249,8 +249,8 @@ describe('подсветка (plugins: codesample)', () => {
   });
 });
 
-describe('забор «```»', () => {
-  it('«```js» и пробел — блок кода с языком; «```» без пробела — ещё текст', async () => {
+describe('the "```" fence', () => {
+  it('"```js" and a space make a code block with a language; "```" without a space is still text', async () => {
     const e = await mount('<p></p>');
     type(e, '```');
     expect(e.getHTML()).toBe('<p>```</p>');
@@ -261,7 +261,7 @@ describe('забор «```»', () => {
     expect(tokens(e).let).toBe('hljs-keyword');
   });
 
-  it('Enter после «```» или «```python» — блок кода; в середине абзаца — нет', async () => {
+  it('Enter after "```" or "```python" makes a code block; in the middle of a paragraph it does not', async () => {
     const e = await mount('<p>```python</p>');
     cursorAfter(e, '```python');
     pressEnter(e);
@@ -276,7 +276,7 @@ describe('забор «```»', () => {
     expect(e.getHTML()).toBe('<p>``` not a fence</p><p></p>');
   });
 
-  it('запрет блоков кода (правила контента) — забор остаётся текстом', async () => {
+  it('code blocks forbidden (content rules): the fence stays text', async () => {
     const e = await mount('<p>```js</p>', { invalidElements: 'pre' });
     cursorAfter(e, '```js');
     pressEnter(e);
@@ -284,7 +284,7 @@ describe('забор «```»', () => {
   });
 });
 
-describe('вставка из VS Code', () => {
+describe('paste from VS Code', () => {
   function paste(e: Editor, data: Record<string, string>): void {
     const clipboardData = {
       getData: (t: string) => data[t] ?? '',
@@ -303,7 +303,7 @@ describe('вставка из VS Code', () => {
   const THEMED =
     '<div style="color: #d4d4d4;background-color: #1e1e1e;font-family: Consolas"><div><span style="color: #569cd6;">const</span> a</div></div>';
 
-  it('несколько строк — блок кода с языком файла, без цветов темы', async () => {
+  it("several lines become a code block with the file's language, without the theme colors", async () => {
     const e = await mount('<p>Before</p><p></p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.atEnd(e.view.state.doc)));
     paste(e, {
@@ -318,7 +318,7 @@ describe('вставка из VS Code', () => {
     expect(tokens(e).const).toBe('hljs-keyword');
   });
 
-  it('одна строка и Markdown — обычный текст; shellscript — bash', async () => {
+  it('one line and Markdown become regular text; shellscript becomes bash', async () => {
     const e = await mount('<p></p>');
     paste(e, {
       'text/plain': 'npm install',
@@ -349,13 +349,13 @@ describe('вставка из VS Code', () => {
   });
 });
 
-describe('диалог «Пример кода» (кнопка codesample)', () => {
+describe('the "Code sample" dialog (the codesample button)', () => {
   const dialogEl = (e: Editor) => e.root.querySelector<HTMLFormElement>('.nova-dialog');
   const field = <T extends HTMLElement>(e: Editor, name: string) =>
     dialogEl(e)!.querySelector<T>(`[name="${name}"]`)!;
   const open = async (e: Editor) => {
     const button = e.ui.registry.get('codesample')!;
-    if (button.type !== 'button') throw new Error('codesample — не кнопка');
+    if (button.type !== 'button') throw new Error('codesample is not a button');
     button.onAction(e);
     await vi.waitFor(() => expect(dialogEl(e)).not.toBeNull());
   };
@@ -364,7 +364,7 @@ describe('диалог «Пример кода» (кнопка codesample)', () 
     await vi.waitFor(() => expect(dialogEl(e)).toBeNull());
   };
 
-  it('вставка: язык и код; пустой абзац заменяется, курсор — в конце кода', async () => {
+  it('insert: language and code; an empty paragraph is replaced, the cursor goes to the end of the code', async () => {
     const e = await mount('<p>Intro</p><p></p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.atEnd(e.view.state.doc)));
     await open(e);
@@ -380,7 +380,7 @@ describe('диалог «Пример кода» (кнопка codesample)', () 
     expect(e.view.state.selection.$from.parent.type.name).toBe('code_block');
   });
 
-  it('правка: курсор в блоке — диалог с его кодом и языком, сохранение заменяет блок', async () => {
+  it('edit: with the cursor in a block the dialog has its code and language, saving replaces the block', async () => {
     const e = await mount(JS);
     cursorAfter(e, 'answer');
     await open(e);
@@ -396,7 +396,7 @@ describe('диалог «Пример кода» (кнопка codesample)', () 
 });
 
 describe('Markdown', () => {
-  it('забор с языком туда и обратно', async () => {
+  it('a fence with a language round trip', async () => {
     const e = await mount(JS);
     const md = toMarkdown(e);
     expect(md).toBe('```javascript\nconst answer = 42; // ok\n```');

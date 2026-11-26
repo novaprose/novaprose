@@ -2,7 +2,7 @@ import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, getComments, getMentions, type Editor, type MentionUser } from '../src';
 
-/** Упоминания: узел в тексте, поиск людей, «@» в комментариях, безопасность. */
+/** Mentions: a node in the text, searching for people, "@" in comments, security. */
 
 const PEOPLE: MentionUser[] = [
   { id: 'u1', name: 'Anna Ivanova', description: 'Head of Sales' },
@@ -38,8 +38,8 @@ function mount(
 const spec = (editor: Editor) =>
   editor.ui.registry.getAutocompleters().find(([name]) => name === 'mentions')![1];
 
-describe('упоминания в тексте', () => {
-  it('HTML туда-обратно без изменений; getMentions — кто упомянут', () => {
+describe('mentions in the text', () => {
+  it('HTML round trip without changes; getMentions tells who is mentioned', () => {
     const html =
       '<p>Ask <span data-mention="u1">@Anna Ivanova</span> and <span data-mention="u2">@Boris Petrov</span>, <span data-mention="u1">@Anna Ivanova</span></p>';
     const editor = mount(html);
@@ -50,7 +50,7 @@ describe('упоминания в тексте', () => {
     ]);
   });
 
-  it('«@» ищет людей: негодные id отброшены, выбор вставляет упоминание и пробел', async () => {
+  it('"@" searches for people: invalid ids are dropped, a choice inserts the mention and a space', async () => {
     const onMention = vi.fn();
     const editor = mount('<p>Hi</p>', { mentions: { fetch: fetchPeople, onMention } });
     await editor.ready;
@@ -70,7 +70,7 @@ describe('упоминания в тексте', () => {
     );
   });
 
-  it('id и имя проверяются и при выводе (документ из JSON)', () => {
+  it('the id and name are checked on output too (a document from JSON)', () => {
     const editor = mount('<p></p>');
     editor.setContent({
       type: 'doc',
@@ -89,13 +89,13 @@ describe('упоминания в тексте', () => {
     expect(html).toContain('&lt;img src=x&gt;');
   });
 
-  it('без плагина упоминание становится обычным текстом', () => {
+  it('without the plugin a mention becomes regular text', () => {
     const editor = mount('<p><span data-mention="u1">@Anna</span></p>', {}, []);
     expect(editor.getHTML()).toBe('<p>@Anna</p>');
   });
 });
 
-describe('«@» в комментариях', () => {
+describe('"@" in comments', () => {
   async function commentEditor(onMention = vi.fn()) {
     const editor = mount(
       '<p>Plan text</p>',
@@ -124,7 +124,7 @@ describe('«@» в комментариях', () => {
   const key = (textarea: HTMLTextAreaElement, k: string, init: KeyboardEventInit = {}) =>
     textarea.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, ...init }));
 
-  it('список людей, стрелки и Enter; упомянутые сохраняются и получают уведомление', async () => {
+  it('a list of people, arrows and Enter; mentioned people are saved and get a notification', async () => {
     const { editor, comments, textarea, onMention } = await commentEditor();
     expect(textarea.getAttribute('role')).toBe('combobox');
     await typeInto(textarea, 'Please check @');
@@ -145,11 +145,11 @@ describe('«@» в комментариях', () => {
     expect(onMention).toHaveBeenCalledWith(
       expect.objectContaining({ users: [{ id: 'u2', name: 'Boris Petrov' }] }),
     );
-    // В тексте комментария имя выделено.
+    // In the comment text the name is highlighted.
     expect(editor.root.querySelector('.nova-comment-mention')?.textContent).toBe('@Boris Petrov');
   });
 
-  it('выбранного, но стёртого из текста человека не уведомляем; Esc закрывает только список', async () => {
+  it("a person picked but then erased from the text isn't notified; Esc closes only the list", async () => {
     const { editor, comments, textarea, onMention } = await commentEditor();
     await typeInto(textarea, '@an');
     key(textarea, 'Enter');

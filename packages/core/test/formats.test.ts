@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor, type EditorOptions } from '../src';
 import { cleanPastedHTML } from '../src/paste-office';
 
-/** Форматы и стили (formats / style_formats): классы в схеме, применение к выделению, меню. */
+/** Formats and styles (formats / style_formats): classes in the schema, applying to the selection, the menu. */
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -34,8 +34,8 @@ const FORMATS: EditorOptions['formats'] = {
   imgLeft: { selector: 'img', classes: 'img-left' },
 };
 
-describe('классы в схеме', () => {
-  it('HTML с классами форматов — туда и обратно без изменений', () => {
+describe('classes in the schema', () => {
+  it('HTML with format classes: round trip without changes', () => {
     const html =
       '<p class="note">a</p><h2 class="title big" style="text-align: center;">b</h2>' +
       '<blockquote class="pull"><p>c</p></blockquote>' +
@@ -46,12 +46,12 @@ describe('классы в схеме', () => {
     expect(e.getHTML()).toBe(html);
   });
 
-  it('по умолчанию классы не сохраняются — вывод как раньше', () => {
+  it("by default classes aren't kept: the output is as before", () => {
     const e = mount('<p class="MsoNormal">a <span class="x">b</span></p>');
     expect(e.getHTML()).toBe('<p>a b</p>');
   });
 
-  it('чужие классы отбрасываются, разрешённые остаются; validClasses: список и true', () => {
+  it('foreign classes are dropped, allowed ones stay; validClasses: a list and true', () => {
     const html = '<p class="note junk">a</p><p class="extra">b</p>';
     expect(mount(html, { formats: FORMATS }).getHTML()).toBe('<p class="note">a</p><p>b</p>');
     editor!.destroy();
@@ -64,7 +64,7 @@ describe('классы в схеме', () => {
     );
   });
 
-  it('некорректные имена классов из JSON не выводятся', () => {
+  it("invalid class names from JSON aren't output", () => {
     const e = mount('', { validClasses: true });
     e.setContent({
       type: 'doc',
@@ -79,7 +79,7 @@ describe('классы в схеме', () => {
     expect(e.getHTML()).toBe('<p class="ok">a</p>');
   });
 
-  it('formatter.register в setup: классы нового формата сохраняются при разборе', () => {
+  it("formatter.register in setup: the new format's classes are kept when parsing", () => {
     const e = mount('', {
       setup: (ed) => ed.formatter.register('lead', { block: 'p', classes: 'lead' }),
     });
@@ -87,7 +87,7 @@ describe('классы в схеме', () => {
     expect(e.getHTML()).toBe('<p class="lead">x</p>');
   });
 
-  it('вставка из Word: классы Office снимаются (их стили уже перенесены в style)', () => {
+  it('paste from Word: Office classes are removed (their styles are already moved into style)', () => {
     const html =
       '<html xmlns:o="urn:schemas-microsoft-com:office:office"><body><p class="MsoNormal">a</p></body></html>';
     expect(cleanPastedHTML(html)).not.toContain('MsoNormal');
@@ -95,7 +95,7 @@ describe('классы в схеме', () => {
 });
 
 describe('formatter', () => {
-  it('block: тип блока, классы и match; remove возвращает абзац', () => {
+  it('block: block type, classes and match; remove returns a paragraph', () => {
     const e = mount('<p>a</p>', { formats: FORMATS });
     select(e, 1);
     expect(e.formatter.match('title')).toBe(false);
@@ -110,7 +110,7 @@ describe('formatter', () => {
     expect(e.getHTML()).toBe('<p>a</p>');
   });
 
-  it('blockquote: оборачивает с классом и снимает', () => {
+  it('blockquote: wraps with a class and unwraps', () => {
     const e = mount('<p>a</p>', { formats: FORMATS });
     select(e, 1);
     e.formatter.apply('quote');
@@ -120,7 +120,7 @@ describe('formatter', () => {
     expect(e.getHTML()).toBe('<p>a</p>');
   });
 
-  it('inline: span с классом, стиль цветом, тег с классом; снятие только своих классов', () => {
+  it('inline: a span with a class, a style with a color, a tag with a class; removing only its own classes', () => {
     const e = mount('<p>hello</p>', { formats: FORMATS });
     select(e, 1, 6);
     e.formatter.apply('hl');
@@ -138,7 +138,7 @@ describe('formatter', () => {
     expect(e.getHTML()).toContain('class="imp"');
   });
 
-  it('selector: выравнивание и класс существующим блокам; картинке — класс, выделение остаётся', () => {
+  it('selector: alignment and a class on existing blocks; on an image a class, the selection stays', () => {
     const e = mount('<p>a</p><h2>b</h2><p><img src="https://example.com/a.png"></p>', {
       formats: FORMATS,
     });
@@ -159,7 +159,7 @@ describe('formatter', () => {
     expect(e.root.querySelector('.nova-image img')!.className).toBe('img-left');
   });
 
-  it('неизвестный формат и неподдерживаемый стиль — предупреждение, не ошибка', () => {
+  it('an unknown format and an unsupported style give a warning, not an error', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const e = mount('<p>a</p>');
     select(e, 1, 2);
@@ -169,7 +169,7 @@ describe('formatter', () => {
     expect(warn.mock.calls.join('\n')).toMatch(/text-shadow/);
   });
 
-  it('только чтение: форматы не применяются', () => {
+  it("read only: formats aren't applied", () => {
     const e = mount('<p>a</p>', { formats: FORMATS, editable: false });
     select(e, 1);
     expect(e.formatter.apply('note')).toBe(false);
@@ -177,13 +177,13 @@ describe('formatter', () => {
   });
 });
 
-describe('меню «Стили»', () => {
+describe('the "Styles" menu', () => {
   const open = (e: Editor) => {
     e.root.querySelector<HTMLButtonElement>('[data-control="styles"]')!.click();
     return e.root.querySelector<HTMLElement>('.nova-menu')!;
   };
 
-  it('по умолчанию — группы заголовков, текста, блоков и выравнивания', () => {
+  it('by default: groups of headings, text, blocks and alignment', () => {
     const e = mount('<h2>a</h2>', { toolbar: 'styles' });
     select(e, 1);
     const button = e.root.querySelector('[data-control="styles"]')!;
@@ -201,7 +201,7 @@ describe('меню «Стили»', () => {
     expect(e.getHTML()).toBe('<h2 style="text-align: center;">a</h2>');
   });
 
-  it('свои styleFormats: группы, ссылки на formats, отметка текущего', () => {
+  it('custom styleFormats: groups, references to formats, the current one checked', () => {
     const e = mount('<p class="note">a</p>', {
       toolbar: 'styles',
       formats: FORMATS,
@@ -219,7 +219,7 @@ describe('меню «Стили»', () => {
       'Marker',
     ]);
     expect(items[0]!.getAttribute('aria-checked')).toBe('true');
-    // Классы из styleFormats сохраняются при разборе.
+    // Classes from styleFormats are kept when parsing.
     e.setContent('<p><span class="marker">x</span></p>');
     expect(e.getHTML()).toBe('<p><span class="marker">x</span></p>');
   });

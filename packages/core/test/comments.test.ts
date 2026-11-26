@@ -9,7 +9,7 @@ import {
   type Editor,
 } from '../src';
 
-/** Комментарии: модель, якоря в HTML, отмена, панель обсуждений, безопасность. */
+/** Comments: the model, anchors in HTML, undo, the discussion panel, security. */
 
 const editors: Editor[] = [];
 afterEach(() => {
@@ -56,8 +56,8 @@ async function addComment(editor: Editor, text: string, body: string) {
 
 const panel = (editor: Editor) => editor.root.querySelector<HTMLElement>('.nova-comments')!;
 
-describe('хранилище комментариев', () => {
-  it('создание, ответ, правка, удаление, решение; onChange получает снимок', () => {
+describe('the comment store', () => {
+  it('create, reply, edit, delete, resolve; onChange gets a snapshot', () => {
     const onChange = vi.fn();
     const store = createCommentStore([], onChange);
     const author = { id: 'u1', name: 'Anna' };
@@ -78,7 +78,7 @@ describe('хранилище комментариев', () => {
     expect(store.threads()).toEqual([]);
   });
 
-  it('данные извне проверяются: плохие id отбрасываются, длина ограничена', () => {
+  it('outside data is checked: bad ids are dropped, the length is limited', () => {
     expect(sanitizeThread({ id: 'bad id"><img>', comments: [] })).toBeNull();
     const thread = sanitizeThread({
       id: 'ok',
@@ -93,8 +93,8 @@ describe('хранилище комментариев', () => {
   });
 });
 
-describe('якоря комментариев в HTML', () => {
-  it('HTML туда-обратно без изменений, в том числе перекрывающиеся обсуждения', () => {
+describe('comment anchors in HTML', () => {
+  it('HTML round trip without changes, overlapping threads included', () => {
     const html =
       '<p>Hello <span data-comment="t1">brave <span data-comment="t2">new</span></span><span data-comment="t2"> world</span></p>';
     const { editor } = mount(html);
@@ -103,7 +103,7 @@ describe('якоря комментариев в HTML', () => {
     expect(again.getHTML()).toBe(html);
   });
 
-  it('недопустимый id и редактор без плагина — разметка якоря отбрасывается, текст остаётся', () => {
+  it('an invalid id and an editor without the plugin: the anchor markup is dropped, the text stays', () => {
     expect(mount('<p><span data-comment="a b">x</span></p>').editor.getHTML()).toBe('<p>x</p>');
     const element = document.createElement('div');
     document.body.appendChild(element);
@@ -113,8 +113,8 @@ describe('якоря комментариев в HTML', () => {
   });
 });
 
-describe('комментирование', () => {
-  it('выделить текст → комментарий: якорь в HTML, ветка с автором, подсветка в тексте', async () => {
+describe('commenting', () => {
+  it('select text → comment: an anchor in the HTML, a thread with the author, a highlight in the text', async () => {
     const { editor, comments } = mount('<p>The quick brown fox</p>');
     const id = await addComment(editor, 'quick brown', 'Too long?');
     expect(editor.getHTML()).toBe(`<p>The <span data-comment="${id}">quick brown</span> fox</p>`);
@@ -125,7 +125,7 @@ describe('комментирование', () => {
     expect(highlight?.classList.contains('is-active')).toBe(true);
   });
 
-  it('без выделения и в режиме только чтения комментировать нельзя', () => {
+  it("without a selection and in read-only mode you can't comment", () => {
     const { editor, comments } = mount('<p>Text</p>');
     expect(comments.startComment()).toBe(false);
     selectText(editor, 'Text');
@@ -133,7 +133,7 @@ describe('комментирование', () => {
     expect(comments.startComment()).toBe(false);
   });
 
-  it('Ctrl+Z отменяет правки текста, но не снимает комментарий', async () => {
+  it("Ctrl+Z undoes text edits but doesn't remove the comment", async () => {
     const { editor } = mount('<p>Draft</p>');
     editor.view.dispatch(editor.view.state.tr.insertText(' text', 6));
     const id = await addComment(editor, 'Draft', 'Rename');
@@ -141,7 +141,7 @@ describe('комментирование', () => {
     expect(editor.getHTML()).toBe(`<p><span data-comment="${id}">Draft</span></p>`);
   });
 
-  it('пока пишется комментарий, правки текста сдвигают отложенное выделение', async () => {
+  it('while a comment is being written, text edits shift the pending selection', async () => {
     const { editor, comments } = mount('<p>abc target</p>');
     selectText(editor, 'target');
     comments.startComment();
@@ -151,7 +151,7 @@ describe('комментирование', () => {
     expect(editor.getHTML()).toBe(`<p>XYZ abc <span data-comment="${id}">target</span></p>`);
   });
 
-  it('Esc в панели отменяет новый комментарий', async () => {
+  it('Esc in the panel cancels a new comment', async () => {
     const { editor, comments } = mount('<p>Text</p>');
     selectText(editor, 'Text');
     comments.startComment();
@@ -163,8 +163,8 @@ describe('комментирование', () => {
   });
 });
 
-describe('панель обсуждений', () => {
-  it('ответ из панели (Ctrl+Enter), решение скрывает подсветку, «открыть снова» возвращает', async () => {
+describe('the discussion panel', () => {
+  it('a reply from the panel (Ctrl+Enter), resolving hides the highlight, "reopen" brings it back', async () => {
     const { editor, comments } = mount('<p>Some text here</p>');
     const id = await addComment(editor, 'text', 'Question');
     const reply = panel(editor).querySelector<HTMLTextAreaElement>(
@@ -180,14 +180,14 @@ describe('панель обсуждений', () => {
 
     comments.setResolved(id, true);
     expect(editor.view.dom.querySelector('.nova-comment')).toBeNull();
-    // Якорь остаётся в HTML: обсуждение можно открыть снова.
+    // The anchor stays in the HTML: the thread can be reopened.
     expect(editor.getHTML()).toContain(`data-comment="${id}"`);
     expect(panel(editor).querySelector(`[data-thread="${id}"]`)).toBeNull();
     comments.setResolved(id, false);
     expect(editor.view.dom.querySelector('.nova-comment')).not.toBeNull();
   });
 
-  it('удаление обсуждения убирает якорь из текста', async () => {
+  it('deleting a thread removes the anchor from the text', async () => {
     const { editor, comments } = mount('<p>Some text</p>');
     const id = await addComment(editor, 'text', 'x');
     const button = [...panel(editor).querySelectorAll<HTMLButtonElement>('button')].find(
@@ -198,7 +198,7 @@ describe('панель обсуждений', () => {
     expect(comments.store.threads().find((t) => t.id === id)).toBeUndefined();
   });
 
-  it('курсор в прокомментированном тексте открывает панель и выделяет обсуждение', async () => {
+  it('the cursor in commented text opens the panel and highlights the thread', async () => {
     const threads: CommentThread[] = [
       {
         id: 't1',
@@ -218,13 +218,13 @@ describe('панель обсуждений', () => {
     expect(comments.isPanelOpen()).toBe(true);
     const card = panel(editor).querySelector('[data-thread="t1"]')!;
     expect(card.classList.contains('is-active')).toBe(true);
-    // Чужой комментарий нельзя править или удалять.
+    // Someone else's comment can't be edited or deleted.
     const buttons = [...card.querySelectorAll('button')].map((b) => b.textContent);
     expect(buttons).not.toContain('Edit');
     expect(buttons).not.toContain('Delete thread');
   });
 
-  it('панель закрыта, а обсуждение активно: клик в его текст снова открывает панель (регрессия)', async () => {
+  it('the panel is closed but the thread is active: a click in its text opens the panel again (regression)', async () => {
     const { editor, comments } = mount('<p>One two</p>');
     await addComment(editor, 'two', 'note');
     comments.closePanel();
@@ -236,7 +236,7 @@ describe('панель обсуждений', () => {
     expect(comments.isPanelOpen()).toBe(true);
   });
 
-  it('набор текста внутри прокомментированного фрагмента не открывает закрытую панель', async () => {
+  it("typing inside a commented fragment doesn't open a closed panel", async () => {
     const { editor, comments } = mount('<p>One two</p>');
     await addComment(editor, 'two', 'note');
     comments.closePanel();
@@ -245,7 +245,7 @@ describe('панель обсуждений', () => {
     expect(comments.isPanelOpen()).toBe(false);
   });
 
-  it('второй комментарий при открытой панели показывает поле ввода (регрессия)', async () => {
+  it('a second comment with the panel open shows the input field (regression)', async () => {
     const { editor, comments } = mount('<p>One two</p>');
     await addComment(editor, 'One', 'first');
     selectText(editor, 'two');
@@ -256,7 +256,7 @@ describe('панель обсуждений', () => {
     expect(document.activeElement).toBe(input);
   });
 
-  it('текст комментария и имя автора выводятся как текст, не как HTML', async () => {
+  it('the comment text and the author name are output as text, not HTML', async () => {
     const { editor, comments } = mount('<p>x</p>', {
       threads: [
         {
@@ -280,7 +280,7 @@ describe('панель обсуждений', () => {
     expect(el.textContent).toContain('<img src=x onerror=alert(1)>');
   });
 
-  it('удалённый прокомментированный текст: обсуждение остаётся с пометкой', async () => {
+  it('deleted commented text: the thread stays with a note', async () => {
     const { editor, comments } = mount('<p>Keep remove</p>');
     const id = await addComment(editor, 'remove', 'Why?');
     selectText(editor, 'remove');
@@ -291,7 +291,7 @@ describe('панель обсуждений', () => {
     expect(card.textContent).toContain('The commented text was deleted');
   });
 
-  it('кнопки addcomment и showcomments, сохранённые ветки и onChange', async () => {
+  it('the addcomment and showcomments buttons, saved threads and onChange', async () => {
     const onChange = vi.fn();
     const { editor, comments } = mount('<p>Text</p>', { onChange });
     expect(editor.root.querySelector('[data-control="addcomment"]')).not.toBeNull();

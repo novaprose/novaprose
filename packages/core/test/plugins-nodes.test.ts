@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, type Editor } from '../src';
 import { parseMediaUrl } from '../src/plugins/media';
 
-/** Плагины с узлами документа: anchor, pagebreak, media. */
+/** Plugins with document nodes: anchor, pagebreak, media. */
 
 const editors: Editor[] = [];
 function mount(content: string, plugins: string[], toolbar?: string): Editor {
@@ -25,21 +25,21 @@ function submitDialog(fields: string[]): void {
 }
 
 describe('anchor', () => {
-  it('HTML туда-обратно без изменений; name из старого HTML — тоже якорь', () => {
+  it('HTML round trip without changes; name from old HTML is an anchor too', () => {
     const editor = mount('<h2><a id="intro"></a>Intro</h2><p><a name="old"></a>text</p>', [
       'anchor',
     ]);
     expect(editor.getHTML()).toBe('<h2><a id="intro"></a>Intro</h2><p><a id="old"></a>text</p>');
   });
 
-  it('недопустимый идентификатор не становится якорем', () => {
+  it("an invalid identifier doesn't become an anchor", () => {
     const editor = mount('<p><a id="x y"></a><a id="1abc"></a><a id=\'a"b\'></a>t</p>', ['anchor']);
     expect(editor.getHTML()).toBe('<p>t</p>');
   });
 
-  it('диалог вставляет якорь, повторно — переименовывает выделенный', async () => {
+  it('the dialog inserts an anchor, a second time it renames the selected one', async () => {
     const editor = mount('<p>Section</p>', ['anchor'], 'anchor');
-    // Кнопки плагина регистрирует его ленивая часть — после editor.ready.
+    // The plugin's buttons are registered by its lazy part, after editor.ready.
     await editor.ready;
     editor.root.querySelector<HTMLElement>('[data-control="anchor"]')!.click();
     submitDialog(['bad id']);
@@ -61,7 +61,7 @@ describe('anchor', () => {
 });
 
 describe('pagebreak', () => {
-  it('HTML туда-обратно; разрыв из других редакторов распознаётся', () => {
+  it('HTML round trip; a break from other editors is recognized', () => {
     const editor = mount(
       '<p>a</p><div class="nova-pagebreak" style="break-after: page;"></div><p>b</p><div style="page-break-after: always"></div><p>c</p>',
       ['pagebreak'],
@@ -71,7 +71,7 @@ describe('pagebreak', () => {
     );
   });
 
-  it('кнопка вставляет разрыв', async () => {
+  it('the button inserts a break', async () => {
     const editor = mount('<p>a</p>', ['pagebreak'], 'pagebreak');
     await editor.ready;
     editor.root.querySelector<HTMLElement>('[data-control="pagebreak"]')!.click();
@@ -94,7 +94,7 @@ describe('media', () => {
     ],
     ['https://vimeo.com/76979871', 'https://player.vimeo.com/video/76979871'],
     ['https://cdn.example.com/clip.mp4', 'https://cdn.example.com/clip.mp4'],
-  ])('распознаёт %s', (url, src) => {
+  ])('recognizes %s', (url, src) => {
     expect(parseMediaUrl(url)?.src).toBe(src);
   });
 
@@ -103,17 +103,17 @@ describe('media', () => {
     'javascript:alert(1)',
     'http://cdn.example.com/clip.mp4',
     'https://www.youtube.com.evil.com/watch?v=dQw4w9WgXcQ',
-  ])('не принимает %s', (url) => {
+  ])("doesn't accept %s", (url) => {
     expect(parseMediaUrl(url)).toBeNull();
   });
 
-  it('HTML туда-обратно без изменений', () => {
+  it('HTML round trip without changes', () => {
     const html =
       '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" width="640" height="360" title="Demo" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen="" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe><video src="https://cdn.example.com/clip.mp4" controls="" width="560" height="315"></video>';
     expect(mount(html, ['media']).getHTML()).toBe(html);
   });
 
-  it('чужие iframe и опасные адреса отбрасываются; без плагина видео не встраивается вовсе', () => {
+  it('foreign iframes and dangerous addresses are dropped; without the plugin no video is embedded at all', () => {
     const html =
       '<iframe src="https://evil.example.com/x"></iframe><iframe src="javascript:alert(1)"></iframe><p>ok</p>';
     expect(mount(html, ['media']).getHTML()).toBe('<p>ok</p>');
@@ -122,7 +122,7 @@ describe('media', () => {
     ).toBe('<p></p>');
   });
 
-  it('диалог вставляет видео по обычной ссылке YouTube', async () => {
+  it('the dialog inserts a video from a regular YouTube link', async () => {
     const editor = mount('<p></p>', ['media'], 'media');
     await editor.ready;
     editor.root.querySelector<HTMLElement>('[data-control="media"]')!.click();
@@ -134,7 +134,7 @@ describe('media', () => {
     expect(editor.getHTML()).toContain(
       '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" width="560" height="315" title="Launch video"',
     );
-    // В редакторе плеер закрыт слоем для выделения.
+    // In the editor the player is covered by a layer for selection.
     expect(editor.root.querySelector('.nova-media .nova-media-overlay')).not.toBeNull();
   });
 });

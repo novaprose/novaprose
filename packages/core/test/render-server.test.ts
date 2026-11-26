@@ -4,21 +4,21 @@ import { createRenderer, registerHtmlRules, renderHTML } from '../src';
 import { htmlRules } from '../src/html-rules';
 
 /**
- * Отрисовка сохранённого документа на сервере (Node, письма, SSR страниц): импорт ядра и вывод
- * HTML не трогают window/document. Совпадение с getHTML() редактора — render.test.ts.
+ * Rendering a saved document on the server (Node, e-mails, page SSR): importing the core and outputting
+ * HTML don't touch window/document. Matching the editor's getHTML() is in render.test.ts.
  */
 
 const doc = (...content: unknown[]) => ({ type: 'doc', content });
 const p = (...content: unknown[]) => ({ type: 'paragraph', content });
 const text = (value: string, marks?: unknown[]) => ({ type: 'text', text: value, marks });
 
-describe('на сервере, без DOM', () => {
-  it('окружение действительно без DOM', () => {
+describe('on the server, without a DOM', () => {
+  it('the environment really has no DOM', () => {
     expect(typeof window).toBe('undefined');
     expect(typeof document).toBe('undefined');
   });
 
-  it('встроенные узлы, марки и проверка ссылок', () => {
+  it('built-in nodes, marks and the link check', () => {
     const html = renderHTML(
       doc(
         { type: 'heading', attrs: { level: 2 }, content: [text('Title')] },
@@ -35,7 +35,7 @@ describe('на сервере, без DOM', () => {
     );
   });
 
-  it('плагины с узлами — по имени, с их настройками', () => {
+  it('plugins with nodes, by name, with their settings', () => {
     const renderer = createRenderer({
       plugins: ['mentions', 'mergetags', 'math', 'accordion'],
       pluginOptions: { accordion: { serializedState: 'expanded' } },
@@ -62,7 +62,7 @@ describe('на сервере, без DOM', () => {
     expect(renderer.text(doc(p(text('a')), p(text('b'))))).toBe('a\n\nb');
   });
 
-  it('правила разметки и направление письма', () => {
+  it('markup rules and writing direction', () => {
     registerHtmlRules(htmlRules);
     const indented = doc({ type: 'paragraph', attrs: { indent: 1 }, content: [text('x')] });
     expect(renderHTML(indented, { language: 'ar' })).toContain('margin-right');

@@ -39,32 +39,32 @@ function silenceErrors() {
 describe('orderPlugins', () => {
   const p = (name: string, requires: string[] = []) => definePlugin({ name, requires });
 
-  it('сортирует по зависимостям', () => {
+  it('sorts by dependencies', () => {
     const { ordered, errors } = orderPlugins([p('c', ['b']), p('b', ['a']), p('a')]);
     expect(ordered.map((x) => x.name)).toEqual(['a', 'b', 'c']);
     expect(errors).toEqual([]);
   });
 
-  it('отсутствующая зависимость исключает только этот плагин', () => {
+  it('a missing dependency excludes only that plugin', () => {
     const { ordered, errors } = orderPlugins([p('a'), p('b', ['missing']), p('c', ['b'])]);
     expect(ordered.map((x) => x.name)).toEqual(['a']);
     expect(errors[0]).toContain('"b" requires "missing"');
   });
 
-  it('цикл обнаруживается', () => {
+  it('a cycle is detected', () => {
     const { ordered, errors } = orderPlugins([p('a', ['b']), p('b', ['a']), p('ok')]);
     expect(ordered.map((x) => x.name)).toEqual(['ok']);
     expect(errors.some((e) => e.includes('cycle'))).toBe(true);
   });
 
-  it('зависимость от уже подключённого плагина', () => {
+  it('a dependency on an already attached plugin', () => {
     const { ordered } = orderPlugins([p('b', ['a'])], new Set(['a']));
     expect(ordered.map((x) => x.name)).toEqual(['b']);
   });
 });
 
-describe('плагины в редакторе', () => {
-  it('синхронный плагин: кнопка, ProseMirror-плагин, очистка при destroy', () => {
+describe('plugins in the editor', () => {
+  it('a synchronous plugin: a button, a ProseMirror plugin, cleanup on destroy', () => {
     const cleanup = vi.fn();
     const seen: string[] = [];
     const plugin = definePlugin({
@@ -89,7 +89,7 @@ describe('плагины в редакторе', () => {
     expect(cleanup).toHaveBeenCalledOnce();
   });
 
-  it('ошибка в setup изолирована: редактор работает, остальные плагины подключены', () => {
+  it('an error in setup is isolated: the editor works, the other plugins are attached', () => {
     const spy = silenceErrors();
     const broken = definePlugin({
       name: 'broken',
@@ -106,14 +106,14 @@ describe('плагины в редакторе', () => {
     expect(spy.mock.calls[0]![0]).toContain('"broken" failed during setup');
   });
 
-  it('незарегистрированное имя — ошибка в консоли, редактор создаётся', () => {
+  it('an unregistered name: an error in the console, the editor is created', () => {
     const spy = silenceErrors();
     const e = mount({ plugins: ['no-such-plugin'] });
     expect(e.getHTML()).toBe('<p>a</p>');
     expect(spy.mock.calls[0]![0]).toContain('"no-such-plugin" is not registered');
   });
 
-  it('ленивый плагин: кнопка появляется в тулбаре после editor.ready', async () => {
+  it('a lazy plugin: its button appears in the toolbar after editor.ready', async () => {
     const lazy = () =>
       Promise.resolve({
         default: definePlugin({
@@ -125,30 +125,30 @@ describe('плагины в редакторе', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const e = mount({ plugins: [lazy], toolbar: 'bold lazybtn' });
     expect(button('lazybtn')).toBeNull();
-    expect(warn).not.toHaveBeenCalled(); // пока плагин грузится, неизвестная кнопка — не ошибка
+    expect(warn).not.toHaveBeenCalled(); // while the plugin loads, an unknown button isn't an error
     await e.ready;
     expect(e.hasPlugin('lazy')).toBe(true);
     expect(button('lazybtn')).not.toBeNull();
-    // После перестройки тулбара обработчики не задвоились: в тулбаре одна кнопка с tabindex=0.
+    // After the toolbar is rebuilt the handlers aren't doubled: one toolbar button has tabindex=0.
     expect(e.root.querySelectorAll('.nova-toolbar button[tabindex="0"]')).toHaveLength(1);
     warn.mockRestore();
   });
 
-  it('ленивый плагин, который не загрузился, не ломает ready', async () => {
+  it("a lazy plugin that failed to load doesn't break ready", async () => {
     silenceErrors();
     const e = mount({ plugins: [() => Promise.reject(new Error('network'))] });
     await expect(e.ready).resolves.toBeUndefined();
   });
 
-  it('регистрация по имени (как PluginManager.add)', () => {
+  it('registration by name (like PluginManager.add)', () => {
     registerPlugin('test-named', definePlugin({ name: 'test-named', setup: () => {} }));
     expect(isPluginRegistered('test-named')).toBe(true);
     expect(mount({ plugins: ['test-named'] }).hasPlugin('test-named')).toBe(true);
   });
 });
 
-describe('кнопки плагинов в тулбаре по умолчанию', () => {
-  it('добавляются, если toolbar не задан, и не трогают явный конфиг', async () => {
+describe('plugin buttons in the default toolbar', () => {
+  it("are added when toolbar isn't set, and don't touch an explicit config", async () => {
     const plugin = definePlugin({
       name: 'extra',
       toolbar: 'extrabtn',
@@ -163,8 +163,8 @@ describe('кнопки плагинов в тулбаре по умолчани�
   });
 });
 
-describe('встроенный плагин insertdatetime', () => {
-  it('зарегистрирован, грузится лениво и вставляет дату', async () => {
+describe('the built-in insertdatetime plugin', () => {
+  it('is registered, loads lazily and inserts the date', async () => {
     expect(isPluginRegistered('insertdatetime')).toBe(true);
     const e = mount({
       language: 'en',
@@ -181,8 +181,8 @@ describe('встроенный плагин insertdatetime', () => {
   });
 });
 
-describe('плагины: переопределение команд и своя история', () => {
-  it('commands переопределяют undo для exec, кнопок и Mod-z; replaceHistory отключает встроенную историю', () => {
+describe('plugins: overriding commands and a custom history', () => {
+  it('commands override undo for exec, buttons and Mod-z; replaceHistory turns the built-in history off', () => {
     const calls: string[] = [];
     const custom = definePlugin({
       name: 'custom-history',
@@ -197,7 +197,7 @@ describe('плагины: переопределение команд и сво�
     const element = document.createElement('div');
     document.body.appendChild(element);
     const editor = createEditor({ element, content: '<p>a</p>', plugins: [custom] });
-    // Встроенной истории нет: redo (не переопределён) недоступен.
+    // There is no built-in history: redo (not overridden) is unavailable.
     editor.view.dispatch(editor.view.state.tr.insertText('b'));
     expect(editor.can('redo')).toBe(false);
     expect(editor.exec('undo')).toBe(true);
@@ -209,8 +209,8 @@ describe('плагины: переопределение команд и сво�
   });
 });
 
-describe('плагин, меняющий документ при инициализации', () => {
-  it('транзакция внутри конструктора EditorView не ломает редактор (регрессия: this.view ещё не задан)', () => {
+describe('a plugin that changes the document on init', () => {
+  it("a transaction inside the EditorView constructor doesn't break the editor (regression: this.view not set yet)", () => {
     const init = definePlugin({
       name: 'init-dispatch',
       prosemirrorPlugins: () => [
@@ -234,7 +234,7 @@ describe('плагин, меняющий документ при инициал�
     editor.destroy();
   });
 
-  it('транзакция по таймеру плагина после destroy() игнорируется (регрессия: падение в updateState)', () => {
+  it('a transaction from a plugin timer after destroy() is ignored (regression: a crash in updateState)', () => {
     let late: (() => void) | undefined;
     const timer = definePlugin({
       name: 'late-dispatch',

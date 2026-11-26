@@ -4,17 +4,17 @@ import { dataUrlToFile } from '../src/image';
 import { loadPasteCleaner } from '../src/paste';
 import { extractRtfImages, replaceLocalImages } from '../src/paste-rtf';
 
-// Очистка Office — ленивый чанк; здесь проверяется её логика, а не момент загрузки
-// (вставка до загрузки — в paste-lazy.test.ts).
+// Office cleanup is a lazy chunk; its logic is checked here, not the moment it loads
+// (pasting before it loads is in paste-lazy.test.ts).
 beforeAll(() => loadPasteCleaner());
 
-// 1×1 PNG и заголовок JPEG — для проверки сигнатур достаточно.
+// A 1×1 PNG and a JPEG header are enough to check the signatures.
 const PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 const PNG_HEX = Buffer.from(PNG_BASE64, 'base64').toString('hex');
 const JPEG_HEX = 'ffd8ffe000104a46494600010100000100010000ffd9';
 
-/** RTF в том виде, как Word кладёт картинки в буфер: основная копия (\shppict) и резервная WMF. */
+/** RTF the way Word puts images on the clipboard: the main copy (\shppict) and a WMF fallback. */
 function wordRtf(): string {
   const split = (hex: string) => hex.match(/.{1,64}/g)!.join('\r\n');
   return [
@@ -36,22 +36,22 @@ const WORD_HTML =
   ' and <![if !vml]><img width=10 height=10 src="file:///C:/Users/a/AppData/Local/Temp/msohtmlclip1/01/clip_image003.jpg"><![endif]>' +
   '<o:p></o:p></p>';
 
-describe('Картинки из RTF буфера Word', () => {
-  it('достаёт PNG и JPEG по порядку, пропускает резервные WMF и неверные данные', () => {
+describe("Images from Word's RTF clipboard", () => {
+  it('extracts PNG and JPEG in order, skips WMF fallbacks and invalid data', () => {
     const images = extractRtfImages(wordRtf());
     expect(images.map((i) => i.type)).toEqual(['image/png', 'image/jpeg']);
     expect(images[0]!.base64).toBe(PNG_BASE64);
     expect(Buffer.from(images[1]!.base64, 'base64').toString('hex')).toBe(JPEG_HEX);
   });
 
-  it('подставляет картинки только при совпадении количества', () => {
+  it('puts the images in only when the counts match', () => {
     const images = extractRtfImages(wordRtf());
     const replaced = replaceLocalImages(WORD_HTML, images);
-    // file: остаётся только внутри VML-комментария, который очистка вставки выбрасывает.
+    // file: remains only inside a VML comment, which the paste cleanup throws away.
     expect(replaced).not.toMatch(/<img[^>]+src="file:/);
     expect(replaced).toContain(`src="data:image/png;base64,${PNG_BASE64}"`);
     expect(replaced).toContain('src="data:image/jpeg;base64,');
-    // Одна картинка в RTF на две в HTML — не угадываем, оставляем как есть.
+    // One image in the RTF for two in the HTML: no guessing, it is left as is.
     expect(replaceLocalImages(WORD_HTML, images.slice(0, 1))).toBe(WORD_HTML);
   });
 });
@@ -88,8 +88,8 @@ function pasteEvent(editor: Editor, data: Record<string, string>): void {
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
-describe('Вставка из Word с картинками', () => {
-  it('картинки из RTF попадают в документ вместо file:-ссылок', () => {
+describe('Paste from Word with images', () => {
+  it('images from the RTF get into the document instead of file: links', () => {
     const editor = mount();
     pasteEvent(editor, { 'text/html': WORD_HTML, 'text/rtf': wordRtf(), 'text/plain': 'Text' });
     const html = editor.getHTML();
@@ -100,13 +100,13 @@ describe('Вставка из Word с картинками', () => {
     expect(html).not.toContain('file:');
   });
 
-  it('без RTF картинки с file:-ссылками по-прежнему не вставляются', () => {
+  it("without RTF, images with file: links still aren't pasted", () => {
     const editor = mount();
     pasteEvent(editor, { 'text/html': WORD_HTML, 'text/plain': 'Text' });
     expect(editor.getHTML()).toBe('<p>Text before and</p>');
   });
 
-  it('с uploadImage вставленные картинки загружаются и заменяются адресом', async () => {
+  it('with uploadImage pasted images are uploaded and replaced with the address', async () => {
     const uploaded: File[] = [];
     const editor = mount({
       uploadImage: async (file) => {
@@ -121,12 +121,12 @@ describe('Вставка из Word с картинками', () => {
     expect(editor.getHTML()).toContain('src="https://cdn.example.com/1.png"');
     expect(editor.getHTML()).toContain('src="https://cdn.example.com/2.jpg"');
     expect(editor.getHTML()).not.toContain('data:image');
-    // Подмена адреса — не отдельный шаг отмены: undo убирает саму вставку.
+    // Replacing the address isn't a separate undo step: undo removes the paste itself.
     editor.exec('undo');
     expect(editor.getHTML()).toBe('<p></p>');
   });
 
-  it('ошибка загрузки оставляет картинку встроенной и показывает уведомление', async () => {
+  it('an upload error leaves the image embedded and shows a notification', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const editor = mount({ uploadImage: () => Promise.reject(new Error('offline')) });
     pasteEvent(editor, { 'text/html': WORD_HTML, 'text/rtf': wordRtf() });
@@ -136,7 +136,7 @@ describe('Вставка из Word с картинками', () => {
     expect(document.body.textContent).toContain('Image upload failed');
   });
 
-  it('dataUrlToFile: только растровые картинки', () => {
+  it('dataUrlToFile: raster images only', () => {
     expect(dataUrlToFile(`data:image/png;base64,${PNG_BASE64}`)?.type).toBe('image/png');
     expect(dataUrlToFile('data:image/svg+xml;base64,PHN2Zz4=')).toBeNull();
     expect(dataUrlToFile('https://example.com/a.png')).toBeNull();

@@ -3,7 +3,7 @@ import { TextSelection } from 'prosemirror-state';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor } from '../src';
 
-/** Встроенные плагины паритета с TinyMCE (ленивые, подключаются по имени). */
+/** Built-in parity plugins (lazy, attached by name). */
 
 const editors: Editor[] = [];
 async function mount(
@@ -26,13 +26,13 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-/** Курсор в конец документа. */
+/** The cursor to the end of the document. */
 function toEnd(editor: Editor): void {
   const { state } = editor.view;
   editor.view.dispatch(state.tr.setSelection(TextSelection.atEnd(state.doc)));
 }
 
-/** Набор текста посимвольно — как с клавиатуры (срабатывают правила ввода). */
+/** Typing character by character, as from a keyboard (input rules fire). */
 function type(editor: Editor, text: string): void {
   for (const ch of text) {
     const view = editor.view;
@@ -49,8 +49,8 @@ function clickControl(editor: Editor, name: string): void {
 }
 
 describe('charmap', () => {
-  it('панель с поиском вставляет символ', async () => {
-    const editor = await mount('<p>Цена 100</p>', { plugins: ['charmap'], toolbar: 'charmap' });
+  it('the panel with search inserts a character', async () => {
+    const editor = await mount('<p>Price 100</p>', { plugins: ['charmap'], toolbar: 'charmap' });
     toEnd(editor);
     clickControl(editor, 'charmap');
     const search = document.querySelector<HTMLInputElement>('.nova-charmap input')!;
@@ -62,11 +62,11 @@ describe('charmap', () => {
     expect(cells.map((c) => c.textContent)).toEqual(['€']);
     expect(cells[0]!.getAttribute('aria-label')).toBe('euro');
     cells[0]!.click();
-    expect(editor.getHTML()).toBe('<p>Цена 100€</p>');
+    expect(editor.getHTML()).toBe('<p>Price 100€</p>');
     expect(document.querySelector('.nova-charmap')).toBeNull();
   });
 
-  it('пункт меню открывает панель в диалоге', async () => {
+  it('the menu item opens the panel in a dialog', async () => {
     const editor = await mount('<p></p>', {
       plugins: ['charmap'],
       menubar: 'insert',
@@ -78,12 +78,12 @@ describe('charmap', () => {
 });
 
 describe('emoticons', () => {
-  it('автодополнение «:smi» находит эмодзи и заменяет набранное', async () => {
-    const editor = await mount('<p>Привет</p>', { plugins: ['emoticons'] });
+  it('the ":smi" autocomplete finds an emoji and replaces what was typed', async () => {
+    const editor = await mount('<p>Hello</p>', { plugins: ['emoticons'] });
     const spec = editor.ui.registry.getAutocompleters().find(([name]) => name === 'emoticons')![1];
     const items = await spec.fetch('smi', editor);
     expect(items.map((i) => i.value)).toContain('😄');
-    // «10:30» и «:)» — не запросы эмодзи.
+    // "10:30" and ":)" aren't emoji queries.
     expect(await spec.fetch('30', editor)).toEqual([]);
     toEnd(editor);
     type(editor, ' :smi');
@@ -93,22 +93,22 @@ describe('emoticons', () => {
       { from: to - 4, to },
       editor,
     );
-    expect(editor.getHTML()).toBe('<p>Привет 😄</p>');
+    expect(editor.getHTML()).toBe('<p>Hello 😄</p>');
   });
 });
 
 describe('nonbreaking', () => {
-  it('кнопка вставляет неразрывный пробел', async () => {
+  it('the button inserts a non-breaking space', async () => {
     const editor = await mount('<p>100</p>', { plugins: ['nonbreaking'], toolbar: 'nonbreaking' });
     toEnd(editor);
     clickControl(editor, 'nonbreaking');
-    type(editor, 'кг');
-    expect(editor.getHTML()).toBe('<p>100&nbsp;кг</p>');
+    type(editor, 'kg');
+    expect(editor.getHTML()).toBe('<p>100&nbsp;kg</p>');
   });
 });
 
 describe('autolink', () => {
-  it('адрес становится ссылкой после пробела, пунктуация в ссылку не входит', async () => {
+  it("an address becomes a link after a space, punctuation isn't part of the link", async () => {
     const editor = await mount('<p></p>', { plugins: ['autolink'] });
     type(editor, 'see https://example.com/a?b=1. ok');
     expect(editor.getHTML()).toBe(
@@ -116,7 +116,7 @@ describe('autolink', () => {
     );
   });
 
-  it('www и e-mail получают правильную схему', async () => {
+  it('www and e-mail get the right scheme', async () => {
     const editor = await mount('<p></p>', { plugins: ['autolink'] });
     type(editor, 'www.example.com and team@example.com ');
     expect(editor.getHTML()).toBe(
@@ -124,10 +124,10 @@ describe('autolink', () => {
     );
   });
 
-  it('Enter после адреса — тоже ссылка, и в списке', async () => {
+  it('Enter after an address makes a link too, in a list as well', async () => {
     const editor = await mount('<ul><li><p></p></li></ul>', { plugins: ['autolink'] });
     type(editor, 'https://novaprose.com');
-    // Enter в списке обрабатывает раскладка ядра (новый пункт), плагин смотрит на результат.
+    // Enter in a list is handled by the core keymap (a new item), the plugin looks at the result.
     editor.view.someProp('handleKeyDown', (f) =>
       f(editor.view, new KeyboardEvent('keydown', { key: 'Enter' })),
     );
@@ -136,7 +136,7 @@ describe('autolink', () => {
     );
   });
 
-  it('Enter в обычном абзаце', async () => {
+  it('Enter in a regular paragraph', async () => {
     const editor = await mount('<p></p>', { plugins: ['autolink'] });
     type(editor, 'https://novaprose.com');
     splitBlock(editor.view.state, editor.view.dispatch);
@@ -145,7 +145,7 @@ describe('autolink', () => {
     );
   });
 
-  it('вставка адреса поверх выделения делает текст ссылкой; опасный адрес — нет', async () => {
+  it('pasting an address over a selection makes the text a link; a dangerous address does not', async () => {
     const editor = await mount('<p>docs here</p>', { plugins: ['autolink'] });
     const { state } = editor.view;
     editor.view.dispatch(state.tr.setSelection(TextSelection.create(state.doc, 1, 5)));
@@ -162,7 +162,7 @@ describe('autolink', () => {
           cancelable: true,
         }),
       );
-    // Опасный «адрес» вставляется как обычный текст, но не становится ссылкой.
+    // A dangerous "address" is pasted as regular text but doesn't become a link.
     paste('javascript:alert(1)');
     expect(editor.getHTML()).not.toContain('href="javascript');
     editor.setContent('<p>docs here</p>');
@@ -176,7 +176,7 @@ describe('autolink', () => {
 describe('autosave', () => {
   beforeEach(() => vi.useFakeTimers());
 
-  it('сохраняет черновик и предлагает восстановить его в новом редакторе', async () => {
+  it('saves a draft and offers to restore it in a new editor', async () => {
     vi.useRealTimers();
     const first = await mount('<p>start</p>', {
       plugins: ['autosave'],
@@ -197,7 +197,7 @@ describe('autosave', () => {
     expect(second.getHTML()).toBe('<p>start and more</p>');
   });
 
-  it('устаревший черновик (retention) и черновик, равный содержимому, не предлагаются', async () => {
+  it("an outdated draft (retention) and a draft equal to the content aren't offered", async () => {
     vi.useRealTimers();
     localStorage.setItem(
       'novaprose-draft:/:post',
@@ -213,7 +213,7 @@ describe('autosave', () => {
     ).toBe(true);
   });
 
-  it('при закрытии редактора сохраняет изменения последней секунды', async () => {
+  it('saves the changes of the last second when the editor closes', async () => {
     vi.useRealTimers();
     const editor = await mount('<p>a</p>', {
       plugins: ['autosave'],
@@ -227,8 +227,8 @@ describe('autosave', () => {
   });
 });
 
-describe('autoresize и visualblocks', () => {
-  it('autoresize задаёт пределы высоты', async () => {
+describe('autoresize and visualblocks', () => {
+  it('autoresize sets the height limits', async () => {
     const editor = await mount('<p>a</p>', {
       plugins: ['autoresize'],
       pluginOptions: { autoresize: { minHeight: 120, maxHeight: 400 } },
@@ -238,7 +238,7 @@ describe('autoresize и visualblocks', () => {
     expect(editor.root.querySelector<HTMLElement>('.nova-content')!.style.maxHeight).toBe('400px');
   });
 
-  it('visualblocks переключает показ границ блоков', async () => {
+  it('visualblocks toggles showing block borders', async () => {
     const editor = await mount('<p>a</p>', { plugins: ['visualblocks'], toolbar: 'visualblocks' });
     const button = editor.root.querySelector<HTMLButtonElement>('[data-control="visualblocks"]')!;
     button.click();

@@ -12,7 +12,7 @@ function mount(content: string) {
   return editor;
 }
 
-/** Выделить первую картинку как узел. */
+/** Selects the first image as a node. */
 function selectImage(e: Editor) {
   let pos = -1;
   e.view.state.doc.descendants((node, p) => {
@@ -27,17 +27,17 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('картинки: размер и выравнивание', () => {
+describe('images: size and alignment', () => {
   it.each([
     '<p><img src="https://a.io/x.png" width="320" height="200"></p>',
     '<p><img src="https://a.io/x.png" style="float: left; margin: 0 1em 1em 0;"></p>',
     '<p><img src="https://a.io/x.png" style="float: right; margin: 0 0 1em 1em;"></p>',
     '<p><img src="https://a.io/x.png" style="display: block; margin-left: auto; margin-right: auto;"></p>',
-  ])('сохраняет %s', (html) => {
+  ])('keeps %s', (html) => {
     expect(mount(html).getHTML()).toBe(html);
   });
 
-  it('читает размер из style и align-атрибута (старый HTML)', () => {
+  it('reads the size from style and the align attribute (old HTML)', () => {
     expect(
       mount(
         '<p><img src="https://a.io/x.png" style="width: 100px; height: 50px" align="right"></p>',
@@ -47,13 +47,13 @@ describe('картинки: размер и выравнивание', () => {
     );
   });
 
-  it('отбрасывает невалидные размеры', () => {
+  it('drops invalid sizes', () => {
     expect(mount('<p><img src="https://a.io/x.png" width="100%" height="-5"></p>').getHTML()).toBe(
       '<p><img src="https://a.io/x.png"></p>',
     );
   });
 
-  it('рендерит NodeView с маркерами ресайза', () => {
+  it('renders the NodeView with resize handles', () => {
     const e = mount('<p><img src="https://a.io/x.png" width="320" height="200"></p>');
     const wrapper = e.view.dom.querySelector('.nova-image')!;
     expect(wrapper.querySelectorAll('.nova-image-handle')).toHaveLength(4);
@@ -62,7 +62,7 @@ describe('картинки: размер и выравнивание', () => {
     expect(wrapper.classList.contains('is-selected')).toBe(true);
   });
 
-  it('setImageAttrs меняет выравнивание и сохраняет выделение картинки', () => {
+  it('setImageAttrs changes the alignment and keeps the image selected', () => {
     const e = mount('<p>a<img src="https://a.io/x.png">b</p>');
     selectImage(e);
     e.exec(setImageAttrs({ align: 'center' }));
@@ -71,27 +71,27 @@ describe('картинки: размер и выравнивание', () => {
     expect(e.view.dom.querySelector<HTMLElement>('.nova-image')!.dataset.align).toBe('center');
   });
 
-  it('setImageAttrs без выделенной картинки — false', () => {
+  it('setImageAttrs without a selected image gives false', () => {
     const e = mount('<p>a</p>');
     expect(e.exec(setImageAttrs({ align: 'left' }))).toBe(false);
   });
 
-  it('диалог alt-текста сохраняет alt и title', async () => {
+  it('the alt text dialog saves alt and title', async () => {
     const e = mount('<p><img src="https://a.io/x.png"></p>');
     selectImage(e);
     openImageAltDialog(e);
     const dialog = e.root.querySelector<HTMLFormElement>('.nova-dialog')!;
     const [alt, title] = dialog.querySelectorAll<HTMLInputElement>('input');
-    alt!.value = 'Кот на окне';
-    title!.value = 'Барсик';
+    alt!.value = 'A cat on the window sill';
+    title!.value = 'Tom';
     dialog.requestSubmit();
     await new Promise((r) => setTimeout(r, 0));
     expect(e.getHTML()).toBe(
-      '<p><img src="https://a.io/x.png" alt="Кот на окне" title="Барсик"></p>',
+      '<p><img src="https://a.io/x.png" alt="A cat on the window sill" title="Tom"></p>',
     );
   });
 
-  it('контекстный тулбар картинки зарегистрирован', () => {
+  it('the image context toolbar is registered', () => {
     const e = mount('<p>a</p>');
     const names = e.ui.registry.getContextToolbars().map(([name]) => name);
     expect(names).toContain('image');

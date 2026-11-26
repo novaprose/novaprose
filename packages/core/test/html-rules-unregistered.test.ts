@@ -2,11 +2,11 @@ import { expect, it, vi } from 'vitest';
 import { createEditor } from '../src';
 
 /**
- * Правила элементов и атрибутов — отдельный импорт (@novaprose/core/html-rules). Без регистрации
- * редактор работает как раньше (атрибуты в [...] не применяются, новых элементов нет) и один раз
- * подсказывает в консоли, что подключить. Отдельный файл: регистрация глобальна для страницы.
+ * Element and attribute rules are a separate import (@novaprose/core/html-rules). Without registering it
+ * the editor works as before (attributes in [...] don't apply, there are no new elements) and hints once
+ * in the console what to attach. A separate file: the registration is global to the page.
  */
-it('без registerHtmlRules — прежнее поведение и подсказка в консоли', () => {
+it('without registerHtmlRules: the old behavior and a hint in the console', () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   const element = document.createElement('div');
   document.body.append(element);
@@ -20,7 +20,7 @@ it('без registerHtmlRules — прежнее поведение и подск
   editor.destroy();
 });
 
-it('опции без атрибутов и новых элементов модуль не требуют', () => {
+it("options without attributes and new elements don't need the module", () => {
   const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
   const element = document.createElement('div');
   document.body.append(element);

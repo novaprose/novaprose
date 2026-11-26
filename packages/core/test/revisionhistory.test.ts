@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor, type Revision } from '../src';
 
-/** История версий: список, просмотр с отличиями, восстановление, сохранение, безопасность. */
+/** Version history: the list, viewing with differences, restoring, saving, security. */
 
 const editors: Editor[] = [];
 afterEach(() => {
@@ -61,8 +61,8 @@ const open = async (editor: Editor) => {
 const item = (editor: Editor, id: string) =>
   editor.root.querySelector<HTMLButtonElement>(`.nova-history-item[data-revision="${id}"]`)!;
 
-describe('история версий', () => {
-  it('список: текущая версия и версии новыми сверху, с авторами и именем', async () => {
+describe('version history', () => {
+  it('the list: the current version and versions newest first, with authors and a name', async () => {
     const { editor } = await mount();
     await open(editor);
     const items = [...editor.root.querySelectorAll('.nova-history-item')];
@@ -72,7 +72,7 @@ describe('история версий', () => {
     expect(items[0]!.getAttribute('aria-current')).toBe('true');
   });
 
-  it('просмотр версии с подсветкой отличий; восстановление — отменяемая правка', async () => {
+  it('viewing a version with highlighted differences; restoring is an undoable edit', async () => {
     const onRestore = vi.fn();
     const { editor } = await mount({ onRestore });
     await open(editor);
@@ -82,7 +82,7 @@ describe('история версий', () => {
     expect(preview.textContent).toContain('The quick');
     expect(preview.querySelector('.nova-diff-added')?.textContent).toBe('quick');
     expect(preview.querySelector('.nova-diff-removed')?.textContent).toBe('slow');
-    // Просмотр — только чтение.
+    // Viewing is read only.
     expect(preview.getAttribute('contenteditable')).toBe('false');
 
     const restore = [...history(editor)!.querySelectorAll('button')].find(
@@ -97,7 +97,7 @@ describe('история версий', () => {
     expect(editor.getHTML()).toBe('<h2>Plan</h2><p>The slow fox</p>');
   });
 
-  it('восстановление — отдельный шаг отмены, даже сразу после правки (регрессия)', async () => {
+  it('restoring is a separate undo step, even right after an edit (regression)', async () => {
     const { editor } = await mount();
     editor.setContent('<p>Edited just now</p>');
     await open(editor);
@@ -110,7 +110,7 @@ describe('история версий', () => {
     expect(editor.getHTML()).toBe('<p>Edited just now</p>');
   });
 
-  it('подсветку можно выключить; Esc закрывает историю', async () => {
+  it('the highlighting can be turned off; Esc closes the history', async () => {
     const { editor } = await mount();
     await open(editor);
     item(editor, '1').click();
@@ -123,7 +123,7 @@ describe('история версий', () => {
     expect(history(editor)).toBeNull();
   });
 
-  it('содержимое версии проходит те же проверки, что и обычный контент (JSON с javascript:)', async () => {
+  it("a version's content goes through the same checks as regular content (JSON with javascript:)", async () => {
     const { editor } = await mount();
     await open(editor);
     item(editor, '2').click();
@@ -133,7 +133,7 @@ describe('история версий', () => {
     expect(preview.querySelector('a[href^="javascript"]')).toBeNull();
   });
 
-  it('«Сохранить версию» вызывает save и обновляет список; ошибка загрузки — «Повторить»', async () => {
+  it('"Save version" calls save and updates the list; a loading error offers "Retry"', async () => {
     const save = vi.fn(async () => {});
     let fail = true;
     const list = vi.fn(async () => {
@@ -158,7 +158,7 @@ describe('история версий', () => {
     expect(list).toHaveBeenCalledTimes(3);
   });
 
-  it('стрелки переходят по списку версий', async () => {
+  it('arrows move through the version list', async () => {
     const { editor, options } = await mount();
     await open(editor);
     item(editor, 'current').dispatchEvent(

@@ -23,18 +23,18 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('quickbars: когда показывать', () => {
-  it('панель выделения — только для непустого текстового выделения вне кода', async () => {
+describe('quickbars: when to show', () => {
+  it('the selection toolbar only for a non-empty text selection outside code', async () => {
     const e = await mount('<p>hello world</p><pre><code>code</code></pre>');
     select(e, 1, 6);
     expect(hasTextSelection(e)).toBe(true);
     select(e, 3);
     expect(hasTextSelection(e)).toBe(false);
-    select(e, 15, 18); // внутри блока кода
+    select(e, 15, 18); // inside the code block
     expect(hasTextSelection(e)).toBe(false);
   });
 
-  it('панель выделения не реагирует на выделение картинки и ячеек', async () => {
+  it("the selection toolbar doesn't react to selecting an image or cells", async () => {
     const e = await mount(
       '<p><img src="https://a.io/x.png"></p><table><tr><td><p>a</p></td><td><p>b</p></td></tr></table>',
     );
@@ -51,19 +51,19 @@ describe('quickbars: когда показывать', () => {
     cells = [];
   });
 
-  it('панель вставки — на пустой строке верхнего уровня, не в списке и не в таблице', async () => {
+  it('the insert toolbar on an empty top-level line, not in a list or a table', async () => {
     const e = await mount('<p>text</p><p></p><ul><li><p></p></li></ul>');
-    select(e, 7); // пустой абзац
+    select(e, 7); // an empty paragraph
     expect(isOnEmptyLine(e)).toBe(true);
     select(e, 3);
     expect(isOnEmptyLine(e)).toBe(false);
-    select(e, 11); // пустой пункт списка
+    select(e, 11); // an empty list item
     expect(isOnEmptyLine(e)).toBe(false);
   });
 });
 
-describe('quickbars: регистрация и настройки', () => {
-  it('регистрирует обе панели; выделение важнее таблицы', async () => {
+describe('quickbars: registration and settings', () => {
+  it('registers both toolbars; a selection matters more than a table', async () => {
     const e = await mount('<p>a</p>');
     const names = e.ui.registry.getContextToolbars().map(([n]) => n);
     expect(names[0]).toBe('quickbars-selection');
@@ -74,7 +74,7 @@ describe('quickbars: регистрация и настройки', () => {
     }
   });
 
-  it('pluginOptions: свой набор и отключение панели', async () => {
+  it('pluginOptions: a custom set and turning a toolbar off', async () => {
     const e = await mount('<p>a</p>', {
       pluginOptions: { quickbars: { selection: 'bold', insert: false } },
     });
@@ -84,8 +84,8 @@ describe('quickbars: регистрация и настройки', () => {
   });
 });
 
-describe('кнопки заголовков', () => {
-  it('h2 включает и повторно выключает заголовок', async () => {
+describe('heading buttons', () => {
+  it('h2 turns the heading on and off again', async () => {
     const e = await mount('<p>title</p>', { toolbar: 'h2' });
     select(e, 2);
     const h2 = e.root.querySelector<HTMLButtonElement>('[data-control="h2"]')!;

@@ -23,7 +23,7 @@ afterEach(() => {
 });
 
 describe('htmlToPlainText', () => {
-  it('сохраняет абзацы и переносы, убирает разметку и скрипты', () => {
+  it('keeps paragraphs and line breaks, removes markup and scripts', () => {
     expect(
       htmlToPlainText(
         '<h1>Title</h1><p>One <b>bold</b><br>line</p><script>alert(1)</script><ul><li>a</li><li>b</li></ul>',
@@ -31,19 +31,19 @@ describe('htmlToPlainText', () => {
     ).toBe('Title\nOne bold\nline\na\nb');
   });
 
-  it('схлопывает пробелы и пустые строки', () => {
+  it('collapses spaces and empty lines', () => {
     expect(htmlToPlainText('<p>  a   b </p><p></p><p></p><p>c</p>')).toBe('a b\n\nc');
   });
 });
 
-describe('вставка', () => {
-  it('обычный режим сохраняет форматирование', () => {
+describe('paste', () => {
+  it('the regular mode keeps formatting', () => {
     const e = mount();
     e.view.pasteHTML('<p><strong>bold</strong> text</p>');
     expect(e.getHTML()).toBe('<p><strong>bold</strong> text</p>');
   });
 
-  it('режим «как текст» убирает форматирование', () => {
+  it('the "as text" mode removes formatting', () => {
     const e = mount('<p></p>', { pasteAsText: true });
     e.view.pasteHTML('<h1>Big</h1><p><strong>bold</strong> <a href="https://a.io">link</a></p>');
     expect(e.getHTML()).not.toContain('<strong>');
@@ -52,7 +52,7 @@ describe('вставка', () => {
     expect(e.getText()).toContain('bold link');
   });
 
-  it('переключатель pastetext меняет режим и состояние кнопки', () => {
+  it('the pastetext toggle changes the mode and the button state', () => {
     const e = mount('<p></p>', { toolbar: 'pastetext' });
     const button = e.root.querySelector<HTMLButtonElement>('[data-control="pastetext"]')!;
     expect(button.getAttribute('aria-pressed')).toBe('false');
@@ -61,7 +61,7 @@ describe('вставка', () => {
     expect(button.getAttribute('aria-pressed')).toBe('true');
   });
 
-  it('pastePreprocess и pastePostprocess', () => {
+  it('pastePreprocess and pastePostprocess', () => {
     const e = mount('<p></p>', {
       pastePreprocess: (html) => html.replace(/secret/g, '***'),
       pastePostprocess: (root) =>

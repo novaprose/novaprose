@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor, type EditorEvent } from '../src';
 
 /**
- * События редактора: что и когда срабатывает, какие подробности приходят вторым аргументом.
- * Главное различие: change — документ изменился любым путём, input — его изменил пользователь.
+ * Editor events: what fires and when, which details come as the second argument.
+ * The main difference: change means the document changed in any way, input means the user changed it.
  */
 
 const editors: Editor[] = [];
@@ -25,7 +25,7 @@ function mount(
   return editor;
 }
 
-/** Набор текста пользователем — как его видит ProseMirror (транзакция ввода). */
+/** Typing by the user, as ProseMirror sees it (an input transaction). */
 function type(editor: Editor, text: string) {
   const { state } = editor.view;
   editor.view.dispatch(state.tr.setSelection(TextSelection.atEnd(state.doc)).insertText(text));
@@ -37,8 +37,8 @@ function record(editor: Editor, events: EditorEvent[]) {
   return log;
 }
 
-describe('события', () => {
-  it('init — один раз, когда редактор готов', async () => {
+describe('events', () => {
+  it('init fires once, when the editor is ready', async () => {
     const editor = mount();
     const onInit = vi.fn();
     editor.on('init', onInit);
@@ -48,7 +48,7 @@ describe('события', () => {
     expect(onInit).toHaveBeenCalledWith(editor, undefined);
   });
 
-  it('input — на ввод пользователя, вместе с change; подробности — транзакция', () => {
+  it('input fires on user input, together with change; the details are the transaction', () => {
     const editor = mount();
     const onInput = vi.fn();
     editor.on('input', onInput);
@@ -59,7 +59,7 @@ describe('события', () => {
     expect(log).toEqual(['change', 'selectionChange']);
   });
 
-  it('команда с тулбара или горячей клавиши — тоже ввод', () => {
+  it('a command from the toolbar or a keyboard shortcut is input too', () => {
     const editor = mount('<p>Hello</p>');
     const log = record(editor, ['input']);
     editor.view.dispatch(
@@ -69,7 +69,7 @@ describe('события', () => {
     expect(log).toEqual(['input']);
   });
 
-  it('setContent и insertContent — change без input', () => {
+  it('setContent and insertContent fire change without input', () => {
     const editor = mount();
     const log = record(editor, ['change', 'input']);
     editor.setContent('<p>Other</p>');
@@ -77,24 +77,24 @@ describe('события', () => {
     expect(log).toEqual(['change', 'change']);
   });
 
-  it('beforeSetContent может заменить содержимое, setContent сообщает итог', () => {
+  it('beforeSetContent can replace the content, setContent reports the result', () => {
     const editor = mount();
     editor.on('beforeSetContent', (_e, detail) => {
-      detail.content = String(detail.content).replace('черновик', 'итог');
+      detail.content = String(detail.content).replace('draft', 'final');
     });
     const onSet = vi.fn();
     editor.on('setContent', onSet);
-    editor.setContent('<p>черновик</p>');
-    expect(editor.getHTML()).toBe('<p>итог</p>');
-    expect(onSet).toHaveBeenCalledWith(editor, { content: '<p>итог</p>' });
+    editor.setContent('<p>draft</p>');
+    expect(editor.getHTML()).toBe('<p>final</p>');
+    expect(onSet).toHaveBeenCalledWith(editor, { content: '<p>final</p>' });
   });
 
-  it('keydown: подробности — событие; preventDefault отменяет обработку редактором', () => {
+  it("keydown: the details are the event; preventDefault cancels the editor's handling", () => {
     const editor = mount('<p>Hello</p>');
     const seen: string[] = [];
     editor.on('keydown', (_e, { event }) => {
       seen.push(event.key);
-      // Ctrl+Enter — «отправить», а не перенос строки.
+      // Ctrl+Enter means "send", not a line break.
       if (event.key === 'Enter' && event.ctrlKey) event.preventDefault();
     });
     const before = editor.getHTML();
@@ -110,7 +110,7 @@ describe('события', () => {
     expect(editor.getHTML()).toBe(before);
   });
 
-  it('focus и blur получают DOM-событие', () => {
+  it('focus and blur get the DOM event', () => {
     const editor = mount();
     const onFocus = vi.fn();
     editor.on('focus', onFocus);
@@ -118,7 +118,7 @@ describe('события', () => {
     expect(onFocus.mock.calls[0]![1].event).toBeInstanceOf(FocusEvent);
   });
 
-  it('ошибка в одном обработчике не ломает редактор и остальных подписчиков', () => {
+  it("an error in one handler doesn't break the editor or the other subscribers", () => {
     const editor = mount();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const second = vi.fn();
@@ -131,7 +131,7 @@ describe('события', () => {
     expect(editor.getHTML()).toBe('<p>Hello!</p>');
   });
 
-  it('off и функция отписки', () => {
+  it('off and the unsubscribe function', () => {
     const editor = mount();
     const a = vi.fn();
     const b = vi.fn();
@@ -146,18 +146,18 @@ describe('события', () => {
 });
 
 describe('getCommandState', () => {
-  it('active и enabled — для своего тулбара', () => {
+  it('active and enabled, for a custom toolbar', () => {
     const editor = mount('<p><strong>Bold</strong> plain</p>');
     editor.view.dispatch(
       editor.view.state.tr.setSelection(TextSelection.create(editor.view.state.doc, 2)),
     );
     expect(editor.getCommandState('bold')).toEqual({ active: true, enabled: true });
     expect(editor.getCommandState('italic')).toEqual({ active: false, enabled: true });
-    // unlink доступен только на ссылке.
+    // unlink is available only on a link.
     expect(editor.getCommandState('unlink').enabled).toBe(false);
   });
 
-  it('в режиме только чтения ничего не доступно', () => {
+  it('in read-only mode nothing is available', () => {
     const editor = mount('<p>Text</p>', { editable: false });
     expect(editor.getCommandState('bold').enabled).toBe(false);
   });

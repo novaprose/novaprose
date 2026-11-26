@@ -2,10 +2,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createEditor } from '../src';
 
 /**
- * JSON-документ приходит снаружи (БД, API, старые версии) и не обязан соответствовать типам схемы.
- * Любой узел и любая марка с атрибутами не того типа (null, число, мусорная строка) не должны
- * ронять setContent / getHTML / отрисовку тулбара — иначе пользователь не откроет свой документ.
- * Найдено property-based тестом (security.property.test.ts).
+ * A JSON document comes from outside (a database, an API, old versions) and doesn't have to match the schema's types.
+ * No node and no mark with attributes of the wrong type (null, a number, a garbage string) may
+ * crash setContent / getHTML / toolbar rendering, otherwise the user can't open their document.
+ * Found by a property-based test (security.property.test.ts).
  */
 const PLUGINS = [
   'accordion',
@@ -18,7 +18,7 @@ const PLUGINS = [
   'mentions',
   'mergetags',
   'suggestions',
-  // Ленивые: оформление (галочки, подсветка кода) тоже не должно падать на мусорных атрибутах.
+  // Lazy ones: decorations (checkboxes, code highlighting) must not crash on garbage attributes either.
   'checklist',
   'codesample',
 ];
@@ -112,22 +112,22 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
   }),
 };
 
-describe('внешний JSON с атрибутами не того типа', () => {
+describe('external JSON with attributes of the wrong type', () => {
   for (const [name, make] of Object.entries(NODES)) {
-    it(`узел ${name}`, () => {
+    it(`node ${name}`, () => {
       for (const v of VARIANTS) {
         expect(
           () => {
             editor.setContent({ type: 'doc', content: [make(attrsWith(v))] });
             editor.getHTML();
           },
-          `значение ${JSON.stringify(v)}`,
+          `value ${JSON.stringify(v)}`,
         ).not.toThrow();
       }
     });
   }
 
-  it('все марки', () => {
+  it('every mark', () => {
     for (const mark of Object.keys(editor.view.state.schema.marks)) {
       for (const v of VARIANTS) {
         expect(
@@ -138,13 +138,13 @@ describe('внешний JSON с атрибутами не того типа', (
             });
             editor.getHTML();
           },
-          `марка ${mark}, значение ${JSON.stringify(v)}`,
+          `mark ${mark}, value ${JSON.stringify(v)}`,
         ).not.toThrow();
       }
     }
   });
 
-  it('уровень заголовка вне 1–6 не попадает в имя тега', () => {
+  it("a heading level outside 1–6 doesn't reach the tag name", () => {
     for (const level of ['1><script', 7, 0, null, 'eader']) {
       editor.setContent({
         type: 'doc',
@@ -159,7 +159,7 @@ describe('внешний JSON с атрибутами не того типа', (
     expect(editor.getHTML()).toBe('<h3>x</h3>');
   });
 
-  it('небезопасный или нестроковый адрес ссылки заменяется на «#»', () => {
+  it('an unsafe or non-string link address is replaced with "#"', () => {
     for (const href of [null, 7, 'javascript:alert(1)']) {
       editor.setContent({
         type: 'doc',
@@ -169,15 +169,15 @@ describe('внешний JSON с атрибутами не того типа', (
     }
   });
 
-  it('ячейка с colspan: null не отвергает весь документ', () => {
+  it("a cell with colspan: null doesn't reject the whole document", () => {
     editor.setContent({
       type: 'doc',
       content: [
-        para({ type: 'text', text: 'до таблицы' }),
+        para({ type: 'text', text: 'before the table' }),
         NODES.table!({ colspan: null, rowspan: 'x' }),
       ],
     });
-    expect(editor.getHTML()).toContain('до таблицы');
+    expect(editor.getHTML()).toContain('before the table');
     expect(editor.getHTML()).toContain('<td>');
   });
 });

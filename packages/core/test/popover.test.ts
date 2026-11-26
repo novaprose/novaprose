@@ -2,9 +2,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { positionFloating } from '../src/ui/popover';
 
 /**
- * Плавающие панели на телефоне: с открытой клавиатурой видимая часть окна (visualViewport) меньше
- * окна и может быть сдвинута, а getBoundingClientRect и position: fixed считаются от всей страницы.
- * Панель должна вставать у якоря внутри видимой части, а не по высоте окна.
+ * Floating panels on a phone: with the keyboard open, the visible part of the window (visualViewport) is smaller
+ * than the window and may be shifted, while getBoundingClientRect and position: fixed are relative to the whole page.
+ * The panel must sit by its anchor inside the visible part, not by the window height.
  */
 
 const original = Object.getOwnPropertyDescriptor(window, 'visualViewport');
@@ -27,9 +27,9 @@ function setViewport(offsetTop: number, height: number, offsetLeft = 0, width = 
   });
 }
 
-describe('positionFloating и видимая часть окна', () => {
-  it('клавиатура открыта, страница прокручена: панель под якорем, внутри видимой части', () => {
-    // Видимая часть — с 400 до 800 по высоте страницы; якорь (строка) — 600…624.
+describe('positionFloating and the visible part of the window', () => {
+  it('the keyboard is open, the page scrolled: the panel under the anchor, inside the visible part', () => {
+    // The visible part spans 400 to 800 of the page height; the anchor (a line) is at 600…624.
     setViewport(400, 400);
     const el = floating();
     positionFloating(el, new DOMRect(20, 600, 100, 24), 'bottom-start');
@@ -37,7 +37,7 @@ describe('positionFloating и видимая часть окна', () => {
     expect(parseInt(el.style.top)).toBe(630);
   });
 
-  it('места снизу мало — сверху, но не выше видимой части', () => {
+  it('little room below: above, but not above the visible part', () => {
     setViewport(400, 400);
     const el = floating();
     positionFloating(el, new DOMRect(20, 770, 100, 24), 'bottom-start');
@@ -47,7 +47,7 @@ describe('positionFloating и видимая часть окна', () => {
     expect(top).toBeGreaterThanOrEqual(400);
   });
 
-  it('по горизонтали — в пределах видимой части при увеличении', () => {
+  it('horizontally within the visible part when zoomed in', () => {
     setViewport(0, 600, 100, 200);
     const el = floating(150);
     positionFloating(el, new DOMRect(20, 100, 50, 20), 'bottom-start');

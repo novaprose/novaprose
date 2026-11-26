@@ -4,7 +4,7 @@ import { createEditor, type Editor } from '../src';
 import { getSelectedImage, setImageAttrs, toggleImageCaption } from '../src/image';
 import { markdownToHTML, toMarkdown } from '../src/markdown';
 
-/** Картинка с подписью: <figure><img><figcaption>. */
+/** An image with a caption: <figure><img><figcaption>. */
 
 const editors: Editor[] = [];
 afterEach(() => {
@@ -23,7 +23,7 @@ function mount(content: string, options: Partial<Parameters<typeof createEditor>
 const SRC = 'https://example.com/cat.png';
 const FIG = `<figure style="width: 320px;"><img src="${SRC}" alt="Cat" width="320" height="240"><figcaption>A <strong>cat</strong></figcaption></figure>`;
 
-/** Выделить первую картинку (узлом). */
+/** Selects the first image (as a node). */
 function selectImage(e: Editor) {
   let pos = -1;
   e.view.state.doc.descendants((node, p) => {
@@ -38,17 +38,17 @@ describe('HTML', () => {
     `<figure><img src="${SRC}"><figcaption></figcaption></figure>`,
     `<figure style="float: left; margin: 0 1em 1em 0; width: 200px;"><img src="${SRC}" width="200"><figcaption>left</figcaption></figure>`,
     `<figure style="display: block; margin-left: auto; margin-right: auto;"><img src="${SRC}"><figcaption>center</figcaption></figure>`,
-  ])('туда-обратно без изменений: %s', (html) => {
+  ])('round trip without changes: %s', (html) => {
     expect(mount(html).getHTML()).toBe(html);
   });
 
-  it('figure без подписи получает пустую подпись', () => {
+  it('a figure without a caption gets an empty caption', () => {
     expect(mount(`<figure><img src="${SRC}"></figure>`).getHTML()).toBe(
       `<figure><img src="${SRC}"><figcaption></figcaption></figure>`,
     );
   });
 
-  it('figure с небезопасной картинкой не создаётся, текст подписи сохраняется', () => {
+  it("a figure with an unsafe image isn't created, the caption text is kept", () => {
     const html = mount(
       '<figure><img src="javascript:alert(1)"><figcaption>text</figcaption></figure>',
     ).getHTML();
@@ -57,15 +57,15 @@ describe('HTML', () => {
     expect(html).toContain('text');
   });
 
-  it('figure без картинки (с цитатой) разбирается как обычное содержимое', () => {
+  it('a figure without an image (with a quote) is parsed as regular content', () => {
     expect(mount('<figure><blockquote><p>quote</p></blockquote></figure>').getHTML()).toBe(
       '<blockquote><p>quote</p></blockquote>',
     );
   });
 });
 
-describe('включить и убрать подпись', () => {
-  it('картинка одна в абзаце → figure, курсор в подписи', () => {
+describe('turning the caption on and off', () => {
+  it('an image alone in a paragraph → a figure, the cursor in the caption', () => {
     const e = mount(`<p><img src="${SRC}" alt="Cat"></p>`);
     selectImage(e);
     expect(e.exec(toggleImageCaption)).toBe(true);
@@ -77,7 +77,7 @@ describe('включить и убрать подпись', () => {
     expect(e.getHTML()).toContain('<figcaption>Hello</figcaption>');
   });
 
-  it('картинка среди текста → figure после абзаца, текст остаётся', () => {
+  it('an image inside text → a figure after the paragraph, the text stays', () => {
     const e = mount(`<p>before <img src="${SRC}"> after</p>`);
     selectImage(e);
     e.exec(toggleImageCaption);
@@ -86,7 +86,7 @@ describe('включить и убрать подпись', () => {
     );
   });
 
-  it('убрать подпись: картинка в абзаце, текст подписи — абзацем ниже (не теряется)', () => {
+  it('removing the caption: the image in a paragraph, the caption text as a paragraph below (not lost)', () => {
     const e = mount(FIG);
     selectImage(e);
     e.exec(toggleImageCaption);
@@ -95,7 +95,7 @@ describe('включить и убрать подпись', () => {
     );
   });
 
-  it('пустая подпись убирается без лишнего абзаца', () => {
+  it('an empty caption is removed without an extra paragraph', () => {
     const e = mount(`<figure><img src="${SRC}"><figcaption></figcaption></figure>`);
     selectImage(e);
     e.exec(toggleImageCaption);
@@ -103,8 +103,8 @@ describe('включить и убрать подпись', () => {
   });
 });
 
-describe('редактирование', () => {
-  /** Курсор в конце подписи. */
+describe('editing', () => {
+  /** The cursor at the end of the caption. */
   const cursorInCaption = (e: Editor) => {
     let pos = 0;
     e.view.state.doc.descendants((node, p) => {
@@ -113,7 +113,7 @@ describe('редактирование', () => {
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, pos)));
   };
 
-  it('курсор в подписи — тулбар картинки знает о ней; выравнивание применяется к figure', () => {
+  it('the cursor in the caption: the image toolbar knows about it; alignment applies to the figure', () => {
     const e = mount(FIG);
     cursorInCaption(e);
     expect(getSelectedImage(e.view.state)?.node.type.name).toBe('figure');
@@ -123,7 +123,7 @@ describe('редактирование', () => {
     );
   });
 
-  it('Enter в подписи — новый абзац после картинки', () => {
+  it('Enter in the caption makes a new paragraph after the image', () => {
     const e = mount(FIG);
     cursorInCaption(e);
     e.view.dom.dispatchEvent(
@@ -133,7 +133,7 @@ describe('редактирование', () => {
     expect(e.getHTML()).toBe(`${FIG}<p>next</p>`);
   });
 
-  it('удаление из тулбара работает и когда курсор в подписи', () => {
+  it('deleting from the toolbar works with the cursor in the caption too', () => {
     const e = mount(`<p>a</p>${FIG}`, { toolbar: false });
     cursorInCaption(e);
     const image = getSelectedImage(e.view.state)!;
@@ -142,28 +142,28 @@ describe('редактирование', () => {
   });
 });
 
-describe('ограничения контента и Markdown', () => {
-  it('validElements без figure: картинка и подпись — абзацами', () => {
+describe('content restrictions and Markdown', () => {
+  it('validElements without figure: the image and the caption become paragraphs', () => {
     const e = mount(FIG, { validElements: 'p,img,strong' });
     expect(e.getHTML()).toBe(
       `<p><img src="${SRC}" alt="Cat" width="320" height="240"></p><p>A <strong>cat</strong></p>`,
     );
   });
 
-  it('картинки запрещены — от figure остаётся текст подписи', () => {
+  it('images forbidden: only the caption text remains of the figure', () => {
     expect(mount(FIG, { validElements: 'p,strong' }).getHTML()).toBe(
       '<p>A <strong>cat</strong></p>',
     );
   });
 
-  it('Markdown: картинка и подпись абзацем', () => {
+  it('Markdown: the image and the caption as a paragraph', () => {
     const e = mount(FIG);
     expect(toMarkdown(e)).toBe(`![Cat](${SRC})\n\nA **cat**`);
     e.setContent(markdownToHTML(toMarkdown(e)));
     expect(e.getHTML()).toContain('A <strong>cat</strong>');
   });
 
-  it('JSON с мусором в атрибутах figure не роняет редактор', () => {
+  it("JSON with garbage in figure attributes doesn't crash the editor", () => {
     const e = mount('<p>a</p>');
     e.setContent({
       type: 'doc',

@@ -2,7 +2,7 @@ import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor, type EditorOptions, type MergeTagsOptions } from '../src';
 
-/** Переменные шаблона (mergetags): узел, HTML туда-обратно, вставка из меню и по «{{». */
+/** Template variables (mergetags): the node, the HTML round trip, inserting from the menu and with "{{". */
 
 let editor: Editor | null = null;
 afterEach(() => {
@@ -14,13 +14,13 @@ afterEach(() => {
 
 const LIST: MergeTagsOptions['list'] = [
   {
-    title: 'Клиент',
+    title: 'Client',
     items: [
-      { key: 'client', label: 'Имя клиента' },
-      { key: 'phone', label: 'Телефон' },
+      { key: 'client', label: 'Client name' },
+      { key: 'phone', label: 'Phone' },
     ],
   },
-  { key: 'orderId', label: 'Номер заказа' },
+  { key: 'orderId', label: 'Order number' },
 ];
 
 function mount(
@@ -54,8 +54,8 @@ const key = (e: Editor, k: string) =>
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 describe('mergetags: HTML', () => {
-  // Найдено property-based тестом: JSON приходит снаружи, метка может оказаться числом.
-  it('getHTML не падает, если в JSON метка — не строка', () => {
+  // Found by a property-based test: JSON comes from outside, and the label may turn out to be a number.
+  it("getHTML doesn't crash when the label in the JSON isn't a string", () => {
     const e = mount('<p>a</p>');
     e.setContent({
       type: 'doc',
@@ -74,35 +74,35 @@ describe('mergetags: HTML', () => {
     );
   });
 
-  it('туда-обратно без изменений (атрибут по умолчанию)', () => {
+  it('round trip without changes (the default attribute)', () => {
     const html =
-      '<p>Клиент: <span data-mergetag="client" contenteditable="false">Имя клиента</span>, заказ № <span data-mergetag="orderId" contenteditable="false">Номер заказа</span></p>';
+      '<p>Client: <span data-mergetag="client" contenteditable="false">Client name</span>, order # <span data-mergetag="orderId" contenteditable="false">Order number</span></p>';
     const e = mount(html);
     expect(e.getHTML()).toBe(html);
     expect(e.root.querySelectorAll('.nova-mergetag')).toHaveLength(2);
   });
 
-  it('свой атрибут (data-var): «фишка» из чужого редактора со стилями сохраняет ключ и подпись', () => {
+  it('a custom attribute (data-var): a "chip" from another editor with styles keeps its key and label', () => {
     const e = mount(
-      '<p>от <span contenteditable="false" data-var="client" style="background:#dbeafe;color:#1d4ed8;font-weight:500">Имя клиента</span></p>',
+      '<p>from <span contenteditable="false" data-var="client" style="background:#dbeafe;color:#1d4ed8;font-weight:500">Client name</span></p>',
       { list: LIST, attribute: 'data-var' },
     );
     expect(e.getHTML()).toBe(
-      '<p>от <span data-var="client" contenteditable="false">Имя клиента</span></p>',
+      '<p>from <span data-var="client" contenteditable="false">Client name</span></p>',
     );
   });
 
-  it('подпись берётся из списка; неизвестный ключ не теряется, а подсвечивается', () => {
+  it("the label comes from the list; an unknown key isn't lost but highlighted", () => {
     const e = mount(
-      '<p><span data-mergetag="phone">Старая подпись</span> <span data-mergetag="legacy_key">Что-то</span></p>',
+      '<p><span data-mergetag="phone">Old label</span> <span data-mergetag="legacy_key">Something</span></p>',
     );
     const chips = [...e.root.querySelectorAll<HTMLElement>('.nova-mergetag')];
-    expect(chips.map((c) => c.textContent)).toEqual(['Телефон', 'Что-то']);
+    expect(chips.map((c) => c.textContent)).toEqual(['Phone', 'Something']);
     expect(chips[1]!.classList.contains('is-unknown')).toBe(true);
     expect(e.getHTML()).toContain('data-mergetag="legacy_key"');
   });
 
-  it('некорректный ключ и атрибут не попадают в HTML', () => {
+  it("an invalid key and attribute don't reach the HTML", () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const e = mount('<p><span data-mergetag="a b">x</span></p>');
     expect(e.getHTML()).toBe('<p>x</p>');
@@ -113,10 +113,10 @@ describe('mergetags: HTML', () => {
   });
 });
 
-describe('mergetags: вставка', () => {
-  it('меню: группы, вставка в позицию курсора', async () => {
-    const e = mount('<p>Заказ №</p>', { list: LIST }, { toolbar: 'mergetags' });
-    // Кнопки плагина регистрирует его ленивая часть — после editor.ready.
+describe('mergetags: inserting', () => {
+  it('the menu: groups, inserting at the cursor', async () => {
+    const e = mount('<p>Order #</p>', { list: LIST }, { toolbar: 'mergetags' });
+    // The plugin's buttons are registered by its lazy part, after editor.ready.
     await e.ready;
     const button = e.root.querySelector<HTMLButtonElement>('[data-control="mergetags"]')!;
     expect(button.getAttribute('aria-label')).toBe('Insert variable');
@@ -126,16 +126,16 @@ describe('mergetags: вставка', () => {
     );
     button.click();
     const menu = e.root.querySelector<HTMLElement>('.nova-menu')!;
-    expect(menu.querySelector('.nova-menu-heading')!.textContent).toBe('Клиент');
+    expect(menu.querySelector('.nova-menu-heading')!.textContent).toBe('Client');
     [...menu.querySelectorAll<HTMLButtonElement>('.nova-menu-item')]
-      .find((b) => b.textContent?.includes('Номер заказа'))!
+      .find((b) => b.textContent?.includes('Order number'))!
       .click();
     expect(e.getHTML()).toBe(
-      '<p>Заказ №<span data-mergetag="orderId" contenteditable="false">Номер заказа</span></p>',
+      '<p>Order #<span data-mergetag="orderId" contenteditable="false">Order number</span></p>',
     );
   });
 
-  it('пустой список — кнопка неактивна', async () => {
+  it('an empty list makes the button inactive', async () => {
     const e = mount('<p>x</p>', { list: [] }, { toolbar: 'mergetags' });
     await e.ready;
     expect(e.root.querySelector<HTMLButtonElement>('[data-control="mergetags"]')!.disabled).toBe(
@@ -143,16 +143,16 @@ describe('mergetags: вставка', () => {
     );
   });
 
-  it('«{{» и поиск по подписи: Enter вставляет переменную вместо набранного', async () => {
-    const e = mount('<p>Здравствуйте, </p>');
+  it('"{{" and search by label: Enter inserts the variable in place of what was typed', async () => {
+    const e = mount('<p>Hello, </p>');
     await e.ready;
-    type(e, ' {{тел');
+    type(e, ' {{pho');
     await flush();
     const list = e.root.querySelector<HTMLElement>('.nova-ac')!;
-    expect(list.textContent).toContain('Телефон');
+    expect(list.textContent).toContain('Phone');
     key(e, 'Enter');
     expect(e.getHTML()).toBe(
-      '<p>Здравствуйте, <span data-mergetag="phone" contenteditable="false">Телефон</span></p>',
+      '<p>Hello, <span data-mergetag="phone" contenteditable="false">Phone</span></p>',
     );
   });
 });

@@ -6,8 +6,8 @@ import { parseXml, textContent, type XmlElement } from '../src/docx/xml';
 import { crc32, unzip, zip } from '../src/docx/zip';
 
 /**
- * Word (.docx): ZIP и XML, экспорт (правильный XML, структура Word), импорт документов в духе
- * Word (стили, нумерация, поля, объединённые ячейки, сноски, исправления), путь туда и обратно.
+ * Word (.docx): ZIP and XML, export (valid XML, Word structure), import of Word-style documents
+ * (styles, numbering, fields, merged cells, footnotes, revisions), the round trip.
  */
 
 let editor: Editor | null = null;
@@ -27,7 +27,7 @@ function mount(content: string, options: Record<string, unknown> = {}): Editor {
 
 const text = (bytes: Uint8Array | undefined) => new TextDecoder().decode(bytes);
 
-/** Строгий разбор XML браузером: Word не откроет файл с ошибкой в XML. */
+/** Strict XML parsing by the browser: Word won't open a file with an XML error. */
 function wellFormed(xml: string): void {
   const doc = new DOMParser().parseFromString(xml, 'application/xml');
   expect(doc.getElementsByTagName('parsererror')).toHaveLength(0);
@@ -36,10 +36,10 @@ function wellFormed(xml: string): void {
 const PNG = // 2×1 px
   'iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAEUlEQVR42mP8z8Dwn4EIwAgAJ/4D/c4Z6xcAAAAASUVORK5CYII=';
 
-describe('ZIP и XML', () => {
-  it('ZIP туда и обратно: сжатые и маленькие (без сжатия) файлы; CRC-32', async () => {
+describe('ZIP and XML', () => {
+  it('ZIP round trip: compressed and small (stored) files; CRC-32', async () => {
     expect(crc32(new TextEncoder().encode('123456789'))).toBe(0xcbf43926);
-    const big = new TextEncoder().encode('Привет, Word! '.repeat(200));
+    const big = new TextEncoder().encode('Hello, Word! '.repeat(200));
     const small = new TextEncoder().encode('tiny');
     const files = await unzip(
       await zip([
@@ -52,7 +52,7 @@ describe('ZIP и XML', () => {
     await expect(unzip(new Uint8Array([1, 2, 3]))).rejects.toThrow('Not a ZIP');
   });
 
-  it('XML: сущности, CDATA, атрибуты с префиксами, самозакрывающиеся теги', () => {
+  it('XML: entities, CDATA, prefixed attributes, self-closing tags', () => {
     const root = parseXml(
       '<?xml version="1.0"?><!-- c --><w:p w:x="a &amp; b"><w:t>1 &lt; 2 &#x41;&#66;</w:t><w:br/><![CDATA[<raw>]]></w:p>',
     );
@@ -63,7 +63,7 @@ describe('ZIP и XML', () => {
     expect((p.children[1] as XmlElement).name).toBe('w:br');
   });
 
-  it('помощники: цвета, имена закладок, размер картинки', () => {
+  it('helpers: colors, bookmark names, image size', () => {
     expect(hexColor('#e03e2d')).toBe('E03E2D');
     expect(hexColor('#abc')).toBe('AABBCC');
     expect(hexColor('rgb(255, 0, 128)')).toBe('FF0080');
@@ -94,8 +94,8 @@ const RICH =
   '<pre><code>line 1\nline 2</code></pre>' +
   '<hr><div class="nova-pagebreak" style="break-after: page;"></div><p>After</p>';
 
-describe('экспорт', () => {
-  it('части файла и правильный XML; структура Word', async () => {
+describe('export', () => {
+  it('the parts of the file and valid XML; Word structure', async () => {
     const e = mount(RICH, { plugins: ['pagebreak'] });
     const files = await unzip(await exportDocx(e));
     for (const part of [
@@ -125,7 +125,7 @@ describe('экспорт', () => {
     expect(doc).toContain('<w:pStyle w:val="Quote"/>');
     expect(doc).toContain('<w:pStyle w:val="Code"/>');
     expect(doc).toContain('<w:br w:type="page"/>');
-    // Картинка: файл в word/media и связь на него; размер — из атрибутов (px → EMU).
+    // The image: a file in word/media and a relationship to it; the size comes from the attributes (px → EMU).
     expect(doc).toContain('<wp:extent cx="190500" cy="95250"/>');
     expect(files.has('word/media/image1.png')).toBe(true);
     const rels = text(files.get('word/_rels/document.xml.rels'));
@@ -134,12 +134,12 @@ describe('экспорт', () => {
     const numbering = text(files.get('word/numbering.xml'));
     expect(numbering).toContain('<w:startOverride w:val="3"/>');
     expect(numbering).toContain('<w:numFmt w:val="bullet"/>');
-    // Лист по умолчанию — A4 с полями 20 мм.
+    // The default sheet is A4 with 20 mm margins.
     expect(doc).toContain('<w:pgSz w:w="11906" w:h="16838"/>');
     expect(doc).toContain('w:top="1134"');
   });
 
-  it('лист из режима страниц; предложенные правки — исправления Word', async () => {
+  it('the sheet from page mode; suggested edits become Word revisions', async () => {
     const e = mount(
       '<p>Keep <ins data-suggestion="s1" data-author="u1" data-name="Anna" data-time="1700000000000">new</ins>' +
         '<del data-suggestion="s2" data-author="u1" data-name="Anna" data-time="1700000000000">old</del></p>',
@@ -157,7 +157,7 @@ describe('экспорт', () => {
     expect(doc).toContain('<w:delText xml:space="preserve">old</w:delText>');
   });
 
-  it('картинка, которую не загрузить, — подписью; документ без содержимого — валидный', async () => {
+  it("an image that can't be loaded becomes a caption; a document without content is valid", async () => {
     const e = mount('<p><img src="https://example.invalid/x.png" alt="Logo"></p>');
     const bytes = await exportDocx(e, { loadImage: async () => null });
     expect(text((await unzip(bytes)).get('word/document.xml'))).toContain('[Logo]');
@@ -166,8 +166,8 @@ describe('экспорт', () => {
   });
 });
 
-describe('туда и обратно', () => {
-  it('экспорт → импорт сохраняет структуру и форматирование', async () => {
+describe('round trip', () => {
+  it('export → import keeps the structure and formatting', async () => {
     const e = mount(RICH, { plugins: ['pagebreak'] });
     const result = await fromDocx(await exportDocx(e));
     const back = mount(result.html, { plugins: ['pagebreak'] });
@@ -198,7 +198,7 @@ describe('туда и обратно', () => {
   });
 });
 
-/** Файл .docx из частей — как их пишет Word. */
+/** A .docx file from parts, the way Word writes them. */
 async function docx(body: string, parts: Record<string, string> = {}): Promise<Uint8Array> {
   const enc = (s: string) => new TextEncoder().encode(s);
   const W =
@@ -216,7 +216,7 @@ async function docx(body: string, parts: Record<string, string> = {}): Promise<U
       '</Relationships>',
     'word/styles.xml':
       `<w:styles ${W}>` +
-      // Русский Word: показывает «Заголовок 1», но в файле имя встроенного стиля английское.
+      // A localized Word shows a translated "Heading 1", but the built-in style name in the file is English.
       '<w:style w:type="paragraph" w:styleId="1"><w:name w:val="heading 1"/></w:style>' +
       '<w:style w:type="paragraph" w:styleId="MyTitle"><w:name w:val="My Title"/><w:basedOn w:val="1"/></w:style>' +
       '<w:style w:type="paragraph" w:styleId="ListBullet"><w:name w:val="List Bullet"/><w:pPr><w:numPr><w:numId w:val="1"/></w:numPr></w:pPr></w:style>' +
@@ -240,8 +240,8 @@ const run = (t: string, rPr = '') =>
 const para = (content: string, pPr = '') =>
   `<w:p>${pPr ? `<w:pPr>${pPr}</w:pPr>` : ''}${content}</w:p>`;
 
-describe('импорт документов Word', () => {
-  it('заголовки по стилям (и унаследованным), закладка — id; символьный стиль', async () => {
+describe('importing Word documents', () => {
+  it('headings by style (inherited too), a bookmark becomes the id; a character style', async () => {
     const { html } = await fromDocx(
       await docx(
         para('<w:bookmarkStart w:id="0" w:name="_Toc1"/>' + run('Intro'), '<w:pStyle w:val="1"/>') +
@@ -254,7 +254,7 @@ describe('импорт документов Word', () => {
     expect(html).toContain('<p><strong>strong</strong> plain</p>');
   });
 
-  it('списки: нумерация в стиле, буквенная со своим началом; поле HYPERLINK; ссылки', async () => {
+  it('lists: numbering in a style, a lettered one with its own start; the HYPERLINK field; links', async () => {
     const { html } = await fromDocx(
       await docx(
         para(run('a'), '<w:pStyle w:val="ListBullet"/>') +
@@ -280,7 +280,7 @@ describe('импорт документов Word', () => {
     expect(html).not.toContain('HYPERLINK');
   });
 
-  it('таблица: gridSpan, vMerge, заливка, строка-заголовок; ширины колонок', async () => {
+  it('a table: gridSpan, vMerge, shading, a header row; column widths', async () => {
     const tc = (content: string, tcPr = '') =>
       `<w:tc>${tcPr ? `<w:tcPr>${tcPr}</w:tcPr>` : ''}${para(run(content))}</w:tc>`;
     const { html } = await fromDocx(
@@ -300,7 +300,7 @@ describe('импорт документов Word', () => {
     expect(html.match(/<td/g)).toHaveLength(3);
   });
 
-  it('исправления приняты, сноска — в конце, разрыв страницы, лист и поля', async () => {
+  it('revisions accepted, a footnote at the end, a page break, the sheet and margins', async () => {
     const result = await fromDocx(
       await docx(
         para(
@@ -325,7 +325,7 @@ describe('импорт документов Word', () => {
     });
   });
 
-  it('importDocx: заменяет содержимое (Ctrl+Z возвращает), лист — в режим страниц', async () => {
+  it('importDocx replaces the content (Ctrl+Z brings it back), the sheet goes to page mode', async () => {
     const e = mount('<p>Before</p>', { plugins: ['pagelayout'] });
     await importDocx(
       e,
@@ -344,8 +344,8 @@ describe('импорт документов Word', () => {
   });
 });
 
-describe('кнопки в редакторе', () => {
-  it('exportword скачивает .docx; importword открывает выбранный файл', async () => {
+describe('buttons in the editor', () => {
+  it('exportword downloads a .docx; importword opens the chosen file', async () => {
     const e = mount('<p>Hello</p>', {
       plugins: ['exportword', 'importword'],
       pluginOptions: { exportword: { filename: 'report' } },
@@ -366,7 +366,7 @@ describe('кнопки в редакторе', () => {
       downloaded = this.download;
     });
     const exportButton = e.ui.registry.get('exportword');
-    if (exportButton?.type !== 'button') throw new Error('нет кнопки exportword');
+    if (exportButton?.type !== 'button') throw new Error('no exportword button');
     exportButton.onAction(e);
     await vi.waitFor(() => expect(downloaded).toBe('report.docx'));
     expect(urls[0]!.type).toBe(
@@ -374,7 +374,7 @@ describe('кнопки в редакторе', () => {
     );
     click.mockRestore();
 
-    // Импорт: выбор файла в скрытом поле — содержимое заменяется.
+    // Import: choosing a file in the hidden field replaces the content.
     const bytes = await new Promise<Uint8Array>((resolve) => {
       const reader = new FileReader();
       reader.onload = () => resolve(new Uint8Array(reader.result as ArrayBuffer));
@@ -382,11 +382,11 @@ describe('кнопки в редакторе', () => {
     });
     e.setContent('<p>Other</p>');
     const importButton = e.ui.registry.get('importword');
-    if (importButton?.type !== 'button') throw new Error('нет кнопки importword');
+    if (importButton?.type !== 'button') throw new Error('no importword button');
     const input = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(function (
       this: HTMLInputElement,
     ) {
-      // В jsdom у File нет arrayBuffer() (в браузерах есть).
+      // In jsdom File has no arrayBuffer() (browsers have it).
       const file = Object.assign(new File([bytes as BlobPart], 'report.docx'), {
         arrayBuffer: async () => bytes.buffer,
       });

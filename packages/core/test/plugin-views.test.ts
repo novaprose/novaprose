@@ -4,9 +4,9 @@ import { createEditor, type Editor } from '../src';
 import { keepPluginViews, reconfigurePlugins } from '../src/plugin-views';
 
 /**
- * Регрессия: догрузка ленивых частей (механика таблиц, плагины по имени) перестраивает набор
- * плагинов, и ProseMirror пересоздавал представления всех плагинов — открытое слэш-меню
- * закрывалось посреди ввода (тест «после пробела срабатывает» падал в зависимости от времени).
+ * A regression: loading lazy parts (table mechanics, plugins by name) rebuilds the plugin set,
+ * and ProseMirror recreated the views of all plugins: an open slash menu
+ * closed in the middle of typing (the "fires after a space" test failed depending on timing).
  */
 
 let editor: Editor | null = null;
@@ -27,8 +27,8 @@ function mount(): Editor {
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
-describe('представления плагинов при перестройке набора', () => {
-  it('открытый список слэш-команд остаётся открытым', async () => {
+describe('plugin views when the set is rebuilt', () => {
+  it('an open list of slash commands stays open', async () => {
     const e = mount();
     await e.ready;
     const { state } = e.view;
@@ -41,7 +41,7 @@ describe('представления плагинов при перестрой�
     expect(list.hidden).toBe(false);
   });
 
-  it('представление создаётся один раз, обновляется, уничтожается при удалении плагина и закрытии', async () => {
+  it('a view is created once, updated, destroyed when the plugin is removed and on close', async () => {
     const e = mount();
     await e.ready;
     const create = vi.fn();
@@ -73,7 +73,7 @@ describe('представления плагинов при перестрой�
     expect(destroy).toHaveBeenCalledTimes(2);
   });
 
-  it('keepPluginViews идемпотентен: повторная подготовка не оборачивает дважды', () => {
+  it("keepPluginViews is idempotent: preparing again doesn't wrap twice", () => {
     const view = vi.fn(() => ({}));
     const plugin = new Plugin({ view });
     keepPluginViews([plugin]);

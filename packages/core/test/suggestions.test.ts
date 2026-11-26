@@ -10,7 +10,7 @@ import {
   type Editor,
 } from '../src';
 
-/** Режим правок: ввод превращается в предложения, их принимают и отклоняют. */
+/** Suggesting mode: typing turns into suggestions, which get accepted and rejected. */
 
 const editors: Editor[] = [];
 afterEach(() => {
@@ -31,7 +31,7 @@ function mount(content: string, options: Record<string, unknown> = { enabled: tr
   return editor;
 }
 
-/** HTML без случайных id и времени. */
+/** HTML without random ids and times. */
 const html = (editor: Editor) =>
   editor
     .getHTML()
@@ -46,19 +46,19 @@ const cursor = (editor: Editor, pos: number) =>
 const type = (editor: Editor, text: string) => {
   for (const ch of text) editor.view.dispatch(editor.view.state.tr.insertText(ch));
 };
-/** Как Backspace: удалить символ перед курсором. */
+/** Like Backspace: delete the character before the cursor. */
 const backspace = (editor: Editor) => {
   const { from } = editor.view.state.selection;
   editor.view.dispatch(editor.view.state.tr.delete(from - 1, from));
 };
-/** Как Delete: удалить символ после курсора. */
+/** Like Delete: delete the character after the cursor. */
 const del = (editor: Editor) => {
   const { from } = editor.view.state.selection;
   editor.view.dispatch(editor.view.state.tr.delete(from, from + 1));
 };
 
-describe('режим правок', () => {
-  it('выключен по умолчанию: ввод меняет текст напрямую', () => {
+describe('suggesting mode', () => {
+  it('off by default: typing changes the text directly', () => {
     const editor = mount('<p>Hi</p>', {});
     expect(isSuggesting(editor.view.state)).toBe(false);
     cursor(editor, 3);
@@ -66,7 +66,7 @@ describe('режим правок', () => {
     expect(editor.getHTML()).toBe('<p>Hi!</p>');
   });
 
-  it('набранный текст — одна вставка с автором', () => {
+  it('typed text is one insertion with an author', () => {
     const editor = mount('<p>Hello world</p>');
     cursor(editor, 7);
     type(editor, 'big ');
@@ -76,7 +76,7 @@ describe('режим правок', () => {
     expect(listSuggestions(editor.view.state.doc)).toHaveLength(1);
   });
 
-  it('Backspace помечает удаление, текст остаётся, курсор идёт влево; одна правка', () => {
+  it('Backspace marks a deletion, the text stays, the cursor moves left; one suggestion', () => {
     const editor = mount('<p>Hello world</p>');
     cursor(editor, 12);
     backspace(editor);
@@ -86,7 +86,7 @@ describe('режим правок', () => {
     expect(listSuggestions(editor.view.state.doc)).toHaveLength(1);
   });
 
-  it('стёр слово и печатает: замена читается «удалено, затем вставлено»', () => {
+  it('a word erased, then typing: the replacement reads "deleted, then inserted"', () => {
     const editor = mount('<p>Ship in May</p>');
     cursor(editor, 12);
     for (let i = 0; i < 3; i += 1) backspace(editor);
@@ -95,7 +95,7 @@ describe('режим правок', () => {
     expect(editor.view.state.selection.from).toBe(16);
   });
 
-  it('Delete помечает символ справа и перепрыгивает его', () => {
+  it('Delete marks the character on the right and jumps over it', () => {
     const editor = mount('<p>abc</p>');
     cursor(editor, 1);
     del(editor);
@@ -104,7 +104,7 @@ describe('режим правок', () => {
     expect(editor.view.state.selection.from).toBe(3);
   });
 
-  it('Backspace по своей ещё не принятой вставке удаляет её по-настоящему', () => {
+  it("Backspace over your own insertion that isn't accepted yet deletes it for real", () => {
     const editor = mount('<p>Hi</p>');
     cursor(editor, 3);
     type(editor, ' there');
@@ -113,7 +113,7 @@ describe('режим правок', () => {
     expect(html(editor)).toBe('<p>Hi<ins> the</ins></p>');
   });
 
-  it('ввод поверх выделения: старое — удаление, новое — вставка после него', () => {
+  it('typing over a selection: the old text is a deletion, the new one an insertion after it', () => {
     const editor = mount('<p>The quick fox</p>');
     editor.view.dispatch(
       editor.view.state.tr.setSelection(TextSelection.create(editor.view.state.doc, 5, 10)),
@@ -123,7 +123,7 @@ describe('режим правок', () => {
     expect(editor.view.state.selection.from).toBe(14);
   });
 
-  it('принять всё / отклонить всё / одну правку', () => {
+  it('accept all / reject all / one suggestion', () => {
     const editor = mount('<p>The quick fox</p>');
     editor.view.dispatch(
       editor.view.state.tr.setSelection(TextSelection.create(editor.view.state.doc, 5, 10)),
@@ -139,7 +139,7 @@ describe('режим правок', () => {
     expect(editor.getHTML()).toBe('<p>The quickslow fox</p>');
   });
 
-  it('Ctrl+Z отменяет предложение целиком, а не превращает отмену в новую правку', () => {
+  it('Ctrl+Z undoes a whole suggestion instead of turning the undo into a new suggestion', () => {
     const editor = mount('<p>Text</p>');
     cursor(editor, 5);
     type(editor, '!');
@@ -147,7 +147,7 @@ describe('режим правок', () => {
     expect(editor.getHTML()).toBe('<p>Text</p>');
   });
 
-  it('HTML туда-обратно без изменений; обычный <del> остаётся зачёркиванием', () => {
+  it('HTML round trip without changes; a regular <del> stays a strike-through', () => {
     const saved =
       '<p>A <ins data-suggestion="s1" data-author="u2" data-name="Boris" data-time="1700000000000">new</ins> <del data-suggestion="s2" data-author="u2" data-name="Boris" data-time="1700000000000">old</del> <s>gone</s></p>';
     const editor = mount(saved);
@@ -155,7 +155,7 @@ describe('режим правок', () => {
     expect(mount('<p><del>struck</del></p>').getHTML()).toBe('<p><s>struck</s></p>');
   });
 
-  it('данные из HTML проверяются: плохой id — не правка, имя — только текст', () => {
+  it('data from HTML is checked: a bad id is not a suggestion, the name is only text', () => {
     const editor = mount(
       '<p><ins data-suggestion="bad id" data-name="x">a</ins><ins data-suggestion="ok" data-author="&quot;><img>" data-name="&lt;img src=x onerror=alert(1)&gt;">b</ins></p>',
     );
@@ -166,15 +166,15 @@ describe('режим правок', () => {
     expect(listSuggestions(editor.view.state.doc).map((s) => s.id)).toEqual(['ok']);
   });
 
-  it('программные изменения без истории (addToHistory: false) не отслеживаются', () => {
+  it("programmatic changes without history (addToHistory: false) aren't tracked", () => {
     const editor = mount('<p>x</p>');
     editor.setContent('<p>Loaded</p>', { addToHistory: false });
     expect(editor.getHTML()).toBe('<p>Loaded</p>');
   });
 
-  it('force: режим всегда включён, кнопка недоступна; без force — переключается', async () => {
+  it('force: the mode is always on and the button unavailable; without force it toggles', async () => {
     const forced = mount('<p>x</p>', { force: true });
-    // Кнопки плагина регистрирует его ленивая часть — после editor.ready.
+    // The plugin's buttons are registered by its lazy part, after editor.ready.
     await forced.ready;
     setSuggesting(forced, false);
     expect(isSuggesting(forced.view.state)).toBe(true);
@@ -189,7 +189,7 @@ describe('режим правок', () => {
     expect(free.view.dom.classList.contains('nova-suggesting')).toBe(true);
   });
 
-  it('подсказка с автором и цвет автора — только в редакторе, не в HTML', () => {
+  it("the tooltip with the author and the author's color are in the editor only, not in the HTML", () => {
     const editor = mount('<p>Hi</p>');
     cursor(editor, 3);
     type(editor, '!');
@@ -199,7 +199,7 @@ describe('режим правок', () => {
     expect(editor.getHTML()).not.toContain('title');
   });
 
-  it('отклонили текст нового абзаца — пустой строки не остаётся (Enter напрямую, текст — правка)', () => {
+  it('the text of a new paragraph rejected: no empty line is left (Enter directly, the text as a suggestion)', () => {
     const editor = mount('<p>One</p><p>Two</p>');
     cursor(editor, 4);
     editor.view.dispatch(editor.view.state.tr.split(4));
@@ -209,20 +209,20 @@ describe('режим правок', () => {
     expect(editor.getHTML()).toBe('<p>One</p><p>Two</p>');
   });
 
-  it('приняли удаление всего текста блока — блок уходит; где он обязателен — остаётся пустым', () => {
+  it("the deletion of all of a block's text accepted: the block goes; where it is required it stays empty", () => {
     const editor = mount('<p>One</p><p>Two</p>');
     editor.view.dispatch(editor.view.state.tr.delete(6, 9));
     expect(html(editor)).toBe('<p>One</p><p><del>Two</del></p>');
     editor.view.dispatch(resolveSuggestions(editor.view.state, 'accept'));
     expect(editor.getHTML()).toBe('<p>One</p>');
 
-    // Пункт списка без текста — целиком.
+    // A list item without text goes entirely.
     const list = mount('<ul><li><p>A</p></li><li><p>B</p></li></ul>');
     list.view.dispatch(list.view.state.tr.delete(8, 9));
     list.view.dispatch(resolveSuggestions(list.view.state, 'accept'));
     expect(list.getHTML()).toBe('<ul><li><p>A</p></li></ul>');
 
-    // Единственный абзац документа и абзац пункта перед вложенным списком — обязательны.
+    // The only paragraph of the document and the item's paragraph before a nested list are required.
     const only = mount('<p>Only</p>');
     only.view.dispatch(only.view.state.tr.delete(1, 5));
     only.view.dispatch(resolveSuggestions(only.view.state, 'accept'));

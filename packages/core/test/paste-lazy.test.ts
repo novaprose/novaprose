@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 import { createEditor } from '../src';
 
 /**
- * Очистка вставки из Office — ленивый чанк (не входит в первую загрузку ядра).
- * Отдельный файл = свежий модуль: чанк здесь ещё не загружен. Проверяем, что Ctrl+V в первые
- * миллисекунды после создания редактора не теряет ни вставку, ни очистку.
+ * Office paste cleanup is a lazy chunk (not part of the core's first load).
+ * A separate file means a fresh module: the chunk isn't loaded here yet. This checks that Ctrl+V in the first
+ * milliseconds after the editor is created loses neither the paste nor the cleanup.
  */
 const FIXTURES = join(__dirname, 'fixtures', 'paste');
 const read = (name: string) => readFileSync(join(FIXTURES, name), 'utf8');
@@ -27,8 +27,8 @@ function pasteEvent(target: HTMLElement, data: Record<string, string>): Clipboar
   return event;
 }
 
-describe('вставка до загрузки очистки Office', () => {
-  it('Ctrl+V сразу после создания: вставка ждёт чанк и выходит очищенной', async () => {
+describe('pasting before the Office cleanup loads', () => {
+  it('Ctrl+V right after creation: the paste waits for the chunk and comes out clean', async () => {
     const element = document.createElement('div');
     document.body.appendChild(element);
     const editor = createEditor({ element, content: '' });
@@ -37,7 +37,7 @@ describe('вставка до загрузки очистки Office', () => {
       'text/html': read('word-desktop-lists.html'),
       'text/plain': 'x',
     });
-    // Браузерную вставку мы перехватили, пока чанк грузится.
+    // We intercepted the browser paste while the chunk was loading.
     expect(event.defaultPrevented).toBe(true);
 
     await editor.ready;
@@ -46,13 +46,13 @@ describe('вставка до загрузки очистки Office', () => {
     editor.destroy();
   });
 
-  it('после загрузки вставка идёт обычным путём, без перехвата', async () => {
+  it('after loading, a paste takes the regular path, without interception', async () => {
     const element = document.createElement('div');
     document.body.appendChild(element);
     const editor = createEditor({ element, content: '' });
     await editor.ready;
     const event = pasteEvent(editor.view.dom, { 'text/html': '<p>a</p>', 'text/plain': 'a' });
-    // Обработал сам ProseMirror (его handler тоже вызывает preventDefault) — результат сразу.
+    // ProseMirror itself handled it (its handler calls preventDefault too): the result is immediate.
     expect(editor.getHTML()).toBe('<p>a</p>');
     expect(event.defaultPrevented).toBe(true);
     editor.destroy();

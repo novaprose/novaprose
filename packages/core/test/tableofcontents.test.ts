@@ -3,8 +3,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, type Editor, type EditorOptions } from '../src';
 
 /**
- * Оглавление (плагин tableofcontents): пункты из заголовков, устойчивые id, обновление в той же
- * правке, глубина, формат TinyMCE, переход по ссылке внутри редактора, экранирование.
+ * Table of contents (the tableofcontents plugin): items from headings, stable ids, updating in the same
+ * edit, depth, the TinyMCE format, following a link inside the editor, escaping.
  */
 
 let editor: Editor | null = null;
@@ -30,11 +30,11 @@ function posAfter(e: Editor, text: string): number {
       pos = at + node.text!.indexOf(text) + text.length;
     }
   });
-  if (pos < 0) throw new Error(`нет текста ${text}`);
+  if (pos < 0) throw new Error(`no text ${text}`);
   return pos;
 }
 
-/** id заголовков по порядку. */
+/** Heading ids in order. */
 function headingIds(e: Editor): (string | null)[] {
   const ids: (string | null)[] = [];
   e.view.state.doc.descendants((node) => {
@@ -50,8 +50,8 @@ function insertToc(e: Editor): void {
 
 const DOC = '<p></p><h1>Intro</h1><p>text</p><h2>Setup</h2><h3>Details</h3><h4>Deep</h4>';
 
-describe('оглавление из заголовков', () => {
-  it('вставка: пункты по уровням, заголовкам — id; глубже depth (3) — не попадает', async () => {
+describe('a table of contents from headings', () => {
+  it("inserting: items by level, ids for headings; deeper than depth (3) isn't included", async () => {
     const e = await mount(DOC);
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1)));
     insertToc(e);
@@ -69,7 +69,7 @@ describe('оглавление из заголовков', () => {
     );
   });
 
-  it('правка заголовка обновляет пункт в той же правке; отмена откатывает обоих', async () => {
+  it('editing a heading updates the item in the same edit; undo rolls both back', async () => {
     const e = await mount(DOC);
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1)));
     insertToc(e);
@@ -78,7 +78,7 @@ describe('оглавление из заголовков', () => {
     e.exec('undo');
     expect(e.getHTML()).toContain('>Setup</a>');
     expect(e.getHTML()).not.toContain('and more');
-    // Новый заголовок — новый пункт с id; удалённый — пропадает.
+    // A new heading gets a new item with an id; a deleted one disappears.
     const end = e.view.state.doc.content.size;
     e.view.dispatch(
       e.view.state.tr.insert(
@@ -90,7 +90,7 @@ describe('оглавление из заголовков', () => {
     expect(e.getHTML()).toMatch(/<h2 id="toc-[a-z0-9]+">Outro<\/h2>/);
   });
 
-  it('без оглавления заголовкам id не выдаются; свои id сохраняются, повторы — заменяются', async () => {
+  it('without a table of contents headings get no ids; their own ids are kept, duplicates replaced', async () => {
     const e = await mount('<h2>A</h2><h2 id="keep">B</h2><h2 id="keep">C</h2>');
     expect(headingIds(e)).toEqual([null, 'keep', 'keep']);
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1)));
@@ -102,14 +102,14 @@ describe('оглавление из заголовков', () => {
     expect(c).not.toBe('keep');
   });
 
-  it('смена уровня заголовка сохраняет id (ссылки не ломаются)', async () => {
+  it("changing a heading's level keeps the id (links don't break)", async () => {
     const e = await mount('<h2 id="s1">Section</h2>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 2)));
     e.exec('h3');
     expect(e.getHTML()).toBe('<h3 id="s1">Section</h3>');
   });
 
-  it('текст заголовка экранируется, мусорные пункты из JSON отбрасываются', async () => {
+  it('the heading text is escaped, garbage items from JSON are dropped', async () => {
     const e = await mount('<h2>a &lt;/a&gt;&lt;script&gt;x()&lt;/script&gt;</h2>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1)));
     insertToc(e);
@@ -132,13 +132,13 @@ describe('оглавление из заголовков', () => {
         },
       ],
     });
-    // Пункты сверены с документом (заголовков нет), мусор не выведен.
+    // The items are reconciled with the document (there are no headings), the garbage isn't output.
     expect(e.getHTML()).toBe('<nav class="nova-toc" data-toc=""></nav>');
   });
 });
 
-describe('настройки и формат TinyMCE', () => {
-  it('div.mce-toc с h2 и ссылками mcetoc_ — читается и выводится в том же виде', async () => {
+describe('settings and the TinyMCE format', () => {
+  it('div.mce-toc with an h2 and mcetoc_ links is read and output the same way', async () => {
     const tiny =
       '<div class="mce-toc" data-toc=""><h2>Table of Contents</h2><ul><li><a href="#mcetoc_1">One</a></li></ul></div>' +
       '<h2 id="mcetoc_1">One</h2>';
@@ -148,7 +148,7 @@ describe('настройки и формат TinyMCE', () => {
     expect(e.getHTML()).toBe(tiny.replace('<div', '<nav').replace('</div>', '</nav>'));
   });
 
-  it('depth: 1 и нумерованный список; title: "" — без подписи', async () => {
+  it('depth: 1 and a numbered list; title: "" means no title', async () => {
     const e = await mount('<p></p><h1>A</h1><h2>B</h2>', {
       pluginOptions: { tableofcontents: { depth: 1, orderedList: true, title: '' } },
     });
@@ -162,7 +162,7 @@ describe('настройки и формат TinyMCE', () => {
     );
   });
 
-  it('ссылка оглавления в редакторе ведёт к заголовку, адрес страницы не меняется', async () => {
+  it("a table of contents link in the editor goes to the heading, the page address doesn't change", async () => {
     const e = await mount('<p></p><h2>Target</h2><p>after</p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1)));
     insertToc(e);

@@ -14,11 +14,11 @@ import {
   type EditorOptions,
 } from '../src';
 import { createTranslator } from '../src/i18n';
-import ruPack from '../src/i18n/packs/ru';
+import dePack from '../src/i18n/packs/de';
 import { parseToolbar } from '../src/ui/toolbar';
 
-// Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
-registerLanguage('ru', ruPack);
+// A language pack (not built into the core): registered the way a customer does it.
+registerLanguage('de', dePack);
 
 let editor: Editor | null = null;
 
@@ -43,7 +43,7 @@ const control = (e: Editor, name: string) =>
 const flush = () => new Promise((r) => setTimeout(r, 0));
 
 beforeAll(() => {
-  // jsdom не реализует blob-URL.
+  // jsdom doesn't implement blob URLs.
   let n = 0;
   URL.createObjectURL ??= () => `blob:test/${++n}`;
   URL.revokeObjectURL ??= () => {};
@@ -55,19 +55,19 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('стили текста', () => {
+describe('text styles', () => {
   it.each([
-    '<p><span style="color: #ff0000;">красный</span></p>',
-    '<p><span style="background-color: yellow;">маркер</span></p>',
-    '<p><span style="font-size: 18pt;">крупно</span></p>',
-    '<p><span style="font-family: Georgia, serif;">шрифт</span></p>',
-    '<p style="line-height: 1.5;">интервал</p>',
-    '<h2 style="text-align: center; line-height: 2;">оба стиля</h2>',
-  ])('сохраняет %s', (html) => {
+    '<p><span style="color: #ff0000;">red</span></p>',
+    '<p><span style="background-color: yellow;">highlight</span></p>',
+    '<p><span style="font-size: 18pt;">large</span></p>',
+    '<p><span style="font-family: Georgia, serif;">font</span></p>',
+    '<p style="line-height: 1.5;">spacing</p>',
+    '<h2 style="text-align: center; line-height: 2;">both styles</h2>',
+  ])('keeps %s', (html) => {
     expect(mount(html).getHTML()).toBe(html);
   });
 
-  it('приводит цвета к #rrggbb', () => {
+  it('normalizes colors to #rrggbb', () => {
     expect(
       mount(
         '<p><span style="color: rgb(255, 0, 0)">a</span><span style="background-color: #ABC">b</span></p>',
@@ -77,14 +77,14 @@ describe('стили текста', () => {
     );
   });
 
-  it('отбрасывает опасные и невалидные значения стилей', () => {
+  it('drops dangerous and invalid style values', () => {
     const html = mount(
       '<p><span style="font-size: expression(alert(1))">a</span><span style="color: url(javascript:x)">b</span></p>',
     ).getHTML();
     expect(html).toBe('<p>ab</p>');
   });
 
-  it('не выводит невалидный стиль, пришедший через JSON', () => {
+  it("doesn't output an invalid style that came through JSON", () => {
     const e = mount();
     e.setContent({
       type: 'doc',
@@ -104,42 +104,42 @@ describe('стили текста', () => {
     expect(e.getHTML()).toBe('<p><span>x</span></p>');
   });
 
-  it('setStyle ставит, меняет и снимает цвет', () => {
-    const e = mount('<p>текст</p>');
+  it('setStyle sets, changes and removes a color', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     e.exec(setStyle('color', '#ff0000'));
-    expect(e.getHTML()).toBe('<p><span style="color: #ff0000;">текст</span></p>');
+    expect(e.getHTML()).toBe('<p><span style="color: #ff0000;">text</span></p>');
     expect(getStyle(e.view.state, 'color')).toBe('#ff0000');
     e.exec(setStyle('color', '#00ff00'));
-    expect(e.getHTML()).toBe('<p><span style="color: #00ff00;">текст</span></p>');
+    expect(e.getHTML()).toBe('<p><span style="color: #00ff00;">text</span></p>');
     e.exec(setStyle('color', null));
-    expect(e.getHTML()).toBe('<p>текст</p>');
+    expect(e.getHTML()).toBe('<p>text</p>');
   });
 
-  it('setStyle отказывается от невалидного значения', () => {
-    const e = mount('<p>текст</p>');
+  it('setStyle refuses an invalid value', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     expect(e.exec(setStyle('font_size', '12px; color: red'))).toBe(false);
   });
 
-  it('межстрочный интервал', () => {
-    const e = mount('<p>текст</p>');
+  it('line height', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     e.exec(setLineHeight('1.5'));
-    expect(e.getHTML()).toBe('<p style="line-height: 1.5;">текст</p>');
+    expect(e.getHTML()).toBe('<p style="line-height: 1.5;">text</p>');
     e.exec('h1');
-    expect(e.getHTML()).toBe('<h1 style="line-height: 1.5;">текст</h1>');
+    expect(e.getHTML()).toBe('<h1 style="line-height: 1.5;">text</h1>');
   });
 
-  it('очистка форматирования убирает и стили', () => {
-    const e = mount('<p><strong><span style="color: red;">текст</span></strong></p>');
+  it('clearing formatting removes styles too', () => {
+    const e = mount('<p><strong><span style="color: red;">text</span></strong></p>');
     selectAll(e);
     e.exec('clearFormatting');
-    expect(e.getHTML()).toBe('<p>текст</p>');
+    expect(e.getHTML()).toBe('<p>text</p>');
   });
 });
 
-describe('ссылки', () => {
+describe('links', () => {
   it.each([
     ['example.com', 'https://example.com'],
     ['www.example.com/path?q=1', 'https://www.example.com/path?q=1'],
@@ -151,37 +151,37 @@ describe('ссылки', () => {
     expect(normalizeUrl(input)).toBe(output);
   });
 
-  it('applyLink на выделении', () => {
-    const e = mount('<p>текст</p>');
+  it('applyLink on a selection', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     e.exec(applyLink({ href: 'example.com', target: '_blank' }));
     expect(e.getHTML()).toBe(
-      '<p><a href="https://example.com" target="_blank" rel="noopener noreferrer">текст</a></p>',
+      '<p><a href="https://example.com" target="_blank" rel="noopener noreferrer">text</a></p>',
     );
   });
 
-  it('applyLink без выделения вставляет текст ссылки', () => {
+  it('applyLink without a selection inserts the link text', () => {
     const e = mount('<p>a</p>');
     select(e, 2, 2);
-    e.exec(applyLink({ href: 'https://x.io', text: ' сайт' }));
-    expect(e.getHTML()).toBe('<p>a<a href="https://x.io"> сайт</a></p>');
+    e.exec(applyLink({ href: 'https://x.io', text: ' site' }));
+    expect(e.getHTML()).toBe('<p>a<a href="https://x.io"> site</a></p>');
   });
 
-  it('applyLink меняет текст и сохраняет жирный', () => {
-    const e = mount('<p><strong>старый</strong></p>');
+  it('applyLink changes the text and keeps bold', () => {
+    const e = mount('<p><strong>old</strong></p>');
     selectAll(e);
-    e.exec(applyLink({ href: 'https://x.io', text: 'новый' }));
-    expect(e.getHTML()).toBe('<p><a href="https://x.io"><strong>новый</strong></a></p>');
+    e.exec(applyLink({ href: 'https://x.io', text: 'new' }));
+    expect(e.getHTML()).toBe('<p><a href="https://x.io"><strong>new</strong></a></p>');
   });
 
-  it('applyLink отказывается от javascript:', () => {
-    const e = mount('<p>текст</p>');
+  it('applyLink refuses javascript:', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     expect(e.exec(applyLink({ href: 'javascript:alert(1)' }))).toBe(false);
   });
 
-  it('диалог ссылки: Mod-k открывает, отправка вставляет ссылку', () => {
-    const e = mount('<p>текст</p>');
+  it('link dialog: Mod-k opens it, submitting inserts the link', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     control(e, 'link').click();
     const dialog = e.root.querySelector<HTMLFormElement>('.nova-dialog')!;
@@ -191,12 +191,12 @@ describe('ссылки', () => {
     dialog.requestSubmit();
     return flush().then(() => {
       expect(e.root.querySelector('.nova-dialog')).toBeNull();
-      expect(e.getHTML()).toBe('<p><a href="https://example.com">текст</a></p>');
+      expect(e.getHTML()).toBe('<p><a href="https://example.com">text</a></p>');
     });
   });
 
-  it('диалог ссылки показывает ошибку на небезопасный адрес и не закрывается', async () => {
-    const e = mount('<p>текст</p>');
+  it("link dialog shows an error for an unsafe address and doesn't close", async () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     control(e, 'link').click();
     const dialog = e.root.querySelector<HTMLFormElement>('.nova-dialog')!;
@@ -205,11 +205,11 @@ describe('ссылки', () => {
     await flush();
     expect(e.root.querySelector('.nova-dialog')).not.toBeNull();
     expect(dialog.querySelector('.nova-dialog-error')!.textContent).not.toBe('');
-    expect(e.getHTML()).toBe('<p>текст</p>');
+    expect(e.getHTML()).toBe('<p>text</p>');
   });
 
-  it('Escape закрывает диалог', () => {
-    const e = mount('<p>текст</p>');
+  it('Escape closes the dialog', () => {
+    const e = mount('<p>text</p>');
     control(e, 'link').click();
     const dialog = e.root.querySelector('.nova-dialog')!;
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
@@ -217,8 +217,8 @@ describe('ссылки', () => {
   });
 });
 
-describe('тулбар', () => {
-  it('парсит строковый конфиг с группами', () => {
+describe('toolbar', () => {
+  it('parses a string config with groups', () => {
     expect(parseToolbar('undo redo |  bold italic | | link')).toEqual([
       ['undo', 'redo'],
       ['bold', 'italic'],
@@ -227,7 +227,7 @@ describe('тулбар', () => {
     expect(parseToolbar(['bold', '|', 'link'])).toEqual([['bold'], ['link']]);
   });
 
-  it('рендерит кнопки из конфига и пропускает неизвестные', () => {
+  it('renders buttons from the config and skips unknown ones', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const e = mount('<p>a</p>', { toolbar: 'bold italic | nonexistent link' });
     const names = [...e.root.querySelectorAll('[data-control]')].map((b) =>
@@ -239,17 +239,18 @@ describe('тулбар', () => {
     warn.mockRestore();
   });
 
-  it('кастомная кнопка через setup и registry', () => {
+  it('a custom button through setup and the registry', () => {
     const onAction = vi.fn();
     const e = mount('<p>a</p>', {
       toolbar: 'bold mybutton',
-      setup: (ed) => ed.ui.registry.addButton('myButton', { text: 'Hi', tooltip: 'Мой', onAction }),
+      setup: (ed) =>
+        ed.ui.registry.addButton('myButton', { text: 'Hi', tooltip: 'Mine', onAction }),
     });
     control(e, 'mybutton').click();
     expect(onAction).toHaveBeenCalledWith(e);
   });
 
-  it('кнопка bold отражает состояние aria-pressed', () => {
+  it('the bold button reflects its state in aria-pressed', () => {
     const e = mount('<p><strong>a</strong>b</p>');
     select(e, 1, 2);
     expect(control(e, 'bold').getAttribute('aria-pressed')).toBe('true');
@@ -257,27 +258,27 @@ describe('тулбар', () => {
     expect(control(e, 'bold').getAttribute('aria-pressed')).toBe('false');
   });
 
-  it('меню стиля блока показывает текущий стиль и применяет выбранный', () => {
-    const e = mount('<h2>заголовок</h2>', { language: 'ru' });
+  it('the block style menu shows the current style and applies the chosen one', () => {
+    const e = mount('<h2>heading</h2>', { language: 'de' });
     select(e, 2, 2);
     const blocks = control(e, 'blocks');
-    expect(blocks.textContent).toContain('Заголовок 2');
+    expect(blocks.textContent).toContain('Überschrift 2');
     blocks.click();
     expect(blocks.getAttribute('aria-expanded')).toBe('true');
     const menu = e.root.querySelector('.nova-menu')!;
-    expect(menu.querySelector('[aria-checked="true"]')?.textContent).toContain('Заголовок 2');
+    expect(menu.querySelector('[aria-checked="true"]')?.textContent).toContain('Überschrift 2');
     menu.querySelector<HTMLButtonElement>('[data-id="paragraph"]')!.click();
-    expect(e.getHTML()).toBe('<p>заголовок</p>');
+    expect(e.getHTML()).toBe('<p>heading</p>');
     expect(e.root.querySelector('.nova-menu')).toBeNull();
     expect(blocks.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('меню: навигация стрелками', () => {
+  it('menu: arrow navigation', () => {
     const e = mount('<p>a</p>');
     control(e, 'blocks').click();
     const menu = e.root.querySelector<HTMLElement>('.nova-menu')!;
     const items = menu.querySelectorAll<HTMLButtonElement>('.nova-menu-item');
-    expect(document.activeElement).toBe(items[0]); // отмеченный «Paragraph»
+    expect(document.activeElement).toBe(items[0]); // the checked "Paragraph"
     menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     expect(document.activeElement).toBe(items[1]);
     menu.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
@@ -286,16 +287,16 @@ describe('тулбар', () => {
     expect(document.activeElement).toBe(items[0]);
   });
 
-  it('палитра цвета применяет цвет', () => {
-    const e = mount('<p>текст</p>');
+  it('the color palette applies a color', () => {
+    const e = mount('<p>text</p>');
     selectAll(e);
     control(e, 'forecolor').click();
     e.root.querySelector<HTMLButtonElement>('.nova-swatch[aria-label="#3b82f6"]')!.click();
-    expect(e.getHTML()).toBe('<p><span style="color: #3b82f6;">текст</span></p>');
+    expect(e.getHTML()).toBe('<p><span style="color: #3b82f6;">text</span></p>');
     expect(e.root.querySelector('.nova-color-panel')).toBeNull();
   });
 
-  it('roving tabindex: в тулбаре только одна кнопка с tabindex=0', () => {
+  it('roving tabindex: only one toolbar button has tabindex=0', () => {
     const e = mount('<p>a</p>');
     const tabbable = e.root.querySelectorAll('.nova-toolbar button[tabindex="0"]');
     expect(tabbable).toHaveLength(1);
@@ -303,57 +304,57 @@ describe('тулбар', () => {
 });
 
 describe('i18n', () => {
-  it('английский по умолчанию, русский по language', () => {
+  it('English by default, another language through language', () => {
     expect(control(mount('<p>a</p>'), 'bold').getAttribute('aria-label')).toBe('Bold');
     editor!.destroy();
-    expect(control(mount('<p>a</p>', { language: 'ru' }), 'bold').getAttribute('aria-label')).toBe(
-      'Жирный',
+    expect(control(mount('<p>a</p>', { language: 'de' }), 'bold').getAttribute('aria-label')).toBe(
+      'Fett',
     );
   });
 
-  it('фолбэк: pt-BR → pt → en, overrides и параметры', () => {
+  it('fallback: pt-BR → pt → en, overrides and parameters', () => {
     registerLanguage('pt', { bold: 'Negrito' });
     expect(createTranslator('pt-BR')('bold')).toBe('Negrito');
     expect(createTranslator('pt-BR')('italic')).toBe('Italic');
     expect(createTranslator('xx')('bold')).toBe('Bold');
     expect(createTranslator('en', { bold: 'B' })('bold')).toBe('B');
-    expect(createTranslator('ru')('status.words', { count: 5 })).toBe('Слов: 5');
+    expect(createTranslator('de')('status.words', { count: 5 })).toBe('Wörter: 5');
   });
 });
 
-describe('статусбар', () => {
+describe('statusbar', () => {
   it.each([
     ['', 0],
-    ['Привет, мир!', 2],
-    ["don't stop-motion 2026 год", 4],
-    ['  много   пробелов  ', 2],
-    // Китайский и японский — без пробелов: каждый знак — слово (как в текстовых процессорах).
+    ['Hello, world!', 2],
+    ["don't stop-motion 2026 year", 4],
+    ['  many   spaces  ', 2],
+    // Chinese and Japanese have no spaces: every character is a word (as in word processors).
     ['日本語の文章です', 8],
     ['你好，世界', 4],
     ['Hello 世界 and カタカナ', 8],
-    // Корейский пишется с пробелами между словами.
+    // Korean is written with spaces between words.
     ['한국어 문장입니다', 2],
   ])('countWords(%j) = %i', (text, count) => {
     expect(countWords(text)).toBe(count);
   });
 
-  it('показывает путь к элементу', () => {
+  it('shows the path to the element', () => {
     const e = mount('<ul><li><p><strong>a</strong></p></li></ul>');
     select(e, 4, 4);
     expect(e.root.querySelector('.nova-path')!.textContent).toBe('ul › li › p › strong');
   });
 
-  it('можно отключить', () => {
+  it('can be turned off', () => {
     expect(
       mount('<p>a</p>', { statusbar: false }).root.querySelector('.nova-statusbar'),
     ).toBeNull();
   });
 });
 
-describe('загрузка изображений', () => {
+describe('image upload', () => {
   const png = () => new File([new Uint8Array([137, 80, 78, 71])], 'a.png', { type: 'image/png' });
 
-  it('через uploadImage: показывает blob, затем подменяет на URL сервера', async () => {
+  it('through uploadImage: shows the blob, then swaps in the server URL', async () => {
     let resolve!: (url: string) => void;
     const uploadImage = vi.fn(() => new Promise<string>((r) => (resolve = r)));
     const e = mount('<p>a</p>', { uploadImage });
@@ -363,19 +364,19 @@ describe('загрузка изображений', () => {
     resolve('https://cdn.example.com/a.png');
     await flush();
     expect(e.getHTML()).toBe('<p>a<img src="https://cdn.example.com/a.png"></p>');
-    // Подмена src не создаёт отдельный шаг undo: одна отмена убирает картинку целиком.
+    // Swapping src doesn't create a separate undo step: one undo removes the whole image.
     e.exec('undo');
     expect(e.getHTML()).toBe('<p>a</p>');
   });
 
-  describe('сбой загрузки', () => {
+  describe('upload failure', () => {
     beforeEach(() => {
       vi.useFakeTimers();
       vi.spyOn(console, 'error').mockImplementation(() => {});
     });
     afterEach(() => vi.useRealTimers());
 
-    /** Обработчик, который падает `fails` раз, потом отдаёт адрес. */
+    /** A handler that fails `fails` times, then returns the address. */
     const flaky = (fails: number) => {
       let calls = 0;
       return vi.fn(() =>
@@ -390,7 +391,7 @@ describe('загрузка изображений', () => {
         (b) => b.textContent === label,
       )!;
 
-    it('временный сбой: автоповтор, картинка загружается без участия пользователя', async () => {
+    it('a temporary failure: an automatic retry, the image uploads without the user', async () => {
       const uploadImage = flaky(2);
       const e = mount('<p>a</p>', { uploadImage });
       select(e, 2, 2);
@@ -401,7 +402,7 @@ describe('загрузка изображений', () => {
       expect(errorBox(e)).toBeNull();
     });
 
-    it('стойкий сбой: картинка остаётся, «Повторить» загружает её', async () => {
+    it('a persistent failure: the image stays, "Retry" uploads it', async () => {
       const uploadImage = flaky(3);
       const e = mount('<p>a</p>', { uploadImage });
       select(e, 2, 2);
@@ -416,7 +417,7 @@ describe('загрузка изображений', () => {
       expect(errorBox(e)).toBeNull();
     });
 
-    it('«Убрать картинку» и закрытие уведомления убирают её (blob: не попадёт в документ)', async () => {
+    it('"Remove image" and closing the notification remove it (blob: never reaches the document)', async () => {
       for (const how of ['remove', 'close'] as const) {
         const e = mount('<p>a</p>', { uploadImage: flaky(99) });
         select(e, 2, 2);
@@ -428,7 +429,7 @@ describe('загрузка изображений', () => {
       }
     });
 
-    it('небезопасный адрес от сервера не повторяется', async () => {
+    it("an unsafe address from the server isn't retried", async () => {
       const uploadImage = vi.fn(() => Promise.resolve('javascript:alert(1)'));
       const e = mount('<p>a</p>', { uploadImage });
       uploadImages(e, [png()]);
@@ -437,7 +438,7 @@ describe('загрузка изображений', () => {
       expect(errorBox(e)).not.toBeNull();
     });
 
-    it('картинку удалили во время загрузки — без ошибок и повторов', async () => {
+    it('the image was deleted during the upload: no errors and no retries', async () => {
       const uploadImage = flaky(99);
       const e = mount('<p>a</p>', { uploadImage });
       select(e, 2, 2);
@@ -449,7 +450,7 @@ describe('загрузка изображений', () => {
     });
   });
 
-  it('игнорирует не-изображения', () => {
+  it('ignores non-images', () => {
     const e = mount('<p>a</p>');
     uploadImages(e, [new File(['x'], 'a.txt', { type: 'text/plain' })]);
     expect(e.getHTML()).toBe('<p>a</p>');

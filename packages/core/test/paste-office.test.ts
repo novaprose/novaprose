@@ -5,14 +5,14 @@ import { createEditor, type Editor } from '../src';
 import { loadPasteCleaner } from '../src/paste';
 import { cleanPastedHTML, detectPasteSource } from '../src/paste-office';
 
-// Очистка Office — ленивый чанк; здесь проверяется её логика, а не момент загрузки
-// (вставка до загрузки — в paste-lazy.test.ts).
+// Office cleanup is a lazy chunk; its logic is checked here, not the moment it loads
+// (pasting before it loads is in paste-lazy.test.ts).
 beforeAll(() => loadPasteCleaner());
 
 /**
- * Вставка из офисных приложений. Эталоны — test/fixtures/paste/*.html (буфер обмена приложения) и
- * *.expected.html (что должно получиться в getHTML). Новый пример из жизни: положить .html, запустить
- * тест, проверить вывод глазами и сохранить его как .expected.html.
+ * Paste from office applications. The fixtures are test/fixtures/paste/*.html (the application's clipboard) and
+ * *.expected.html (what getHTML must give). A new real-life example: add the .html, run
+ * the test, check the output by eye and save it as .expected.html.
  */
 
 const FIXTURES = join(__dirname, 'fixtures', 'paste');
@@ -32,12 +32,12 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-describe('Эталоны вставки', () => {
+describe('Paste fixtures', () => {
   const fixtures = readdirSync(FIXTURES).filter(
     (f) => f.endsWith('.html') && !f.endsWith('.expected.html'),
   );
 
-  it('набор эталонов не пуст и у каждого есть ожидаемый результат', () => {
+  it('the set of fixtures is not empty and each has an expected result', () => {
     expect(fixtures.length).toBeGreaterThanOrEqual(7);
     for (const file of fixtures) {
       expect(readdirSync(FIXTURES)).toContain(file.replace('.html', '.expected.html'));
@@ -51,7 +51,7 @@ describe('Эталоны вставки', () => {
   });
 });
 
-describe('Определение источника', () => {
+describe('Detecting the source', () => {
   it.each([
     ['word-desktop-text.html', 'word'],
     ['word-desktop-lists.html', 'word'],
@@ -63,7 +63,7 @@ describe('Определение источника', () => {
     expect(detectPasteSource(readFileSync(join(FIXTURES, file), 'utf8'))).toBe(source);
   });
 
-  it('LibreOffice, веб-страница и копирование внутри редактора', () => {
+  it('LibreOffice, a web page and copying inside the editor', () => {
     expect(detectPasteSource('<meta name="generator" content="LibreOffice 7.6"><p>a</p>')).toBe(
       'libreoffice',
     );
@@ -72,14 +72,14 @@ describe('Определение источника', () => {
   });
 });
 
-describe('Режимы и поведение', () => {
-  it('копирование внутри редактора не чистится: шрифты и кегль сохраняются', () => {
+describe('Modes and behavior', () => {
+  it("copying inside the editor isn't cleaned: fonts and sizes are kept", () => {
     const html =
       '<p data-pm-slice="1 1 []"><span style="font-family: Georgia;">serif</span> <span style="font-size: 20px;">big</span></p>';
     expect(cleanPastedHTML(html)).toBe(html);
   });
 
-  it("pasteStyles: 'clean' (по умолчанию) убирает шрифт и кегль веб-страницы, но не смысл", () => {
+  it("pasteStyles: 'clean' (the default) removes a web page's font and size, but not the meaning", () => {
     const editor = paste(
       '<p style="font-family: Georgia; line-height: 2"><span style="font-size: 20px; color: #ff0000;">red</span> <b>bold</b></p>',
     );
@@ -88,7 +88,7 @@ describe('Режимы и поведение', () => {
     );
   });
 
-  it("pasteStyles: 'keep' переносит шрифт, кегль и интервал", () => {
+  it("pasteStyles: 'keep' carries over the font, size and spacing", () => {
     const editor = paste(
       '<p style="line-height: 2"><span style="font-family: Georgia; font-size: 20px;">serif</span></p>',
       { pasteStyles: 'keep' },
@@ -98,7 +98,7 @@ describe('Режимы и поведение', () => {
     );
   });
 
-  it('pastePreprocess видит исходный HTML, pastePostprocess — уже очищенный', () => {
+  it('pastePreprocess sees the original HTML, pastePostprocess the cleaned one', () => {
     const seen: string[] = [];
     paste('<meta name=Generator content="Microsoft Word 15"><p class=MsoNormal>a<o:p></o:p></p>', {
       pastePreprocess: (html) => (seen.push(html.includes('o:p') ? 'raw' : 'clean'), html),
@@ -107,7 +107,7 @@ describe('Режимы и поведение', () => {
     expect(seen).toEqual(['raw', 'clean']);
   });
 
-  it('вставка в пустой абзац сохраняет оформление первого абзаца, в непустой — продолжает его', () => {
+  it("pasting into an empty paragraph keeps the first paragraph's formatting; into a non-empty one it continues it", () => {
     const html = '<p style="text-align: center">a</p><p>b</p>';
     expect(paste(html).getHTML()).toBe('<p style="text-align: center;">a</p><p>b</p>');
 
@@ -116,11 +116,11 @@ describe('Режимы и поведение', () => {
     const editor = createEditor({ element, content: '<p>xy</p>' });
     editors.push(editor);
     editor.view.pasteHTML(html);
-    // Курсор в начале «xy»: первый абзац сливается с текущим, как в Word.
+    // The cursor at the start of "xy": the first paragraph merges with the current one, as in Word.
     expect(editor.getHTML()).toBe('<p>a</p><p>bxy</p>');
   });
 
-  it('опасное содержимое из Word по-прежнему отбрасывается', () => {
+  it('dangerous content from Word is still dropped', () => {
     const editor = paste(
       '<meta name=Generator content="Microsoft Word 15"><p class=MsoNormal onclick="alert(1)">a <a href="javascript:alert(1)">x</a><img src="file:///C:/Users/a/img.png"></p><script>alert(1)</script>',
     );
