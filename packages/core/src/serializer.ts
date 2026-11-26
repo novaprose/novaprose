@@ -1,5 +1,5 @@
-import type { DOMOutputSpec, Fragment, Mark, Node as PMNode } from 'prosemirror-model';
-import { isSafeImageUrl, isSafeLinkUrl } from './url';
+import type { DOMOutputSpec, Fragment, Mark, MarkType, Node as PMNode } from 'prosemirror-model';
+import { safeAttr } from './safe-attr';
 
 /**
  * Строковый HTML-сериализатор по toDOM-спекам схемы.
@@ -112,24 +112,6 @@ const FORBIDDEN_TAGS = new Set([
   'template',
   'noscript',
 ]);
-const LINK_ATTRS = new Set(['href', 'xlink:href', 'action', 'formaction', 'cite']);
-const RESOURCE_ATTRS = new Set(['src', 'poster', 'data', 'background']);
-const UNSAFE_CSS = /url\s*\(|expression\s*\(|javascript:|@import|behavior\s*:|-moz-binding/i;
-
-/** Значение атрибута, если оно безопасно, иначе null (атрибут не выводится). */
-function safeAttr(name: string, value: string): string | null {
-  const lower = name.toLowerCase();
-  if (lower.startsWith('on')) return null;
-  if (LINK_ATTRS.has(lower)) return isSafeLinkUrl(value) ? value : null;
-  if (RESOURCE_ATTRS.has(lower)) return isSafeImageUrl(value) ? value : null;
-  if (lower === 'srcset') {
-    const urls = value.split(',').map((part) => part.trim().split(/\s+/)[0] ?? '');
-    return urls.every((url) => isSafeImageUrl(url)) ? value : null;
-  }
-  if (lower === 'style') return UNSAFE_CSS.test(value) ? null : value;
-  return value;
-}
-
 const reported = new Set<string>();
 function reportForbidden(tag: string): void {
   if (reported.has(tag)) return;
@@ -218,7 +200,11 @@ function renderSpec(spec: DOMOutputSpec): Rendered {
 }
 
 export class HTMLSerializer {
-  private readonly cache = new Map<string, Rendered>();
+  /**
+   * Кэш отрисовки марок — свой у каждого типа марки: сериализатор общий для всех редакторов страницы,
+   * а вывод одноимённой марки зависит от схемы редактора (правила атрибутов, плагины).
+   */
+  private readonly cache = new WeakMap<MarkType, Map<string, Rendered>>();
 
   serializeFragment(fragment: Fragment, { pre = false }: { pre?: boolean } = {}): string {
     const texts = pre ? null : protectSpaces(fragment);
@@ -279,12 +265,14 @@ export class HTMLSerializer {
   private renderMark(mark: Mark, inline: boolean): Rendered {
     const toDOM = mark.type.spec.toDOM;
     if (!toDOM) throw new Error(`[nova] mark "${mark.type.name}" has no toDOM`);
-    const key = `${mark.type.name}:${JSON.stringify(mark.attrs)}`;
-    let r = this.cache.get(key);
+    let cache = this.cache.get(mark.type);
+    if (!cache) this.cache.set(mark.type, (cache = new Map()));
+    const key = JSON.stringify(mark.attrs);
+    let r = cache.get(key);
     if (!r) {
       r = renderSpec(toDOM(mark, inline));
-      if (this.cache.size > 500) this.cache.clear();
-      this.cache.set(key, r);
+      if (cache.size > 500) cache.clear();
+      cache.set(key, r);
     }
     return r;
   }

@@ -33,6 +33,7 @@ import {
 } from './ui/menubar';
 import { registerMenuItems } from './ui/menu-items';
 import { ContentRules, contentRulesPlugin, type ContentRulesOptions } from './content-rules';
+import { htmlRulesFor, type HtmlRulesInstance } from './html-rules-api';
 import {
   loadPlugin,
   orderPlugins,
@@ -366,9 +367,15 @@ export class Editor {
         o.value.split(/\s+/).filter(Boolean),
       ),
     ]);
+    const htmlRules = htmlRulesFor(options);
+    // `p[class]` в правилах без validClasses — классы сохраняются (как у TinyMCE по умолчанию).
+    const allClasses =
+      options.validClasses === true ||
+      (options.validClasses === undefined && !!htmlRules?.classOnBuiltIn);
     this.schema = this.buildSchema(
       syncPlugins,
-      options.validClasses === true ? () => true : (name) => allowedClasses.has(name),
+      allClasses ? () => true : (name) => allowedClasses.has(name),
+      htmlRules,
     );
     this.formatter = new Formatter(this, allowedClasses);
     for (const [name, spec] of Object.entries(options.formats ?? {}))
@@ -557,7 +564,11 @@ export class Editor {
    * Схема с узлами и марками плагинов. Конфликт имён — ошибка конфигурации: сообщаем и работаем
    * на базовой схеме, чтобы редактор всё равно открылся.
    */
-  private buildSchema(plugins: NovaPlugin[], classFilter: ClassFilter): NovaSchema {
+  private buildSchema(
+    plugins: NovaPlugin[],
+    classFilter: ClassFilter,
+    htmlRules: HtmlRulesInstance | null,
+  ): NovaSchema {
     const nodes: Record<string, NodeSpec> = {};
     const marks: Record<string, MarkSpec> = {};
     for (const plugin of plugins) {
@@ -573,10 +584,10 @@ export class Editor {
       }
     }
     try {
-      return createSchema({ nodes, marks }, classFilter);
+      return createSchema({ nodes, marks }, classFilter, htmlRules);
     } catch (error) {
       reportPluginError('Failed to build the document schema from plugins', error);
-      return createSchema({}, classFilter);
+      return createSchema({}, classFilter, htmlRules);
     }
   }
 

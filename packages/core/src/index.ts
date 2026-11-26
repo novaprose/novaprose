@@ -70,6 +70,12 @@ export {
   type PluginMessageKey,
   getPluginMessages,
 } from './i18n';
+export {
+  registerHtmlRules,
+  type HtmlRulesModule,
+  type HtmlRulesOptions,
+  type HtmlRulesInstance,
+} from './html-rules-api';
 export { defaultToolbar, parseToolbar, type ToolbarConfig, type ToolbarMode } from './ui/toolbar';
 export {
   defaultFontFamilies,

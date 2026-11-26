@@ -15,6 +15,10 @@ export default defineConfig({
   resolve: {
     // Тесты всегда идут по исходникам пакетов, без предварительной сборки.
     alias: {
+      // Отдельные входы — до общего псевдонима ядра (иначе он перехватит путь).
+      '@novaprose/core/html-rules': fileURLToPath(
+        new URL('./packages/core/src/html-rules.ts', import.meta.url),
+      ),
       '@novaprose/core': fileURLToPath(new URL('./packages/core/src/index.ts', import.meta.url)),
     },
   },

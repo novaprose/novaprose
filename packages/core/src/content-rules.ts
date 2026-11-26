@@ -10,8 +10,18 @@ import type { NovaSchema } from './schema';
  * при любом изменении документа — вставке, перетаскивании, setContent, горячих клавишах.
  */
 export interface ContentRulesOptions {
-  /** Разрешены ТОЛЬКО эти элементы: 'p,strong/b,em/i,a[href],ul,ol'. Атрибуты в [...] пока не учитываются. */
+  /**
+   * Разрешены ТОЛЬКО эти элементы: 'p,strong/b,em/i,a[href|title],ul,ol'. Список атрибутов в [...] —
+   * полный список для элемента; элемент без [...] сохраняет встроенные атрибуты.
+   */
   validElements?: string;
+  /**
+   * Дополнительные элементы и атрибуты (синтаксис validElements): 'div[class],h2[id],i[class]'.
+   * Правило для элемента заменяет его список атрибутов; `@[id|title]` — атрибуты всех элементов.
+   */
+  extendedValidElements?: string;
+  /** Свои элементы: 'my-widget,~my-chip' (~ — строчный, как span; без ~ — блочный, как div). */
+  customElements?: string;
   /** Запрещённые элементы: 'img,table,h1'. */
   invalidElements?: string;
   /** Разрешённые CSS-свойства: 'color,text-align' или { '*': 'color', img: 'float' }. */
@@ -178,6 +188,8 @@ export class ContentRules {
     const valid = parseList(options.validElements);
     const invalid = parseList(options.invalidElements) ?? new Set();
     const tags = new Set<string>(valid ?? KNOWN_TAGS);
+    // extendedValidElements дополняет список validElements.
+    if (valid) for (const tag of parseList(options.extendedValidElements) ?? []) tags.add(tag);
     // Неявные зависимости: список без li или таблица без tr/td бессмысленны.
     if (tags.has('ul') || tags.has('ol')) tags.add('li');
     if (tags.has('table')) {

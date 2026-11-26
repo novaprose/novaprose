@@ -218,6 +218,15 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
       state.closeBlock(node);
     },
     anchor() {},
+    // Элементы из extendedValidElements / customElements: в Markdown остаётся их текст.
+    html_block(state, node) {
+      state.renderContent(node);
+    },
+    html_textblock(state, node) {
+      state.renderInline(node);
+      state.closeBlock(node);
+    },
+    html_inline_atom() {},
     pagebreak(state, node) {
       state.closeBlock(node);
     },
@@ -246,6 +255,7 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
     font_family: plain,
     font_size: plain,
     span_class: plain,
+    html_inline: plain,
     comment: plain,
     suggestion_insert: plain,
     suggestion_delete: plain,

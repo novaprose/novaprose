@@ -46,7 +46,9 @@ When you're ready, move to the native API below — it is smaller, typed and fra
 | `font_size_formats`                     | `fontSizes: ['12px', '14px', …]`                              |
 | `line_height_formats`                   | `lineHeights: ['1', '1.5', '2']`                              |
 | `color_map`                             | `colors: ['#000000', …]`                                      |
-| `valid_elements`, `invalid_elements`    | `validElements`, `invalidElements` (attribute rules: planned) |
+| `valid_elements`, `invalid_elements`    | `validElements`, `invalidElements`                            |
+| `extended_valid_elements`               | `extendedValidElements` (with `@novaprose/core/html-rules`)   |
+| `custom_elements`                       | `customElements` (with `@novaprose/core/html-rules`)          |
 | `valid_styles`                          | `validStyles`                                                 |
 | `paste_preprocess`, `paste_postprocess` | `pastePreprocess(html)`, `pastePostprocess(fragment)`         |
 | `paste_as_text`                         | `pasteAsText`                                                 |

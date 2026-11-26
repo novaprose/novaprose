@@ -55,15 +55,17 @@ Default toolbar: see [Toolbar and menus](/guides/toolbar-and-menus/#toolbar).
 
 ## Content rules and paste
 
-| Option             | Type                                      | Description                                                                       |
-| ------------------ | ----------------------------------------- | --------------------------------------------------------------------------------- |
-| `validElements`    | `string`                                  | allow only these elements ([Content restrictions](/guides/content-restrictions/)) |
-| `invalidElements`  | `string`                                  | forbid these elements                                                             |
-| `validStyles`      | `string \| Record<string, string>`        | allowed CSS properties                                                            |
-| `pastePreprocess`  | `(html: string, editor) => string`        | change pasted HTML before parsing                                                 |
-| `pastePostprocess` | `(fragment: HTMLElement, editor) => void` | change the parsed DOM before insertion                                            |
-| `pasteAsText`      | `boolean`                                 | paste plain text; toggle later with `setPasteAsText()`                            |
-| `pasteStyles`      | `'clean'                                  | 'keep'`                                                                           | `'clean'` drops the source document's fonts, sizes and spacing on paste ([Pasting from Office](/guides/pasting-from-office/)) |
+| Option                  | Type                                      | Description                                                                                                                         |
+| ----------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `validElements`         | `string`                                  | allow only these elements ([Content restrictions](/guides/content-restrictions/))                                                   |
+| `invalidElements`       | `string`                                  | forbid these elements                                                                                                               |
+| `validStyles`           | `string \| Record<string, string>`        | allowed CSS properties                                                                                                              |
+| `extendedValidElements` | `string`                                  | keep extra elements and attributes ([Attributes and your own markup](/guides/content-restrictions/#attributes-and-your-own-markup)) |
+| `customElements`        | `string`                                  | your own elements: `'product-card,~user-chip'` (`~` — inline)                                                                       |
+| `pastePreprocess`       | `(html: string, editor) => string`        | change pasted HTML before parsing                                                                                                   |
+| `pastePostprocess`      | `(fragment: HTMLElement, editor) => void` | change the parsed DOM before insertion                                                                                              |
+| `pasteAsText`           | `boolean`                                 | paste plain text; toggle later with `setPasteAsText()`                                                                              |
+| `pasteStyles`           | `'clean'                                  | 'keep'`                                                                                                                             | `'clean'` drops the source document's fonts, sizes and spacing on paste ([Pasting from Office](/guides/pasting-from-office/)) |
 
 ## Extensions
 

@@ -5,6 +5,7 @@
     "types": ["vite/client"],
     "paths": {
       "@novaprose/core": ["../../packages/core/src/index.ts"],
+      "@novaprose/core/html-rules": ["../../packages/core/src/html-rules.ts"],
       "@novaprose/react": ["../../packages/react/src/index.ts"],
       "@novaprose/vue": ["../../packages/vue/src/index.ts"],
       "@novaprose/web-component": ["../../packages/web-component/src/index.ts"],

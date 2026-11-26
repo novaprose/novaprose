@@ -13,7 +13,10 @@
  */
 import fc from 'fast-check';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createEditor, type Editor } from '../src';
+import { createEditor, registerHtmlRules, type Editor } from '../src';
+import { htmlRules } from '../src/html-rules';
+
+registerHtmlRules(htmlRules);
 
 const RUNS = Number(process.env.FC_RUNS) || 300;
 
@@ -29,12 +32,29 @@ const SCHEMA_PLUGINS = [
 ];
 
 let editor: Editor;
+/** Редактор с максимально разрешающими правилами элементов и атрибутов. */
+let ruled: Editor;
+const PERMISSIVE = {
+  extendedValidElements:
+    '@[*],div[*],section[*],details[*],summary[*],abbr[*],kbd[*],ins[*],i[*],b[*],span[*],mark[*],' +
+    'a[*],img[*],td[*],script[*],iframe[*],form[*]',
+  customElements: 'my-widget,~my-chip',
+};
 beforeAll(() => {
   const element = document.createElement('div');
   document.body.appendChild(element);
   editor = createEditor({ element, plugins: SCHEMA_PLUGINS, table: true } as never);
+  const second = document.createElement('div');
+  document.body.appendChild(second);
+  const warn = console.warn;
+  console.warn = () => {};
+  ruled = createEditor({ element: second, plugins: SCHEMA_PLUGINS, ...PERMISSIVE } as never);
+  console.warn = warn;
 });
-afterAll(() => editor.destroy());
+afterAll(() => {
+  editor.destroy();
+  ruled.destroy();
+});
 
 /* ------------------------------ генераторы ------------------------------ */
 
@@ -120,6 +140,12 @@ const TAGS = [
   'figcaption',
   'colgroup',
   'col',
+  'section',
+  'summary',
+  'abbr',
+  'kbd',
+  'my-widget',
+  'my-chip',
 ];
 
 const ATTRS = [
@@ -441,5 +467,78 @@ describe('безопасность и стабильность HTML (property-ba
     );
     // Защита от «пустого» теста: генератор должен давать в основном валидные документы.
     expect(accepted / RUNS).toBeGreaterThan(0.9);
+  });
+});
+
+describe('правила элементов и атрибутов не открывают дыр (property-based)', () => {
+  it('getHTML() безопасен при правилах «разрешить всё»', () => {
+    fc.assert(
+      fc.property(htmlDocument, (input) => {
+        ruled.setContent(input, { addToHistory: false });
+        expect(xssViolations(ruled.getHTML()), `вход: ${input}`).toEqual([]);
+      }),
+      { numRuns: RUNS },
+    );
+  });
+
+  it('HTML стабилен при правилах «разрешить всё»', () => {
+    fc.assert(
+      fc.property(htmlDocument, (input) => {
+        ruled.setContent(input, { addToHistory: false });
+        const first = ruled.getHTML();
+        ruled.setContent(first, { addToHistory: false });
+        expect(ruled.getHTML(), `вход: ${input}`).toBe(first);
+      }),
+      { numRuns: RUNS },
+    );
+  });
+
+  it('JSON с чужими тегами и атрибутами в узлах правил не даёт XSS', () => {
+    const anyValue = fc.oneof(attrValue, fc.integer(), fc.constant(null), fc.constant({}));
+    const htmlAttrs = fc.oneof(
+      fc.dictionary(fc.constantFrom(...ATTRS, 'srcdoc', 'is', 'ONCLICK', 'a b', ''), anyValue, {
+        maxKeys: 4,
+      }),
+      anyValue,
+    );
+    const tag = fc.constantFrom('div', 'section', 'script', 'iframe', 'img', 'abbr', 7, null);
+    // href — обязательный атрибут ссылки: без него JSON отвергается целиком, тест проверял бы меньше.
+    const attrs = fc.record({ tag, htmlAttrs, href: attrValue });
+    const text = fc.record({
+      type: fc.constant('text'),
+      text: fc.string({ minLength: 1, maxLength: 4 }),
+      marks: fc.array(fc.record({ type: fc.constantFrom('html_inline', 'link'), attrs }), {
+        maxLength: 2,
+      }),
+    });
+    const atom = fc.record({ type: fc.constant('html_inline_atom'), attrs });
+    const textblock = fc.record({
+      type: fc.constantFrom('html_textblock', 'paragraph', 'heading'),
+      attrs,
+      content: fc.array(fc.oneof(text, atom), { maxLength: 3 }),
+    });
+    const container = fc.record({
+      type: fc.constant('html_block'),
+      attrs,
+      content: fc.array(textblock, { minLength: 1, maxLength: 2 }),
+    });
+    let accepted = 0;
+    fc.assert(
+      fc.property(
+        fc.array(fc.oneof(textblock, container), { minLength: 1, maxLength: 3 }),
+        (content) => {
+          const json = { type: 'doc', content };
+          try {
+            ruled.setContent(json as never, { addToHistory: false });
+          } catch {
+            return;
+          }
+          accepted++;
+          expect(xssViolations(ruled.getHTML()), `вход: ${JSON.stringify(json)}`).toEqual([]);
+        },
+      ),
+      { numRuns: RUNS },
+    );
+    expect(accepted / RUNS).toBeGreaterThan(0.8);
   });
 });

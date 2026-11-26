@@ -1,4 +1,5 @@
-import { createEditor } from '@novaprose/core';
+import { createEditor, registerHtmlRules } from '@novaprose/core';
+import { htmlRules } from '@novaprose/core/html-rules';
 import { CompatEditor } from './editor';
 import { mapOptions, type TinyConfig } from './options';
 
@@ -53,6 +54,8 @@ let counter = 0;
 const px = (value: unknown) => (typeof value === 'number' ? `${value}px` : String(value));
 
 export function createTinymce(): TinyMCECompat {
+  // valid_elements с атрибутами, extended_valid_elements и custom_elements — частые опции TinyMCE.
+  registerHtmlRules(htmlRules);
   const all: CompatEditor[] = [];
   const plugins = new Map<string, PluginFn>();
   let active: CompatEditor | null = null;

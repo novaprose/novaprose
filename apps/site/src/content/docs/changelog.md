@@ -34,6 +34,20 @@ All packages in this repository are versioned together. The format follows
   from pasted or loaded HTML is recognized; Markdown export writes the image and the caption text.
 - Notifications can carry action buttons (`actions`, `onClose` in `editor.ui.notify()`).
 
+### Content rules
+
+- Keep markup the editor doesn't create itself, or restrict attributes further:
+  `extendedValidElements` (heading ids, `data-*`, callout `<div class>`, icon fonts like
+  `<i class="fa fa-star"></i>`, `<abbr>`, `<details>`…), `customElements` (your own block and inline
+  elements) and attribute lists in `validElements` (`a[href|title]`, default `=`, forced `:`, allowed
+  `<` values, required `!`, `@[...]` for all elements). A separate import,
+  `@novaprose/core/html-rules` (about 3 KB gzip), registered with `registerHtmlRules(htmlRules)`;
+  the core first load doesn't change. Without it, editors behave as before.
+- Rules can't make content unsafe: scripts, iframes, forms and `<svg>` are never allowed, event
+  handlers and `srcdoc` are never kept, URLs and CSS are checked — for HTML and JSON input.
+- `@novaprose/tinymce-compat` registers the rules itself: `extended_valid_elements`,
+  `custom_elements` and attribute lists in `valid_elements` now work as in TinyMCE.
+
 ### Markdown
 
 - `@novaprose/core/markdown`: `markdownToHTML()` (CommonMark + GitHub tables and strikethrough,
@@ -81,6 +95,8 @@ All packages in this repository are versioned together. The format follows
 
 ### Fixes
 
+- With several editors on a page, `getHTML()` could render a formatting mark (a link, for example)
+  the way another editor with different settings had rendered it.
 - When a lazily loaded part of the editor finishes loading (for example the `autolink` plugin),
   an open slash-command or mention list no longer closes, and in collaborative editing undo and
   the cursor position no longer break.

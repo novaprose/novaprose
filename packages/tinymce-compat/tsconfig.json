@@ -4,7 +4,8 @@
     "outDir": "dist",
     "rootDir": "..",
     "paths": {
-      "@novaprose/core": ["../core/src/index.ts"]
+      "@novaprose/core": ["../core/src/index.ts"],
+      "@novaprose/core/html-rules": ["../core/src/html-rules.ts"]
     }
   },
   "include": ["src", "test"]

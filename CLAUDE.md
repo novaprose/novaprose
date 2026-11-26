@@ -29,6 +29,9 @@ packages/core/src
   serializer.ts     строковый HTML-сериализатор (getHTML): детерминированный, без DOM
   commands.ts       именованные команды (CommandName)
   styles.ts, link.ts, image.ts — команды стилей, ссылок, картинок (+ их диалоги)
+  html-rules.ts     отдельный вход @novaprose/core/html-rules: атрибуты в validElements,
+                    extendedValidElements, customElements; в ядре — только html-rules-api.ts
+                    (registerHtmlRules); safe-attr.ts — общая проверка атрибутов на выходе
   i18n/             строки UI: en (эталон ключей), ru
   ui/               UI-слой: manager (editor.ui), registry, toolbar, menu, popover, dialog, tooltip,
                     notification, statusbar, link-bubble, color-panel, builtins (встроенные кнопки)

@@ -70,7 +70,8 @@ editor.on('change', () => console.log(editor.getContent()));
   `style_formats_merge`, `valid_classes`, `table_class_list`, `table_cell_class_list` (without it all classes are kept, as in TinyMCE), `language`,
   `inline`, `height`/`min_height`/`max_height`/`width`, `content_style`, `content_css` (your files; skin names
   like `default` or `dark` are ignored), `images_upload_handler`,
-  `paste_as_text`, `paste_preprocess`, `valid_elements`/`invalid_elements`/`valid_styles`,
+  `paste_as_text`, `paste_preprocess`, `valid_elements` (with attribute rules)/`invalid_elements`/`valid_styles`,
+  `extended_valid_elements`, `custom_elements`,
   `font_family_formats`, `font_size_formats`, `line_height_formats`, `color_map`, `toolbar_mode`,
   `setup`, `init_instance_callback`, `autosave_*`, `quickbars_*`, `mentions_fetch`.
 - Form submit writes the HTML back into the textarea.

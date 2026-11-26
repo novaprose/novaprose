@@ -113,6 +113,8 @@ const IGNORED = new Set([
   'paste_postprocess',
   'invalid_elements',
   'valid_elements',
+  'extended_valid_elements',
+  'custom_elements',
   'valid_styles',
   'toolbar_mode',
   'toolbar_sticky',
@@ -334,6 +336,9 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.invalid_elements === 'string')
     options.invalidElements = config.invalid_elements;
   if (typeof config.valid_elements === 'string') options.validElements = config.valid_elements;
+  if (typeof config.extended_valid_elements === 'string')
+    options.extendedValidElements = config.extended_valid_elements;
+  if (typeof config.custom_elements === 'string') options.customElements = config.custom_elements;
   if (config.valid_styles) options.validStyles = config.valid_styles as string;
   const fonts = parseFormats(config.font_family_formats);
   if (fonts) options.fontFamilies = fonts;

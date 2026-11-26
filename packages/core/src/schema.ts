@@ -1,4 +1,5 @@
 import { Schema, type DOMOutputSpec, type MarkSpec, type NodeSpec } from 'prosemirror-model';
+import type { HtmlRulesInstance } from './html-rules-api';
 import { tableNodes } from './table-nodes';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
 
@@ -834,20 +835,30 @@ export function createSchema(
   extensions: SchemaExtensions = {},
   /** Какие классы сохранять (style_formats, validClasses). Без фильтра — никакие. */
   classFilter?: ClassFilter,
+  /** Правила элементов и атрибутов (validElements с атрибутами, extendedValidElements…). */
+  htmlRules?: HtmlRulesInstance | null,
 ): NovaSchema {
   const extraNodes = Object.entries(extensions.nodes ?? {});
   const extraMarks = Object.entries(extensions.marks ?? {});
-  if (!extraNodes.length && !extraMarks.length && !classFilter) return schema;
-  const baseNodes = classFilter ? buildNodes(classFilter) : nodes;
-  const baseMarks = classFilter ? buildMarks(classFilter) : marks;
+  if (!extraNodes.length && !extraMarks.length && !classFilter && !htmlRules) return schema;
+  let baseNodes: Record<string, NodeSpec> = classFilter ? buildNodes(classFilter) : nodes;
+  let baseMarks: Record<string, MarkSpec> = classFilter ? buildMarks(classFilter) : marks;
+  const ref: { schema?: Schema } = {};
+  if (htmlRules) {
+    ({ nodes: baseNodes, marks: baseMarks } = htmlRules.apply(
+      { nodes: baseNodes, marks: baseMarks },
+      ref,
+    ));
+  }
   for (const [name] of extraNodes) {
     if (name in nodes) throw new Error(`[nova] node "${name}" already exists in the base schema`);
   }
   for (const [name] of extraMarks) {
     if (name in marks) throw new Error(`[nova] mark "${name}" already exists in the base schema`);
   }
-  return new Schema({
+  ref.schema = new Schema({
     nodes: { ...baseNodes, ...Object.fromEntries(extraNodes) },
     marks: { ...baseMarks, ...Object.fromEntries(extraMarks) },
-  }) as unknown as NovaSchema;
+  });
+  return ref.schema as unknown as NovaSchema;
 }

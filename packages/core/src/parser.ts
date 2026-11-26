@@ -5,6 +5,7 @@ import {
   type Schema,
   type Slice,
 } from 'prosemirror-model';
+import { OWN_STYLE } from './html-rules-api';
 import { schema } from './schema';
 
 /** Атрибут, в который переносим фон ячейки до разбора (см. preprocessDOM). */
@@ -59,9 +60,23 @@ export function preprocessDOM(root: ParentNode): void {
  */
 class NovaDOMParser extends DOMParser {
   private atomSelector: string | undefined;
+  private ownStyleSelector: string | undefined;
 
   private prepare(dom: globalThis.Node): void {
     preprocessDOM(dom as ParentNode);
+    // Элементы из extendedValidElements (div, abbr…) хранят style сами. Иначе ProseMirror превратил бы
+    // его ещё и в марки оформления содержимого — и стиль удваивался бы при каждом сохранении.
+    this.ownStyleSelector ??= Object.values(this.schema.nodes)
+      .flatMap((type) => (type.spec as { ownStyleTags?: string[] }).ownStyleTags ?? [])
+      .join(', ');
+    if (this.ownStyleSelector && 'querySelectorAll' in dom) {
+      (dom as ParentNode).querySelectorAll(this.ownStyleSelector).forEach((el) => {
+        const style = el.getAttribute('style');
+        if (style === null) return;
+        el.setAttribute(OWN_STYLE, style);
+        el.removeAttribute('style');
+      });
+    }
     this.atomSelector ??= Object.values(this.schema.nodes)
       .filter((type) => (type.spec as { ignoreStyles?: boolean }).ignoreStyles)
       .flatMap((type) => (type.spec.parseDOM ?? []).map((rule) => rule.tag))

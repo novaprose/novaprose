@@ -54,6 +54,16 @@
         "default": "./dist/markdown.cjs"
       }
     },
+    "./html-rules": {
+      "import": {
+        "types": "./dist/html-rules.d.ts",
+        "default": "./dist/html-rules.js"
+      },
+      "require": {
+        "types": "./dist/html-rules.d.cts",
+        "default": "./dist/html-rules.cjs"
+      }
+    },
     "./i18n/*": {
       "import": {
         "types": "./dist/i18n/*.d.ts",

@@ -244,6 +244,19 @@ describe('tinymce.init', () => {
     expect(b!.getContent()).toBe('<p class="other">y</p>');
   });
 
+  it('extended_valid_elements и custom_elements: иконки, id заголовков, свои элементы', async () => {
+    const html =
+      '<h2 id="faq">FAQ</h2><div class="note">Tip <i class="fa fa-info"></i></div>' +
+      '<my-card data-id="3"><p>Card</p></my-card>';
+    page(`<textarea id="t">${html}</textarea>`);
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      extended_valid_elements: 'h2[id],div[class],i[class]',
+      custom_elements: 'my-card',
+    });
+    expect(editor!.getContent()).toBe(html);
+  });
+
   it('опции: block_formats, disabled (и options.set на лету), resize', async () => {
     page('<textarea id="a"></textarea><textarea id="b"></textarea>');
     const [a] = await tinymce.init({

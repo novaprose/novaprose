@@ -13,7 +13,13 @@ const packs = Object.fromEntries(
 );
 
 export default defineConfig({
-  entry: { index: 'src/index.ts', markdown: 'src/markdown.ts', ...packs },
+  entry: {
+    index: 'src/index.ts',
+    markdown: 'src/markdown.ts',
+    // Правила элементов и атрибутов (extendedValidElements…): ~3 КБ, нужны немногим.
+    'html-rules': 'src/html-rules.ts',
+    ...packs,
+  },
   format: ['esm', 'cjs'],
   dts: true,
   clean: true,
