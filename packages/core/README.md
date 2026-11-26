@@ -15,7 +15,8 @@ comments and version history. Toolbar, plugin and option names follow familiar c
 - **Complete out of the box.** Tables, images with upload and resize, links, colors, fonts, line
   height, search and replace, source code view, fullscreen, menu bar, slash commands, Markdown
   shortcuts, paste from Word, Excel and Google Docs (lists, tables, formatting and images kept,
-  Office markup removed; anything outside the schema is dropped), English and Russian UI plus
+  Office markup removed; anything outside the schema is dropped), Markdown import and export
+  (`@novaprose/core/markdown`), English and Russian UI plus
   language packs (German, Spanish, French, Italian, Portuguese), light and dark theme.
 - **Small.** About 146 KB gzip on first load, including ProseMirror and tables; checked in CI
   against a 150 KB budget. Optional plugins and the Office paste cleanup load lazily.

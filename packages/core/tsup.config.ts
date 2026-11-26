@@ -13,7 +13,7 @@ const packs = Object.fromEntries(
 );
 
 export default defineConfig({
-  entry: { index: 'src/index.ts', ...packs },
+  entry: { index: 'src/index.ts', markdown: 'src/markdown.ts', ...packs },
   format: ['esm', 'cjs'],
   dts: true,
   clean: true,

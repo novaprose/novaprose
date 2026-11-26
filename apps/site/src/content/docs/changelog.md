@@ -11,6 +11,15 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Markdown
+
+- `@novaprose/core/markdown`: `markdownToHTML()` (CommonMark + GitHub tables and strikethrough,
+  raw HTML not interpreted) and `toMarkdown(editor)`. A separate import (~46 KB gzip with the
+  parser) — the core first load does not change. Output is stable across export/import, verified by
+  property-based tests that also found and fixed: lists merging, headings losing a trailing `#`,
+  a line break followed by `#` becoming a heading, `2025.` / `1)` becoming lists, plain-text
+  addresses turning into links and code blocks gaining empty lines.
+
 ### Events
 
 - New events: `init` (editor ready), `input` (the user changed the document — not `setContent()`,

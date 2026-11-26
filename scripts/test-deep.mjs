@@ -6,7 +6,7 @@
 import { spawnSync } from 'node:child_process';
 
 const runs = process.argv[2] ?? '5000';
-const res = spawnSync('pnpm', ['exec', 'vitest', 'run', 'property'], {
+const res = spawnSync('pnpm', ['exec', 'vitest', 'run', 'property', 'markdown'], {
   stdio: 'inherit',
   shell: process.platform === 'win32',
   env: { ...process.env, FC_RUNS: runs },
