@@ -23,6 +23,7 @@ packages wrap the same object.
 | `exec(command): boolean`     | run a named command; returns `false` if it does not apply |
 | `can(command): boolean`      | whether the command applies to the current selection      |
 | `isActive(command): boolean` | whether the selection already has this format             |
+| `getCommandState(command)`   | `{ active, enabled }` for a custom toolbar button         |
 
 Named commands — part of the public API, stable across minor versions:
 
@@ -64,15 +65,34 @@ const off = editor.on('change', (e) => save(e.getHTML()));
 off(); // unsubscribe
 ```
 
-| Event             | When                                        |
-| ----------------- | ------------------------------------------- |
-| `change`          | the document changed                        |
-| `selectionChange` | the selection moved or the document changed |
-| `focus`, `blur`   | the text gained or lost focus               |
-| `editableChange`  | read-only mode was switched                 |
-| `destroy`         | the editor is being destroyed               |
+| Event              | When                                                             | Details (2nd argument) |
+| ------------------ | ---------------------------------------------------------------- | ---------------------- |
+| `init`             | the editor is ready (lazy plugins and content styles loaded)     | —                      |
+| `change`           | the document changed in any way: typing, API, a collaborator     | `{ transaction }`      |
+| `input`            | **the user** changed the document (typing, paste, toolbar, keys) | `{ transaction }`      |
+| `selectionChange`  | the selection moved or the document changed                      | `{ transaction }`      |
+| `beforeSetContent` | before `setContent()`; assign `detail.content` to change it      | `{ content }`          |
+| `setContent`       | after `setContent()`                                             | `{ content }`          |
+| `keydown`          | a key in the text, before the editor handles it                  | `{ event }`            |
+| `focus`, `blur`    | the text gained or lost focus                                    | `{ event }`            |
+| `editableChange`   | read-only or disabled mode was switched                          | —                      |
+| `destroy`          | the editor is being destroyed                                    | —                      |
 
-Listeners receive the editor instance. `editor.off(event, listener)` removes a listener as well.
+Listeners receive the editor and the details. `editor.off(event, listener)` removes a listener as
+well. An exception in your listener is reported to the console and does not break the editor.
+
+Use `input` for "unsaved changes" indicators and `change` to save: `change` also fires for
+`setContent()` and for edits from collaborators.
+
+```ts
+// Ctrl+Enter sends the message instead of starting a new paragraph.
+editor.on('keydown', (editor, { event }) => {
+  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault();
+    send(editor.getHTML());
+  }
+});
+```
 
 ## Utilities
 

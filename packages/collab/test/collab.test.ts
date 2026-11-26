@@ -1,6 +1,6 @@
 import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createEditor, type Editor } from '@novaprose/core';
+import { createEditor, REMOTE_CHANGE_META, type Editor } from '@novaprose/core';
 import { applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
 import { Awareness, collab, colorFor, Y, type CollabParticipant } from '../src';
 
@@ -67,6 +67,26 @@ function typeAtEnd(editor: Editor, text: string): void {
 }
 
 describe('совместное редактирование', () => {
+  it('правка соавтора вызывает change, но не input (ввод — только свои правки)', async () => {
+    const { a, b } = pair();
+    const events: string[] = [];
+    const remote: unknown[] = [];
+    b.on('change', (_e, { transaction }) => {
+      events.push('change');
+      remote.push(transaction.getMeta(REMOTE_CHANGE_META));
+    });
+    b.on('input', () => events.push('input'));
+    typeAtEnd(a, 'Anna');
+    await tick();
+    expect(b.getHTML()).toBe('<p>Anna</p>');
+    expect(events).toContain('change');
+    expect(events).not.toContain('input');
+    // Правка соавтора явно помечена — не только косвенно (addToHistory: false из y-prosemirror).
+    expect(remote).toContain(true);
+    typeAtEnd(b, '!');
+    expect(events.at(-1)).toBe('input');
+  });
+
   it('правки одного участника появляются у другого', async () => {
     const { a, b } = pair();
     a.setContent('<h2>Plan</h2><p>Draft</p>');

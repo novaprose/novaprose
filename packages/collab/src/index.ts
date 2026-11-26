@@ -1,6 +1,19 @@
 import { HocuspocusProvider } from '@hocuspocus/provider';
-import { definePlugin, type CommentStore, type Editor, type NovaPlugin } from '@novaprose/core';
-import { redoCommand, undoCommand, yCursorPlugin, ySyncPlugin, yUndoPlugin } from 'y-prosemirror';
+import {
+  definePlugin,
+  REMOTE_CHANGE_META,
+  type CommentStore,
+  type Editor,
+  type NovaPlugin,
+} from '@novaprose/core';
+import {
+  redoCommand,
+  undoCommand,
+  yCursorPlugin,
+  ySyncPlugin,
+  ySyncPluginKey,
+  yUndoPlugin,
+} from 'y-prosemirror';
 import { Awareness } from 'y-protocols/awareness';
 import * as Y from 'yjs';
 import { yCommentStore } from './comments';
@@ -216,6 +229,11 @@ export function collab(options: CollabOptions): CollabPlugin {
     // Своя история: Ctrl+Z отменяет только свои правки, не чужие.
     replaceHistory: true,
     commands: { undo: undoCommand, redo: redoCommand },
+    // Правки соавторов — не ввод этого пользователя: событие input для них не срабатывает.
+    transformTransaction: (tr) =>
+      (tr.getMeta(ySyncPluginKey) as { isChangeOrigin?: boolean } | undefined)?.isChangeOrigin
+        ? tr.setMeta(REMOTE_CHANGE_META, true)
+        : tr,
     prosemirrorPlugins: () => {
       const { ydoc, awareness } = get();
       const fragment = ydoc.getXmlFragment(options.field ?? 'prosemirror');

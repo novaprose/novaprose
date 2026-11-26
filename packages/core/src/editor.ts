@@ -64,8 +64,37 @@ const htmlSerializer = new HTMLSerializer();
 
 export type EditorMode = 'classic' | 'inline' | 'distraction-free';
 
-export type EditorEvent =
-  'change' | 'selectionChange' | 'focus' | 'blur' | 'editableChange' | 'destroy';
+/** Метка транзакции, пришедшей от соавтора (ставит @novaprose/collab): не считается вводом. */
+export const REMOTE_CHANGE_META = 'nova:remote';
+/** Метка транзакции из API (setContent, insertContent): не считается вводом. */
+export const API_CHANGE_META = 'nova:api';
+
+/** Подробности событий: второй аргумент обработчика `editor.on(event, (editor, detail) => …)`. */
+export interface EditorEventDetails {
+  /** Редактор готов: ленивые плагины и стили контента загружены (то же, что `await editor.ready`). */
+  init: undefined;
+  /** Документ изменился — любым путём: ввод, API, соавтор. */
+  change: { transaction: Transaction };
+  /** Документ изменил пользователь этого редактора (набор, вставка, кнопки, горячие клавиши). */
+  input: { transaction: Transaction };
+  selectionChange: { transaction: Transaction };
+  focus: { event: FocusEvent };
+  blur: { event: FocusEvent };
+  editableChange: undefined;
+  destroy: undefined;
+  /** До setContent: `detail.content` можно заменить. */
+  beforeSetContent: { content: string | Record<string, unknown> };
+  setContent: { content: string | Record<string, unknown> };
+  /** Клавиша в тексте до обработки редактором; `detail.event.preventDefault()` отменяет её обработку. */
+  keydown: { event: KeyboardEvent };
+}
+
+export type EditorEvent = keyof EditorEventDetails;
+
+export type EditorListener<E extends EditorEvent = EditorEvent> = (
+  editor: Editor,
+  detail: EditorEventDetails[E],
+) => void;
 
 /**
  * Настройки встроенных плагинов (типизированы — подсказки в редакторе кода) и любых сторонних по имени.
@@ -201,8 +230,6 @@ export interface BlockFormat {
   block: 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'pre';
 }
 
-type Listener = (editor: Editor) => void;
-
 /** Теги, которые insertContent вставляет отдельными блоками. */
 const INSERT_BLOCK_TAGS = new Set(
   'P H1 H2 H3 H4 H5 H6 UL OL TABLE BLOCKQUOTE PRE HR DIV FIGURE'.split(' '),
@@ -220,7 +247,7 @@ export class Editor {
   readonly root: HTMLElement;
   readonly ui: UiManager;
   readonly options: Readonly<EditorOptions>;
-  private readonly listeners = new Map<EditorEvent, Set<Listener>>();
+  private readonly listeners = new Map<EditorEvent, Set<EditorListener>>();
   /** Выполняется, когда загружены и подключены все ленивые плагины. */
   readonly ready: Promise<void>;
   private toolbar: ToolbarHandle | null;
@@ -394,8 +421,12 @@ export class Editor {
         image: (node, view, getPos) => new ImageView(node, view, getPos, this),
       },
       handleDOMEvents: {
-        focus: () => (this.emit('focus'), false),
-        blur: () => (this.emit('blur'), false),
+        focus: (_view, event) => (this.emit('focus', { event }), false),
+        blur: (_view, event) => (this.emit('blur', { event }), false),
+      },
+      handleKeyDown: (_view, event) => {
+        this.emit('keydown', { event });
+        return event.defaultPrevented;
       },
     });
     this.root.classList.toggle('nova-readonly', !this.editable);
@@ -447,7 +478,9 @@ export class Editor {
       contentCss,
       // Очистка вставки из Office — отдельный чанк, грузится в фоне (см. paste.ts).
       loadPasteCleaner(),
-    ]).then(() => undefined);
+    ]).then(() => {
+      if (!this.destroyed) this.emit('init');
+    });
   }
 
   /** contentStyle сразу, contentCss — по мере загрузки. Каждый редактор — своя область. */
@@ -615,8 +648,14 @@ export class Editor {
     this.statusbar?.update(tr.docChanged);
     this.searchBar?.update();
     this.updatePlaceholder();
-    if (tr.docChanged) this.emit('change');
-    if (tr.selectionSet || tr.docChanged) this.emit('selectionChange');
+    if (tr.docChanged) {
+      this.emit('change', { transaction: tr });
+      const programmatic = tr.getMeta(API_CHANGE_META) || tr.getMeta(REMOTE_CHANGE_META);
+      if (!programmatic && tr.getMeta('addToHistory') !== false) {
+        this.emit('input', { transaction: tr });
+      }
+    }
+    if (tr.selectionSet || tr.docChanged) this.emit('selectionChange', { transaction: tr });
   }
 
   private updatePlaceholder(): void {
@@ -645,10 +684,14 @@ export class Editor {
 
   /** Заменить содержимое. По умолчанию попадает в историю undo. */
   setContent(content: string | Record<string, unknown>, { addToHistory = true } = {}): void {
-    const doc = parseContent(this.schema, content);
+    const detail = { content };
+    this.emit('beforeSetContent', detail);
+    const doc = parseContent(this.schema, detail.content);
     const tr = this.view.state.tr.replaceWith(0, this.view.state.doc.content.size, doc.content);
+    tr.setMeta(API_CHANGE_META, true);
     if (!addToHistory) tr.setMeta('addToHistory', false);
     this.view.dispatch(tr);
+    this.emit('setContent', { content: detail.content });
   }
 
   /**
@@ -686,7 +729,7 @@ export class Editor {
       hasTable && tableDepth
         ? state.tr.insert($from.after(tableDepth), slice.content)
         : state.tr.replaceSelection(slice);
-    this.view.dispatch(tr.scrollIntoView());
+    this.view.dispatch(tr.setMeta(API_CHANGE_META, true).scrollIntoView());
     return true;
   }
 
@@ -725,6 +768,14 @@ export class Editor {
   /** Активна ли именованная команда в текущем выделении (для своих кнопок тулбара). */
   isActive(command: CommandName): boolean {
     return isCommandActive(this.view.state, command);
+  }
+
+  /**
+   * Состояние именованной команды для своего тулбара: активна ли (подсветка кнопки) и доступна ли
+   * сейчас. Аналог queryCommandState / queryCommandEnabled.
+   */
+  getCommandState(command: CommandName): { active: boolean; enabled: boolean } {
+    return { active: this.isActive(command), enabled: this.isEditable() && this.can(command) };
   }
 
   focus(): void {
@@ -794,19 +845,29 @@ export class Editor {
 
   // ---------- события ----------
 
-  on(event: EditorEvent, listener: Listener): () => void {
+  on<E extends EditorEvent>(event: E, listener: EditorListener<E>): () => void {
     let set = this.listeners.get(event);
     if (!set) this.listeners.set(event, (set = new Set()));
-    set.add(listener);
+    set.add(listener as EditorListener);
     return () => this.off(event, listener);
   }
 
-  off(event: EditorEvent, listener: Listener): void {
-    this.listeners.get(event)?.delete(listener);
+  off<E extends EditorEvent>(event: E, listener: EditorListener<E>): void {
+    this.listeners.get(event)?.delete(listener as EditorListener);
   }
 
-  private emit(event: EditorEvent): void {
-    for (const listener of this.listeners.get(event) ?? []) listener(this);
+  private emit<E extends EditorEvent>(
+    event: E,
+    ...[detail]: EditorEventDetails[E] extends undefined ? [] : [EditorEventDetails[E]]
+  ): void {
+    for (const listener of this.listeners.get(event) ?? []) {
+      // Ошибка в обработчике клиента не должна ломать редактор и остальных подписчиков.
+      try {
+        (listener as EditorListener<E>)(this, detail as EditorEventDetails[E]);
+      } catch (error) {
+        reportPluginError(`Listener for "${event}" failed`, error);
+      }
+    }
   }
 
   destroy(): void {

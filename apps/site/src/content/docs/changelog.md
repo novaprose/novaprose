@@ -11,6 +11,17 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Events
+
+- New events: `init` (editor ready), `input` (the user changed the document — not `setContent()`,
+  `insertContent()` or a collaborator), `beforeSetContent` (can replace the content), `setContent`
+  and `keydown` (`preventDefault()` stops the editor from handling the key, e.g. Ctrl+Enter to send).
+- Listeners get details as a second argument: `{ transaction }`, `{ event }`, `{ content }`.
+  Existing one-argument listeners keep working. An exception in a listener no longer breaks the
+  editor or other listeners.
+- `editor.getCommandState(name)` returns `{ active, enabled }` for custom toolbars.
+- `@novaprose/collab` marks collaborators' changes with `REMOTE_CHANGE_META`.
+
 ### Localization
 
 - Language packs for German, Spanish, French, Italian and Portuguese (Brazil):
