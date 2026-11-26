@@ -55,7 +55,7 @@ export const t = {
       {
         icon: 'history',
         title: 'Version history',
-        text: 'Compare any two versions word by word and restore one. Restoring is a normal edit, so Ctrl+Z brings the text back.',
+        text: 'See what changed since any saved version, word by word, and restore it. Restoring is a normal edit, so Ctrl+Z brings the text back.',
       },
       {
         icon: 'file',
@@ -110,7 +110,7 @@ export const t = {
   },
   quality: {
     title: 'Measured, not promised',
-    lead: 'Measured on a developer laptop and checked in CI on every change. If one gets worse, the build fails.',
+    lead: 'Measured on a developer laptop. CI measures again on every change and fails the build when a number crosses its limit.',
     items: [
       { value: '5 ms', label: 'per keystroke in a 100-page document' },
       { value: '139 KB', label: 'gzip first load, ProseMirror included' },
