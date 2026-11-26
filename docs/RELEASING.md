@@ -5,13 +5,17 @@
 
 ## Чек-лист релиза
 
-1. Версия в `packages/*/package.json` (одинаковая у всех) и раздел в `CHANGELOG.md`.
+1. Версия в `packages/*/package.json` (одинаковая у всех) и раздел в `CHANGELOG.md`. Новый минор —
+   ещё и примеры: `@novaprose/*` в `examples/*/package.json` (`^X.Y.0`) и ссылки CDN (`@X.Y`) в
+   `examples/cdn`, README веб-компонента и `getting-started.md`.
 2. `pnpm check` и `pnpm e2e` зелёные.
 3. `pnpm release:pack` — собирает всё и кладёт архивы в `.release/`; падает, если версии
    разошлись, остался `workspace:` или пакет помечен `private`.
-4. Проверка архивов в чистом проекте (как в 0.1.0): установка из `.release/*.tgz`, импорт ESM/CJS в
-   Node, `tsc` с `moduleResolution: bundler` и `node16`, сборка Vite (React, Vue, веб-компонент) и
-   AOT-сборка Angular (`ng build`) с запуском в браузере.
+4. `pnpm verify:examples --strict` — примеры из `examples/` ставятся из `.release/*.tgz` в чистые
+   папки: сборка Vite с проверкой типов (React 19, Vue + vue-tsc) и запуск в Chromium, CDN-файл
+   веб-компонента в форме, отрисовка на сервере в Node (ESM и CJS). `--strict` — версии в примерах
+   совпадают с выпускаемой. Типы ESM/CJS (`node16`, `bundler`) проверяет `pnpm check:packages`.
+   Вручную пока остаётся AOT-сборка Angular (`ng build`).
 5. Публикация (см. ниже), затем тег `vX.Y.Z` в git.
 
 ## Первая публикация (один раз, вручную)

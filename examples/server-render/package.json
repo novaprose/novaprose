@@ -1,0 +1,12 @@
+{
+  "name": "novaprose-example-server-render",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node render.js"
+  },
+  "dependencies": {
+    "@novaprose/core": "^0.8.0"
+  }
+}

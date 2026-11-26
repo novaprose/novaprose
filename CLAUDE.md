@@ -54,6 +54,8 @@ apps/playground     Vite-песочница (по исходникам). ?lang=e
 apps/site           сайт novaprose.com (Astro + Starlight, английский). Страницы фреймворков и changelog
                     генерируются из README/CHANGELOG: правьте источник и запускайте sync-docs
 e2e/                Playwright: Chromium, Firefox, WebKit, мобильный Chrome
+examples/           примеры для StackBlitz (react, vue, cdn, server-render) — вне workspace, на npm-версии;
+                    они же — чистые проекты проверки архивов: pnpm verify:examples (CI и релиз)
 docs/               RELEASING.md — как выпускать релизы (публичное)
 test/setup.ts       заглушки jsdom для юнит-тестов
 ```
@@ -84,6 +86,7 @@ pnpm test:deep [N]  # property-based тесты на N случайных док
 pnpm size           # бюджет размера в gzip (нужна сборка); падает при превышении
 pnpm check:packages # publint + типы ESM/CJS в архивах .release/ (нужен release:pack)
 pnpm verify:release # сборка + архивы + size + check:packages — то же, что CI и релиз
+pnpm verify:examples # примеры из архивов .release/: сборка Vite, запуск в Chromium, Node (--strict в релизе)
 ```
 
 CI (`.github/workflows`): ci.yml — check с покрытием, сборка/размер/пакеты, e2e во всех браузерах + a11y;

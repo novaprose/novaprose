@@ -135,6 +135,7 @@ http://localhost:5173/element.html.
 | `packages/tinymce-compat` | `@novaprose/tinymce-compat` — перенос настроек `tinymce.init()`        |
 | `apps/sync-server`        | сервер синхронизации (Docker)                                          |
 | `apps/site`               | сайт novaprose.com                                                     |
+| `examples`                | примеры (React, Vue, CDN, сервер); перед релизом — `verify:examples`   |
 | `docs/RELEASING.md`       | как выпускаются релизы                                                 |
 
 ## Лицензия

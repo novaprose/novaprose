@@ -54,6 +54,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # Сборка + архивы как для npm, бюджет размера (gzip), publint + проверка типов ESM/CJS.
       - run: pnpm verify:release
+      # Примеры (examples/) из этих архивов: сборка Vite (React, Vue), CDN-файл, Node; проверка в Chromium.
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify:examples
       - name: Размер в сводку прогона
         if: always()
         run: |

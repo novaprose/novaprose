@@ -40,6 +40,9 @@ jobs:
       - run: pnpm check
       # Сборка, архивы, бюджет размера, publint + типы ESM/CJS — до публикации, а не после.
       - run: pnpm verify:release
+      # Примеры — из этих же архивов, их версии и ссылки CDN — на выпускаемый минор.
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm verify:examples --strict
 
       - name: Publish to npm (core first)
         run: |

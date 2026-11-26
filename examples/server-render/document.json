@@ -1,0 +1,59 @@
+{
+  "type": "doc",
+  "content": [
+    {
+      "type": "heading",
+      "attrs": { "level": 2 },
+      "content": [{ "type": "text", "text": "Release notes" }]
+    },
+    {
+      "type": "paragraph",
+      "content": [
+        { "type": "text", "text": "Thanks to " },
+        { "type": "mention", "attrs": { "id": "u42", "name": "Anna" } },
+        { "type": "text", "text": " for the " },
+        {
+          "type": "text",
+          "marks": [{ "type": "link", "attrs": { "href": "https://novaprose.com" } }],
+          "text": "new docs"
+        },
+        { "type": "text", "text": ". Energy: " },
+        { "type": "math_inline", "attrs": { "latex": "E=mc^2" } },
+        { "type": "text", "text": "." }
+      ]
+    },
+    {
+      "type": "bullet_list",
+      "content": [
+        {
+          "type": "list_item",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                { "type": "text", "marks": [{ "type": "bold" }], "text": "Faster" },
+                { "type": "text", "text": " first load" }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "list_item",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                { "type": "text", "text": "Unsafe links are dropped: " },
+                {
+                  "type": "text",
+                  "marks": [{ "type": "link", "attrs": { "href": "javascript:alert(1)" } }],
+                  "text": "click me"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

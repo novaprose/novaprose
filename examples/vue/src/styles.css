@@ -1,0 +1,45 @@
+body {
+  margin: 0;
+  font:
+    16px/1.5 system-ui,
+    sans-serif;
+}
+
+main {
+  max-width: 820px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+pre {
+  white-space: pre-wrap;
+  font-size: 13px;
+  background: #f6f8fa;
+  padding: 12px;
+  border-radius: 6px;
+}
+
+.callout {
+  position: relative;
+  margin: 12px 0;
+  padding: 8px 12px;
+  border-left: 4px solid #0969da;
+  border-radius: 6px;
+  background: #ddf4ff;
+}
+
+.callout[data-tone='warning'] {
+  border-color: #9a6700;
+  background: #fff8c5;
+}
+
+.callout[data-tone='success'] {
+  border-color: #1a7f37;
+  background: #dafbe1;
+}
+
+.callout-bar {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+}

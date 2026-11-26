@@ -22,3 +22,6 @@ apps/sync-server/data/
 # Граф знаний graphify — локальный инструмент, пересобирается командой /graphify
 graphify-out/
 i18n-template.json
+
+# Примеры ставятся заново (StackBlitz, проверка перед релизом) — без своих lock-файлов.
+examples/*/package-lock.json

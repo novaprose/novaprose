@@ -25,6 +25,7 @@
     "size": "node scripts/size.mjs",
     "check:packages": "node scripts/check-packages.mjs",
     "verify:release": "pnpm release:pack && pnpm size && pnpm check:packages",
+    "verify:examples": "node scripts/verify-examples.mjs",
     "icons": "node scripts/icons.mjs && prettier --write packages/core/src/ui/icons.ts apps/site/src/components/site/icons.ts"
   },
   "devDependencies": {

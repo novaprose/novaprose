@@ -6,10 +6,21 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    // Скрипты репозитория выполняются в Node.
-    files: ['scripts/**/*.mjs', 'packages/*/scripts/**/*.mjs', 'apps/*/scripts/**/*.mjs'],
+    // Скрипты репозитория и пример отрисовки на сервере выполняются в Node.
+    files: [
+      'scripts/**/*.mjs',
+      'packages/*/scripts/**/*.mjs',
+      'apps/*/scripts/**/*.mjs',
+      'examples/server-render/**/*.js',
+    ],
     languageOptions: {
-      globals: { process: 'readonly', console: 'readonly', URL: 'readonly' },
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        URL: 'readonly',
+        fetch: 'readonly',
+        setTimeout: 'readonly',
+      },
     },
   },
   {
