@@ -139,6 +139,18 @@ public API and stay stable across minor versions.
 Importing the package never touches `window` or `document`, so it is safe in SSR bundles. Create
 the editor only in the browser.
 
+To show a saved document without an editor — in an email, a preview or a server-rendered page —
+turn its JSON into HTML on the server, with no DOM. The output is the same as `getHTML()` in an
+editor with the same options:
+
+```ts
+import { createRenderer } from '@novaprose/core';
+
+const renderer = createRenderer({ plugins: ['mentions', 'math'] }); // the editor's options
+renderer.html(savedJson); // same as editor.getHTML()
+renderer.text(savedJson); // same as editor.getText()
+```
+
 ## License
 
 MIT

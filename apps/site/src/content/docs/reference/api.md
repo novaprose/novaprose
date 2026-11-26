@@ -16,6 +16,20 @@ packages wrap the same object.
 | `isEmpty(): boolean`                    | `true` when the document has no content                                                    |
 | `setContent(content, { addToHistory })` | replace the document with HTML or JSON; `addToHistory: false` keeps it out of undo history |
 
+## Documents without an editor
+
+Turn a saved JSON document into the same HTML as `getHTML()` without an editor or a DOM: on a
+server, in a worker, at build time. See [Rendering on the server](/guides/server-rendering/).
+
+```ts
+import { createRenderer, renderHTML } from '@novaprose/core';
+```
+
+| Function                    | Description                                                                                           |
+| --------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `createRenderer(options)`   | `{ html(json), text(json), doc(json), schema }` for the editor's options; reuse it for many documents |
+| `renderHTML(json, options)` | HTML of one document                                                                                  |
+
 ## Commands
 
 | Method                       | Description                                               |

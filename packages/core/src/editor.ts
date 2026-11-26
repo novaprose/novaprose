@@ -2,7 +2,7 @@ import type { AccordionOptions } from './plugins/accordion';
 import type { TableOfContentsOptions } from './plugins/tableofcontents';
 import type { AutosaveOptions } from './plugins/autosave';
 import type { CodeSampleOptions } from './plugins/codesample';
-import { Formatter, formatClasses, type FormatSpec, type StyleFormat } from './formats';
+import { Formatter, type FormatSpec, type StyleFormat } from './formats';
 import { attachCss, loadCss, scopeCss } from './content-css';
 import type { FilePicker, FilePickType } from './ui/file-picker';
 import type { CommentsOptions } from './plugins/comments';
@@ -14,7 +14,7 @@ import { dropCursor } from 'prosemirror-dropcursor';
 import { gapCursor } from 'prosemirror-gapcursor';
 import { history } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
-import { Node as PMNode, Slice, type MarkSpec, type NodeSpec } from 'prosemirror-model';
+import { Node as PMNode, Slice } from 'prosemirror-model';
 import { EditorState, type Command, type Plugin, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { commands, isCommandActive, type CommandName } from './commands';
@@ -26,12 +26,7 @@ import { openLinkDialog } from './link';
 import { loadPasteCleaner, pastePlugin, type PasteOptions } from './paste';
 import { loadTables } from './tables';
 import { activeElement } from './ui/dom';
-
-/** Языки, которые пишут справа налево (по основной части кода: ar-EG → ar). */
-const RTL_LANGUAGES = new Set(['ar', 'he', 'iw', 'fa', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb']);
-function isRtlLanguage(language: string | undefined): boolean {
-  return !!language && RTL_LANGUAGES.has(language.toLowerCase().split(/[-_]/)[0]!);
-}
+import { htmlSerializer, isRtlLanguage, sanitizeJSON, schemaFromOptions } from './document';
 import { keepPluginViews, reconfigurePlugins } from './plugin-views';
 import { parserFor } from './parser';
 import {
@@ -43,7 +38,6 @@ import {
 } from './ui/menubar';
 import { registerMenuItems } from './ui/menu-items';
 import { ContentRules, contentRulesPlugin, type ContentRulesOptions } from './content-rules';
-import { htmlRulesFor, type HtmlRulesInstance } from './html-rules-api';
 import {
   loadPlugin,
   orderPlugins,
@@ -54,8 +48,7 @@ import {
 import { searchPlugin } from './search';
 import { createSearchBar, type SearchBarHandle } from './ui/search-bar';
 import { openHelp, toggleFullscreen } from './ui/views';
-import { createSchema, type ClassFilter, type NovaSchema } from './schema';
-import { HTMLSerializer } from './serializer';
+import type { NovaSchema } from './schema';
 import { registerBuiltins, type FontOption } from './ui/builtins';
 import { linkBubblePlugin } from './ui/link-bubble';
 import { contextToolbarPlugin, focusContextToolbar } from './ui/context-toolbar';
@@ -71,8 +64,6 @@ import {
   type ToolbarHandle,
   type ToolbarMode,
 } from './ui/toolbar';
-
-const htmlSerializer = new HTMLSerializer();
 
 export type EditorMode = 'classic' | 'inline' | 'distraction-free';
 
@@ -387,26 +378,15 @@ export class Editor {
       options.invalidElements !== undefined ||
       options.validStyles !== undefined;
     this.contentRules = hasRules ? new ContentRules(options) : null;
-    // Классы, которые схема сохраняет при разборе: из форматов, стилей и validClasses.
-    // Набор живой — formatter.register() в setup тоже пополняет его.
-    const allowedClasses = new Set([
-      ...formatClasses(Object.values(options.formats ?? {}).flat()),
-      ...formatClasses(options.styleFormats ?? []),
-      ...(Array.isArray(options.validClasses) ? options.validClasses : []),
-      ...[...(options.tableClassList ?? []), ...(options.tableCellClassList ?? [])].flatMap((o) =>
-        o.value.split(/\s+/).filter(Boolean),
-      ),
-    ]);
-    const htmlRules = htmlRulesFor(options);
-    // `p[class]` в правилах без validClasses — классы сохраняются (как у TinyMCE по умолчанию).
-    const allClasses =
-      options.validClasses === true ||
-      (options.validClasses === undefined && !!htmlRules?.classOnBuiltIn);
-    this.schema = this.buildSchema(
+    // Та же схема, что у createRenderer() на сервере: HTML редактора и сервера совпадает.
+    // Набор классов живой — formatter.register() в setup тоже пополняет его.
+    const { schema, allowedClasses } = schemaFromOptions(
+      options,
       syncPlugins,
-      allClasses ? () => true : (name) => allowedClasses.has(name),
-      htmlRules,
+      this.direction,
+      this,
     );
+    this.schema = schema;
     this.formatter = new Formatter(this, allowedClasses);
     for (const [name, spec] of Object.entries(options.formats ?? {}))
       this.formatter.register(name, spec);
@@ -589,37 +569,6 @@ export class Editor {
 
   hasPlugin(name: string): boolean {
     return this.pluginsByName.has(name);
-  }
-
-  /**
-   * Схема с узлами и марками плагинов. Конфликт имён — ошибка конфигурации: сообщаем и работаем
-   * на базовой схеме, чтобы редактор всё равно открылся.
-   */
-  private buildSchema(
-    plugins: NovaPlugin[],
-    classFilter: ClassFilter,
-    htmlRules: HtmlRulesInstance | null,
-  ): NovaSchema {
-    const nodes: Record<string, NodeSpec> = {};
-    const marks: Record<string, MarkSpec> = {};
-    for (const plugin of plugins) {
-      // Узлы могут зависеть от настроек плагина (например, имя атрибута переменной).
-      const pluginNodes = typeof plugin.nodes === 'function' ? plugin.nodes(this) : plugin.nodes;
-      for (const [name, spec] of Object.entries(pluginNodes ?? {})) {
-        if (name in nodes) reportPluginError(`Node "${name}" is defined by several plugins`);
-        else nodes[name] = spec;
-      }
-      for (const [name, spec] of Object.entries(plugin.marks ?? {})) {
-        if (name in marks) reportPluginError(`Mark "${name}" is defined by several plugins`);
-        else marks[name] = spec;
-      }
-    }
-    try {
-      return createSchema({ nodes, marks }, classFilter, htmlRules, this.direction);
-    } catch (error) {
-      reportPluginError('Failed to build the document schema from plugins', error);
-      return createSchema({}, classFilter, htmlRules, this.direction);
-    }
   }
 
   private collectPmPlugins(plugin: NovaPlugin): Plugin[] {
@@ -963,59 +912,6 @@ export class Editor {
 
 function reportPluginError(message: string, error?: unknown): void {
   console.error(`[nova] ${message}`, ...(error === undefined ? [] : [error]));
-}
-
-type AttrSpecs = Record<string, { validate?: string | ((value: unknown) => void) }>;
-
-/** Проходит ли значение проверку `validate` атрибута схемы ("number", "string|null", функция). */
-function attrValid(spec: AttrSpecs[string] | undefined, value: unknown): boolean {
-  const validate = spec?.validate;
-  if (!validate) return true;
-  if (typeof validate === 'function') {
-    try {
-      validate(value);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-  const type = value === null ? 'null' : typeof value;
-  return validate.split('|').includes(type);
-}
-
-function sanitizeAttrs(specs: AttrSpecs | undefined, attrs: unknown): unknown {
-  if (!attrs || typeof attrs !== 'object' || !specs) return attrs;
-  // Значение не того типа заменяем значением по умолчанию (просто убираем — подставит схема).
-  return Object.fromEntries(
-    Object.entries(attrs).filter(([name, value]) => attrValid(specs[name], value)),
-  );
-}
-
-/**
- * Документ из JSON (БД, API, старые версии) мог сохраниться с атрибутами не того типа:
- * `colspan: null` и т.п. ProseMirror в таком случае отвергает ВЕСЬ документ — пользователь не
- * открыл бы его из-за одной ячейки. Здесь неверные значения атрибутов заменяются умолчаниями.
- */
-function sanitizeJSON(schema: NovaSchema, json: Record<string, unknown>): Record<string, unknown> {
-  const type = schema.nodes[json.type as string];
-  const out: Record<string, unknown> = { ...json };
-  if (type) out.attrs = sanitizeAttrs(type.spec.attrs as AttrSpecs, json.attrs);
-  if (Array.isArray(json.marks)) {
-    out.marks = json.marks.map((mark: Record<string, unknown>) => {
-      const markType = mark && schema.marks[mark.type as string];
-      return markType
-        ? { ...mark, attrs: sanitizeAttrs(markType.spec.attrs as AttrSpecs, mark.attrs) }
-        : mark;
-    });
-  }
-  if (Array.isArray(json.content)) {
-    out.content = json.content.map((child: unknown) =>
-      child && typeof child === 'object'
-        ? sanitizeJSON(schema, child as Record<string, unknown>)
-        : child,
-    );
-  }
-  return out;
 }
 
 export function parseContent(

@@ -4,7 +4,8 @@
  * которые должны выполняться для ЛЮБОГО входа:
  *  1. на выходе getHTML() нет способа выполнить скрипт (обработчики on*, опасные теги, URL);
  *  2. HTML стабилен: getHTML → setContent → getHTML даёт то же самое (идемпотентность);
- *  3. редактор не падает ни на каком входе.
+ *  3. редактор не падает ни на каком входе;
+ *  4. HTML на сервере (createRenderer из JSON) совпадает с getHTML() редактора.
  * Оракул безопасности независим от кода редактора: он не вызывает isSafeLinkUrl,
  * а сам разбирает выход как браузер.
  *
@@ -13,7 +14,7 @@
  */
 import fc from 'fast-check';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createEditor, registerHtmlRules, type Editor } from '../src';
+import { createEditor, createRenderer, registerHtmlRules, type Editor } from '../src';
 import { htmlRules } from '../src/html-rules';
 
 registerHtmlRules(htmlRules);
@@ -368,6 +369,17 @@ describe('безопасность и стабильность HTML (property-ba
     );
   });
 
+  it('HTML на сервере из JSON совпадает с getHTML() редактора', () => {
+    const renderer = createRenderer({ plugins: SCHEMA_PLUGINS });
+    fc.assert(
+      fc.property(htmlDocument, (input) => {
+        editor.setContent(input, { addToHistory: false });
+        expect(renderer.html(editor.getJSON()), `вход: ${input}`).toBe(editor.getHTML());
+      }),
+      { numRuns: RUNS },
+    );
+  });
+
   it('JSON-документ с опасными атрибутами не даёт XSS на выходе', () => {
     // Все атрибуты всех узлов и марок схемы (лишние ProseMirror игнорирует). Значения — в т.ч.
     // не того типа: JSON приходит снаружи (БД, API), его никто не обязан проверять до нас.
@@ -542,6 +554,20 @@ describe('правила элементов и атрибутов не откр�
         const first = ruled.getHTML();
         ruled.setContent(first, { addToHistory: false });
         expect(ruled.getHTML(), `вход: ${input}`).toBe(first);
+      }),
+      { numRuns: RUNS },
+    );
+  });
+
+  it('HTML на сервере совпадает с getHTML() и при правилах «разрешить всё»', () => {
+    const warn = console.warn;
+    console.warn = () => {};
+    const renderer = createRenderer({ plugins: SCHEMA_PLUGINS, ...PERMISSIVE });
+    console.warn = warn;
+    fc.assert(
+      fc.property(htmlDocument, (input) => {
+        ruled.setContent(input, { addToHistory: false });
+        expect(renderer.html(ruled.getJSON()), `вход: ${input}`).toBe(ruled.getHTML());
       }),
       { numRuns: RUNS },
     );

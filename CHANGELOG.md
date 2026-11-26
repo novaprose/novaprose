@@ -63,14 +63,26 @@ All packages in this repository are versioned together. The format follows
   `rows` — they used to be one line high. New `code: true` for code: monospace, no spell check.
 - Context toolbars accept `placement: 'top-end' | 'bottom-end'` or a function of the editor.
 
+### API
+
+- Rendering on the server: `createRenderer(options).html(json)` and `renderHTML(json, options)`
+  turn a saved JSON document into the same HTML as `getHTML()` (and `text(json)` into the same
+  text as `getText()`) without an editor or a DOM — in Node, workers and build steps. They take the
+  editor's options that shape the HTML: plugins and their settings, formats and classes, content
+  restrictions, direction. The output is checked against `getHTML()` on thousands of random
+  documents.
+
 ### Plugins API
 
 - The plugins `anchor`, `media`, `pagebreak`, `mentions`, `mergetags` and `suggestions` keep only
   their nodes, marks and rendering in the first load; their buttons, dialogs and lists are a lazy part
   that registers right after creation. **Changed:** like other lazy plugins, their buttons exist after
   `await editor.ready`. Collapsible sections (`accordion`) now render from the first frame.
-- `NovaPlugin.load`: a plugin with nodes keeps only its nodes in the first load and names the rest
-  (buttons, commands, node views) as a lazy module, loaded after the editor is created.
+- `NovaPlugin.load`: a plugin with nodes keeps only its nodes and their rendering in the first load
+  and names the rest (buttons, dialogs, commands, keys) as a lazy module, loaded after the editor
+  is created.
+- A plugin whose `nodes` function throws is reported and left without its nodes; the editor still
+  opens.
 
 ### Distribution
 

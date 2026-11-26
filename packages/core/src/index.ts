@@ -12,6 +12,12 @@ export {
   type BlockFormat,
   type ClassOption,
 } from './editor';
+export {
+  createRenderer,
+  renderHTML,
+  type DocumentOptions,
+  type DocumentRenderer,
+} from './document';
 export { DEFAULT_MENUS, DEFAULT_MENUBAR, type MenuDefinition } from './ui/menubar';
 export type { FilePicker, FilePickResult, FilePickType } from './ui/file-picker';
 export {
