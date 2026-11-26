@@ -1,0 +1,33 @@
+/* Помощник ИИ (плагин ai): свой запрос, быстрые действия, ответ по мере написания. */
+.nova-ai {
+  display: grid;
+  gap: 12px;
+}
+
+.nova-ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nova-ai-action {
+  font-size: 13px;
+}
+
+.nova-ai-preview {
+  display: block;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px 10px;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-surface);
+  color: var(--nova-fg);
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.nova-ai-preview[hidden] {
+  display: none;
+}

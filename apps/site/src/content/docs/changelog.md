@@ -13,6 +13,23 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- AI assistant (`plugins: ['suggestions', 'ai']`, buttons `aidialog` and `aishortcuts`, as in
+  TinyMCE): select text and pick **Improve writing**, **Fix spelling and grammar**, **Make
+  shorter**, **Make longer**, **Simplify**, a formal or friendly tone, **Summarize**, or type your
+  own request; with nothing selected, **Continue writing** or your request writes at the cursor.
+  The answer arrives as suggested edits from “AI”: the rewrite is compared word by word, so only
+  changed words are marked, kept words keep their formatting, and each change is accepted or
+  rejected like a colleague's. The model is yours: `pluginOptions.ai.request` sends the request
+  (instruction, selected text, the text around it) through your server and returns the answer as
+  text or as a stream shown while it is written; closing the dialog cancels it. The answer is
+  inserted as text, never HTML. Guide with a server example:
+  [AI assistant](https://novaprose.com/guides/ai-assistant/).
+- **Fixed:** in suggesting mode, rejecting the text of a new paragraph left an empty line, and so
+  did accepting the deletion of a paragraph's whole text — the paragraph now goes with it (unless
+  it is the only one where a paragraph is required, such as a table cell).
+- **Fixed:** the colors of suggestion authors and of deleted text did not reach the 4.5:1 contrast
+  required for text on a white background; the palette is darker, and deleted text is no longer
+  faded.
 - Word documents: `plugins: ['importword', 'exportword']` open a `.docx` and save the document as
   `.docx` (buttons and File menu items, as in TinyMCE) — in the browser, with no conversion
   service. Headings, formatting, links and bookmarks, real Word lists, tables with merged cells,

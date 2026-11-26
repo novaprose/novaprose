@@ -3,6 +3,7 @@ import type { TableOfContentsOptions } from './plugins/tableofcontents';
 import type { PageLayoutOptions } from './plugins/pagelayout';
 import type { ExportWordOptions } from './plugins/exportword';
 import type { ImportWordOptions } from './plugins/importword';
+import type { AiOptions } from './plugins/ai';
 import type { AutosaveOptions } from './plugins/autosave';
 import type { CodeSampleOptions } from './plugins/codesample';
 import { Formatter, type FormatSpec, type StyleFormat } from './formats';
@@ -120,6 +121,7 @@ export interface PluginOptions {
   pagelayout?: PageLayoutOptions;
   exportword?: ExportWordOptions;
   importword?: ImportWordOptions;
+  ai?: AiOptions;
   [plugin: string]: unknown;
 }
 

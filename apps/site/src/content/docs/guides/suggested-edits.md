@@ -55,6 +55,10 @@ const final = suggestionsResult(editor, 'accept'); // document as if all were ac
 ## What is tracked
 
 Inserting and deleting text (typing, pasting, cutting) becomes a suggestion. Structural changes —
-new paragraphs, lists, formatting — are applied directly even in suggesting mode.
+new paragraphs, lists, formatting — are applied directly even in suggesting mode. A paragraph whose
+whole text was a suggestion goes with it: reject a new paragraph's text, or accept the deletion of
+a paragraph's text, and no empty line is left.
+
+The [AI assistant](/guides/ai-assistant/) makes its changes as suggestions too.
 
 [Try it in the live demo](/demo/collaboration/).

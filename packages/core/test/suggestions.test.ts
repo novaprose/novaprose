@@ -198,4 +198,39 @@ describe('режим правок', () => {
     );
     expect(editor.getHTML()).not.toContain('title');
   });
+
+  it('отклонили текст нового абзаца — пустой строки не остаётся (Enter напрямую, текст — правка)', () => {
+    const editor = mount('<p>One</p><p>Two</p>');
+    cursor(editor, 4);
+    editor.view.dispatch(editor.view.state.tr.split(4));
+    type(editor, 'New');
+    expect(html(editor)).toBe('<p>One</p><p><ins>New</ins></p><p>Two</p>');
+    editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject'));
+    expect(editor.getHTML()).toBe('<p>One</p><p>Two</p>');
+  });
+
+  it('приняли удаление всего текста блока — блок уходит; где он обязателен — остаётся пустым', () => {
+    const editor = mount('<p>One</p><p>Two</p>');
+    editor.view.dispatch(editor.view.state.tr.delete(6, 9));
+    expect(html(editor)).toBe('<p>One</p><p><del>Two</del></p>');
+    editor.view.dispatch(resolveSuggestions(editor.view.state, 'accept'));
+    expect(editor.getHTML()).toBe('<p>One</p>');
+
+    // Пункт списка без текста — целиком.
+    const list = mount('<ul><li><p>A</p></li><li><p>B</p></li></ul>');
+    list.view.dispatch(list.view.state.tr.delete(8, 9));
+    list.view.dispatch(resolveSuggestions(list.view.state, 'accept'));
+    expect(list.getHTML()).toBe('<ul><li><p>A</p></li></ul>');
+
+    // Единственный абзац документа и абзац пункта перед вложенным списком — обязательны.
+    const only = mount('<p>Only</p>');
+    only.view.dispatch(only.view.state.tr.delete(1, 5));
+    only.view.dispatch(resolveSuggestions(only.view.state, 'accept'));
+    expect(only.getHTML()).toBe('<p></p>');
+    const nested = mount('<ul><li><p>A</p><ul><li><p>B</p></li></ul></li></ul>');
+    nested.view.dispatch(nested.view.state.tr.delete(3, 4));
+    nested.view.dispatch(resolveSuggestions(nested.view.state, 'accept'));
+    expect(() => nested.view.state.doc.check()).not.toThrow();
+    expect(nested.getHTML()).toBe('<ul><li><p></p><ul><li><p>B</p></li></ul></li></ul>');
+  });
 });

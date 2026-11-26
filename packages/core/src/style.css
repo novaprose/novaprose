@@ -2089,8 +2089,8 @@ html.nova-fullscreen-lock body {
     var(--nova-suggestion, var(--nova-danger)),
     white var(--nova-suggestion-lift)
   );
+  /* Без прозрачности: зачёркивания достаточно, а полупрозрачный текст не проходит по контрасту. */
   text-decoration: line-through 2px;
-  opacity: 0.85;
 }
 /* В режиме правок курсор цвета правок — заметно, что ввод станет предложением. */
 .nova-prosemirror.nova-suggesting {

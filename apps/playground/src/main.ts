@@ -1,4 +1,5 @@
 import { createEditor, registerLanguage, type Editor } from '@novaprose/core';
+import type { AiRequest } from '../../../packages/core/src/plugins/ai';
 import '@novaprose/core/style.css';
 import './playground.css';
 import ru from '@novaprose/core/i18n/ru';
@@ -36,6 +37,33 @@ const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)
 const output = $('#output');
 const stats = $('#stats');
 let tab: 'html' | 'json' = 'html';
+
+/**
+ * Демо-модель ИИ без сети: предсказуемые правки (их проверяет e2e), ответ — потоком по словам.
+ * В настоящем приложении request идёт на ваш сервер, а тот — к модели (см. гайд «AI assistant»).
+ */
+async function* demoModel(request: AiRequest): AsyncGenerator<string> {
+  const rewrite: Record<string, (text: string) => string> = {
+    shorter: (t) => t.replace(/\b(very|really|just|quite|actually)\s+/gi, ''),
+    fix: (t) => t.replace(/\bteh\b/g, 'the').replace(/ {2,}/g, ' '),
+    improve: (t) => t.replace(/\bgood\b/g, 'excellent'),
+    formal: (t) => t.replace(/\bhi\b/gi, 'Hello'),
+  };
+  const result =
+    request.action === 'continue'
+      ? 'This sentence was written by the demo model.'
+      : request.action === 'summarize'
+        ? 'A short summary from the demo model.'
+        : request.action === 'custom' && !request.text
+          ? // Свой запрос у курсора — длинный ответ (несколько секунд потоком): e2e отменяет его на лету.
+            'Once upon a time, the demo model told a story. '.repeat(40)
+          : (rewrite[request.action] ?? ((t: string) => t))(request.text);
+  for (const word of result.split(/(?<= )/)) {
+    await new Promise((resolve) => setTimeout(resolve, 15));
+    if (request.signal.aborted) return;
+    yield word;
+  }
+}
 
 const editor = createEditor({
   element: $('#editor'),
@@ -126,8 +154,13 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('comments')
       ? ['comments', 'mentions', 'revisionhistory', 'suggestions']
       : []),
+    // ?ai=1 — помощник ИИ с демо-моделью без сети (e2e/ai.spec.ts); правки — предложениями.
+    ...(new URLSearchParams(location.search).has('ai')
+      ? [...(new URLSearchParams(location.search).has('comments') ? [] : ['suggestions']), 'ai']
+      : []),
   ],
   pluginOptions: {
+    ai: { request: demoModel },
     mergetags: {
       list: [
         {

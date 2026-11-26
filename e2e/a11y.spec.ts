@@ -253,6 +253,27 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'формулы');
     });
 
+    test('помощник ИИ: окно с действиями и ответом; правки предложениями', async ({ page }) => {
+      await open(page, theme, '&ai=1');
+      await page.evaluate(() => {
+        const e = window.editor;
+        e.setContent('<p>This is a very good text.</p>');
+      });
+      await page.locator('.nova-prosemirror p').click();
+      await page.keyboard.press('ControlOrMeta+a');
+      await control(page, 'aidialog');
+      await expect(page.locator('.nova-dialog .nova-ai-action').first()).toBeVisible();
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      await audit(page, 'окно помощника ИИ');
+      await page
+        .locator('.nova-ai-action')
+        .filter({ hasText: /короче/i })
+        .click();
+      await expect(page.locator('.nova-dialog')).toBeHidden();
+      await expect(page.locator('.nova-prosemirror del[data-suggestion]')).toBeVisible();
+      await audit(page, 'правки ИИ в тексте');
+    });
+
     test('ручка блока и её меню', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.locator('.nova-prosemirror h2').hover();

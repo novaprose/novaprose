@@ -29,6 +29,7 @@ registerPlugin('autoresize', () => import('./autoresize'));
 registerPlugin('visualblocks', () => import('./visualblocks'));
 registerPlugin('exportword', () => import('./exportword'));
 registerPlugin('importword', () => import('./importword'));
+registerPlugin('ai', () => import('./ai'));
 
 // Плагины с узлами документа: схема нужна при создании редактора, поэтому они не ленивые.
 registerPlugin('anchor', anchor);

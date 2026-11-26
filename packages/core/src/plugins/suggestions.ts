@@ -82,7 +82,11 @@ export const suggestionsKey = new PluginKey<{ enabled: boolean }>('nova-suggesti
 /** Метка транзакций самого плагина (принять/отклонить, переключить режим) — их не отслеживаем. */
 export const OWN = 'nova-suggestions-own';
 
-const PALETTE = ['#1a7f37', '#8250df', '#bf3989', '#0969da', '#bc4c00', '#1b7c83'];
+/**
+ * Цвета авторов: текст правки этим цветом — контраст не ниже 6:1 и на белом фоне, и на подкрашенном
+ * (вставка), и в тёмной теме (там цвет осветляется на 45%). Было ниже 4.5:1 — нашёл axe.
+ */
+const PALETTE = ['#116329', '#6639ba', '#99286e', '#0550ae', '#953800', '#0e5b5e'];
 
 /** Цвет автора правок — один и тот же у одного человека. */
 function colorFor(key: string): string {
@@ -337,13 +341,44 @@ export function resolveSuggestions(
   const types = typesOf(state.schema);
   const tr = state.tr.setMeta(OWN, true);
   const chosen = listSuggestions(state.doc).filter((s) => !ids || ids.includes(s.id));
+  // Блоки, из которых убран текст (позиция перед блоком).
+  const emptied = new Set<number>();
   // С конца — позиции впереди не сдвигаются.
   for (const s of [...chosen].sort((a, b) => b.from - a.from)) {
     const remove = (s.kind === 'insert') === (action === 'reject');
-    if (remove) tr.delete(s.from, s.to);
-    else tr.removeMark(s.from, s.to, s.kind === 'insert' ? types.insert : types.delete);
+    if (remove) {
+      emptied.add(state.doc.resolve(s.from).before());
+      tr.delete(s.from, s.to);
+    } else tr.removeMark(s.from, s.to, s.kind === 'insert' ? types.insert : types.delete);
   }
+  // Блок, весь текст которого был правкой, уходит вместе с ней: отклонили новый абзац или приняли
+  // удаление всего абзаца — пустой строки не остаётся (сам перенос абзаца правкой не отслеживается).
+  for (const pos of [...emptied].sort((a, b) => b - a)) removeEmptyBlock(tr, tr.mapping.map(pos));
   return tr;
+}
+
+/**
+ * Убрать пустой текстовый блок, если без него содержимое допустимо. Нельзя (единственный абзац
+ * документа или ячейки) — подняться к родителю, который состоит только из этого блока (пункт
+ * списка, цитата); ячейки и прочие изолирующие узлы не трогаем.
+ */
+function removeEmptyBlock(tr: Transaction, pos: number): void {
+  const block = tr.doc.nodeAt(pos);
+  if (!block?.isTextblock || block.content.size > 0) return;
+  const $pos = tr.doc.resolve(pos);
+  let from = pos;
+  let to = pos + block.nodeSize;
+  for (let depth = $pos.depth; ; depth--) {
+    const parent = $pos.node(depth);
+    const index = $pos.index(depth);
+    if (parent.canReplace(index, index + 1)) {
+      tr.delete(from, to);
+      return;
+    }
+    if (depth === 0 || parent.childCount > 1 || parent.type.spec.isolating) return;
+    from = $pos.before(depth);
+    to = $pos.after(depth);
+  }
 }
 
 /** HTML документа без правок: как если принять все (accept) или отклонить все (reject). */

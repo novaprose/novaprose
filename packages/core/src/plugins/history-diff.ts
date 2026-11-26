@@ -60,7 +60,7 @@ function textblocks(doc: PMNode): Block[] {
 }
 
 /** Пары индексов наибольшей общей подпоследовательности (или null — слишком большая таблица). */
-function lcs<T>(a: T[], b: T[], eq: (x: T, y: T) => boolean): [number, number][] | null {
+export function lcs<T>(a: T[], b: T[], eq: (x: T, y: T) => boolean): [number, number][] | null {
   const n = a.length;
   const m = b.length;
   if ((n + 1) * (m + 1) > MAX_CELLS) return null;
@@ -87,7 +87,8 @@ function lcs<T>(a: T[], b: T[], eq: (x: T, y: T) => boolean): [number, number][]
   return pairs;
 }
 
-const tokenize = (text: string) => text.split(/(\s+)/).filter(Boolean);
+/** Слова и пробелы между ними — единицы сравнения. */
+export const tokenize = (text: string) => text.split(/(\s+)/).filter(Boolean);
 
 function addRange(result: DiffResult, from: number, to: number) {
   if (from >= to) return;
