@@ -1,8 +1,30 @@
 import { Slice } from 'prosemirror-model';
 import { Plugin, PluginKey } from 'prosemirror-state';
 import type { Editor } from './editor';
-import { cleanPastedHTML, type PasteStyles } from './paste-office';
+import type * as PasteOffice from './paste-office';
+import type { PasteStyles } from './paste-office';
 import { extractRtfImages, hasLocalFileImages, replaceLocalImages } from './paste-rtf';
+
+/**
+ * Очистка вставки из Office/Google (~11 КБ) — отдельный чанк: нужна только в момент вставки.
+ * Грузится сразу после создания редактора в фоне (и входит в `editor.ready`), так что к первому
+ * Ctrl+V обычно уже готова. Если вставка случилась раньше — её ждёт handleDOMEvents.paste ниже.
+ */
+type PasteCleaner = typeof PasteOffice;
+let cleaner: PasteCleaner | null = null;
+let loading: Promise<PasteCleaner | null> | null = null;
+
+export function loadPasteCleaner(): Promise<PasteCleaner | null> {
+  loading ??= import('./paste-office').then(
+    (module) => (cleaner = module),
+    () => {
+      // Сеть подвела — попробуем при следующей вставке, а пока вставка без очистки Office.
+      loading = null;
+      return null;
+    },
+  );
+  return loading;
+}
 
 /**
  * Обработка вставки:
@@ -92,7 +114,8 @@ export function pastePlugin(editor: Editor): Plugin {
         const { pastePreprocess, pastePostprocess, pasteStyles } = editor.options;
         let result = pastePreprocess ? pastePreprocess(html, editor) : html;
         // Очистка разметки Word, Google Docs, Excel и т.п. (своё копирование внутри редактора не трогаем).
-        result = cleanPastedHTML(result, pasteStyles ?? 'clean');
+        // Схема и санитайзер работают и без неё: безопасность от этого чанка не зависит.
+        if (cleaner) result = cleaner.cleanPastedHTML(result, pasteStyles ?? 'clean');
         if (pastePostprocess) {
           // Разбор в <template> инертен: скрипты не выполняются, картинки не грузятся.
           const template = document.createElement('template');
@@ -103,6 +126,35 @@ export function pastePlugin(editor: Editor): Plugin {
           result = container.innerHTML;
         }
         return result;
+      },
+      handleDOMEvents: {
+        /**
+         * Вставка HTML раньше, чем догрузилась очистка (первые миллисекунды после создания или
+         * медленная сеть): забираем данные буфера сейчас (после события они недоступны), ждём чанк
+         * и вставляем как обычно — через transformPastedHTML уже с очисткой.
+         */
+        paste(view, event) {
+          if (cleaner || reentrant || editor.isPasteAsText()) return false;
+          const data = event.clipboardData;
+          const html = data?.getData('text/html');
+          if (!html) return false;
+          const rtf = hasLocalFileImages(html) ? (data?.getData('text/rtf') ?? '') : '';
+          event.preventDefault();
+          void loadPasteCleaner().then(() => {
+            if (view.isDestroyed) return;
+            const withImages =
+              rtf && editor.isAllowed('image')
+                ? replaceLocalImages(html, extractRtfImages(rtf))
+                : html;
+            reentrant = true;
+            try {
+              view.pasteHTML(withImages);
+            } finally {
+              reentrant = false;
+            }
+          });
+          return true;
+        },
       },
       handlePaste(view, event, slice) {
         if (reentrant) return false;

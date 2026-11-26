@@ -1,7 +1,12 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor } from '../src';
 import { dataUrlToFile } from '../src/image';
+import { loadPasteCleaner } from '../src/paste';
 import { extractRtfImages, replaceLocalImages } from '../src/paste-rtf';
+
+// Очистка Office — ленивый чанк; здесь проверяется её логика, а не момент загрузки
+// (вставка до загрузки — в paste-lazy.test.ts).
+beforeAll(() => loadPasteCleaner());
 
 // 1×1 PNG и заголовок JPEG — для проверки сигнатур достаточно.
 const PNG_BASE64 =

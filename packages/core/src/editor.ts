@@ -20,7 +20,7 @@ import { embeddedImageUploadPlugin, imageDropPastePlugin, type UploadImageHandle
 import { buildInputRules } from './inputrules';
 import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
-import { pastePlugin, type PasteOptions } from './paste';
+import { loadPasteCleaner, pastePlugin, type PasteOptions } from './paste';
 import { tablePlugins } from './table';
 import { parserFor } from './parser';
 import {
@@ -445,6 +445,8 @@ export class Editor {
     this.ready = Promise.all([
       resolved.loaders.length ? this.loadLazyPlugins(resolved.loaders) : undefined,
       contentCss,
+      // Очистка вставки из Office — отдельный чанк, грузится в фоне (см. paste.ts).
+      loadPasteCleaner(),
     ]).then(() => undefined);
   }
 

@@ -11,6 +11,12 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Performance
+
+- Smaller first load: the Word / Google Docs / Excel paste cleanup is now a separate chunk, loaded in
+  the background right after the editor is created (core: 149.9 → 146.4 KB gzip). A paste in the
+  first milliseconds waits for it, so nothing is lost; `await editor.ready` covers it too.
+
 ### Fixes
 
 - Spaces you type are no longer lost on save: leading spaces (indentation), double spaces, a space

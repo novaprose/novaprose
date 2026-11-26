@@ -1,8 +1,13 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createEditor, type Editor } from '../src';
+import { loadPasteCleaner } from '../src/paste';
 import { cleanPastedHTML, detectPasteSource } from '../src/paste-office';
+
+// Очистка Office — ленивый чанк; здесь проверяется её логика, а не момент загрузки
+// (вставка до загрузки — в paste-lazy.test.ts).
+beforeAll(() => loadPasteCleaner());
 
 /**
  * Вставка из офисных приложений. Эталоны — test/fixtures/paste/*.html (буфер обмена приложения) и
