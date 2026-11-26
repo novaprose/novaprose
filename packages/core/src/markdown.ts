@@ -17,6 +17,7 @@ import {
   defaultMarkdownSerializer,
 } from 'prosemirror-markdown';
 import type { Editor } from './editor';
+import { codeLanguage } from './code-language';
 
 export interface MarkdownToHTMLOptions {
   /** Превращать адреса вида https://… в ссылки (по умолчанию true). */
@@ -179,7 +180,8 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
       state.closeBlock(node);
     },
     code_block(state, node) {
-      const language = (node.attrs.language as string | null) ?? '';
+      // Из JSON язык может прийти любым — в строку забора только безопасное имя.
+      const language = codeLanguage(node.attrs.language) ?? '';
       // Забор длиннее любой серии обратных кавычек внутри кода.
       const longest = Math.max(2, ...(node.textContent.match(/`+/g) ?? []).map((s) => s.length));
       const fence = '`'.repeat(longest + 1);

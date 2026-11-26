@@ -15,6 +15,20 @@
 .nova-input[aria-invalid='true'] {
   border-color: var(--nova-danger);
 }
+/* Многострочное поле: высота — по rows (у .nova-input она одна строка). textarea — для специфичности. */
+textarea.nova-textarea {
+  height: auto;
+  padding: 8px 10px;
+  line-height: 1.5;
+  resize: vertical;
+}
+/* Поле для кода (textarea с code: true) */
+textarea.nova-input-code {
+  font-family: var(--nova-mono);
+  font-size: 13px;
+  tab-size: 4;
+  white-space: pre;
+}
 .nova-form-message {
   margin: 0;
   padding: 8px 10px;

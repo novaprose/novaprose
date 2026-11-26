@@ -1,5 +1,7 @@
-import { Slice } from 'prosemirror-model';
+import { Fragment, Slice } from 'prosemirror-model';
 import { Plugin, PluginKey } from 'prosemirror-state';
+import type { EditorView } from 'prosemirror-view';
+import { codeLanguage } from './code-language';
 import type { Editor } from './editor';
 import type * as PasteOffice from './paste-office';
 import type { PasteStyles } from './paste-office';
@@ -136,6 +138,8 @@ export function pastePlugin(editor: Editor): Plugin {
         paste(view, event) {
           if (cleaner || reentrant || editor.isPasteAsText()) return false;
           const data = event.clipboardData;
+          // Из редактора кода — свой путь (handlePaste), очистка Office там не нужна.
+          if (data?.getData(VSCODE_DATA)) return false;
           const html = data?.getData('text/html');
           if (!html) return false;
           const rtf = hasLocalFileImages(html) ? (data?.getData('text/rtf') ?? '') : '';
@@ -158,6 +162,15 @@ export function pastePlugin(editor: Editor): Plugin {
       },
       handlePaste(view, event, slice) {
         if (reentrant) return false;
+        const pasteText = (text: string) => {
+          reentrant = true;
+          try {
+            view.pasteText(text);
+          } finally {
+            reentrant = false;
+          }
+        };
+        if (pasteFromCodeEditor(view, event, editor, pasteText)) return true;
         // Пустая строка (а не только null) — тоже «нет данных»: в Firefox clipboardData
         // синтетического события пустой, но существует.
         const html = event.clipboardData?.getData('text/html');
@@ -183,14 +196,73 @@ export function pastePlugin(editor: Editor): Plugin {
           : event.clipboardData?.getData('text/plain') ||
             slice.content.textBetween(0, slice.content.size, '\n\n');
         if (!text) return false;
-        reentrant = true;
-        try {
-          view.pasteText(text);
-        } finally {
-          reentrant = false;
-        }
+        pasteText(text);
         return true;
       },
     },
   });
+}
+
+/** Метаданные, которые VS Code (и редакторы на его основе) кладёт в буфер обмена вместе с кодом. */
+const VSCODE_DATA = 'vscode-editor-data';
+
+/** Языки VS Code, чьи имена не совпадают с привычными в `language-…`. */
+const VSCODE_LANGUAGES: Record<string, string> = {
+  shellscript: 'bash',
+  typescriptreact: 'tsx',
+  javascriptreact: 'jsx',
+  jsonc: 'json',
+};
+
+/**
+ * Вставка из VS Code: в HTML буфера — вёрстка с цветами и шрифтом темы редактора, в документе они
+ * не нужны. Несколько строк кода — блок кода с языком файла; одна строка, Markdown и простой
+ * текст — обычный текст (без цветов темы).
+ */
+function pasteFromCodeEditor(
+  view: EditorView,
+  event: ClipboardEvent,
+  editor: Editor,
+  pasteText: (text: string) => void,
+): boolean {
+  const data = event.clipboardData;
+  const meta = data?.getData(VSCODE_DATA);
+  const raw = data?.getData('text/plain');
+  if (!meta || !raw) return false;
+  // В блоке кода ProseMirror и так вставит простой текст.
+  if (view.state.selection.$from.parent.type.spec.code) return false;
+  let mode: unknown;
+  try {
+    mode = (JSON.parse(meta) as { mode?: unknown }).mode;
+  } catch {
+    // Не JSON — язык неизвестен, вставим как код без языка.
+  }
+  // Скопированная строка целиком (Ctrl+C без выделения) заканчивается переводом строки — он лишний.
+  const text = raw.replace(/\r\n?/g, '\n').replace(/\n$/, '');
+  const codeBlock = view.state.schema.nodes.code_block;
+  if (
+    !text.includes('\n') ||
+    mode === 'markdown' ||
+    mode === 'plaintext' ||
+    editor.isPasteAsText() ||
+    !codeBlock ||
+    !editor.isAllowed('codeblock')
+  ) {
+    pasteText(text);
+    return true;
+  }
+  const language =
+    typeof mode === 'string'
+      ? Object.hasOwn(VSCODE_LANGUAGES, mode)
+        ? VSCODE_LANGUAGES[mode]
+        : codeLanguage(mode)
+      : null;
+  const block = codeBlock.create({ language }, view.state.schema.text(text));
+  view.dispatch(
+    view.state.tr
+      .replaceSelection(new Slice(Fragment.from(block), 0, 0))
+      .setMeta('uiEvent', 'paste')
+      .scrollIntoView(),
+  );
+  return true;
 }

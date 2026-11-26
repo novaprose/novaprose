@@ -67,6 +67,8 @@ export interface MenuItemSpec {
   isEnabled?: (editor: Editor) => boolean;
 }
 
+export type ContextPlacement = 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
+
 /** Контекстный тулбар: появляется рядом с выделенным объектом (картинка, таблица, ссылка). */
 export interface ContextToolbarSpec {
   /** Когда показывать. Проверяются по порядку регистрации — побеждает первый подходящий. */
@@ -79,8 +81,11 @@ export interface ContextToolbarSpec {
   position?: 'node' | 'selection';
   /** Свой якорь (например, вся таблица). Перекрывает position. */
   anchor?: (editor: Editor) => DOMRect | null;
-  /** Сторона относительно якоря; при нехватке места переворачивается. */
-  placement?: 'top-start' | 'bottom-start';
+  /**
+   * Сторона относительно якоря; при нехватке места переворачивается. Функция — если сторона
+   * зависит от состояния (блок кода всегда слева направо, даже в документе справа налево).
+   */
+  placement?: ContextPlacement | ((editor: Editor) => ContextPlacement);
   /** Порядок проверки: больше — раньше (по умолчанию 0). Выделение текста в таблице → quickbar важнее таблицы. */
   priority?: number;
 }

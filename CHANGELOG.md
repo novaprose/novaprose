@@ -8,6 +8,34 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Syntax highlighting in code blocks (`plugins: ['codesample']`, as in TinyMCE): 27 languages and
+  their usual short names (`js`, `ts`, `sh`, `html`, Prism's `markup`…), colors with AA contrast
+  in both themes, the language in the corner of each block and a language menu above the block with
+  the cursor, and the `codesample` button with a dialog to insert or edit code. Highlighting only
+  decorates the screen: the saved HTML stays `<pre><code class="language-…">`. The highlighter
+  (highlight.js) and each grammar download only when a code block in that language appears (about
+  11 KB for JavaScript). Own grammars and language list: `pluginOptions.codesample`; colors: CSS
+  variables `--nova-code-*` or any highlight.js theme. TinyMCE `codesample_languages` and
+  `execCommand('CodeSample')` work through `@novaprose/tinymce-compat`.
+- The Markdown fence takes a language: type ` ```ts ` and press Space or Enter. **Changed:**
+  three backticks alone no longer turn into a code block immediately — press Space or Enter, as you
+  would in Markdown.
+- Several lines copied in VS Code paste as a code block in the file's language, without the editor
+  theme's colors and fonts; one line pastes as plain text.
+- The language of a code block is read from `<pre class="language-x">` (TinyMCE, Prism), `lang-x`
+  and `data-language` as well, and an unsafe language value from JSON no longer reaches the HTML
+  class or the Markdown fence.
+- Code blocks stay left-to-right in right-to-left documents.
+- Multi-line fields in plugin dialogs (`editor.ui.dialog`, `type: 'textarea'`) are as tall as their
+  `rows` — they used to be one line high. New `code: true` for code: monospace, no spell check.
+- Context toolbars accept `placement: 'top-end' | 'bottom-end'` or a function of the editor.
+
+### Distribution
+
+- The CDN builds include `novaprose.licenses.txt` / `tinymce.licenses.txt` with the license of
+  every bundled package (ProseMirror, highlight.js…), generated from the build itself, and a banner
+  pointing to it.
+
 - Checklists (`plugins: ['checklist']`, button `checklist`): tick an item with a click or Ctrl/Cmd+Enter,
   type `[ ]` or `[x]` at the start of a line, Enter starts a new unticked item; nesting, indent and
   paste work as in other lists. HTML uses the Tiptap task list format (`data-type="taskList"`,

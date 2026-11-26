@@ -73,5 +73,5 @@ Default toolbar: see [Toolbar and menus](/guides/toolbar-and-menus/#toolbar).
 | Option               | Type                                        | Description                                                                                     |
 | -------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `plugins`            | `(NovaPlugin \| string \| () => Promise)[]` | plugin objects, built-in names or lazy loaders ([Plugins](/guides/custom-buttons-and-plugins/)) |
-| `pluginOptions`      | `Record<string, unknown>`                   | per-plugin settings, keyed by plugin name                                                       |
+| `pluginOptions`      | `Record<string, unknown>`                   | per-plugin settings, keyed by plugin name (for example `codesample: { languages, grammars }`)   |
 | `prosemirrorPlugins` | `Plugin[]`                                  | raw ProseMirror plugins for low-level extensions                                                |

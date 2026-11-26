@@ -2,6 +2,7 @@ import { Schema, type DOMOutputSpec, type MarkSpec, type NodeSpec } from 'prosem
 import type { HtmlRulesInstance } from './html-rules-api';
 import { tableNodes } from './table-nodes';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
+import { codeLanguage } from './code-language';
 
 /**
  * Базовая схема документа NovaProse (P0 из PRD §4.1–4.2).
@@ -347,6 +348,23 @@ export type ClassFilter = (className: string) => boolean;
 const NO_CLASSES: ClassFilter = () => false;
 const CLASS_TOKEN = /^-?[_a-zA-Z][\w-]*$/;
 
+const LANGUAGE_CLASS = /(?:^|\s)lang(?:uage)?-(\S+)/;
+
+/**
+ * Язык из разметки: class="language-x" у <code> (CommonMark, highlight.js, Prism, Tiptap) или у
+ * <pre> (TinyMCE, Prism), «lang-x» (Prettify), data-language.
+ */
+function readCodeLanguage(pre: HTMLElement): string | null {
+  for (const el of [pre.querySelector('code'), pre]) {
+    if (!el) continue;
+    const value =
+      codeLanguage(LANGUAGE_CLASS.exec(el.getAttribute('class') ?? '')?.[1]) ??
+      codeLanguage(el.getAttribute('data-language'));
+    if (value) return value;
+  }
+  return null;
+}
+
 /** Список-чек-лист в чужой разметке: Tiptap, TinyMCE (плагин checklist), GitHub/Markdown. */
 function isChecklistElement(dom: HTMLElement): boolean {
   return (
@@ -468,17 +486,13 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
         {
           tag: 'pre',
           preserveWhitespace: 'full',
-          getAttrs: (dom) => {
-            const code = (dom as HTMLElement).querySelector('code');
-            const match = code?.className.match(/language-([\w-]+)/);
-            return { language: match?.[1] ?? null };
-          },
+          getAttrs: (dom) => ({ language: readCodeLanguage(dom as HTMLElement) }),
         },
       ],
-      toDOM: (node): DOMOutputSpec => [
-        'pre',
-        ['code', node.attrs.language ? { class: `language-${node.attrs.language}` } : {}, 0],
-      ],
+      toDOM: (node): DOMOutputSpec => {
+        const language = codeLanguage(node.attrs.language);
+        return ['pre', ['code', language ? { class: `language-${language}` } : {}, 0]];
+      },
     },
 
     // Чек-лист — маркированный список с флагом checklist (пункты с checked): вся механика списков

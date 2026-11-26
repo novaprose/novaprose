@@ -18,7 +18,7 @@
  */
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -37,6 +37,8 @@ const globalName = args.global;
 const bundle = path.basename(outFile).replace(/\.global\.js$|\.js$/, '');
 const chunkDir = `${bundle}-chunks`;
 const registry = `__novaprose_${bundle.replace(/\W/g, '_')}`;
+const licensesFile = `${bundle}.licenses.txt`;
+const { version } = JSON.parse(readFileSync(path.join(pkgDir, 'package.json'), 'utf8'));
 
 // Заглушка адреса части с запасом длины: после сборки её заменяет настоящий адрес, дополненный
 // пробелами до той же длины, — карты исходников (позиции в строке) остаются верными.
@@ -213,6 +215,7 @@ const main = await build({
   // Адрес частей — от адреса самого скрипта (document.currentScript), а не страницы.
   banner: {
     js:
+      `/*! NovaProse ${version} | MIT | third-party licenses: ${licensesFile} */\n` +
       'var __novaChunkBase=typeof document!=="undefined"&&(document.currentScript&&document.currentScript.src||document.baseURI)||"";' +
       'function __novaChunk(p){return new URL(p,__novaChunkBase).href}',
   },
@@ -235,8 +238,48 @@ for (const [id, text] of finalText) {
 }
 if (args.css) copyFileSync(path.resolve(pkgDir, args.css), path.join(outDir, 'novaprose.css'));
 
+// ---------- лицензии стороннего кода в сборке ----------
+// Сборка включает код пакетов (ProseMirror, highlight.js…), а их лицензии (MIT, BSD) требуют
+// прикладывать текст лицензии. Список — из того, что реально попало в основной файл и части.
+const LICENSE_FILE = /^(licen[cs]e|copying)(\.(md|txt))?$/i;
+const packageDirs = new Set();
+for (const key of [...Object.keys(main.metafile.inputs), ...chunkModules.keys()]) {
+  const at = key.lastIndexOf('node_modules/');
+  if (at < 0) continue;
+  const [scope, name] = key.slice(at + 'node_modules/'.length).split('/');
+  const pkgName = scope.startsWith('@') ? `${scope}/${name}` : scope;
+  packageDirs.add(path.join(root, key.slice(0, at), 'node_modules', pkgName));
+}
+const packages = [...packageDirs]
+  .map((dir) => {
+    const pkg = JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8'));
+    const file = readdirSync(dir).find((name) => LICENSE_FILE.test(name));
+    const text = file
+      ? readFileSync(path.join(dir, file), 'utf8').replace(/\r\n?/g, '\n').trim()
+      : `License: ${pkg.license ?? 'see the package'} (the package has no license file).`;
+    return { title: `${pkg.name} ${pkg.version} — ${pkg.license ?? 'see below'}`, text };
+  })
+  .sort((a, b) => a.title.localeCompare(b.title));
+const rule = '='.repeat(80);
+// Иконки Lucide — в исходниках ядра, их лицензия — в его THIRD_PARTY_NOTICES.md.
+const icons = readFileSync(path.join(root, 'packages/core/THIRD_PARTY_NOTICES.md'), 'utf8')
+  .replace(/^# .*\n+/, '')
+  .replace(/```(text)?\n?/g, '')
+  .trim();
+writeFileSync(
+  path.join(outDir, licensesFile),
+  [
+    `NovaProse ${version} (MIT) — third-party software in ${path.basename(outFile)} and ${chunkDir}/.`,
+    ...packages.flatMap(({ title, text }) => [rule, title, '', text]),
+    rule,
+    icons,
+    '',
+  ].join('\n'),
+);
+
 const kb = (s) => (Buffer.byteLength(s) / 1024).toFixed(1);
 console.log(
   `[build-cdn] ${path.basename(outFile)}: ${kb(mainText)} KB + ${chunks.size} chunks in ${chunkDir}/ ` +
-    `(${kb([...finalText.values()].join(''))} KB), ${shared.size} shared modules`,
+    `(${kb([...finalText.values()].join(''))} KB), ${shared.size} shared modules, ` +
+    `${packages.length} third-party packages in ${licensesFile}`,
 );

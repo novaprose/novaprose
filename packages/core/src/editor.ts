@@ -1,4 +1,5 @@
 import type { AutosaveOptions } from './plugins/autosave';
+import type { CodeSampleOptions } from './plugins/codesample';
 import { Formatter, formatClasses, type FormatSpec, type StyleFormat } from './formats';
 import { attachCss, loadCss, scopeCss } from './content-css';
 import type { FilePicker, FilePickType } from './ui/file-picker';
@@ -17,7 +18,7 @@ import { EditorView } from 'prosemirror-view';
 import { commands, isCommandActive, type CommandName } from './commands';
 import { createTranslator, type LanguagePack } from './i18n';
 import { embeddedImageUploadPlugin, imageDropPastePlugin, type UploadImageHandler } from './image';
-import { buildInputRules } from './inputrules';
+import { buildInputRules, codeFenceKeymap } from './inputrules';
 import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
 import { loadPasteCleaner, pastePlugin, type PasteOptions } from './paste';
@@ -116,6 +117,7 @@ export interface PluginOptions {
   revisionhistory?: RevisionHistoryOptions;
   autosave?: AutosaveOptions;
   quickbars?: QuickbarsOptions;
+  codesample?: CodeSampleOptions;
   [plugin: string]: unknown;
 }
 
@@ -410,6 +412,7 @@ export class Editor {
       // Первым: при открытом списке Enter/Tab/стрелки принадлежат автокомплитеру, а не раскладке клавиш.
       autocompleterPlugin(this),
       buildInputRules((name) => this.isAllowed(name), this.schema),
+      codeFenceKeymap((name) => this.isAllowed(name), this.schema),
       editorKeys,
       // Сюда (до общей раскладки) встанут плагины таблиц после загрузки механики: Tab в таблице —
       // следующая ячейка, а не отступ списка. См. installTables().

@@ -1,7 +1,23 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
+/**
+ * Грамматики подсветки кода грузятся через import() из плагина codesample. Без заранее
+ * подготовленных зависимостей Vite находит их при первом блоке кода и перезагружает все открытые
+ * страницы — e2e, идущие параллельно, теряли страницу посреди проверки. Список — из самого плагина.
+ */
+const grammars = [
+  ...readFileSync(
+    new URL('../../packages/core/src/plugins/code-languages.ts', import.meta.url),
+    'utf8',
+  ).matchAll(/'(highlight\.js\/lib\/languages\/[\w-]+)'/g),
+].map((match) => `@novaprose/core > ${match[1]}`);
+
 export default defineConfig({
+  optimizeDeps: {
+    include: ['@novaprose/core > highlight.js/lib/core', ...grammars],
+  },
   resolve: {
     // Playground работает напрямую с исходниками ядра — правки видны сразу, без сборки.
     alias: {

@@ -281,10 +281,19 @@ export function openFormDialog(
     if (field.type === 'textarea') {
       input = h('textarea', {
         id,
-        className: 'nova-input',
+        className: field.code
+          ? 'nova-input nova-textarea nova-input-code'
+          : 'nova-input nova-textarea',
         rows: String(field.rows ?? 4),
         placeholder: field.placeholder,
       });
+      if (field.code) {
+        // Код: без проверки орфографии, автозамены и заглавных букв на телефоне, строки не переносятся.
+        input.spellcheck = false;
+        input.setAttribute('autocapitalize', 'off');
+        input.setAttribute('autocorrect', 'off');
+        input.setAttribute('wrap', 'off');
+      }
     } else if (field.type === 'select') {
       input = h(
         'select',

@@ -486,6 +486,9 @@
   font-family: var(--nova-mono);
   font-size: 14px;
   white-space: pre-wrap;
+  /* Код пишется слева направо и в документе на арабском или иврите. */
+  direction: ltr;
+  text-align: left;
 }
 
 .nova-prosemirror code {

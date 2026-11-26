@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createEditor } from '../src';
 
 /**
@@ -15,10 +15,14 @@ const PLUGINS = [
   'mentions',
   'mergetags',
   'suggestions',
+  // Ленивые: оформление (галочки, подсветка кода) тоже не должно падать на мусорных атрибутах.
+  'checklist',
+  'codesample',
 ];
 const element = document.createElement('div');
 document.body.appendChild(element);
 const editor = createEditor({ element, plugins: PLUGINS });
+beforeAll(() => editor.ready);
 afterAll(() => editor.destroy());
 
 const ATTR_NAMES = [

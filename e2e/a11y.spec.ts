@@ -167,6 +167,38 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'чек-лист');
     });
 
+    test('подсветка кода (контраст токенов) и меню языка', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        // Все группы токенов темы: ключевые слова, строки, комментарии, числа, функции, типы,
+        // атрибуты, мета, вставки в строку, удалённое и добавленное.
+        e.setContent(
+          '<pre><code class="language-ts">// note\nclass A extends B<T> { m(p: number) { return `x ${p}` && 42 && true } }</code></pre>' +
+            '<pre><code class="language-html">&lt;div class="a" id="b"&gt;x&lt;/div&gt;</code></pre>' +
+            '<pre><code class="language-css">.a #b:hover[x] { color: red; --v: 1px }</code></pre>' +
+            '<pre><code class="language-python">@decorator\ndef f(self): pass</code></pre>' +
+            '<pre><code class="language-markdown"># Title\n*em* **strong** [link](https://x)</code></pre>' +
+            '<pre><code class="language-diff">- old\n+ new</code></pre>',
+        );
+      });
+      await expect(page.locator('.nova-prosemirror .hljs-addition')).toBeVisible();
+      await page.locator('.nova-prosemirror pre').first().click();
+      await page.locator('.nova-context-toolbar [data-control="codelanguage"]').click();
+      await expect(page.locator('.nova-menu [role="menuitemradio"]').first()).toBeVisible();
+      await audit(page, 'подсветка кода и меню языка');
+    });
+
+    test('диалог «Пример кода»', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await control(page, 'codesample');
+      await expect(page.locator('.nova-dialog textarea.nova-input-code')).toBeVisible();
+      await audit(page, 'диалог примера кода');
+    });
+
     test('боковая панель плагина открыта', async ({ page }) => {
       await open(page, theme);
       await page.evaluate(async () => {

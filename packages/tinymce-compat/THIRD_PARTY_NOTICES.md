@@ -2,6 +2,8 @@
 
 NovaProse includes icons from [Lucide](https://lucide.dev) (some derived from Feather), used under the licenses below.
 
+The CDN build (`dist/tinymce.global.js` and its lazy chunks) also bundles open-source packages such as ProseMirror (MIT) and highlight.js (BSD-3-Clause). Their names, versions and full license texts are in `dist/tinymce.licenses.txt`, generated from the exact contents of the build.
+
 ```text
 ISC License
 

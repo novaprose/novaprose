@@ -307,6 +307,13 @@ export class CompatEditor {
     } else if (name === 'mcesetcontent') {
       this.setContent(String(value ?? ''));
       done = true;
+    } else if (name === 'codesample') {
+      // Диалог «Пример кода» (плагин codesample) — как нажатие его кнопки.
+      const button = this.core.ui.registry.get('codesample');
+      if (button?.type === 'button') {
+        button.onAction(this.core);
+        done = true;
+      }
     } else if (name === 'selectall') {
       const { state, dispatch } = this.core.view;
       dispatch(state.tr.setSelection(new AllSelection(state.doc)));

@@ -1,6 +1,6 @@
 import { activeElement, isRtl, listenDocument } from './dom';
 
-export type Placement = 'bottom-start' | 'bottom-end' | 'top-start' | 'bottom';
+export type Placement = 'bottom-start' | 'bottom-end' | 'top-start' | 'top-end' | 'bottom';
 
 export type Anchor = HTMLElement | (() => DOMRect);
 
@@ -25,7 +25,7 @@ export function positionFloating(
 
   const spaceBelow = vh - anchorRect.bottom;
   const spaceAbove = anchorRect.top;
-  const preferTop = placement === 'top-start';
+  const preferTop = placement === 'top-start' || placement === 'top-end';
   const placeTop = preferTop
     ? spaceAbove >= height + GAP || spaceAbove > spaceBelow
     : spaceBelow < height + GAP && spaceAbove > spaceBelow;
@@ -33,7 +33,7 @@ export function positionFloating(
   let top = placeTop ? anchorRect.top - height - GAP : anchorRect.bottom + GAP;
   // start/end — края начала и конца строки: справа налево «начало» — правый край.
   const rtl = isRtl(floating);
-  const alignEnd = (placement === 'bottom-end') !== rtl;
+  const alignEnd = (placement === 'bottom-end' || placement === 'top-end') !== rtl;
   let left =
     placement === 'bottom'
       ? anchorRect.left + anchorRect.width / 2 - width / 2

@@ -1,3 +1,4 @@
+import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTinymce, type CompatEditor } from '../src';
 
@@ -330,6 +331,46 @@ describe('tinymce.init', () => {
       alt: 'Cat',
     });
     expect(calls).toEqual([['old.png', 'image']]);
+  });
+
+  it('codesample: разметка TinyMCE, подсветка, codesample_languages, команда CodeSample', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page(
+      '<textarea id="t"><pre class="language-javascript"><code>const a = 1;</code></pre></textarea>',
+    );
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'codesample',
+      toolbar: 'codesample',
+      codesample_languages: [
+        { text: 'HTML/XML', value: 'markup' },
+        { text: 'JavaScript', value: 'javascript' },
+      ],
+      codesample_global_prismjs: true,
+    });
+    // Язык из класса <pre> сохраняется — на выходе у <code>, как его ждут Prism и highlight.js.
+    expect(editor!.getContent()).toBe(
+      '<pre><code class="language-javascript">const a = 1;</code></pre>',
+    );
+    const { core } = editor!;
+    await vi.waitFor(() =>
+      expect(core.root.querySelector('.nova-prosemirror .hljs-keyword')?.textContent).toBe('const'),
+    );
+    expect(core.root.querySelector('[data-control="codesample"]')).not.toBeNull();
+    // Список языков — из codesample_languages (с «Простым текстом» первым).
+    core.view.dispatch(
+      core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, 2)),
+    );
+    const menu = core.ui.registry.get('codelanguage');
+    if (menu?.type !== 'menu') throw new Error('нет меню языка');
+    const labels = menu
+      .items(core)
+      .flatMap((i) => ('label' in i && i.type !== 'heading' ? [i.label] : []));
+    expect(labels).toEqual(['Plain text', 'HTML/XML', 'JavaScript']);
+    expect(editor!.execCommand('CodeSample')).toBe(true);
+    await vi.waitFor(() => expect(core.root.querySelector('.nova-dialog')).not.toBeNull());
+    // Опции codesample понятны — предупреждений о них нет.
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/codesample/);
   });
 
   it('незнакомые опции и плагины — предупреждение, а не ошибка', async () => {

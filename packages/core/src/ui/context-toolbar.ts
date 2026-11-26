@@ -105,7 +105,8 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
         if (!rect) return hide();
         container.hidden = false;
         let placement =
-          spec.placement ?? (spec.position === 'selection' ? 'bottom-start' : 'top-start');
+          (typeof spec.placement === 'function' ? spec.placement(editor) : spec.placement) ??
+          (spec.position === 'selection' ? 'bottom-start' : 'top-start');
         // На тач-устройствах над выделением — системное меню «Копировать/Вставить»: уходим вниз.
         if (coarse && spec.position === 'selection') placement = 'bottom-start';
         positionFloating(container, rect, placement);

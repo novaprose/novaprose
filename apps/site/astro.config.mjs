@@ -38,6 +38,7 @@ export default defineConfig({
             { slug: 'guides/images' },
             { slug: 'guides/pasting-from-office' },
             { slug: 'guides/markdown' },
+            { slug: 'guides/code-blocks' },
             { slug: 'guides/content-restrictions' },
             { slug: 'guides/collaboration' },
             { slug: 'guides/comments' },

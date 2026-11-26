@@ -1,0 +1,162 @@
+/*
+ * Подсветка синтаксиса (плагин codesample). Подключается вместе с плагином через editor.ui.addStyles.
+ * Всё — под :where(), с нулевой специфичностью: цвета меняются переменными --nova-code-* на
+ * .nova-editor или любой темой highlight.js (.hljs-keyword { … }) без !important.
+ * Цвета — контраст не ниже 4.5:1 на фоне --nova-code-bg в светлой и тёмной теме.
+ */
+:where(.nova-editor) {
+  --nova-code-keyword: #b3245a;
+  --nova-code-string: #0b6640;
+  --nova-code-comment: #59636e;
+  --nova-code-number: #0a58b0;
+  --nova-code-function: #7537c4;
+  --nova-code-type: #94500a;
+  --nova-code-attr: #0d6b80;
+  --nova-code-meta: #4547b8;
+  --nova-code-deleted: #a1152b;
+  --nova-code-deleted-bg: #ffebe9;
+  --nova-code-inserted: #156d31;
+  --nova-code-inserted-bg: #dafbe1;
+}
+
+:where([data-theme='dark'] .nova-editor) {
+  --nova-code-keyword: #ff7fa6;
+  --nova-code-string: #7ddc9f;
+  --nova-code-comment: #9198a1;
+  --nova-code-number: #7cbcff;
+  --nova-code-function: #d1a6ff;
+  --nova-code-type: #f2b26b;
+  --nova-code-attr: #6dd0e3;
+  --nova-code-meta: #a5a8ff;
+  --nova-code-deleted: #ffa198;
+  --nova-code-deleted-bg: #3c1d22;
+  --nova-code-inserted: #7ee787;
+  --nova-code-inserted-bg: #1b3326;
+}
+
+@media (prefers-color-scheme: dark) {
+  :where(.nova-editor:not([data-theme='light'] *)) {
+    --nova-code-keyword: #ff7fa6;
+    --nova-code-string: #7ddc9f;
+    --nova-code-comment: #9198a1;
+    --nova-code-number: #7cbcff;
+    --nova-code-function: #d1a6ff;
+    --nova-code-type: #f2b26b;
+    --nova-code-attr: #6dd0e3;
+    --nova-code-meta: #a5a8ff;
+    --nova-code-deleted: #ffa198;
+    --nova-code-deleted-bg: #3c1d22;
+    --nova-code-inserted: #7ee787;
+    --nova-code-inserted-bg: #1b3326;
+  }
+}
+
+/* Подпись языка в углу блока — только оформление (не текст документа и не для диктора). */
+:where(.nova-prosemirror pre[data-language]) {
+  position: relative;
+  padding-top: 26px;
+}
+
+:where(.nova-prosemirror pre[data-language])::before {
+  content: attr(data-language);
+  content: attr(data-language) / '';
+  position: absolute;
+  top: 6px;
+  inset-inline-end: 10px;
+  color: var(--nova-muted);
+  font: 500 11px/14px var(--nova-font, system-ui, sans-serif);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  user-select: none;
+}
+
+/*
+ * Токены. Классы — как у highlight.js; вложенные области склеены в один элемент
+ * («hljs-meta hljs-string»), поэтому частные правила стоят после общих.
+ */
+:where(.nova-prosemirror pre) :where(.hljs-meta) {
+  color: var(--nova-code-meta);
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-comment, .hljs-quote) {
+  color: var(--nova-code-comment);
+  font-style: italic;
+}
+
+:where(.nova-prosemirror pre)
+  :where(
+    .hljs-keyword,
+    .hljs-doctag,
+    .hljs-template-tag,
+    .hljs-selector-tag,
+    .hljs-name,
+    .hljs-variable.language_
+  ) {
+  color: var(--nova-code-keyword);
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-string, .hljs-regexp, .hljs-code) {
+  color: var(--nova-code-string);
+}
+
+:where(.nova-prosemirror pre)
+  :where(
+    .hljs-number,
+    .hljs-literal,
+    .hljs-symbol,
+    .hljs-bullet,
+    .hljs-link,
+    .hljs-char.escape_,
+    .hljs-variable.constant_
+  ) {
+  color: var(--nova-code-number);
+}
+
+:where(.nova-prosemirror pre)
+  :where(.hljs-title, .hljs-section, .hljs-selector-id, .hljs-selector-class) {
+  color: var(--nova-code-function);
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-type, .hljs-built_in, .hljs-title.class_, .hljs-class) {
+  color: var(--nova-code-type);
+}
+
+:where(.nova-prosemirror pre)
+  :where(
+    .hljs-attr,
+    .hljs-attribute,
+    .hljs-property,
+    .hljs-variable,
+    .hljs-template-variable,
+    .hljs-selector-attr,
+    .hljs-selector-pseudo
+  ) {
+  color: var(--nova-code-attr);
+}
+
+/* Вставка ${…} в строке шаблона — обычный код, а не строка. */
+:where(.nova-prosemirror pre) :where(.hljs-subst) {
+  color: var(--nova-fg);
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-section, .hljs-strong) {
+  font-weight: 600;
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-emphasis) {
+  font-style: italic;
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-link) {
+  text-decoration: underline;
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-deletion) {
+  background: var(--nova-code-deleted-bg);
+  color: var(--nova-code-deleted);
+}
+
+:where(.nova-prosemirror pre) :where(.hljs-addition) {
+  background: var(--nova-code-inserted-bg);
+  color: var(--nova-code-inserted);
+}

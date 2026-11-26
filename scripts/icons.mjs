@@ -99,6 +99,8 @@ const editor = {
   browse: 'folder-open',
   mergeTags: 'braces',
   resizeHandleBoth: 'move-diagonal-2',
+  // Кнопка своей боковой панели плагина (registry.addSidebar), если иконку не задали.
+  sidebar: 'panel-right',
   // Плагины
   anchor: 'anchor',
   save: 'save',
@@ -108,6 +110,8 @@ const editor = {
   emoji: 'smile',
   dateTime: 'calendar-clock',
   media: 'square-play',
+  checklist: 'list-todo',
+  codeSample: 'file-code',
   nonBreaking: 'space',
   pageBreak: 'scissors-line-dashed',
   history: 'history',

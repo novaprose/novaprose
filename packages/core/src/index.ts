@@ -166,6 +166,8 @@ export type { Revision, RevisionHistoryOptions } from './plugins/revisionhistory
 export type { PluginOptions } from './editor';
 export type { AutosaveOptions } from './plugins/autosave';
 export type { QuickbarsOptions } from './plugins/quickbars';
+export type { CodeSampleOptions } from './plugins/codesample';
+export type { CodeLanguage, CodeGrammarLoader } from './plugins/code-languages';
 export {
   listSuggestions,
   resolveSuggestions,

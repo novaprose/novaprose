@@ -33,7 +33,6 @@ const BUILT_IN = new Set([
   'image',
   'table',
   'code',
-  'codesample',
   'preview',
   'searchreplace',
   'fullscreen',
@@ -131,6 +130,9 @@ const IGNORED = new Set([
   'mentions_fetch',
   'tinycomments_author',
   'tinycomments_author_name',
+  'codesample_languages',
+  // Подсветка — своя (highlight.js, лениво); Prism на странице сайта для неё не нужен.
+  'codesample_global_prismjs',
 ]);
 
 const list = (value: unknown): string[] =>
@@ -432,6 +434,16 @@ export function mapOptions(config: TinyConfig): MappedOptions {
         name: String(config.tinycomments_author_name ?? config.tinycomments_author),
       },
     };
+  }
+  if (Array.isArray(config.codesample_languages)) {
+    // [{ text: 'HTML/XML', value: 'markup' }] — значения Prism (markup, csharp…) понимает и подсветка.
+    const languages = (config.codesample_languages as unknown[]).flatMap((item) => {
+      const { text, value } = (item ?? {}) as { text?: unknown; value?: unknown };
+      return typeof value === 'string' && value
+        ? [{ value, label: typeof text === 'string' && text ? text : value }]
+        : [];
+    });
+    pluginOptions.codesample = { languages };
   }
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 

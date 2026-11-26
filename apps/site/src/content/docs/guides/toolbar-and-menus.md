@@ -103,5 +103,5 @@ createEditor({ element, mode: 'distraction-free', plugins: ['quickbars'] });
 | Alt+0            | keyboard help                     |
 
 Markdown shortcuts while typing: `#` to `######` followed by a space for headings, `-` or `*` for
-bullets, `1.` for numbered lists, `>` for a quote, three backticks for a code block. Type `/` for
-slash commands.
+bullets, `1.` for numbered lists, `>` for a quote, three backticks and Space or Enter for a code
+block (` ```js ` sets the language). Type `/` for slash commands.

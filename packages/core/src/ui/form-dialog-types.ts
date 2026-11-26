@@ -30,7 +30,13 @@ interface FieldBase {
 export type DialogField =
   | (FieldBase & { type: 'text' | 'url' | 'email' | 'tel'; placeholder?: string })
   | (FieldBase & { type: 'number'; min?: number; max?: number; step?: number })
-  | (FieldBase & { type: 'textarea'; rows?: number; placeholder?: string })
+  | (FieldBase & {
+      type: 'textarea';
+      rows?: number;
+      placeholder?: string;
+      /** Поле для кода: моноширинный шрифт, без проверки орфографии и переноса строк. */
+      code?: boolean;
+    })
   | (FieldBase & { type: 'select'; options: { value: string; label: string }[] })
   | (FieldBase & { type: 'checkbox' | 'color' })
   | (FieldBase & {

@@ -192,6 +192,7 @@ export const icons = {
     '<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1" /><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1" />',
   ),
   resizeHandleBoth: svg('<path d="M19 13v6h-6" /><path d="M5 11V5h6" /><path d="m5 5 14 14" />'),
+  sidebar: svg('<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M15 3v18" />'),
   anchor: svg(
     '<path d="M12 6v16" /><path d="m19 13 2-1a9 9 0 0 1-18 0l2 1" /><path d="M9 11h6" /><circle cx="12" cy="4" r="2" />',
   ),
@@ -217,14 +218,15 @@ export const icons = {
     '<rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z" />',
   ),
   checklist: svg(
-    '<rect x="3" y="5" width="6" height="6" rx="1" /><path d="m4.5 8 1 1 2-2" /><path d="M13 8h8" /><rect x="3" y="14" width="6" height="6" rx="1" /><path d="M13 17h8" />',
+    '<path d="M13 5h8" /><path d="M13 12h8" /><path d="M13 19h8" /><path d="m3 17 2 2 4-4" /><rect x="3" y="4" width="6" height="6" rx="1" />',
+  ),
+  codeSample: svg(
+    '<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /><path d="M14 2v5a1 1 0 0 0 1 1h5" /><path d="M10 12.5 8 15l2 2.5" /><path d="m14 12.5 2 2.5-2 2.5" />',
   ),
   nonBreaking: svg('<path d="M22 17v1c0 .5-.5 1-1 1H3c-.5 0-1-.5-1-1v-1" />'),
   pageBreak: svg(
     '<path d="M5.42 9.42 8 12" /><circle cx="4" cy="8" r="2" /><path d="m14 6-8.58 8.58" /><circle cx="4" cy="16" r="2" /><path d="M10.8 14.8 14 18" /><path d="M16 12h-2" /><path d="M22 12h-2" />',
   ),
-  /** Боковая панель (кнопка своих панелей плагинов по умолчанию). */
-  sidebar: svg('<rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" />'),
   history: svg(
     '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" />',
   ),
