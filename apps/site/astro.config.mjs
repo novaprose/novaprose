@@ -62,7 +62,11 @@ export default defineConfig({
         },
         {
           label: 'Reference',
-          items: [{ slug: 'reference/options' }, { slug: 'reference/api' }],
+          items: [
+            { slug: 'reference/options' },
+            { slug: 'reference/api' },
+            { slug: 'reference/helpers' },
+          ],
         },
         {
           label: 'Project',

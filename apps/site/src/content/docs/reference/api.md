@@ -144,3 +144,6 @@ import { isSafeLinkUrl, isSafeImageUrl, htmlToPlainText, defaultToolbar } from '
 
 `isSafeLinkUrl` and `isSafeImageUrl` expose the same URL allowlist the editor uses, so you can
 apply it on your server too.
+
+More functions for your own toolbar and integrations — reading the state, commands with parameters,
+the built-in dialogs, defaults to extend — are in [Helper functions](/reference/helpers/).
