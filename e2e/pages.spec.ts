@@ -62,6 +62,7 @@ test.describe('на компьютере', () => {
   test('смена листа и полей пересчитывает страницы', async ({ page }) => {
     await expect.poll(async () => (await state(page)).pages).toBeGreaterThanOrEqual(3);
     const a5 = (await state(page)).pages!;
+    const portrait = (await state(page)).breaks.map((b) => Math.round(b.top)).join();
     await page.locator('#size').selectOption('A4');
     await expect.poll(async () => (await state(page)).width).toBeCloseTo(210 * PX_PER_MM, 0);
     await expect.poll(async () => (await state(page)).pages).toBeLessThan(a5);
@@ -69,7 +70,13 @@ test.describe('на компьютере', () => {
     await page.locator('#size').selectOption('A5');
     await page.locator('#orientation').selectOption('landscape');
     await expect.poll(async () => (await state(page)).width).toBeCloseTo(210 * PX_PER_MM, 0);
-    await expect.poll(async () => (await state(page)).pages).toBeGreaterThan(a5);
+    // Другая ширина строк — другие границы (сколько страниц — зависит от шрифтов системы).
+    await expect
+      .poll(async () => {
+        const s = await state(page);
+        return s.pages !== null && s.breaks.map((b) => Math.round(b.top)).join() !== portrait;
+      })
+      .toBe(true);
     // A4 альбомный (297 мм) шире колонки: лист сужается, строки переносятся не как при печати —
     // границ не рисуем, число страниц неизвестно.
     await page.locator('#size').selectOption('A4');
