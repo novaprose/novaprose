@@ -11,6 +11,7 @@ import {
   type TextAlign,
 } from './schema';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
+import { moveBlock } from './blocks';
 
 /** Именованные команды редактора. Имена — часть публичного API (см. Editor.exec). */
 export type CommandName =
@@ -42,7 +43,9 @@ export type CommandName =
   | 'unlink'
   | 'clearFormatting'
   | 'undo'
-  | 'redo';
+  | 'redo'
+  | 'moveBlockUp'
+  | 'moveBlockDown';
 
 /**
  * Типы узлов и марок берём из схемы конкретного редактора (state.schema): у редакторов с плагинами
@@ -223,6 +226,8 @@ export const commands: Record<CommandName, Command> = {
   clearFormatting,
   undo,
   redo,
+  moveBlockUp: moveBlock(-1),
+  moveBlockDown: moveBlock(1),
 };
 
 /** Ближайший список вокруг курсора (маркированный, нумерованный, чек-лист) и его позиция. */

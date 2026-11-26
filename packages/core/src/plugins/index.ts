@@ -18,6 +18,7 @@ registerPlugin('emoticons', () => import('./emoticons'));
 registerPlugin('nonbreaking', () => import('./nonbreaking'));
 registerPlugin('checklist', () => import('./checklist'));
 registerPlugin('codesample', () => import('./codesample'));
+registerPlugin('draghandle', () => import('./draghandle'));
 registerPlugin('autolink', () => import('./autolink'));
 registerPlugin('autosave', () => import('./autosave'));
 registerPlugin('autoresize', () => import('./autoresize'));

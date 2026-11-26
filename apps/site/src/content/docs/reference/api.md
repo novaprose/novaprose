@@ -27,13 +27,13 @@ packages wrap the same object.
 
 Named commands — part of the public API, stable across minor versions:
 
-| Group     | Commands                                                              |
-| --------- | --------------------------------------------------------------------- |
-| Marks     | `bold` `italic` `underline` `strike` `code` `subscript` `superscript` |
-| Blocks    | `paragraph` `h1` `h2` `h3` `h4` `h5` `h6` `blockquote` `codeBlock`    |
-| Lists     | `bulletList` `orderedList` `indent` `outdent`                         |
-| Alignment | `alignLeft` `alignCenter` `alignRight` `alignJustify`                 |
-| Other     | `horizontalRule` `unlink` `clearFormatting` `undo` `redo`             |
+| Group     | Commands                                                                                         |
+| --------- | ------------------------------------------------------------------------------------------------ |
+| Marks     | `bold` `italic` `underline` `strike` `code` `subscript` `superscript`                            |
+| Blocks    | `paragraph` `h1` `h2` `h3` `h4` `h5` `h6` `blockquote` `codeBlock` `moveBlockUp` `moveBlockDown` |
+| Lists     | `bulletList` `orderedList` `indent` `outdent`                                                    |
+| Alignment | `alignLeft` `alignCenter` `alignRight` `alignJustify`                                            |
+| Other     | `horizontalRule` `unlink` `clearFormatting` `undo` `redo`                                        |
 
 `exec()` and `can()` also accept a raw ProseMirror `Command` for advanced use.
 

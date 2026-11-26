@@ -199,6 +199,14 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'диалог примера кода');
     });
 
+    test('ручка блока и её меню', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.locator('.nova-prosemirror h2').hover();
+      await page.locator('.nova-drag-handle').click();
+      await expect(page.locator('.nova-popover-menu [role="menu"]')).toBeVisible();
+      await audit(page, 'меню ручки блока');
+    });
+
     test('боковая панель плагина открыта', async ({ page }) => {
       await open(page, theme);
       await page.evaluate(async () => {

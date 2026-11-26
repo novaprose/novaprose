@@ -91,16 +91,17 @@ createEditor({ element, mode: 'distraction-free', plugins: ['quickbars'] });
 
 ## Keyboard
 
-| Shortcut         | Action                            |
-| ---------------- | --------------------------------- |
-| Alt+F10          | move focus to the toolbar         |
-| Alt+F9           | move focus to the menu bar        |
-| Ctrl+F9          | move focus to the context toolbar |
-| Esc              | return focus to the text          |
-| Ctrl/Cmd+K       | insert or edit a link             |
-| Ctrl/Cmd+F       | search and replace                |
-| Ctrl/Cmd+Shift+F | fullscreen                        |
-| Alt+0            | keyboard help                     |
+| Shortcut         | Action                                                  |
+| ---------------- | ------------------------------------------------------- |
+| Alt+F10          | move focus to the toolbar                               |
+| Alt+F9           | move focus to the menu bar                              |
+| Ctrl+F9          | move focus to the context toolbar                       |
+| Esc              | return focus to the text                                |
+| Ctrl/Cmd+K       | insert or edit a link                                   |
+| Ctrl/Cmd+F       | search and replace                                      |
+| Ctrl/Cmd+Shift+F | fullscreen                                              |
+| Alt+Shift+↑ / ↓  | move the block (paragraph, list item, table) up or down |
+| Alt+0            | keyboard help                                           |
 
 Markdown shortcuts while typing: `#` to `######` followed by a space for headings, `-` or `*` for
 bullets, `1.` for numbered lists, `>` for a quote, three backticks and Space or Enter for a code

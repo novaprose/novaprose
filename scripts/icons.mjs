@@ -112,6 +112,8 @@ const editor = {
   media: 'square-play',
   checklist: 'list-todo',
   codeSample: 'file-code',
+  dragHandle: 'grip-vertical',
+  duplicate: 'copy-plus',
   nonBreaking: 'space',
   pageBreak: 'scissors-line-dashed',
   history: 'history',

@@ -13,6 +13,15 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Move blocks with the keyboard: Alt+Shift+↑/↓ moves the paragraph, heading, list item (among its
+  siblings) or selected table or image up or down; with several blocks selected, they move
+  together. New named commands `moveBlockUp` and `moveBlockDown`.
+- Drag handle (`plugins: ['draghandle']`): a handle appears to the left of the block under the
+  mouse. Drag it to move the block; the drop line shows where it lands (upper half of a block —
+  before it, lower half — after it). A list item dropped outside its list keeps its list type and
+  joins a neighbouring list of the same type; a paragraph dropped between list items becomes an
+  item. Hold Ctrl (⌥ on a Mac) to copy. Click the handle for move up/down, duplicate and delete.
+
 - Syntax highlighting in code blocks (`plugins: ['codesample']`, as in TinyMCE): 27 languages and
   their usual short names (`js`, `ts`, `sh`, `html`, Prism's `markup`…), colors with AA contrast
   in both themes, the language in the corner of each block and a language menu above the block with

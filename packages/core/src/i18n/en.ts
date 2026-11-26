@@ -28,6 +28,8 @@ export const en = {
   alignJustify: 'Justify',
   blockquote: 'Quote',
   codeBlock: 'Code block',
+  moveBlockUp: 'Move block up',
+  moveBlockDown: 'Move block down',
   horizontalRule: 'Horizontal line',
   clearFormatting: 'Clear formatting',
   more: 'More',

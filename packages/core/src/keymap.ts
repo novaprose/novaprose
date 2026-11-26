@@ -57,6 +57,9 @@ export function buildKeymap(resolve: Resolve = (name) => commands[name]): Plugin
     'Shift-Tab': listOutdent,
     'Mod-]': commands.indent,
     'Mod-[': commands.outdent,
+    // Переместить блок (пункт списка, абзац, таблицу) — как в Word.
+    'Alt-Shift-ArrowUp': commands.moveBlockUp,
+    'Alt-Shift-ArrowDown': commands.moveBlockDown,
   };
   if (!mac) keys['Mod-y'] = byName(resolve, 'redo');
   return [keymap(keys), keymap(baseKeymap)];

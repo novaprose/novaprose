@@ -46,10 +46,17 @@ export const isMac =
   typeof navigator !== 'undefined' && /Mac|iP(hone|[oa]d)/.test(navigator.platform);
 
 /** 'Mod-Shift-b' → '⌘⇧B' на macOS, 'Ctrl+Shift+B' на остальных. */
+const ARROWS: Record<string, string> = {
+  ArrowUp: '↑',
+  ArrowDown: '↓',
+  ArrowLeft: '←',
+  ArrowRight: '→',
+};
+
 export function formatShortcut(shortcut: string): string {
   const parts = shortcut.split('-');
   const key = parts.pop()!;
-  const keyLabel = key.length === 1 ? key.toUpperCase() : key;
+  const keyLabel = key.length === 1 ? key.toUpperCase() : (ARROWS[key] ?? key);
   if (isMac) {
     const map: Record<string, string> = { Mod: '⌘', Shift: '⇧', Alt: '⌥', Ctrl: '⌃' };
     return parts.map((p) => map[p] ?? p).join('') + keyLabel;

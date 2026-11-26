@@ -125,6 +125,8 @@ const SHORTCUTS: { group: MessageKey; rows: ShortcutRow[] }[] = [
       { label: 'pasteAsText', keys: 'Mod-Shift-v' },
       { label: 'fullscreen', keys: 'Mod-Shift-f' },
       { label: 'help.slash', keys: '/' },
+      { label: 'moveBlockUp', keys: 'Alt-Shift-ArrowUp' },
+      { label: 'moveBlockDown', keys: 'Alt-Shift-ArrowDown' },
     ],
   },
   {

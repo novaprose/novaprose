@@ -115,6 +115,7 @@ const editor = createEditor({
           'advlist',
           'checklist',
           'codesample',
+          'draghandle',
         ]
       : []),
     // ?comments=1 — комментарии к тексту (их гоняет e2e/comments.spec.ts).
