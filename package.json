@@ -7,10 +7,13 @@
     "node": ">=22.23"
   },
   "scripts": {
+    "prepare": "simple-git-hooks",
     "dev": "pnpm --filter @novaprose/playground dev",
     "build": "pnpm -r --filter \"./packages/**\" build",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:deep": "node scripts/test-deep.mjs",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -19,20 +22,34 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "release:pack": "pnpm build && node scripts/release-pack.mjs",
+    "size": "node scripts/size.mjs",
+    "check:packages": "node scripts/check-packages.mjs",
+    "verify:release": "pnpm release:pack && pnpm size && pnpm check:packages",
     "icons": "node scripts/icons.mjs && prettier --write packages/core/src/ui/icons.ts apps/site/src/components/site/icons.ts"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@axe-core/playwright": "^4.14.1",
     "@eslint/js": "^9.17.0",
     "@playwright/test": "^1.49",
     "@primer/octicons": "^19.43.0",
     "@types/node": "^22.10.2",
+    "@vitest/coverage-v8": "2.1.9",
+    "esbuild": "0.27.7",
     "eslint": "^9.17.0",
+    "fast-check": "^4.11.0",
     "jsdom": "^25.0.1",
     "lucide-static": "^1.80.0",
     "prettier": "^3.4.2",
+    "publint": "^0.3.25",
+    "simple-git-hooks": "^2.14.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.1",
     "vitest": "^2.1.8"
+  },
+  "simple-git-hooks": {
+    "pre-push": "pnpm check",
+    "commit-msg": "node scripts/commit-msg.mjs $1"
   }
 }

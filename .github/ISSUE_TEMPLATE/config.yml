@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/novaprose/novaprose/blob/main/SECURITY.md
+    about: Please report security issues privately by email, not as a public issue.
+  - name: Documentation
+    url: https://novaprose.com
+    about: Guides, API reference and examples.

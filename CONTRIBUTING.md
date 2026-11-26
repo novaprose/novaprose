@@ -9,8 +9,16 @@ Requires Node.js 22.13+ and pnpm 9.
 ```bash
 pnpm install
 pnpm dev     # playground on http://localhost:5173
-pnpm check   # format, lint, types, unit tests — run before every commit
-pnpm e2e     # browser tests (Chromium, Firefox, WebKit, mobile Chrome)
+pnpm check   # format, lint, types, unit tests — also runs as a pre-push git hook
+pnpm e2e     # browser tests (Chromium, Firefox, WebKit, mobile Chrome) + accessibility (axe)
+```
+
+More checks (CI runs all of them on every pull request):
+
+```bash
+pnpm test:coverage   # unit tests with coverage; thresholds live in vitest.config.ts
+pnpm test:deep       # property-based tests on thousands of random documents (XSS, stable HTML)
+pnpm verify:release  # build, size budget (gzip) and package checks (publint, ESM/CJS types)
 ```
 
 The playground has pages for each package (`/react.html`, `/vue.html`, `/angular.html`,

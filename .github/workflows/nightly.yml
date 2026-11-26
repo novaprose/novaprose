@@ -1,0 +1,27 @@
+name: Nightly
+
+# Долгие проверки, которым не место в каждом PR:
+#  - property-based тесты на 20 000 случайных документов (XSS, стабильность HTML, внешний JSON).
+# При падении fast-check печатает минимальный пример и seed — превратите его в обычный тест.
+on:
+  schedule:
+    - cron: '17 2 * * *' # каждую ночь, 02:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deep-properties:
+    name: Property-based тесты (20 000 прогонов)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:deep 20000

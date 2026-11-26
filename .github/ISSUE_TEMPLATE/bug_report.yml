@@ -1,0 +1,61 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time! **Security issues:** please don't open a public issue —
+        email security@novaprose.com instead (see SECURITY.md).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: |
+        The smallest setup that shows the problem. The best: editor options + the HTML you load
+        (`editor.setContent(...)`) + the keys you press. A StackBlitz/CodeSandbox link is great.
+      placeholder: |
+        1. createEditor({ element, plugins: ['mergetags'] })
+        2. setContent('<p>…</p>')
+        3. Type …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: NovaProse version
+      placeholder: '@novaprose/core 0.6.0'
+    validations:
+      required: true
+  - type: dropdown
+    id: package
+    attributes:
+      label: Package
+      multiple: true
+      options:
+        - '@novaprose/core'
+        - '@novaprose/react'
+        - '@novaprose/vue'
+        - '@novaprose/angular'
+        - '@novaprose/web-component (incl. CDN)'
+        - '@novaprose/collab'
+        - '@novaprose/tinymce-compat'
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 131, Windows 11 / Safari, iOS 18
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Console errors, screenshots, the HTML produced by `editor.getHTML()`.
