@@ -14,9 +14,11 @@ comments and version history. Toolbar, plugin and option names follow familiar c
   visible focus, screen-reader labels.
 - **Complete out of the box.** Tables, images with upload and resize, links, colors, fonts, line
   height, search and replace, source code view, fullscreen, menu bar, slash commands, Markdown
-  shortcuts, paste sanitizing (anything outside the schema is dropped), English and Russian UI,
-  light and dark theme. Dedicated Word and Excel paste cleanup is on the roadmap.
-- **Small.** About 120 KB gzip including ProseMirror and tables. Optional plugins load lazily.
+  shortcuts, paste from Word, Excel and Google Docs (lists, tables, formatting and images kept,
+  Office markup removed; anything outside the schema is dropped), English and Russian UI, light
+  and dark theme.
+- **Small.** About 146 KB gzip on first load, including ProseMirror and tables; checked in CI
+  against a 150 KB budget. Optional plugins and the Office paste cleanup load lazily.
 
 ## Install
 
