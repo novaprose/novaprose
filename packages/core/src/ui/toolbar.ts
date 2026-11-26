@@ -6,12 +6,12 @@ import { Popover } from './popover';
 import type { ControlSpec, SplitButtonSpec } from './registry';
 
 /**
- * Конфиг тулбара: строка в привычном формате ('undo redo | bold italic') или массив имён,
- * где '|' разделяет группы.
+ * Toolbar configuration: a string in the familiar format ('undo redo | bold italic') or an array of
+ * names, where '|' separates groups.
  */
 export type ToolbarConfig = string | string[];
 
-/** Режим при нехватке ширины: перенос на новую строку или «⋯» с остальными группами. */
+/** What to do when the width runs out: wrap to a new line, or "⋯" with the remaining groups. */
 export type ToolbarMode = 'wrap' | 'sliding';
 
 // Порядок = приоритет: при нехватке места в «⋯» уходят группы с конца,

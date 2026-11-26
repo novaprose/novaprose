@@ -3,14 +3,14 @@ import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
 
 /**
- * Плагин autosave: черновик в localStorage браузера, чтобы текст не пропал при закрытой вкладке,
- * перезагрузке или сбое. Если при открытии найден черновик, отличный от текущего содержимого,
- * появляется уведомление, а кнопка «Восстановить черновик» (restoredraft) становится активной.
+ * The autosave plugin: a draft in the browser's localStorage, so text isn't lost when a tab is
+ * closed, the page reloads or something crashes. If a draft different from the current content is
+ * found on opening, a notification appears and the "Restore draft" button (restoredraft) becomes active.
  *
- * `plugins: ['autosave']`, настройки — `pluginOptions.autosave`:
- * - key — ключ хранилища (по умолчанию адрес страницы + id элемента);
- * - delay — задержка сохранения после изменения, мс (1000);
- * - retention — сколько хранить черновик, минут (7 дней).
+ * `plugins: ['autosave']`, options in `pluginOptions.autosave`:
+ * - key — the storage key (the page address + the element's id by default);
+ * - delay — how long after a change to save, ms (1000);
+ * - retention — how long to keep a draft, minutes (7 days).
  */
 
 export interface AutosaveOptions {

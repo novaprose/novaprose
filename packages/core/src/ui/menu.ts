@@ -7,12 +7,12 @@ export interface MenuItem {
   label: string;
   icon?: string;
   shortcut?: string;
-  /** Отмечен (радио/чекбокс) — показывается галочка. */
+  /** Checked (radio/checkbox): a check mark is shown. */
   active?: boolean;
-  /** Независимый переключатель (жирный, надстрочный) — menuitemcheckbox, а не radio. */
+  /** An independent toggle (bold, superscript): menuitemcheckbox rather than radio. */
   checkbox?: boolean;
   disabled?: boolean;
-  /** Стиль подписи — для превью шрифтов и заголовков прямо в меню. */
+  /** Style of the label, to preview fonts and headings right in the menu. */
   labelStyle?: string;
   onSelect: () => void;
 }
@@ -21,7 +21,7 @@ export interface MenuSeparator {
   type: 'separator';
 }
 
-/** Заголовок группы пунктов (не нажимается). */
+/** A heading of a group of items (not clickable). */
 export interface MenuHeading {
   type: 'heading';
   label: string;

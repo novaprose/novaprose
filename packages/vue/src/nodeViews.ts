@@ -24,15 +24,15 @@ import {
 } from 'vue';
 
 /**
- * Виды узлов на Vue. Компонент рисуется через Teleport внутри вашего приложения (у
- * <NovaProseEditor> или <component :is="nodeViews" /> из useEditor): ему доступны provide/inject,
- * роутер, переводы, хранилище.
+ * Vue node views. The component renders through Teleport inside your app (in <NovaProseEditor>, or in
+ * <component :is="nodeViews" /> from useEditor), so provide/inject, the router, translations and
+ * stores are available to it.
  *
  *   const Callout = defineComponent({ props: nodeViewProps, setup(props) { … h(NodeViewContent) … } });
  *   definePlugin({ name: 'callout', nodes: { callout: {…} }, nodeViews: { callout: vueNodeView(Callout) } });
  */
 
-/** Свойства вида узла для `props` компонента (как NodeViewProps ядра). */
+/** Node view props for a component's `props` (like the core's NodeViewProps). */
 export const nodeViewProps = {
   editor: { type: Object as PropType<Editor>, required: true },
   node: { type: Object as PropType<NodeViewProps['node']>, required: true },
@@ -88,7 +88,7 @@ export function createWithTeleports(teleports: NodeViewTeleports, create: () => 
 
 const NODE_VIEW: InjectionKey<ShallowRef<NodeViewProps>> = Symbol('nova-node-view');
 
-/** Свойства вида узла во вложенных компонентах. */
+/** Node view props in nested components. */
 export function useNodeView(): Readonly<ShallowRef<NodeViewProps>> {
   const props = inject(NODE_VIEW, null);
   if (!props) throw new Error('[nova] useNodeView() works only inside a node view component');
@@ -145,11 +145,11 @@ export const NodeViewHost = defineComponent({
   },
 });
 
-/** Место редактируемого содержимого узла в разметке компонента. */
+/** Where the node's editable content goes in the component's markup. */
 export const NodeViewContent = defineComponent({
   name: 'NodeViewContent',
   props: {
-    /** Тег обёртки содержимого (по умолчанию div; у строчных узлов — span). */
+    /** Tag of the content wrapper (div by default; span for inline nodes). */
     as: { type: String, default: undefined },
   },
   setup(props) {
@@ -170,7 +170,7 @@ export const NodeViewContent = defineComponent({
 let counter = 0;
 let warned = false;
 
-/** Вид узла из Vue-компонента — для `nodeViews` плагина. */
+/** A node view from a Vue component, for a plugin's `nodeViews`. */
 export function vueNodeView(component: Component, options?: NodeViewOptions): NodeViewFactory {
   const raw = markRaw(component);
   return defineNodeView((editor) => {

@@ -4,9 +4,9 @@ import { positionFloating } from './popover';
 const SHOW_DELAY = 450;
 
 /**
- * Одна общая подсказка на редактор: название кнопки + горячая клавиша.
- * Мышь — с задержкой, клавиатурный фокус — сразу. На тач-устройствах не показывается
- * (там подпись дублируется aria-label, а не скрывается в подсказке).
+ * One shared tooltip per editor: the button name plus its shortcut. With a delay for the mouse, at
+ * once for keyboard focus. Not shown on touch devices (there the label is in aria-label rather than
+ * hidden in a tooltip).
  */
 export class Tooltip {
   private readonly el: HTMLDivElement;
@@ -18,7 +18,7 @@ export class Tooltip {
     host.append(this.el);
   }
 
-  /** Подключить подсказку к элементу. Текст берётся из data-tooltip и data-shortcut. */
+  /** Attach the tooltip to an element. The text comes from data-tooltip and data-shortcut. */
   attach(target: HTMLElement): void {
     target.addEventListener('pointerenter', (e) => {
       if (e.pointerType === 'mouse') this.schedule(target);

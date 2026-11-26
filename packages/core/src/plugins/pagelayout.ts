@@ -3,14 +3,14 @@ import { definePlugin } from '../plugins';
 import css from './pagelayout.css?raw';
 
 /**
- * Плагин pagelayout: режим страниц. Текст — на листе точного размера с полями, как при печати;
- * границы страниц видны прямо в тексте; печать и экспорт берут те же размеры.
+ * The pagelayout plugin: page layout. The text sits on a sheet of the exact size with margins, as
+ * when printed; page boundaries show right in the text; printing and export use the same sizes.
  *
  *   plugins: ['pagelayout'],
  *   pluginOptions: { pagelayout: { size: 'A4', orientation: 'portrait', margins: 20 } }
  *
- * Здесь — вид листа (он нужен с первого кадра: лист, появившийся позже, сдвинул бы весь текст)
- * и настройки с pageLayout(editor). Расчёт границ страниц — ленивая часть pagelayout-ui.ts.
+ * This part is the sheet itself (needed from the first frame: a sheet appearing later would shift
+ * the whole text) and the settings with pageLayout(editor). Page boundaries are computed in the lazy part, pagelayout-ui.ts.
  */
 
 export type PageSizeName = 'A3' | 'A4' | 'A5' | 'A6' | 'Letter' | 'Legal';
@@ -23,15 +23,15 @@ export interface PageMargins {
 }
 
 export interface PageLayoutOptions {
-  /** Размер листа: 'A4' (по умолчанию), 'A3', 'A5', 'A6', 'Letter', 'Legal' или { width, height } в мм. */
+  /** Sheet size: 'A4' (default), 'A3', 'A5', 'A6', 'Letter', 'Legal' or { width, height } in mm. */
   size?: PageSizeName | { width: number; height: number };
-  /** Ориентация; без неё — книжная для стандартных размеров и как задано для своего размера. */
+  /** Orientation; without it, portrait for standard sizes and as given for your own size. */
   orientation?: 'portrait' | 'landscape';
-  /** Поля в мм: одно число для всех сторон или по сторонам. По умолчанию 20. */
+  /** Margins in mm: one number for all sides, or per side. Default 20. */
   margins?: number | Partial<PageMargins>;
 }
 
-/** Лист в мм (уже с учётом ориентации) и поля. */
+/** The sheet in mm (orientation already applied) and the margins. */
 export interface PageLayout {
   size: PageSizeName | 'custom';
   orientation: 'portrait' | 'landscape';
@@ -40,7 +40,7 @@ export interface PageLayout {
   margins: PageMargins;
 }
 
-/** Размеры листов в мм (книжная ориентация). */
+/** Sheet sizes in mm (portrait). */
 export const PAGE_SIZES: Readonly<Record<PageSizeName, readonly [number, number]>> = {
   A3: [297, 420],
   A4: [210, 297],
@@ -92,16 +92,16 @@ export function resolvePageLayout(options: PageLayoutOptions = {}): PageLayout {
 }
 
 export interface PageLayoutController {
-  /** Текущий лист (мм). */
+  /** The current sheet (mm). */
   readonly layout: PageLayout;
   /**
-   * Сколько страниц в документе. null — пока не посчитано или лист уже страницы (узкий экран:
-   * строки переносятся не так, как при печати).
+   * How many pages the document has. null — not counted yet, or the sheet is narrower than the page
+   * (a narrow screen: lines wrap differently than in print).
    */
   readonly pages: number | null;
-  /** Сменить размер, ориентацию или поля (остальное сохраняется). */
+  /** Change the size, orientation or margins (the rest stays). */
   set(options: PageLayoutOptions): void;
-  /** Изменились лист или число страниц. Возвращает отписку. */
+  /** The sheet or the page count changed. Returns an unsubscribe function. */
   onChange(listener: () => void): () => void;
 }
 
@@ -132,7 +132,7 @@ function applyLayout(editor: Editor, layout: PageLayout): void {
   style.setProperty('--nova-page-margins', `${top}mm ${right}mm ${bottom}mm ${left}mm`);
 }
 
-/** Режим страниц редактора (плагин pagelayout); undefined — плагин не подключён. */
+/** The editor's page layout (the pagelayout plugin); undefined when the plugin isn't active. */
 export function pageLayout(editor: Editor): PageLayoutController | undefined {
   const state = states.get(editor);
   if (!state) return undefined;

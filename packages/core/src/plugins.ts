@@ -5,73 +5,73 @@ import type { Editor } from './editor';
 import type { NodeViewFactory } from './node-view';
 
 /**
- * Плагин NovaProse. Встроенные и сторонние плагины используют один и тот же API.
+ * A NovaProse plugin. Built-in and third-party plugins use the same API.
  *
  * ```ts
  * export default definePlugin({
  *   name: 'signature',
  *   setup(editor) {
- *     editor.ui.registry.addButton('signature', { text: 'Подпись', tooltip: '…', onAction: … });
+ *     editor.ui.registry.addButton('signature', { text: 'Signature', tooltip: '…', onAction: … });
  *   },
  * });
  * ```
  */
 export interface NovaPlugin {
-  /** Уникальное имя; по нему плагин указывается в конфиге и в requires других плагинов. */
+  /** A unique name: the plugin is listed under it in the configuration and in `requires` of other plugins. */
   name: string;
-  /** Плагины, которые должны быть подключены раньше. */
+  /** Plugins that must be set up first. */
   requires?: string[];
-  /** Регистрация кнопок, команд, автокомплитеров. Может вернуть функцию очистки (при destroy). */
+  /** Register buttons, commands, autocompleters. May return a cleanup function (called on destroy). */
   setup?: (editor: Editor) => void | (() => void);
   /**
-   * Кнопки, которые добавляются в конец тулбара по умолчанию ('insertdatetime').
-   * Если пользователь задал свой toolbar — не добавляются: его конфиг главнее.
+   * Buttons appended to the end of the default toolbar ('insertdatetime'). Not added when the user
+   * set their own toolbar: their configuration wins.
    */
   toolbar?: string;
-  /** ProseMirror-плагины (ввод, декорации, клавиши). */
+  /** ProseMirror plugins (input handling, decorations, keys). */
   prosemirrorPlugins?: (editor: Editor) => PMPlugin[];
   /**
-   * Новые узлы документа (с parseDOM и toDOM). Расширяют схему конкретного редактора.
-   * Плагин с узлами или марками передаётся объектом, не ленивым загрузчиком: схема создаётся сразу.
-   * Функция получает редактор до его создания — читать только `editor.options`; на сервере
-   * (createRenderer) ей передаются только настройки.
+   * New document nodes (with parseDOM and toDOM); they extend this editor's schema. A plugin with
+   * nodes or marks is passed as an object, not a lazy loader: the schema is created right away.
+   * The function gets the editor before it is created — read only `editor.options`; on the server
+   * (createRenderer) it gets just the options.
    */
   nodes?: Record<string, NodeSpec> | ((editor: Editor) => Record<string, NodeSpec>);
-  /** Новые марки (инлайн-форматирование) с parseDOM и toDOM. */
+  /** New marks (inline formatting) with parseDOM and toDOM. */
   marks?: Record<string, MarkSpec>;
   /**
-   * Свой вид узлов в редакторе: `{ callout: reactNodeView(Callout) }`, `vueNodeView(…)` или
-   * `defineNodeView(…)`. На HTML не влияет (он из toDOM). Виды — в самом плагине, а не в ленивой
-   * части: их появление позже перерисовало бы весь документ.
+   * Your own way to draw nodes in the editor: `{ callout: reactNodeView(Callout) }`, `vueNodeView(…)`
+   * or `defineNodeView(…)`. Doesn't affect the HTML (that comes from toDOM). Views belong in the plugin
+   * itself, not in its lazy part: adding them later would redraw the whole document.
    */
   nodeViews?: Record<string, NodeViewFactory>;
   /**
-   * Переопределение именованных команд (кнопки, меню, горячие клавиши и editor.exec берут их отсюда).
-   * Например, совместное редактирование заменяет undo/redo своими — «отменить только свои правки».
+   * Override named commands (buttons, menus, shortcuts and editor.exec take them from here). For
+   * example, collaboration replaces undo/redo with its own, which undo only your own changes.
    */
   commands?: Partial<Record<CommandName, Command>>;
-  /** Плагин ведёт свою историю изменений — встроенная (prosemirror-history) не подключается. */
+  /** The plugin keeps its own history: the built-in one (prosemirror-history) is not added. */
   replaceHistory?: boolean;
   /**
-   * Переписать транзакцию до применения (режим правок превращает удаление в пометку «удалено»).
-   * Вызывается для каждой транзакции редактора; вернуть ту же, если менять нечего.
+   * Rewrite a transaction before it is applied (suggesting mode turns a deletion into a "deleted"
+   * mark). Called for every transaction of the editor; return the same one when there is nothing to change.
    */
   transformTransaction?: (tr: Transaction, state: EditorState, editor: Editor) => Transaction;
   /**
-   * Ленивая часть плагина с узлами: кнопки, диалоги, команды, клавиши. Схема создаётся сразу,
-   * поэтому узлы и всё, что их рисует (nodeViews), — в самом плагине (первая загрузка), а остальное —
-   * отдельным чанком после создания редактора (входит в `editor.ready`). Часть — обычный плагин
-   * без узлов.
+   * The lazy part of a plugin with nodes: buttons, dialogs, commands, keys. The schema is created
+   * right away, so the nodes and everything that draws them (nodeViews) stay in the plugin itself
+   * (first load), and the rest is a separate chunk loaded after the editor is created (part of
+   * `editor.ready`). The part is an ordinary plugin without nodes.
    */
   load?: Loader;
 }
 
 type Loader = () => Promise<NovaPlugin | { default: NovaPlugin }>;
 
-/** Элемент конфига plugins: объект, имя из реестра или ленивый загрузчик. */
+/** An entry of the plugins option: an object, a registered name or a lazy loader. */
 export type PluginEntry = NovaPlugin | string | Loader;
 
-/** Помощник для типизации определения плагина. */
+/** A helper for typing a plugin definition. */
 export function definePlugin(plugin: NovaPlugin): NovaPlugin {
   return plugin;
 }
@@ -80,7 +80,7 @@ export function definePlugin(plugin: NovaPlugin): NovaPlugin {
 
 const registry = new Map<string, NovaPlugin | Loader>();
 
-/** Зарегистрировать плагин (или его ленивый загрузчик) под именем — для `plugins: ['имя']`. */
+/** Register a plugin (or its lazy loader) under a name, for `plugins: ['name']`. */
 export function registerPlugin(name: string, plugin: NovaPlugin | Loader): void {
   registry.set(name, plugin);
 }

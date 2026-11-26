@@ -21,13 +21,13 @@ import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
 
 /**
- * Плагин suggestions — режим правок (как «Предлагать изменения» в Google Docs).
- * В режиме правок ввод не меняет текст напрямую: вставленное помечается <ins>, удалённое — <del>
- * (текст остаётся до решения). Каждая правка знает автора и время; её принимают или отклоняют —
- * по одной (панель над правкой) или все сразу. В HTML: `<ins data-suggestion="id" …>`.
+ * The suggestions plugin — suggesting mode (like "Suggesting" in Google Docs). In suggesting mode,
+ * typing doesn't change the text directly: insertions are marked <ins>, deletions <del> (the text
+ * stays until a decision). Every suggestion knows its author and time; it is accepted or rejected
+ * one by one (the panel above it) or all at once. In HTML: `<ins data-suggestion="id" …>`.
  *
- * Отслеживаются вставка и удаление текста. Структурные изменения (новый абзац, список, формат)
- * в режиме правок применяются сразу.
+ * Inserting and deleting text is tracked. Structural changes (a new paragraph, a list, a format)
+ * apply directly even in suggesting mode.
  */
 
 export interface SuggestionAuthor {
@@ -36,13 +36,13 @@ export interface SuggestionAuthor {
 }
 
 export interface SuggestionsOptions {
-  /** Кто предлагает правки. */
+  /** Who is suggesting. */
   author?: SuggestionAuthor;
-  /** Включить режим правок сразу. */
+  /** Start in suggesting mode. */
   enabled?: boolean;
-  /** Только правки: режим нельзя выключить (участник без права менять текст напрямую). */
+  /** Suggestions only: the mode can't be turned off (someone who may not change the text directly). */
   force?: boolean;
-  /** Может ли этот пользователь принимать и отклонять правки (по умолчанию да). */
+  /** Whether this user can accept and reject suggestions (yes by default). */
   canReview?: boolean;
 }
 
@@ -300,7 +300,7 @@ export function suggestTransaction(
   return out;
 }
 
-/** Все правки документа (подряд идущие части одной правки объединены). */
+/** All suggestions in the document (consecutive parts of one suggestion are merged). */
 export function listSuggestions(doc: PMNode): Suggestion[] {
   const types = typesOf(doc.type.schema);
   const result: Suggestion[] = [];
@@ -332,7 +332,7 @@ export function listSuggestions(doc: PMNode): Suggestion[] {
   return result;
 }
 
-/** Принять или отклонить правки (все или с указанными id). */
+/** Accept or reject suggestions (all of them, or those with the given ids). */
 export function resolveSuggestions(
   state: EditorState,
   action: 'accept' | 'reject',
@@ -381,7 +381,7 @@ function removeEmptyBlock(tr: Transaction, pos: number): void {
   }
 }
 
-/** HTML документа без правок: как если принять все (accept) или отклонить все (reject). */
+/** The document without suggestions: as if all were accepted (accept) or all rejected (reject). */
 export function suggestionsResult(editor: Editor, action: 'accept' | 'reject'): PMNode {
   return resolveSuggestions(editor.view.state, action).doc;
 }

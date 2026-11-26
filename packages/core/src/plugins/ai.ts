@@ -55,28 +55,28 @@ export type AiAction =
   | 'custom';
 
 export interface AiRequest {
-  /** Что сделать — текст для модели (у быстрых действий — готовая инструкция на английском). */
+  /** What to do — text for the model (for quick actions, a ready instruction in English). */
   instruction: string;
-  /** Быстрое действие или custom — свой запрос пользователя. */
+  /** The quick action, or custom for the user's own request. */
   action: AiAction;
-  /** Выделенный текст (абзацы через пустую строку); пусто — модель пишет у курсора. */
+  /** The selected text (paragraphs separated by a blank line); empty — the model writes at the cursor. */
   text: string;
-  /** Текст до и после выделения (до 1500 символов) — для связности. */
+  /** Text before and after the selection (up to 1,500 characters), for context. */
   before: string;
   after: string;
-  /** Язык интерфейса редактора (например, ru). */
+  /** The editor's UI language (for example, en). */
   language: string;
-  /** Отмена: пользователь закрыл окно. */
+  /** Cancellation: the user closed the dialog. */
   signal: AbortSignal;
 }
 
 export interface AiOptions {
   /**
-   * Запрос к модели через ваш сервер. Вернуть текст ответа или поток кусков (AsyncIterable) —
-   * тогда ответ виден по мере написания. Ответ — только текст: абзацы через пустую строку.
+   * The request to the model through your server. Return the answer's text, or a stream of pieces
+   * (AsyncIterable) to show it as it is written. The answer is plain text: paragraphs separated by a blank line.
    */
   request?: (request: AiRequest) => Promise<string> | AsyncIterable<string>;
-  /** Подпись автора правок (по умолчанию «AI» на языке интерфейса). */
+  /** Author name on the suggestions ("AI" in the UI language by default). */
   name?: string;
 }
 

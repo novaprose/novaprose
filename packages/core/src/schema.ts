@@ -6,9 +6,8 @@ import { codeLanguage } from './code-language';
 import { elementId } from './element-id';
 
 /**
- * Базовая схема документа NovaProse (P0 из PRD §4.1–4.2).
- * Каждый узел и марка описывают и парсинг HTML (parseDOM), и сериализацию (toDOM),
- * поэтому HTML на входе и выходе предсказуем.
+ * The base document schema of NovaProse. Every node and mark defines both HTML parsing (parseDOM)
+ * and serialization (toDOM), so the HTML going in and out is predictable.
  */
 
 export const ALIGNMENTS = ['left', 'center', 'right', 'justify'] as const;
@@ -344,7 +343,7 @@ function buildTableNodes(allow: ClassFilter) {
 
 // ---------- классы (style_formats, validClasses) ----------
 
-/** Какие классы из HTML сохранять. По умолчанию — никакие: вывод без классов, как раньше. */
+/** Which classes from HTML to keep. By default none: output without classes. */
 export type ClassFilter = (className: string) => boolean;
 const NO_CLASSES: ClassFilter = () => false;
 const CLASS_TOKEN = /^-?[_a-zA-Z][\w-]*$/;
@@ -570,9 +569,9 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
     text: { group: 'inline' },
 
     /**
-     * Картинка с подписью: <figure><img><figcaption>…</figcaption></figure> — как в HTML, два блока
-     * внутри. Поэтому подпись нельзя превратить в заголовок или список (схема не пустит другой блок
-     * в figure) — картинка не потеряется. Атрибуты картинки — у figure_image, выравнивание — у figure.
+     * An image with a caption: <figure><img><figcaption>…</figcaption></figure>, as in HTML — two
+     * blocks inside. So the caption can't become a heading or a list (the schema won't let another
+     * block into figure) and the image is never lost. Image attributes live on figure_image, alignment on figure.
      */
     figure: {
       group: 'block',
@@ -599,7 +598,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
         return ['figure', { ...classAttr(node.attrs.class), ...(style ? { style } : {}) }, 0];
       },
     },
-    /** Картинка внутри figure (блочная, в отличие от картинки в строке). */
+    /** An image inside figure (a block, unlike an image in a line). */
     figure_image: {
       atom: true,
       selectable: false,
@@ -843,7 +842,7 @@ const buildMarks = (allow: ClassFilter) =>
       toDOM: (mark): DOMOutputSpec => styleSpan('font-size', cssValue.length(mark.attrs.value)),
     },
 
-    /** <span class="…"> — инлайн-стиль из style_formats. Только разрешённые классы. */
+    /** <span class="…"> — an inline style from style_formats. Allowed classes only. */
     span_class: {
       attrs: { class: {} },
       parseDOM: [
@@ -876,12 +875,12 @@ export type NodeName = keyof typeof nodes;
 export type MarkName = keyof typeof marks;
 
 /**
- * Схема редактора: базовые узлы и марки + расширения плагинов. Тип оставляем «базовым»: встроенный
- * код обращается только к своим узлам (`schema.nodes.paragraph`), а узлы плагинов доступны по имени.
+ * An editor's schema: base nodes and marks plus plugin extensions. The type stays the base one:
+ * built-in code only touches its own nodes (`schema.nodes.paragraph`), plugin nodes are available by name.
  */
 export type NovaSchema = Schema<NodeName, MarkName>;
 
-/** Базовая схема без расширений — у редакторов без плагинов-узлов она общая. */
+/** The base schema without extensions, shared by editors without node plugins. */
 export const schema: NovaSchema = new Schema<NodeName, MarkName>({ nodes, marks });
 
 export interface SchemaExtensions {
@@ -890,17 +889,17 @@ export interface SchemaExtensions {
 }
 
 /**
- * Схема с узлами и марками плагинов. Без расширений возвращает общую базовую схему.
- * Новые узлы и марки добавляются в конец: базовые правила разбора HTML остаются в приоритете,
- * если плагин не задал свой `priority` в parseDOM.
+ * A schema with the nodes and marks of plugins; without extensions, the shared base schema. New
+ * nodes and marks go at the end, so the base HTML parse rules keep priority unless a plugin sets its
+ * own `priority` in parseDOM.
  */
 export function createSchema(
   extensions: SchemaExtensions = {},
-  /** Какие классы сохранять (style_formats, validClasses). Без фильтра — никакие. */
+  /** Which classes to keep (style_formats, validClasses). Without a filter, none. */
   classFilter?: ClassFilter,
-  /** Правила элементов и атрибутов (validElements с атрибутами, extendedValidElements…). */
+  /** Rules for elements and attributes (validElements with attributes, extendedValidElements…). */
   htmlRules?: HtmlRulesInstance | null,
-  /** Направление редактора: справа налево отступ блока — margin-right. */
+  /** The editor's direction: right-to-left, a block's indent is margin-right. */
   direction: 'ltr' | 'rtl' = 'ltr',
 ): NovaSchema {
   const rtl = direction === 'rtl';

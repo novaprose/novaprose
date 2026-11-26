@@ -9,10 +9,10 @@ import { icons } from './icons';
 
 export interface SlashCommand {
   name: string;
-  /** Ключ перевода подписи. */
+  /** Translation key of the label. */
   label: MessageKey;
   icon: string;
-  /** Доп. слова для поиска (английские — чтобы «/h1» и «/quote» работали в любом языке UI). */
+  /** Extra search words (English, so "/h1" and "/quote" work in any UI language). */
   keywords: string[];
   shortcut?: string;
   run: (editor: Editor) => void;

@@ -7,13 +7,13 @@ import type { SidebarSpec } from './sidebar';
 const sidebarIcon = icons.sidebar;
 
 interface ControlBase {
-  /** Подпись для подсказки и aria-label. */
+  /** Text for the tooltip and aria-label. */
   tooltip: string;
-  /** SVG-иконка (строка). Если нет — показывается text. */
+  /** An SVG icon (string). Without one, `text` is shown. */
   icon?: string;
-  /** Текст на кнопке (для выпадающих списков: «Обычный текст ▾»). */
+  /** Text on the button (for dropdowns: "Paragraph ▾"). */
   text?: string;
-  /** Горячая клавиша в формате ProseMirror ('Mod-b') — только для подсказки. */
+  /** Shortcut in ProseMirror format ('Mod-b'), shown in the tooltip only. */
   shortcut?: string;
   isEnabled?: (editor: Editor) => boolean;
 }
@@ -21,31 +21,31 @@ interface ControlBase {
 export interface ButtonSpec extends ControlBase {
   type: 'button';
   onAction: (editor: Editor) => void;
-  /** Если задан — кнопка становится переключателем (aria-pressed). */
+  /** When set, the button becomes a toggle (aria-pressed). */
   isActive?: (editor: Editor) => boolean;
 }
 
 export interface MenuButtonSpec extends ControlBase {
   type: 'menu';
   items: (editor: Editor) => MenuEntry[];
-  /** Динамическая подпись (текущий стиль блока, шрифт и т.п.). */
+  /** A dynamic label (the current block style, font and so on). */
   label?: (editor: Editor) => string;
   isActive?: (editor: Editor) => boolean;
-  /** Минимальная ширина подписи в символах — чтобы тулбар не прыгал. */
+  /** Minimum label width in characters, so the toolbar doesn't jump. */
   minChars?: number;
 }
 
 export interface PanelButtonSpec extends ControlBase {
   type: 'panel';
   render: (editor: Editor, close: () => void) => HTMLElement;
-  /** Цвет полоски под иконкой (текущий цвет текста/фона). */
+  /** Color of the bar under the icon (the current text or background color). */
   indicator?: (editor: Editor) => string | null;
   isActive?: (editor: Editor) => boolean;
 }
 
 /**
- * Составная кнопка: основная часть выполняет действие (переключить список), стрелка открывает
- * меню вариантов (стиль маркеров). Как bullist/numlist с плагином advlist.
+ * A split button: the main part runs an action (toggle a list), the arrow opens a menu of variants
+ * (the bullet style). Like bullist/numlist with the advlist plugin.
  */
 export interface SplitButtonSpec extends ControlBase {
   type: 'split';
@@ -56,45 +56,45 @@ export interface SplitButtonSpec extends ControlBase {
 
 export type ControlSpec = ButtonSpec | MenuButtonSpec | PanelButtonSpec | SplitButtonSpec;
 
-/** Пункт меню менюбара. */
+/** A menu bar item. */
 export interface MenuItemSpec {
   text: string;
   icon?: string;
   shortcut?: string;
   onAction: (editor: Editor) => void;
-  /** Галочка (переключатель). */
+  /** A check mark (toggle). */
   isActive?: (editor: Editor) => boolean;
   isEnabled?: (editor: Editor) => boolean;
 }
 
 export type ContextPlacement = 'top-start' | 'top-end' | 'bottom-start' | 'bottom-end';
 
-/** Контекстный тулбар: появляется рядом с выделенным объектом (картинка, таблица, ссылка). */
+/** A context toolbar: appears next to the selected object (image, table, link). */
 export interface ContextToolbarSpec {
-  /** Когда показывать. Проверяются по порядку регистрации — побеждает первый подходящий. */
+  /** When to show it. Checked in order of registration; the first match wins. */
   predicate: (editor: Editor) => boolean;
-  /** Кнопки в формате тулбара ('a b | c'), из того же реестра. */
+  /** Buttons in toolbar format ('a b | c'), from the same registry. */
   items: string | string[];
-  /** Подпись для экранного диктора. */
+  /** Label for screen readers. */
   label: string;
-  /** Где показывать: над выделенным узлом (по умолчанию) или под выделением. */
+  /** Where to show it: above the selected node (default) or below the selection. */
   position?: 'node' | 'selection';
-  /** Свой якорь (например, вся таблица). Перекрывает position. */
+  /** Your own anchor (for example, the whole table). Overrides position. */
   anchor?: (editor: Editor) => DOMRect | null;
   /**
-   * Сторона относительно якоря; при нехватке места переворачивается. Функция — если сторона
-   * зависит от состояния (блок кода всегда слева направо, даже в документе справа налево).
+   * The side relative to the anchor; flips when there isn't room. A function when the side depends
+   * on the state (a code block is always left-to-right, even in a right-to-left document).
    */
   placement?: ContextPlacement | ((editor: Editor) => ContextPlacement);
-  /** Порядок проверки: больше — раньше (по умолчанию 0). Выделение текста в таблице → quickbar важнее таблицы. */
+  /** Check order: higher goes first (default 0). Text selected in a table → the quickbar beats the table. */
   priority?: number;
 }
 
 type WithoutType<T> = Omit<T, 'type'>;
 
 /**
- * Реестр кнопок тулбара (аналог editor.ui.registry). Встроенные кнопки регистрируются так же,
- * как пользовательские, — плагины ничем не ограничены по сравнению с ядром.
+ * The registry of toolbar controls (like editor.ui.registry). Built-in buttons are registered the
+ * same way as yours, so plugins can do everything the core can.
  */
 export class Registry {
   private readonly controls = new Map<string, ControlSpec>();
@@ -103,7 +103,7 @@ export class Registry {
     this.controls.set(name.toLowerCase(), { type: 'button', ...spec });
   }
 
-  /** Синоним addButton с isActive — для совместимости с привычным API. */
+  /** A synonym of addButton with isActive, for the familiar API. */
   addToggleButton(name: string, spec: WithoutType<ButtonSpec>): void {
     this.addButton(name, spec);
   }
@@ -122,12 +122,12 @@ export class Registry {
 
   private readonly menuItems = new Map<string, MenuItemSpec>();
 
-  /** Пункт меню менюбара (аналог addMenuItem). */
+  /** A menu bar item (like addMenuItem). */
   addMenuItem(name: string, spec: MenuItemSpec): void {
     this.menuItems.set(name.toLowerCase(), spec);
   }
 
-  /** Пункт-переключатель (с галочкой). */
+  /** A toggle item (with a check mark). */
   addToggleMenuItem(
     name: string,
     spec: MenuItemSpec & { isActive: (editor: Editor) => boolean },
@@ -136,8 +136,8 @@ export class Registry {
   }
 
   /**
-   * Пункт меню по имени. Если отдельного пункта нет — строится из одноимённой кнопки тулбара
-   * (подпись = tooltip), чтобы не дублировать каждую функцию дважды.
+   * A menu item by name. If there is no separate item, it is built from the toolbar button of the
+   * same name (label = tooltip), so each feature isn't defined twice.
    */
   getMenuItem(name: string): MenuItemSpec | undefined {
     const own = this.menuItems.get(name.toLowerCase());
@@ -158,12 +158,12 @@ export class Registry {
   private readonly contextToolbars = new Map<string, ContextToolbarSpec>();
   private readonly autocompleters = new Map<string, AutocompleterSpec>();
 
-  /** Автокомплитер по символу-триггеру: '/' — команды, '@' — упоминания, ':' — эмодзи. */
+  /** An autocompleter on a trigger character: '/' — commands, '@' — mentions, ':' — emoji. */
   private readonly sidebars = new Map<string, SidebarSpec>();
 
   /**
-   * Боковая панель (показ — editor.ui.sidebar). Если имя свободно, добавляется и кнопка-переключатель
-   * с этим именем для тулбара и меню (`button: false` — без неё).
+   * A sidebar (shown with editor.ui.sidebar). If the name is free, a toggle button with that name is
+   * added for the toolbar and menus too (`button: false` — without it).
    */
   addSidebar(name: string, spec: SidebarSpec): void {
     this.sidebars.set(name, spec);
@@ -192,7 +192,7 @@ export class Registry {
     this.contextToolbars.set(name.toLowerCase(), spec);
   }
 
-  /** По убыванию priority; при равенстве — в порядке регистрации (sort стабильна). */
+  /** By descending priority; equal ones in registration order (the sort is stable). */
   getContextToolbars(): [string, ContextToolbarSpec][] {
     return [...this.contextToolbars].sort((a, b) => (b[1].priority ?? 0) - (a[1].priority ?? 0));
   }

@@ -13,32 +13,32 @@ import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
 
 export { useIsomorphicLayoutEffect };
 
-/** Опции хука: всё из `EditorOptions`, кроме `element` — его даёт `ref`. */
+/** Hook options: everything from `EditorOptions` except `element`, which `ref` provides. */
 export type UseEditorOptions = Omit<EditorOptions, 'element'> & {
-  /** Вызывается сразу после создания экземпляра. */
+  /** Called right after the instance is created. */
   onCreate?: (editor: Editor) => void;
-  /** Вызывается перед уничтожением экземпляра. */
+  /** Called before the instance is destroyed. */
   onDestroy?: (editor: Editor) => void;
 };
 
 export interface UseEditorResult {
-  /** Callback-ref для контейнера: `<div ref={ref} />`. */
+  /** Callback ref for the container: `<div ref={ref} />`. */
   ref: (element: HTMLElement | null) => void;
-  /** Экземпляр редактора; `null` до монтирования и на сервере. */
+  /** The editor instance; `null` before mounting and on the server. */
   editor: Editor | null;
   /**
-   * Виды узлов на React (reactNodeView): отрисуйте рядом с контейнером — `<div ref={ref} />
-   * {nodeViews}`. Компоненты видов получают контекст того места, где стоит этот элемент.
+   * React node views (reactNodeView): render them next to the container — `<div ref={ref} />
+   * {nodeViews}`. View components get the context of the place where this element is rendered.
    */
   nodeViews: ReactNode;
 }
 
 /**
- * Создаёт редактор в контейнере, к которому привязан `ref`, и уничтожает при размонтировании.
+ * Creates the editor in the container `ref` is attached to and destroys it on unmount.
  *
- * Опции читаются в момент создания. Колбэки (`onChange`, `onCreate`, `onDestroy`) всегда берутся
- * свежие — их можно передавать стрелочными функциями. Чтобы пересоздать редактор с новыми опциями,
- * передайте `deps` (как у `useEffect`).
+ * Options are read when the editor is created. Callbacks (`onChange`, `onCreate`, `onDestroy`) are
+ * always the latest ones, so arrow functions are fine. To recreate the editor with new options,
+ * pass `deps` (as with `useEffect`).
  */
 export function useEditor(
   options: UseEditorOptions = {},

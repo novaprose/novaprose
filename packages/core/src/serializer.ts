@@ -201,8 +201,8 @@ function renderSpec(spec: DOMOutputSpec): Rendered {
 
 export class HTMLSerializer {
   /**
-   * Кэш отрисовки марок — свой у каждого типа марки: сериализатор общий для всех редакторов страницы,
-   * а вывод одноимённой марки зависит от схемы редактора (правила атрибутов, плагины).
+   * A cache of rendered marks, separate for each mark type: the serializer is shared by every editor
+   * on the page, while a mark's output depends on the editor's schema (attribute rules, plugins).
    */
   private readonly cache = new WeakMap<MarkType, Map<string, Rendered>>();
 

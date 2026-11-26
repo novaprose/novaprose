@@ -6,8 +6,8 @@ import { h } from './dom';
 import { icons } from './icons';
 
 /**
- * Печать как на экране (с видами узлов и стилями страницы; в режиме страниц — тот же лист).
- * Модуль печати ленивый: грузится при первой печати.
+ * Print what the editor shows (with node views and the page's styles; with page layout, the same
+ * sheet). The print module is lazy: it loads on the first print.
  */
 export function printContent(editor: Editor): void {
   void import('./print').then(

@@ -18,7 +18,7 @@ export const LABELS = {
 };
 
 export interface ImportWordOptions {
-  /** replace (по умолчанию) — заменить содержимое; insert — вставить у курсора. */
+  /** replace (default) — replace the content; insert — insert at the cursor. */
   mode?: 'replace' | 'insert';
 }
 

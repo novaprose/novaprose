@@ -8,12 +8,12 @@ import { createSchema, type ClassFilter, type NovaSchema } from './schema';
 import { HTMLSerializer } from './serializer';
 
 /**
- * Документ без редактора: та же схема, что строит редактор (плагины, классы, правила разметки,
- * направление письма), и тот же HTML, что getHTML(). Без DOM — работает на сервере: письма,
- * предпросмотр, отрисовка страниц из сохранённого JSON.
+ * A document without an editor: the same schema the editor builds (plugins, classes, markup rules,
+ * writing direction) and the same HTML as getHTML(). No DOM, so it works on the server: e-mails,
+ * previews, rendering pages from saved JSON.
  */
 
-/** Настройки, от которых зависят схема и HTML документа (подмножество настроек редактора). */
+/** The options the schema and the HTML depend on (a subset of the editor's options). */
 export type DocumentOptions = Pick<
   EditorOptions,
   | 'plugins'
@@ -160,20 +160,20 @@ export function sanitizeJSON(
 }
 
 export interface DocumentRenderer {
-  /** Схема (для своих операций с документом ProseMirror). */
+  /** The schema (for your own operations on the ProseMirror document). */
   readonly schema: NovaSchema;
-  /** Документ ProseMirror из JSON — с проверкой атрибутов и правилами контента. */
+  /** A ProseMirror document from JSON, with attributes checked and content rules applied. */
   doc(json: Record<string, unknown>): PMNode;
-  /** HTML документа — тот же, что getHTML() редактора с этими настройками. */
+  /** The document's HTML — the same as getHTML() of an editor with these options. */
   html(json: Record<string, unknown>): string;
-  /** Текст документа: блоки через пустую строку — как getText(). */
+  /** The document's text: blocks separated by a blank line, like getText(). */
   text(json: Record<string, unknown>): string;
 }
 
 /**
- * Отрисовщик документов для одних настроек: схема строится один раз — удобно для многих
- * документов (рассылка, список страниц). Плагины — по имени из каталога или объектом; ленивые
- * плагины (без своих узлов) на HTML не влияют и пропускаются.
+ * A document renderer for one set of options: the schema is built once, handy for many documents
+ * (a mailing, a list of pages). Plugins by name from the catalog or as objects; lazy plugins
+ * (without nodes of their own) don't affect the HTML and are skipped.
  *
  *   const renderer = createRenderer({ plugins: ['mentions', 'math'] });
  *   const html = renderer.html(savedJson);
@@ -205,7 +205,7 @@ export function createRenderer(options: DocumentOptions = {}): DocumentRenderer 
   };
 }
 
-/** HTML документа из JSON без редактора и без DOM (сервер, письма) — как getHTML(). */
+/** A document's HTML from JSON without an editor or a DOM (server, e-mails), the same as getHTML(). */
 export function renderHTML(json: Record<string, unknown>, options: DocumentOptions = {}): string {
   return createRenderer(options).html(json);
 }

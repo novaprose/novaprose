@@ -3,25 +3,25 @@ import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
 
 /**
- * Плагин mentions: «@» в тексте → список людей → упоминание `<span data-mention="id">@Имя</span>`.
- * `plugins: ['mentions']`, список людей — `pluginOptions.mentions.fetch` (обычно поиск в вашем API).
- * Тот же источник используют комментарии: «@» в поле комментария.
- * Здесь — узел и общие функции; список при вводе «@» — в mentions-ui.ts.
+ * The mentions plugin: "@" in the text → a list of people → a mention
+ * `<span data-mention="id">@Name</span>`. `plugins: ['mentions']`, the people come from
+ * `pluginOptions.mentions.fetch` (usually a search in your API). Comments use the same source for
+ * "@" in a comment field. This part is the node and shared functions; the list while typing "@" is in mentions-ui.ts.
  */
 
 export interface MentionUser {
   id: string;
   name: string;
-  /** Вторая строка в списке: должность, e-mail. */
+  /** A second line in the list: a job title, an e-mail. */
   description?: string;
 }
 
 export interface MentionsOptions {
-  /** Поиск людей по началу имени (запрос без «@»). Может вернуть Promise. */
+  /** Find people by the start of their name (the query without "@"). May return a Promise. */
   fetch: (query: string) => MentionUser[] | Promise<MentionUser[]>;
-  /** Человека упомянули в тексте (для уведомлений — или соберите их при сохранении: getMentions). */
+  /** Someone was mentioned in the text (for notifications — or collect them on save with getMentions). */
   onMention?: (user: MentionUser, editor: Editor) => void;
-  /** Сколько показывать в списке (по умолчанию 8). */
+  /** How many to show in the list (8 by default). */
   maxResults?: number;
 }
 
@@ -49,7 +49,7 @@ export async function findMentionUsers(
     }));
 }
 
-/** Кто упомянут в документе (без повторов, в порядке появления) — например, чтобы уведомить. */
+/** Who is mentioned in the document (no repeats, in order of appearance) — for example, to notify them. */
 export function getMentions(editorOrDoc: Editor | PMNode): MentionUser[] {
   const doc = 'view' in editorOrDoc ? editorOrDoc.view.state.doc : editorOrDoc;
   const seen = new Map<string, MentionUser>();

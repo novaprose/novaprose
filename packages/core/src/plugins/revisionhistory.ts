@@ -12,30 +12,30 @@ import { pickLabels } from './shared';
 import css from './revisionhistory.css?raw';
 
 /**
- * Плагин revisionhistory (имя как у TinyMCE): история версий документа.
- * Список версий, просмотр версии с подсветкой отличий от текущего текста, восстановление
- * (обычная правка — отменяется Ctrl+Z). Откуда версии — решает приложение: `pluginOptions.revisionhistory`
- * ({@link RevisionHistoryOptions}); при совместном редактировании — `sync.versions()` из @novaprose/collab.
+ * The revisionhistory plugin (named as in TinyMCE): the document's version history. A list of
+ * versions, viewing a version with the differences from the current text highlighted, and
+ * restoring (an ordinary edit — Ctrl+Z undoes it). Your app decides where versions come from:
+ * `pluginOptions.revisionhistory` ({@link RevisionHistoryOptions}); with collaboration, `sync.versions()` from @novaprose/collab.
  */
 
 export interface Revision {
   id: string;
-  /** Время версии, мс с 1970. */
+  /** Time of the version, ms since 1970. */
   createdAt: number;
-  /** Кто менял документ в этой версии. */
+  /** Who changed the document in this version. */
   authors?: string[];
-  /** Имя версии («Отправлено юристам»), если её сохранили вручную. */
+  /** Name of the version ("Sent to legal") if it was saved by hand. */
   label?: string | null;
 }
 
 export interface RevisionHistoryOptions {
-  /** Список версий (порядок не важен — показываем новые сверху). */
+  /** The list of versions (order doesn't matter: newest are shown first). */
   list: () => Promise<Revision[]>;
-  /** Содержимое версии: HTML или JSON документа. */
+  /** A version's content: HTML or a JSON document. */
   load: (revision: Revision, editor: Editor) => Promise<string | Record<string, unknown>>;
-  /** «Сохранить версию» (кнопка появляется, если задано). */
+  /** "Save version" (the button appears when this is set). */
   save?: (label?: string) => Promise<void>;
-  /** Версию восстановили (уже после замены содержимого). */
+  /** A version was restored (after the content was already replaced). */
   onRestore?: (revision: Revision) => void;
 }
 

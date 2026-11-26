@@ -1,20 +1,21 @@
 /**
- * Правила HTML-элементов и атрибутов: validElements (с атрибутами), extendedValidElements и
- * customElements. Синтаксис — как у одноимённых опций TinyMCE (по их публичной документации):
- * `a[href|title],div[class|data-*],@[id],my-widget`.
+ * Rules for HTML elements and attributes: validElements (with attributes), extendedValidElements and
+ * customElements. The syntax is that of the TinyMCE options with the same names (from their public
+ * documentation): `a[href|title],div[class|data-*],@[id],my-widget`.
  *
- * Два направления:
- *  1. Ограничение. Список в [...] — полный список атрибутов элемента: `a[href|title]` снимает
- *     target и class. Значения: `name=v` — по умолчанию, `name:v` — всегда, `name<a?b` — только из
- *     списка, `!name` — обязателен (без него элемент не распознаётся). `@[...]` и `*[...]` — для всех.
- *  2. Расширение. Атрибуты, которых встроенная схема не знает (`h2[id]`, `a[rel|data-*]`), хранятся в
- *     атрибуте узла `htmlAttrs`. Новые элементы (`div`, `section`, `abbr`, `<i class>` для иконок,
- *     свои `my-widget`) — универсальные узлы html_block / html_textblock / html_inline_atom и марка
- *     html_inline с атрибутом `tag`.
+ * Two directions:
+ *  1. Restricting. A list in [...] is the complete list of an element's attributes: `a[href|title]`
+ *     drops target and class. Values: `name=v` — default, `name:v` — always, `name<a?b` — only from
+ *     the list, `!name` — required (an element without it is not recognized). `@[...]` and `*[...]`
+ *     apply to all elements.
+ *  2. Extending. Attributes the built-in schema doesn't know (`h2[id]`, `a[rel|data-*]`) are kept in
+ *     the node attribute `htmlAttrs`. New elements (`div`, `section`, `abbr`, `<i class>` for icons,
+ *     your own `my-widget`) become generic nodes html_block / html_textblock / html_inline_atom and
+ *     the mark html_inline with a `tag` attribute.
  *
- * Безопасность правилами не отключается: script, iframe, формы и т. п. не разрешаются, обработчики
- * on*, srcdoc и formaction не сохраняются, адреса и CSS проверяются при разборе и при выводе
- * (документ может прийти через JSON в обход разбора).
+ * Rules never switch security off: script, iframe, forms and the like are not allowed, on* handlers,
+ * srcdoc and formaction are never kept, and addresses and CSS are checked when parsing and when
+ * writing (a document can arrive as JSON, bypassing the parser).
  */
 import type { DOMOutputSpec, MarkSpec, NodeSpec, ParseRule, Schema } from 'prosemirror-model';
 import {
@@ -51,7 +52,7 @@ const NEVER_ATTR =
 const ATTR_NAME = /^[a-z_:][a-z0-9_.:-]*$/;
 const TAG_NAME = /^[a-z][a-z0-9._-]*$/;
 
-/** Элементы встроенной схемы (их атрибуты можно ограничить и расширить). */
+/** Elements of the built-in schema (their attributes can be restricted and extended). */
 export const BASE_TAGS = new Set(
   'p,h1,h2,h3,h4,h5,h6,blockquote,pre,hr,ul,ol,li,img,figure,figcaption,br,table,tr,td,th,strong,em,u,s,code,a,sub,sup'.split(
     ',',
@@ -131,10 +132,10 @@ function warn(tag: string, reason: string): void {
 type Attrs = Record<string, unknown>;
 
 export class HtmlRules implements HtmlRulesInstance {
-  /** Список атрибутов элемента (null — список не задан, атрибуты встроенные). */
+  /** The element's attribute list (null — no list given, built-in attributes). */
   private readonly elements = new Map<string, AttrRule[] | null>();
   private readonly globals: AttrRule[] = [];
-  /** Универсальные элементы: тег во входном HTML → тег на выходе (синонимы `div/section`). */
+  /** Generic elements: tag in the input HTML → tag in the output (synonyms like `div/section`). */
   readonly blockTags = new Map<string, string>();
   readonly inlineTags = new Map<string, string>();
 
@@ -211,12 +212,12 @@ export class HtmlRules implements HtmlRulesInstance {
     return applyHtmlRules(specs.nodes, specs.marks, this, ref);
   }
 
-  /** Есть ли что применять (иначе редактор обходится без этого модуля). */
+  /** Whether there is anything to apply (otherwise the editor does without this module). */
   get active(): boolean {
     return this.elements.size > 0 || this.globals.length > 0;
   }
 
-  /** Правила касаются элемента: список атрибутов, значения или общие атрибуты. */
+  /** Whether the rules concern the element: an attribute list, values or common attributes. */
   touches(tag: string): boolean {
     return this.globals.length > 0 || this.elements.has(tag);
   }
@@ -225,18 +226,18 @@ export class HtmlRules implements HtmlRulesInstance {
     return [...(this.elements.get(tag) ?? []), ...this.globals];
   }
 
-  /** Разрешает ли правило атрибут (без учёта встроенных атрибутов элемента). */
+  /** Whether the rule allows an attribute (not counting the element's built-in attributes). */
   allows(tag: string, name: string): boolean {
     if (NEVER_ATTR.test(name) || !ATTR_NAME.test(name)) return false;
     return this.rulesFor(tag).some((rule) => matches(rule.name, name));
   }
 
-  /** Может ли у встроенного элемента быть атрибут сверх встроенных (кроме class и style). */
+  /** Whether a built-in element may have attributes beyond its built-in ones (except class and style). */
   extends(tag: string): boolean {
     return this.rulesFor(tag).some((rule) => rule.name !== 'class' && rule.name !== 'style');
   }
 
-  /** Правила разрешают class у какого-либо встроенного элемента (тогда классы сохраняются). */
+  /** Whether the rules allow class on any built-in element (then classes are kept). */
   get classOnBuiltIn(): boolean {
     if (this.globals.some((r) => matches(r.name, 'class'))) return true;
     for (const [tag, attrs] of this.elements) {
@@ -245,15 +246,15 @@ export class HtmlRules implements HtmlRulesInstance {
     return false;
   }
 
-  /** Все обязательные атрибуты на месте. */
+  /** All required attributes are present. */
   hasRequired(tag: string, dom: HTMLElement): boolean {
     return this.rulesFor(tag).every((rule) => !rule.required || dom.hasAttribute(rule.name));
   }
 
   /**
-   * Разрешённые правилом атрибуты элемента (значения проверены) или null. `skip` — атрибуты, которые
-   * хранит не элемент: у встроенных class и style (validClasses, validStyles, марки оформления).
-   * Собственный style новых элементов парсер заранее переносит в OWN_STYLE (см. parser.ts).
+   * The element's attributes allowed by the rule (values checked), or null. `skip` — attributes the
+   * element itself doesn't keep: class and style of built-in elements (validClasses, validStyles,
+   * formatting marks). The parser moves the own style of new elements to OWN_STYLE (see parser.ts).
    */
   readAttrs(tag: string, dom: HTMLElement, skip: readonly string[]): Record<string, string> | null {
     let out: Record<string, string> | null = null;
@@ -268,8 +269,8 @@ export class HtmlRules implements HtmlRulesInstance {
   }
 
   /**
-   * Атрибуты для вывода: встроенные + сохранённые (`extras`, могли прийти из JSON чем угодно),
-   * затем список элемента и правила значений.
+   * Attributes for output: built-in ones plus kept ones (`extras`, which may have come from JSON as
+   * anything), then the element's list and the value rules.
    */
   outputAttrs(tag: string, builtIn: Attrs, extras: unknown): Attrs {
     // Сначала встроенные, затем сохранённые — порядок не зависит от того, откуда пришло значение.
@@ -305,7 +306,7 @@ export class HtmlRules implements HtmlRulesInstance {
     return out;
   }
 
-  /** Применить правила к выводу toDOM: атрибуты верхнего элемента спеки. */
+  /** Apply the rules to toDOM output: attributes of the spec's top element. */
   decorate(spec: DOMOutputSpec, extras: unknown): DOMOutputSpec {
     if (!Array.isArray(spec) || typeof spec[0] !== 'string') return spec;
     const raw = spec[0] as string;
@@ -341,7 +342,7 @@ function parseRule(raw: string): { names: string[]; attrs: AttrRule[] | null } {
   return { names, attrs };
 }
 
-/** Правила из опций или null, если применять нечего. */
+/** Rules from the options, or null when there is nothing to apply. */
 export function createHtmlRules(options: HtmlRulesOptions): HtmlRules | null {
   if (!options.validElements && !options.extendedValidElements && !options.customElements) {
     return null;
@@ -540,9 +541,9 @@ function genericSpecs(rules: HtmlRules): {
 }
 
 /**
- * Применить правила к спекам схемы: встроенные узлы и марки получают правила атрибутов, новые
- * элементы — свои узлы и марки (в конце: встроенные правила разбора остаются в приоритете).
- * После создания схемы её нужно записать в `ref.schema`.
+ * Apply the rules to the schema specs: built-in nodes and marks get attribute rules, new elements
+ * get their own nodes and marks (at the end, so built-in parse rules keep priority). After the schema
+ * is created, store it in `ref.schema`.
  */
 export function applyHtmlRules(
   nodes: Record<string, NodeSpec>,
@@ -562,7 +563,7 @@ export function applyHtmlRules(
 }
 
 /**
- * Модуль для регистрации в ядре:
+ * The module to register in the core:
  *
  *   import { registerHtmlRules } from '@novaprose/core';
  *   import { htmlRules } from '@novaprose/core/html-rules';

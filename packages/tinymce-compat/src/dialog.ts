@@ -2,9 +2,9 @@ import type { Editor } from '@novaprose/core';
 import css from './dialog.css?raw';
 
 /**
- * editor.windowManager.open(spec) — диалог по описанию (как в документации TinyMCE): панель или
- * вкладки, поля, кнопки, initialData, onSubmit/onChange/onAction/onCancel/onClose и объект api.
- * Строится на диалоге NovaProse (фокус, Esc, мобильный «лист»); все подписи — textContent.
+ * editor.windowManager.open(spec) — a dialog from a description (as in the TinyMCE documentation):
+ * a panel or tabs, fields, buttons, initialData, onSubmit/onChange/onAction/onCancel/onClose and the
+ * api object. Built on the NovaProse dialog (focus, Esc, the mobile sheet); every label is textContent.
  */
 
 type Data = Record<string, unknown>;

@@ -5,18 +5,18 @@ export interface DialogOptions {
   host: HTMLElement;
   title: string;
   body: HTMLElement;
-  /** Без submitLabel диалог информационный: в подвале только кнопка cancelLabel («Закрыть»). */
+  /** Without submitLabel the dialog is informational: the footer has only the cancelLabel button ("Close"). */
   submitLabel?: string;
   cancelLabel: string;
   closeLabel: string;
-  /** Вернуть false (или строку ошибки), чтобы не закрывать диалог. */
+  /** Return false (or an error message) to keep the dialog open. */
   onSubmit?: () => boolean | string | void | Promise<boolean | string | void>;
-  /** large — для предпросмотра и HTML-кода. */
+  /** large — for the preview and the HTML source. */
   size?: 'normal' | 'large';
   onClose?: () => void;
-  /** Куда вернуть фокус после закрытия. */
+  /** Where focus returns after closing. */
   returnFocus?: () => void;
-  /** Элемент, получающий фокус при открытии (по умолчанию — первое поле). */
+  /** The element that gets focus on opening (the first field by default). */
   initialFocus?: HTMLElement;
 }
 

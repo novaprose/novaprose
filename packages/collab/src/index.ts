@@ -20,10 +20,10 @@ import { yCommentStore } from './comments';
 import { serverVersions, type ServerRequest, type VersionSource } from './versions';
 
 /**
- * Совместное редактирование NovaProse в реальном времени (Yjs, CRDT):
- * - синхронизация документа через сервер (Hocuspocus-совместимый, см. apps/sync-server);
- * - курсоры и выделения других участников с именами;
- * - отмена только своих правок (чужие изменения не откатываются по Ctrl+Z).
+ * Real-time collaborative editing for NovaProse (Yjs, CRDT):
+ * - the document syncs through a server (Hocuspocus-compatible, see apps/sync-server);
+ * - other people's cursors and selections, with names;
+ * - undo undoes only your own changes (Ctrl+Z never rolls back someone else's).
  *
  * ```ts
  * createEditor({
@@ -37,42 +37,42 @@ export type CollabStatus = 'connecting' | 'connected' | 'disconnected';
 
 export interface CollabUser {
   name: string;
-  /** Цвет курсора (CSS-цвет). По умолчанию — из палитры по имени. */
+  /** Cursor color (any CSS color). By default one from the palette, picked by name. */
   color?: string;
 }
 
-/** Участник документа (из присутствия, «awareness»). */
+/** A participant of the document (from presence, "awareness"). */
 export interface CollabParticipant {
-  /** Идентификатор клиента Yjs: у одного человека в двух вкладках — два участника. */
+  /** The Yjs client ID: one person in two tabs is two participants. */
   clientId: number;
   name: string;
   color: string;
-  /** Это текущий редактор. */
+  /** This is the current editor. */
   self: boolean;
 }
 
 export interface CollabOptions {
-  /** Адрес сервера синхронизации (wss://…). */
+  /** Address of the sync server (wss://…). */
   url?: string;
-  /** Идентификатор документа на сервере. */
+  /** The document's ID on the server. */
   document?: string;
-  /** JWT вашего бэкенда (или функция, которая его получает) — сервер проверяет права на документ. */
+  /** A JWT from your backend (or a function that gets one): the server checks access to the document. */
   token?: string | (() => string) | (() => Promise<string>);
-  /** Кто редактирует — имя и цвет курсора для остальных. */
+  /** Who is editing: the name and cursor color others see. */
   user?: CollabUser;
   /**
-   * Свой Y.Doc и Awareness вместо встроенного подключения (свой транспорт: WebRTC, y-websocket,
-   * тесты). Тогда url/document/token не используются, а подключением управляет вызывающий код.
+   * Your own Y.Doc and Awareness instead of the built-in connection (your own transport: WebRTC,
+   * y-websocket, tests). url/document/token are then unused, and your code manages the connection.
    */
   ydoc?: Y.Doc;
   awareness?: Awareness;
-  /** Имя общего фрагмента в Y.Doc (по умолчанию 'prosemirror'). */
+  /** Name of the shared fragment in the Y.Doc ('prosemirror' by default). */
   field?: string;
   onStatus?: (status: CollabStatus) => void;
-  /** Документ загружен с сервера (первая синхронизация). */
+  /** The document has loaded from the server (first sync). */
   onSynced?: () => void;
   onAuthenticationFailed?: (reason: string) => void;
-  /** Состав участников изменился (подключился, ушёл, сменил имя). Свой клиент — первым. */
+  /** The participants changed (someone joined, left or changed their name). Your own client comes first. */
   onUsers?: (users: CollabParticipant[]) => void;
 }
 
@@ -87,7 +87,7 @@ const PALETTE = [
   '#dc2626',
 ];
 
-/** Стабильный цвет по имени: у одного человека один цвет во всех вкладках. */
+/** A stable color for a name: one person gets the same color in every tab. */
 export function colorFor(name: string): string {
   let hash = 0;
   for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
@@ -201,19 +201,19 @@ function connect(options: CollabOptions): Connection {
   };
 }
 
-/** Плагин совместного редактирования; `setUser` меняет имя/цвет для остальных без переподключения. */
+/** The collaboration plugin; `setUser` changes your name and color for others without reconnecting. */
 export type CollabPlugin = NovaPlugin & {
   setUser(user: CollabUser): void;
-  /** Комментарии в общем документе — для `pluginOptions.comments.store` (плагин comments). */
+  /** Comments in the shared document, for `pluginOptions.comments.store` (the comments plugin). */
   commentStore(): CommentStore;
   /**
-   * История версий с сервера синхронизации — для `pluginOptions.revisionhistory` (плагин revisionhistory).
-   * Только при подключении по url (со своим ydoc версий нет).
+   * Version history from the sync server, for `pluginOptions.revisionhistory` (the revisionhistory
+   * plugin). Only when connected by url (there are no versions with your own ydoc).
    */
   versions(): VersionSource;
 };
 
-/** Плагин совместного редактирования. Передаётся объектом в `plugins` (не по имени и не лениво). */
+/** The collaboration plugin. Passed as an object in `plugins` (not by name and not lazily). */
 export function collab(options: CollabOptions): CollabPlugin {
   let connection: Connection | null = null;
   const get = () => (connection ??= connect(options));

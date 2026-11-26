@@ -7,11 +7,11 @@ import { insertTable, isInTable } from '../tables';
 import { icons } from '../ui/icons';
 
 /**
- * Quickbars: панели «по месту», как одноимённый плагин TinyMCE.
- * - над выделенным текстом — быстрое форматирование;
- * - на пустой строке — быстрая вставка (картинка, таблица).
+ * Quickbars: toolbars in place, like the TinyMCE plugin of the same name.
+ * - above selected text — quick formatting;
+ * - on an empty line — quick insert (image, table).
  *
- * Настройки (pluginOptions.quickbars), false — выключить панель:
+ * Options (pluginOptions.quickbars), false turns a bar off:
  *   { selection: 'bold italic | quicklink h2 h3 blockquote', insert: 'quickimage quicktable' }
  */
 export interface QuickbarsOptions {

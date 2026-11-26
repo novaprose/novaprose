@@ -1,4 +1,4 @@
-/** Английские строки UI — язык по умолчанию и эталон набора ключей для остальных языков. */
+/** English UI strings: the default language and the reference set of keys for other languages. */
 export const en = {
   'toolbar.label': 'Formatting',
   'toolbar.options': 'options',

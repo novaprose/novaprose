@@ -30,13 +30,13 @@ export type AccordionState = 'inherited' | 'collapsed' | 'expanded';
 
 export interface AccordionOptions {
   /**
-   * Состояние при загрузке HTML: как в разметке (`inherited`, по умолчанию), все свёрнуты
-   * (`collapsed`) или все раскрыты (`expanded`). Как `details_initial_state` у TinyMCE.
+   * The state when HTML is loaded: as in the markup (`inherited`, default), all collapsed
+   * (`collapsed`) or all expanded (`expanded`). Like `details_initial_state` in TinyMCE.
    */
   initialState?: AccordionState;
   /**
-   * Атрибут `open` в getHTML: как в редакторе (`inherited`, по умолчанию), всегда свёрнуто или
-   * всегда раскрыто. Как `details_serialized_state` у TinyMCE.
+   * The `open` attribute in getHTML: as in the editor (`inherited`, default), always collapsed or
+   * always expanded. Like `details_serialized_state` in TinyMCE.
    */
   serializedState?: AccordionState;
 }

@@ -6,19 +6,19 @@ import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
 
 /**
- * Плагин mergetags: переменные шаблона («Имя клиента», «Номер заказа»), которые ваш сервер
- * заменит значениями при печати или отправке. В тексте — нередактируемая «фишка», в HTML —
- * `<span data-mergetag="client">Имя клиента</span>` (имя атрибута настраивается).
+ * The mergetags plugin: template variables ("Client name", "Order number") that your server replaces
+ * with values when printing or sending. In the text it is a non-editable chip, in HTML
+ * `<span data-mergetag="client">Client name</span>` (the attribute name can be changed).
  *
- * `plugins: ['mergetags']`, список — `pluginOptions.mergetags.list`. Вставка — кнопка `mergetags`
- * или ввод `{{` в тексте. Переменные, которых нет в списке, не теряются: показываются по ключу.
- * Здесь — узел и его вид в редакторе; меню и ввод `{{` — в mergetags-ui.ts.
+ * `plugins: ['mergetags']`, the list in `pluginOptions.mergetags.list`. Insert them with the
+ * `mergetags` button or by typing `{{`. Variables missing from the list aren't lost: they show by key.
+ * This part is the node and how it looks in the editor; the menu and typing `{{` are in mergetags-ui.ts.
  */
 
 export interface MergeTag {
-  /** Ключ, который увидит ваш сервер: 'client', 'order.number'. */
+  /** The key your server sees: 'client', 'order.number'. */
   key: string;
-  /** Подпись в редакторе: 'Имя клиента'. */
+  /** The label in the editor: 'Client name'. */
   label: string;
 }
 
@@ -28,9 +28,9 @@ export interface MergeTagGroup {
 }
 
 export interface MergeTagsOptions {
-  /** Переменные — списком или по группам. */
+  /** Variables, as a list or in groups. */
   list?: (MergeTag | MergeTagGroup)[];
-  /** Атрибут с ключом в HTML. По умолчанию 'data-mergetag'. */
+  /** The HTML attribute holding the key. Default 'data-mergetag'. */
   attribute?: string;
 }
 

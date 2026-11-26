@@ -20,9 +20,9 @@ import type { Editor } from './editor';
 import { codeLanguage } from './code-language';
 
 export interface MarkdownToHTMLOptions {
-  /** Превращать адреса вида https://… в ссылки (по умолчанию true). */
+  /** Turn addresses like https://… into links (true by default). */
   linkify?: boolean;
-  /** Одиночный перенос строки — <br> (как в чатах). По умолчанию false (как в CommonMark). */
+  /** A single line break becomes <br> (as in chats). Default false (as in CommonMark). */
   breaks?: boolean;
 }
 
@@ -64,7 +64,7 @@ function taskLists(md: InstanceType<typeof MarkdownIt>): void {
   });
 }
 
-/** Markdown (CommonMark + таблицы и ~~зачёркивание~~ GFM) → HTML для `setContent` / `insertContent`. */
+/** Markdown (CommonMark plus GFM tables and ~~strikethrough~~) → HTML for `setContent` / `insertContent`. */
 export function markdownToHTML(markdown: string, options: MarkdownToHTMLOptions = {}): string {
   const md = new MarkdownIt('default', {
     html: false,
@@ -326,9 +326,9 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
 );
 
 /**
- * Документ → Markdown (CommonMark + таблицы и зачёркивание GFM). Оформление, которого нет в Markdown
- * (подчёркивание, цвет, шрифт, разрыв страницы), снимается — текст сохраняется. Переменные шаблона
- * становятся `{{key}}`, упоминания — `@Имя`.
+ * A document → Markdown (CommonMark plus GFM tables and strikethrough). Formatting Markdown doesn't
+ * have (underline, color, font, page break) is dropped and the text is kept. Template variables
+ * become `{{key}}`, mentions `@Name`.
  */
 export function toMarkdown(source: Editor | PMNode): string {
   const doc = 'view' in source ? source.view.state.doc : source;

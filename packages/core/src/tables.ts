@@ -1,11 +1,11 @@
 /**
- * Таблицы в первой загрузке — только лёгкая часть: создание и вставка таблицы, сетка выбора
- * размера, положение таблицы на экране. Механика (выделение ячеек, ширина колонок, команды строк и
- * столбцов, сортировка, свойства) — модуль ./table на prosemirror-tables: ~10 КБ gzip, грузится в
- * фоне сразу после создания редактора и входит в `editor.ready`.
+ * Tables in the first load are only the light part: creating and inserting a table, the size grid,
+ * the table's position on screen. The mechanics (cell selection, column widths, row and column
+ * commands, sorting, properties) are the ./table module on prosemirror-tables: ~10 KB gzip, loaded
+ * in the background right after the editor is created and part of `editor.ready`.
  *
- * Команды и помощники механики доступны здесь «заместителями» с тем же API: пока модуль не
- * загружен (первые миллисекунды), команда «недоступна» (false), как любая неприменимая команда.
+ * The commands and helpers of the mechanics are available here as stand-ins with the same API:
+ * until the module has loaded (the first milliseconds), a command is "unavailable" (false), like any command that doesn't apply.
  */
 import { type Node as PMNode } from 'prosemirror-model';
 import { TextSelection, type Command, type EditorState, type Plugin } from 'prosemirror-state';
@@ -76,7 +76,7 @@ const lazy =
   (state, dispatch, view) =>
     tables ? tables.tableCommands[name](state, dispatch, view) : false;
 
-/** Команды строк, столбцов и ячеек (публичный API; до загрузки механики — недоступны). */
+/** Row, column and cell commands (public API; unavailable until the mechanics have loaded). */
 export const tableCommands: Record<TableCommandName, Command> = {
   addRowBefore: lazy('addRowBefore'),
   addRowAfter: lazy('addRowAfter'),
@@ -91,7 +91,7 @@ export const tableCommands: Record<TableCommandName, Command> = {
   deleteTable: lazy('deleteTable'),
 };
 
-/** Фон выделенных ячеек (null — убрать). */
+/** Background of the selected cells (null removes it). */
 export function setCellBackground(color: string | null): Command {
   return (state, dispatch, view) =>
     tables ? tables.setCellBackground(color)(state, dispatch, view) : false;
@@ -149,7 +149,7 @@ export function tableRect(editor: Editor): DOMRect | null {
   return null;
 }
 
-/** Создать таблицу rows×cols; первая строка — заголовки, если withHeader. */
+/** Create a rows×cols table; the first row is headers when withHeader. */
 export function createTable(
   rows: number,
   cols: number,
@@ -167,7 +167,7 @@ export function createTable(
   return table.create(null, rowNodes);
 }
 
-/** Вставить таблицу на место выделения и поставить курсор в первую ячейку. */
+/** Insert a table in place of the selection and put the cursor in its first cell. */
 export function insertTable(rows: number, cols: number, withHeader = true): Command {
   return (state, dispatch) => {
     if (rows < 1 || cols < 1 || rows > 100 || cols > 50) return false;

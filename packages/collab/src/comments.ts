@@ -2,9 +2,9 @@ import { sanitizeThread, type CommentStore, type CommentThread } from '@novapros
 import * as Y from 'yjs';
 
 /**
- * Хранилище комментариев в общем Y.Doc: обсуждения синхронизируются между участниками так же, как
- * текст, и сохраняются сервером синхронизации вместе с документом. Ответы — в Y.Array, поэтому
- * одновременные ответы двух человек не теряются.
+ * A comment store in the shared Y.Doc: discussions sync between participants like the text and are
+ * saved by the sync server together with the document. Replies live in a Y.Array, so two people
+ * replying at once don't lose each other's replies.
  */
 export function yCommentStore(ydoc: Y.Doc, name = 'comments'): CommentStore {
   const root = ydoc.getMap<Y.Map<unknown>>(name);

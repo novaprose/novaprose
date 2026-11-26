@@ -4,15 +4,15 @@ export type { MessageKey, Messages };
 export { en };
 
 /**
- * Строки плагинов: `<плагин>.<ключ>` («comments.reply», «anchor.title»). Плагины грузятся лениво,
- * поэтому их строки живут в самом плагине и регистрируются при загрузке (registerPluginMessages),
- * но переводятся той же системой, что и ядро: registerLanguage и опция `translations` их видят.
+ * Plugin strings: `<plugin>.<key>` ('comments.reply', 'anchor.title'). Plugins load lazily, so their
+ * strings live in the plugin and are registered when it loads (registerPluginMessages), but they are
+ * translated by the same system as the core: registerLanguage and the `translations` option see them.
  */
 export type PluginMessageKey = `${string}.${string}`;
 
 /**
- * Языковой пакет или точечные переопределения: строки ядра (с подсказками типов) и строки плагинов.
- * Недостающие ключи берутся из английского.
+ * A language pack or individual overrides: core strings (with type hints) and plugin strings.
+ * Missing keys fall back to English.
  */
 export type LanguagePack = Partial<Messages> & { [key: PluginMessageKey]: string };
 
@@ -42,7 +42,7 @@ function flatten(labels: PluginLabels): Record<string, string> {
   return out;
 }
 
-/** Загрузчик пакета: `() => import('@novaprose/core/i18n/de')` — язык качается, только когда нужен. */
+/** A pack loader: `() => import('@novaprose/core/i18n/de')` — the language downloads only when needed. */
 export type LanguageLoader = () => Promise<LanguagePack | { default: LanguagePack }>;
 
 const loaders: Record<string, LanguageLoader> = {};
@@ -57,8 +57,8 @@ function install(lang: string, messages: LanguagePack, below = false): void {
 }
 
 /**
- * Зарегистрировать языковой пакет (BCP-47 код: 'de', 'pt-BR') или функцию, которая его загрузит, —
- * тогда до создания редактора `await loadLanguage(code)`. Недостающие ключи берутся из английского.
+ * Register a language pack (BCP 47 code: 'de', 'pt-BR') or a function that loads it — then call
+ * `await loadLanguage(code)` before creating the editor. Missing keys fall back to English.
  */
 export function registerLanguage(code: string, messages: LanguagePack | LanguageLoader): void {
   const lang = code.toLowerCase();
@@ -66,16 +66,16 @@ export function registerLanguage(code: string, messages: LanguagePack | Language
   else install(lang, messages);
 }
 
-/** Язык готов для нового редактора: пакет зарегистрирован (или это английский). */
+/** Whether a language is ready for a new editor: its pack is registered (or it is English). */
 export function hasLanguage(code: string): boolean {
   const lang = code.toLowerCase();
   return lang in builtin || lang.split('-')[0]! in builtin;
 }
 
 /**
- * Загрузить язык, зарегистрированный загрузчиком (в CDN-сборках так подключены все пакеты).
- * true — язык готов, false — ни пакета, ни загрузчика. Строки берутся при создании редактора,
- * поэтому — до него. Ошибку загрузки можно повторить: неудачная попытка не запоминается.
+ * Load a language registered with a loader (the CDN builds register every pack this way). true —
+ * the language is ready, false — there is neither a pack nor a loader. Strings are taken when an
+ * editor is created, so load first. A failed load can be retried: the failure isn't remembered.
  */
 export function loadLanguage(code: string): Promise<boolean> {
   const lang = code.toLowerCase();
@@ -107,8 +107,8 @@ export function registerPluginMessages(namespace: string, dict: PluginDict): voi
 }
 
 /**
- * Все зарегистрированные строки плагинов в плоском виде: namespace → язык → ключ → строка
- * (для проверки полноты переводов и шаблона для переводчиков).
+ * All registered plugin strings, flattened: namespace → language → key → string (to check that
+ * translations are complete, and as a template for translators).
  */
 export function getPluginMessages(): Readonly<
   Record<string, Readonly<Record<string, Record<string, string>>>>

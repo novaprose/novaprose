@@ -15,22 +15,22 @@ export type InlineTag =
   'span' | 'strong' | 'b' | 'em' | 'i' | 'u' | 's' | 'strike' | 'del' | 'code' | 'sub' | 'sup';
 
 export interface FormatSpec {
-  /** Сменить тип блока. */
+  /** Change the block type. */
   block?: BlockTag;
-  /** Отметить выделенный текст. */
+  /** Mark the selected text. */
   inline?: InlineTag;
-  /** Применить к существующим элементам: 'p,h1', 'img', 'blockquote'. */
+  /** Apply to existing elements: 'p,h1', 'img', 'blockquote'. */
   selector?: string;
-  /** Классы: 'note' или ['note', 'warning']. */
+  /** Classes: 'note' or ['note', 'warning']. */
   classes?: string | string[];
   /**
-   * Стили. Для текста — color, background-color, font-family, font-size;
-   * для блоков — text-align, line-height. Остальные не поддерживаются (предупреждение в консоли).
+   * Styles. For text — color, background-color, font-family, font-size; for blocks — text-align,
+   * line-height. Others aren't supported (a warning in the console).
    */
   styles?: Record<string, string>;
 }
 
-/** Пункт меню «Стили»: свой формат, ссылка на именованный (format) или группа (items). */
+/** An item of the Styles menu: your own format, a reference to a named one (format) or a group (items). */
 export interface StyleFormat extends FormatSpec {
   title: string;
   format?: string;
@@ -200,19 +200,19 @@ function keepBlockStyle(attrs: Record<string, unknown>) {
 }
 
 /**
- * Реестр форматов редактора и их применение к выделению (`editor.formatter`).
- * Классы из зарегистрированных форматов сохраняются при разборе HTML.
+ * The editor's formats and applying them to the selection (`editor.formatter`). Classes of
+ * registered formats are kept when HTML is parsed.
  */
 export class Formatter {
   private readonly registry = new Map<string, FormatSpec[]>();
 
   constructor(
     private readonly editor: Editor,
-    /** Пополняется классами новых форматов — схема сверяется с ним при разборе HTML. */
+    /** Grows with the classes of new formats; the schema checks against it when parsing HTML. */
     private readonly allowedClasses: Set<string>,
   ) {}
 
-  /** Зарегистрировать именованный формат (одно описание или несколько вариантов). */
+  /** Register a named format (one description or several variants). */
   register(name: string, spec: FormatSpec | FormatSpec[]): void {
     const specs = Array.isArray(spec) ? spec : [spec];
     this.registry.set(name, specs);
@@ -238,14 +238,14 @@ export class Formatter {
     return specs ?? [];
   }
 
-  /** Можно ли применить формат к выделению (для selector — есть ли подходящие элементы). */
+  /** Whether the format can apply to the selection (for selector: whether there are matching elements). */
   canApply(format: string | FormatSpec): boolean {
     if (!this.editor.isEditable()) return false;
     const state = this.editor.view.state;
     return this.resolve(format).some((spec) => canApply(state, spec));
   }
 
-  /** Подходит ли выделение под формат. */
+  /** Whether the selection matches the format. */
   match(format: string | FormatSpec): boolean {
     const state = this.editor.view.state;
     return this.resolve(format).some((spec) => matchSpec(state, spec));

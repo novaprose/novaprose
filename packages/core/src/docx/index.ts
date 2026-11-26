@@ -25,8 +25,8 @@ function isEditor(source: unknown): source is Editor {
 }
 
 /**
- * Документ → .docx. Источник — редактор (лист и поля — из его режима страниц), документ
- * ProseMirror или сохранённый JSON (настройки, влияющие на схему, — как у редактора).
+ * A document → .docx. The source is an editor (the sheet and margins come from its page layout), a
+ * ProseMirror document or saved JSON (with the options that shape the schema, as for an editor).
  */
 export function exportDocx(
   source: Editor | PMNode | Record<string, unknown>,
@@ -39,11 +39,11 @@ export function exportDocx(
 }
 
 export interface ImportDocxOptions {
-  /** replace (по умолчанию) — заменить содержимое (Ctrl+Z вернёт); insert — вставить у курсора. */
+  /** replace (default) — replace the content (Ctrl+Z brings it back); insert — insert at the cursor. */
   mode?: 'replace' | 'insert';
 }
 
-/** .docx → в редактор. Лист и поля документа — в режим страниц (если он подключён). */
+/** .docx → into the editor. The document's sheet and margins go to page layout (if it is active). */
 export async function importDocx(
   editor: Editor,
   file: Blob | ArrayBuffer | Uint8Array,

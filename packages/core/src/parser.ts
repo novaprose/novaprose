@@ -101,7 +101,7 @@ class NovaDOMParser extends DOMParser {
 
 const parsers = new WeakMap<Schema, NovaDOMParser>();
 
-/** Парсер для схемы конкретного редактора (создаётся один раз на схему). */
+/** A parser for a specific editor's schema (created once per schema). */
 export function parserFor(target: Schema): DOMParser {
   let parser = parsers.get(target);
   if (!parser) {

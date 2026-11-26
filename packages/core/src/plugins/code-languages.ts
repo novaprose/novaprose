@@ -1,15 +1,15 @@
 /**
- * Языки подсветки кода: грамматики highlight.js, синонимы и список для выбора.
- * Каждая грамматика — отдельный ленивый чанк: документ с кодом на JavaScript скачивает только
- * ядро подсветки и JavaScript (~11 КБ gzip), а не все языки сразу.
+ * Code highlighting languages: highlight.js grammars, aliases and the list to choose from. Each
+ * grammar is a separate lazy chunk: a document with JavaScript code downloads only the highlighter
+ * core and JavaScript (~11 KB gzip), not every language at once.
  */
 
-/** Грамматика highlight.js: функция, возвращающая описание языка. */
+/** A highlight.js grammar: a function returning the language definition. */
 export type CodeGrammar = (hljs: never) => unknown;
-/** Загрузчик грамматики: модуль с default-экспортом или сама функция. */
+/** A grammar loader: a module with a default export, or the function itself. */
 export type CodeGrammarLoader = () => Promise<{ default: CodeGrammar } | CodeGrammar>;
 
-/** Пункт списка языков: значение (в HTML — класс `language-<value>`) и подпись. */
+/** An item of the language list: the value (the class `language-<value>` in HTML) and a label. */
 export interface CodeLanguage {
   value: string;
   label: string;

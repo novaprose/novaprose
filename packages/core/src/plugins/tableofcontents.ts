@@ -24,15 +24,15 @@ export const LABELS = {
 };
 
 export interface TableOfContentsOptions {
-  /** Заголовки каких уровней попадают в оглавление: 1…depth (по умолчанию 3). */
+  /** Which heading levels go into the table of contents: 1…depth (3 by default). */
   depth?: number;
-  /** Класс блока в HTML (по умолчанию `nova-toc`; у TinyMCE — `mce-toc`). */
+  /** The block's class in HTML (`nova-toc` by default; TinyMCE uses `mce-toc`). */
   className?: string;
-  /** Тег заголовка оглавления: `p` (по умолчанию) или `h1`–`h6`. */
+  /** Tag of the table of contents title: `p` (default) or `h1`–`h6`. */
   titleTag?: string;
-  /** Подпись оглавления; по умолчанию — «Contents» на языке интерфейса. Пустая строка — без неё. */
+  /** The title; "Contents" in the UI language by default. An empty string — no title. */
   title?: string;
-  /** Нумерованный список вместо маркированного. */
+  /** A numbered list instead of a bulleted one. */
   orderedList?: boolean;
 }
 

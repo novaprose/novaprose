@@ -4,24 +4,24 @@ import { CompatEditor } from './editor';
 import { mapOptions, type TinyConfig } from './options';
 
 /**
- * Слой совместимости с API `tinymce` для перехода на NovaProse без переписывания интеграции:
+ * A compatibility layer with the `tinymce` API, to move to NovaProse without rewriting the integration:
  *
  * ```js
  * import { tinymce } from '@novaprose/tinymce-compat';
  * tinymce.init({ selector: 'textarea', plugins: 'lists link image', toolbar: 'undo redo | bold italic' });
  * ```
  *
- * Или тегом <script> (CDN-сборка задаёт window.tinymce и подключает стили сама).
- * Поведение — по публичной документации TinyMCE; код TinyMCE не используется.
+ * Or with a <script> tag (the CDN build sets window.tinymce and adds the styles itself).
+ * The behavior follows TinyMCE's public documentation; no TinyMCE code is used.
  */
 
 type PluginFn = (editor: CompatEditor, url: string) => unknown;
 
 export interface TinyMCECompat {
-  /** Версия API, под которую написана совместимость (некоторые интеграции проверяют её). */
+  /** The API version this compatibility targets (some integrations check it). */
   readonly majorVersion: string;
   readonly minorVersion: string;
-  /** Признак: это NovaProse. */
+  /** A flag: this is NovaProse. */
   readonly novaprose: true;
   readonly activeEditor: CompatEditor | null;
   readonly editors: CompatEditor[];
@@ -247,7 +247,7 @@ export function createTinymce(): TinyMCECompat {
   return api;
 }
 
-/** Общий объект `tinymce` для модулей (CDN-сборка кладёт его в window.tinymce). */
+/** The shared `tinymce` object for modules (the CDN build puts it into window.tinymce). */
 export const tinymce = createTinymce();
 
 export { CompatEditor };

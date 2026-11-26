@@ -5,13 +5,13 @@ import { createMenu, focusMenu, type MenuEntry } from './menu';
 import type { Popover } from './popover';
 
 export interface MenuDefinition {
-  /** Заголовок меню (строка) или ключ перевода. */
+  /** The menu title (a string) or a translation key. */
   title: string;
-  /** Пункты через пробел, '|' — разделитель: 'undo redo | searchreplace'. */
+  /** Items separated by spaces, '|' is a separator: 'undo redo | searchreplace'. */
   items: string;
 }
 
-/** Стандартные меню. Имена пунктов — из реестра пунктов меню или кнопок тулбара. */
+/** The standard menus. Item names come from the registry of menu items or toolbar buttons. */
 export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
   file: { title: 'menu.file', items: 'importword exportword | preview | print' },
   edit: { title: 'menu.edit', items: 'undo redo | selectall | searchreplace pastetext' },

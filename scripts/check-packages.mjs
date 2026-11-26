@@ -51,6 +51,35 @@ let failed = 0;
   } else console.log('✓ стили плагинов в коде @novaprose/core');
 }
 
+// Описания в типах (.d.ts) видны разработчикам в подсказках IDE — только по-английски. JSDoc у
+// экспортов и публичных полей пишется на английском; внутренние комментарии могут быть русскими.
+{
+  const walk = (dir) =>
+    readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? walk(`${dir}/${entry.name}`) : [`${dir}/${entry.name}`],
+    );
+  const russian = readdirSync('packages')
+    .flatMap((pkg) => {
+      try {
+        return walk(`packages/${pkg}/dist`);
+      } catch {
+        return [];
+      }
+    })
+    .filter((f) => /\.d\.c?ts$/.test(f))
+    .flatMap((f) =>
+      readFileSync(f, 'utf8')
+        .split('\n')
+        .map((line, i) => ({ f, i, line }))
+        .filter(({ line }) => /[А-Яа-яЁё]/.test(line)),
+    );
+  if (russian.length) {
+    failed++;
+    const sample = russian.slice(0, 10).map(({ f, i, line }) => `${f}:${i + 1}: ${line.trim()}`);
+    console.log(`✗ русский текст в типах (.d.ts): ${russian.length} строк\n${sample.join('\n')}\n`);
+  } else console.log('✓ описания в типах — на английском');
+}
+
 for (const file of tarballs) {
   const path = `.release/${file}`;
   const problems = [];

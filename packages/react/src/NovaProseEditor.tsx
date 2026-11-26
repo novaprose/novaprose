@@ -2,22 +2,22 @@ import type { Editor, EditorOptions } from '@novaprose/core';
 import { forwardRef, useEffect, useImperativeHandle, useRef, type CSSProperties } from 'react';
 import { useEditor, type UseEditorOptions } from './useEditor';
 
-/** Опции редактора без тех, что задаются отдельными пропсами компонента. */
+/** Editor options except those set through separate component props. */
 export type NovaProseInit = Omit<EditorOptions, 'element' | 'content' | 'onChange'>;
 
 export interface NovaProseEditorProps {
-  /** Контролируемое значение (HTML). Вместе с onChange — controlled-режим. */
+  /** The controlled value (HTML). Together with onChange, the controlled mode. */
   value?: string;
-  /** Начальное значение для uncontrolled-режима. */
+  /** The initial value for the uncontrolled mode. */
   defaultValue?: string;
   onChange?: (html: string, editor: Editor) => void;
-  /** Вызывается один раз, когда экземпляр редактора создан. */
+  /** Called once, when the editor instance has been created. */
   onReady?: (editor: Editor) => void;
   onFocus?: (editor: Editor) => void;
   onBlur?: (editor: Editor) => void;
   /**
-   * Любые опции ядра (`toolbar`, `menubar`, `plugins`, `uploadImage`, `validElements`…).
-   * Читаются при монтировании; чтобы применить новые — смените `key` компонента.
+   * Any core options (`toolbar`, `menubar`, `plugins`, `uploadImage`, `validElements`…). Read on
+   * mount; to apply new ones, change the component's `key`.
    */
   init?: NovaProseInit;
   editable?: boolean;
@@ -27,8 +27,8 @@ export interface NovaProseEditorProps {
   prosemirrorPlugins?: EditorOptions['prosemirrorPlugins'];
   language?: string;
   /**
-   * Имя поля для обычной HTML-формы: рядом рендерится `<input type="hidden">` с актуальным HTML,
-   * так что `FormData` и серверные формы работают без JS-обработчиков.
+   * Field name for a plain HTML form: an `<input type="hidden">` with the current HTML is rendered
+   * next to the editor, so `FormData` and server-side forms work without JS handlers.
    */
   name?: string;
   id?: string;
@@ -43,11 +43,11 @@ function pick<T extends object>(source: T): Partial<T> {
 }
 
 /**
- * React-компонент редактора NovaProse.
+ * The NovaProse editor component for React.
  *
- * SSR-безопасен: на сервере рендерит пустой контейнер, редактор создаётся на клиенте.
- * `ref` отдаёт экземпляр `Editor` (у него есть `focus()`, поэтому React Hook Form может
- * фокусировать поле при ошибке валидации).
+ * SSR-safe: renders an empty container on the server; the editor is created on the client.
+ * `ref` gives the `Editor` instance (it has `focus()`, so React Hook Form can focus the field on a
+ * validation error).
  */
 export const NovaProseEditor = forwardRef<Editor | null, NovaProseEditorProps>(
   function NovaProseEditor(props, ref) {

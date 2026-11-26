@@ -1,9 +1,9 @@
 import type { LanguagePack } from '../index';
 
 /**
- * Русский. Полный пакет: ядро и все встроенные плагины. Используется в продакшене.
+ * Russian. A complete pack: the core and every built-in plugin. Used in production.
  * import ru from '@novaprose/core/i18n/ru'; registerLanguage('ru', ru);
- * В CDN-сборках (novaprose.global.js, tinymce.global.js) подключён заранее.
+ * The CDN builds load it on demand: await loadLanguage('ru').
  */
 const ru: LanguagePack = {
   'toolbar.label': 'Форматирование',

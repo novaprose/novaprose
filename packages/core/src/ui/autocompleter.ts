@@ -8,24 +8,24 @@ export interface AutocompleterItem {
   value: string;
   label: string;
   icon?: string;
-  /** Подсказка справа — горячая клавиша в формате 'Mod-b'. */
+  /** A hint on the right: a shortcut in 'Mod-b' format. */
   shortcut?: string;
-  /** Подсказка справа обычным текстом (должность, e-mail). */
+  /** A hint on the right as plain text (a job title, an e-mail). */
   detail?: string;
 }
 
 export interface AutocompleterSpec {
-  /** Символ-триггер: '/', '@', ':'. */
+  /** The trigger character: '/', '@', ':'. */
   trigger: string;
-  /** Сколько символов после триггера нужно до показа списка (по умолчанию 0). */
+  /** How many characters after the trigger before the list shows (0 by default). */
   minChars?: number;
-  /** Пункты для запроса; можно вернуть Promise (поиск на сервере). */
+  /** Items for a query; may return a Promise (a search on the server). */
   fetch: (query: string, editor: Editor) => AutocompleterItem[] | Promise<AutocompleterItem[]>;
-  /** Выбор пункта. range — позиции «триггер + запрос», их обычно удаляют. */
+  /** An item was chosen. range — the positions of "trigger + query", usually deleted. */
   onSelect: (item: AutocompleterItem, range: { from: number; to: number }, editor: Editor) => void;
-  /** Подпись списка для экранного диктора. */
+  /** Label of the list for screen readers. */
   label: string;
-  /** Текст, если ничего не найдено (иначе список скрывается). */
+  /** Text when nothing is found (otherwise the list hides). */
   emptyText?: string;
   maxResults?: number;
 }

@@ -22,7 +22,7 @@ export interface SearchMatch {
 
 export interface SearchState extends SearchOptions {
   matches: SearchMatch[];
-  /** Индекс текущего совпадения или -1. */
+  /** Index of the current match, or -1. */
   current: number;
 }
 
@@ -50,8 +50,8 @@ function buildRegExp({ query, caseSensitive, wholeWord }: SearchOptions): RegExp
 }
 
 /**
- * Все совпадения в документе. Внутри текстового блока буква и встроенный объект занимают
- * по одной позиции, поэтому индекс в тексте блока + (pos + 1) = позиция в документе.
+ * All matches in the document. Inside a text block a letter and an inline object take one position
+ * each, so an index in the block's text + (pos + 1) is the position in the document.
  */
 export function findMatches(doc: PMNode, options: SearchOptions): SearchMatch[] {
   const re = buildRegExp(options);
@@ -132,7 +132,7 @@ export function getSearchState(state: EditorState): SearchState {
   return searchKey.getState(state) ?? EMPTY;
 }
 
-/** Задать запрос. Текущее совпадение — первое после курсора. */
+/** Set the query. The current match is the first one after the cursor. */
 export function setSearch(options: SearchOptions): Command {
   return (state, dispatch) => {
     dispatch?.(state.tr.setMeta(searchKey, { type: 'set', options } satisfies Meta));
@@ -152,7 +152,7 @@ function gotoMatch(tr: Transaction, match: SearchMatch, index: number): Transact
     .scrollIntoView();
 }
 
-/** Перейти к следующему (dir = 1) или предыдущему (-1) совпадению, по кругу. */
+/** Go to the next (dir = 1) or previous (-1) match, wrapping around. */
 export function findNext(dir: 1 | -1 = 1): Command {
   return (state, dispatch) => {
     const { matches, current } = getSearchState(state);
@@ -171,7 +171,7 @@ export function findNext(dir: 1 | -1 = 1): Command {
   };
 }
 
-/** Заменить текущее совпадение и перейти к следующему. */
+/** Replace the current match and go to the next one. */
 export function replaceCurrent(replacement: string): Command {
   return (state, dispatch) => {
     const { matches, current } = getSearchState(state);
@@ -189,7 +189,7 @@ export function replaceCurrent(replacement: string): Command {
   };
 }
 
-/** Заменить все совпадения одной транзакцией (один шаг отмены). */
+/** Replace all matches in one transaction (one undo step). */
 export function replaceAll(replacement: string): Command {
   return (state, dispatch) => {
     const { matches } = getSearchState(state);

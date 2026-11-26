@@ -2,7 +2,7 @@ import type { RevisionHistoryOptions } from '@novaprose/core';
 import { yXmlFragmentToProseMirrorRootNode } from 'y-prosemirror';
 import * as Y from 'yjs';
 
-/** Запрос к серверу синхронизации по открытому соединению (stateless-сообщения). */
+/** A request to the sync server over the open connection (stateless messages). */
 export type ServerRequest = (message: Record<string, unknown>) => Promise<Record<string, unknown>>;
 
 export type VersionSource = Pick<RevisionHistoryOptions, 'list' | 'load' | 'save'>;
@@ -18,8 +18,8 @@ const fail = (reply: Record<string, unknown>) =>
   new Error(`[nova] versions: ${String(reply.error ?? 'unexpected reply')}`);
 
 /**
- * История версий с сервера синхронизации NovaProse — для `pluginOptions.revisionhistory`.
- * Сервер хранит снимки Yjs; здесь они превращаются в документ схемой текущего редактора.
+ * Version history from the NovaProse sync server, for `pluginOptions.revisionhistory`. The server
+ * keeps Yjs snapshots; here they become documents through the current editor's schema.
  */
 export function serverVersions(request: ServerRequest, field: string): VersionSource {
   return {

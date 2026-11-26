@@ -19,19 +19,19 @@ import {
 import { NG_VALUE_ACCESSOR, type ControlValueAccessor } from '@angular/forms';
 import { createEditor, type Editor, type EditorOptions } from '@novaprose/core';
 
-/** Опции редактора без тех, что задаются отдельными входами компонента. */
+/** Editor options except those set through separate component inputs. */
 export type NovaProseInit = Omit<EditorOptions, 'element' | 'content' | 'onChange' | 'editable'>;
 
 /**
- * Angular-компонент редактора NovaProse: standalone, работает с `ngModel` и Reactive Forms
- * (`formControlName`, `[formControl]`), включая `disable()`, `reset()` и `touched`.
+ * The NovaProse editor component for Angular: standalone, works with `ngModel` and Reactive Forms
+ * (`formControlName`, `[formControl]`), including `disable()`, `reset()` and `touched`.
  *
  * ```html
  * <novaprose-editor formControlName="body" [init]="{ menubar: true }" />
  * ```
  *
- * SSR-безопасен: на сервере ничего не создаёт. События редактора обрабатываются вне зоны Angular,
- * в зону входим только для изменений формы и выходов компонента.
+ * SSR-safe: creates nothing on the server. Editor events are handled outside the Angular zone; the
+ * zone is entered only for form changes and the component's outputs.
  */
 @Component({
   selector: 'novaprose-editor',
@@ -49,20 +49,20 @@ export type NovaProseInit = Omit<EditorOptions, 'element' | 'content' | 'onChang
 export class NovaProseEditorComponent
   implements ControlValueAccessor, AfterViewInit, OnChanges, OnDestroy
 {
-  /** Любые опции ядра (`toolbar`, `menubar`, `plugins`, `uploadImage`…). Читаются при создании. */
+  /** Any core options (`toolbar`, `menubar`, `plugins`, `uploadImage`…). Read when the editor is created. */
   @Input() init: NovaProseInit | undefined;
-  /** Начальный HTML, если компонент используется без форм. */
+  /** Initial HTML, when the component is used without forms. */
   @Input() initialValue: string | undefined;
   @Input() placeholder: string | undefined;
   @Input() toolbar: EditorOptions['toolbar'] | undefined;
   @Input() plugins: EditorOptions['plugins'] | undefined;
   @Input() language: string | undefined;
-  /** Только чтение; меняется на лету. Блокировку через формы даёт `control.disable()`. */
+  /** Read-only; can change at any time. Forms disable it with `control.disable()`. */
   @Input() readonly = false;
 
-  /** Экземпляр создан. */
+  /** The instance was created. */
   @Output() readonly ready = new EventEmitter<Editor>();
-  /** HTML после каждого изменения пользователем (без форм). */
+  /** The HTML after every change by the user (without forms). */
   @Output() readonly editorChange = new EventEmitter<string>();
   @Output() readonly editorFocus = new EventEmitter<Editor>();
   @Output() readonly editorBlur = new EventEmitter<Editor>();
@@ -73,15 +73,15 @@ export class NovaProseEditorComponent
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private instance: Editor | null = null;
-  /** Значение, пришедшее из формы до создания редактора. */
+  /** A value that came from the form before the editor was created. */
   private pending: string | undefined;
   private disabled = false;
-  /** Пока применяем значение из формы, onChange не зовём: иначе reset() пометил бы поле dirty. */
+  /** While a value from the form is applied, onChange isn't called — otherwise reset() would mark the field dirty. */
   private syncing = false;
   private onChange: (html: string) => void = () => {};
   private onTouched: () => void = () => {};
 
-  /** Экземпляр `Editor`; `null` до `ngAfterViewInit` и на сервере. */
+  /** The `Editor` instance; `null` before `ngAfterViewInit` and on the server. */
   get editor(): Editor | null {
     return this.instance;
   }
@@ -169,9 +169,9 @@ export class NovaProseEditorComponent
   }
 
   /**
-   * Сообщить Angular об изменении. С zone.js хватает zone.run, но в zoneless-приложениях
-   * (по умолчанию с Angular 21) проверку изменений запускает только markForCheck: события
-   * редактора приходят не через шаблонные обработчики Angular.
+   * Tell Angular about a change. With zone.js, zone.run is enough, but in zoneless applications (the
+   * default since Angular 21) only markForCheck triggers change detection: editor events don't come
+   * through Angular's template handlers.
    */
   private notify(fn: () => void): void {
     this.zone.run(fn);

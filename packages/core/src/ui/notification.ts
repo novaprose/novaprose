@@ -6,11 +6,11 @@ export type NotificationType = 'info' | 'success' | 'warning' | 'error';
 export interface NotificationOptions {
   text: string;
   type?: NotificationType;
-  /** мс до автозакрытия; 0 — не закрывать автоматически. По умолчанию 4000 (ошибки — 0). */
+  /** ms until it closes by itself; 0 — never. Default 4000 (errors: 0). */
   timeout?: number;
-  /** Кнопки действий («Повторить»): нажатие выполняет действие и закрывает уведомление. */
+  /** Action buttons ("Retry"): clicking one runs the action and closes the notification. */
   actions?: NotificationAction[];
-  /** Уведомление закрыли крестиком или по таймеру (не через действие). */
+  /** The notification was closed with the close button or by its timer (not through an action). */
   onClose?: () => void;
 }
 

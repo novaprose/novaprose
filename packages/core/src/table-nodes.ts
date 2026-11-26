@@ -1,9 +1,9 @@
 /**
- * Узлы таблицы для схемы — без зависимости от prosemirror-tables: сама библиотека (выделение
- * ячеек, ширина колонок, команды) грузится лениво, а схема нужна сразу. Спеки совместимы с ней
- * (tableRole, атрибуты colspan/rowspan/colwidth, тот же HTML).
+ * Table nodes for the schema, without depending on prosemirror-tables: the library itself (cell
+ * selection, column widths, commands) loads lazily, but the schema is needed right away. The specs
+ * are compatible with it (tableRole, the colspan/rowspan/colwidth attributes, the same HTML).
  *
- * Адаптировано из prosemirror-tables (MIT, © Marijn Haverbeke и др.): tableNodes, getCellAttrs,
+ * Adapted from prosemirror-tables (MIT, © Marijn Haverbeke and others): tableNodes, getCellAttrs,
  * setCellAttrs.
  */
 import type { NodeSpec } from 'prosemirror-model';
@@ -94,7 +94,7 @@ export function tableNodes(options: {
   };
 }
 
-/** Курсор внутри таблицы (как isInTable из prosemirror-tables). */
+/** The cursor is inside a table (like isInTable from prosemirror-tables). */
 export function isInTable(state: EditorState): boolean {
   const { $head } = state.selection;
   for (let depth = $head.depth; depth > 0; depth--) {

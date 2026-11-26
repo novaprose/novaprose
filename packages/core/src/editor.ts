@@ -72,28 +72,28 @@ import {
 
 export type EditorMode = 'classic' | 'inline' | 'distraction-free';
 
-/** Метка транзакции, пришедшей от соавтора (ставит @novaprose/collab): не считается вводом. */
+/** Marks a transaction that came from a collaborator (set by @novaprose/collab): it is not user input. */
 export const REMOTE_CHANGE_META = 'nova:remote';
 /** Метка транзакции из API (setContent, insertContent): не считается вводом. */
 export const API_CHANGE_META = 'nova:api';
 
-/** Подробности событий: второй аргумент обработчика `editor.on(event, (editor, detail) => …)`. */
+/** Event details: the second argument of a listener, `editor.on(event, (editor, detail) => …)`. */
 export interface EditorEventDetails {
-  /** Редактор готов: ленивые плагины и стили контента загружены (то же, что `await editor.ready`). */
+  /** The editor is ready: lazy plugins and content styles are loaded (same as `await editor.ready`). */
   init: undefined;
-  /** Документ изменился — любым путём: ввод, API, соавтор. */
+  /** The document changed in any way: typing, the API, a collaborator. */
   change: { transaction: Transaction };
-  /** Документ изменил пользователь этого редактора (набор, вставка, кнопки, горячие клавиши). */
+  /** The user of this editor changed the document (typing, paste, toolbar buttons, shortcuts). */
   input: { transaction: Transaction };
   selectionChange: { transaction: Transaction };
   focus: { event: FocusEvent };
   blur: { event: FocusEvent };
   editableChange: undefined;
   destroy: undefined;
-  /** До setContent: `detail.content` можно заменить. */
+  /** Before setContent: `detail.content` can be replaced. */
   beforeSetContent: { content: string | Record<string, unknown> };
   setContent: { content: string | Record<string, unknown> };
-  /** Клавиша в тексте до обработки редактором; `detail.event.preventDefault()` отменяет её обработку. */
+  /** A key in the text, before the editor handles it; `detail.event.preventDefault()` cancels that. */
   keydown: { event: KeyboardEvent };
 }
 
@@ -105,8 +105,8 @@ export type EditorListener<E extends EditorEvent = EditorEvent> = (
 ) => void;
 
 /**
- * Настройки встроенных плагинов (типизированы — подсказки в редакторе кода) и любых сторонних по имени.
- * Только типы: модули плагинов не попадают в ядро.
+ * Options of the built-in plugins (typed, so your code editor suggests them) and of any other plugin
+ * by name. Types only: plugin modules are not pulled into the core.
  */
 export interface PluginOptions {
   comments?: CommentsOptions;
@@ -126,125 +126,125 @@ export interface PluginOptions {
 }
 
 export interface EditorOptions extends PasteOptions, ContentRulesOptions {
-  /** Элемент, внутрь которого монтируется редактор. */
+  /** The element the editor is mounted into. */
   element: HTMLElement;
-  /** Начальное содержимое: HTML-строка или JSON документа. */
+  /** Initial content: an HTML string or a JSON document. */
   content?: string | Record<string, unknown>;
   /**
-   * Тулбар: строка ('undo redo | bold italic'), массив имён или false (headless — UI рисует клиент).
-   * По умолчанию — стандартный набор.
+   * Toolbar: a string ('undo redo | bold italic'), an array of names, or false (headless: you draw
+   * the UI). Defaults to the standard set.
    */
   toolbar?: false | ToolbarConfig;
-  /** Поведение тулбара при нехватке ширины. По умолчанию 'sliding' (лишнее уходит в «⋯»). */
+  /** What the toolbar does when it runs out of width. Default 'sliding' (the rest goes into "⋯"). */
   toolbarMode?: ToolbarMode;
   /**
-   * classic — рамка и панели (по умолчанию); inline — без рамки, панель появляется над текстом при фокусе;
-   * distraction-free — без постоянных панелей, только quickbars над выделением и на пустой строке.
+   * classic — a frame with bars (default); inline — no frame, the toolbar appears above the text on
+   * focus; distraction-free — no permanent bars, only quick toolbars over the selection and empty lines.
    */
   mode?: EditorMode;
-  /** Менюбар: true — стандартный ('file edit view insert format table help'), строка — свой набор. По умолчанию нет. */
+  /** Menu bar: true for the standard one ('file edit view insert format table help'), a string for your own set. Off by default. */
   menubar?: boolean | string;
-  /** Свои меню и переопределение стандартных: { insert: { title: 'Вставка', items: 'image link | hr' } }. */
+  /** Your own menus, or overrides of the standard ones: { insert: { title: 'Insert', items: 'image link | hr' } }. */
   menu?: Record<string, MenuDefinition>;
-  /** Статусбар с путём к элементу и счётчиком слов. По умолчанию включён. */
+  /** Status bar with the element path and the word count. On by default. */
   statusbar?: boolean;
-  /** Плейсхолдер для пустого документа. */
+  /** Placeholder for an empty document. */
   placeholder?: string;
   editable?: boolean;
   /**
-   * Отключённый редактор — как disabled у поля формы: текст не редактируется и не получает фокус,
-   * панели неактивны. В отличие от editable: false (только чтение) выглядит приглушённо.
+   * A disabled editor, like a disabled form field: the text can't be edited or focused and the bars
+   * are inactive. Unlike editable: false (read-only), it looks dimmed.
    */
   disabled?: boolean;
   /**
-   * Ручка изменения размера в статусбаре: true — по высоте, 'both' — по высоте и ширине.
-   * Мышь, палец или клавиатура (стрелки на ручке). По умолчанию нет.
+   * Resize handle in the status bar: true — height, 'both' — height and width. Works with a mouse,
+   * a finger or the keyboard (arrow keys on the handle). Off by default.
    */
   resize?: boolean | 'both';
   /**
-   * Пункты списка блоков (кнопка `blocks`) и их порядок: [{ label: 'Подзаголовок', block: 'h3' }].
-   * По умолчанию — абзац, H1–H6 и блок кода.
+   * Items of the block list (the `blocks` button) and their order: [{ label: 'Subheading', block: 'h3' }].
+   * Default: paragraph, H1–H6 and code block.
    */
   blockFormats?: BlockFormat[];
   /**
-   * Стили содержимого (как content_style в TinyMCE): применяются только к тексту этого редактора.
-   * `body`/`html` в селекторах — это сама область текста: 'body { font-family: Georgia }'.
+   * Content styles (like content_style in TinyMCE), applied only to this editor's text. `body` and
+   * `html` in selectors mean the text area itself: 'body { font-family: Georgia }'.
    */
   contentStyle?: string;
   /**
-   * Файлы стилей содержимого (как content_css): загружаются и применяются только к тексту
-   * этого редактора; относительные url() и @import работают. `await editor.ready` ждёт загрузки.
+   * Content style sheets (like content_css), loaded and applied only to this editor's text;
+   * relative url() and @import work. `await editor.ready` waits for them.
    */
   contentCss?: string | string[];
   /**
-   * Именованные форматы (как formats в TinyMCE): { note: { block: 'p', classes: 'note' } }.
-   * Применяются через editor.formatter.apply('note'); их классы сохраняются при разборе HTML.
+   * Named formats (like formats in TinyMCE): { note: { block: 'p', classes: 'note' } }. Apply them
+   * with editor.formatter.apply('note'); their classes are kept when HTML is parsed.
    */
   formats?: Record<string, FormatSpec | FormatSpec[]>;
   /**
-   * Пункты меню «Стили» (кнопка `styles`): свои форматы, ссылки на именованные и группы.
-   * По умолчанию — заголовки, текст, блоки и выравнивание.
+   * Items of the Styles menu (the `styles` button): your formats, references to named formats and
+   * groups. Default: headings, text, blocks and alignment.
    */
   styleFormats?: StyleFormat[];
-  /** true — добавить styleFormats к стандартному набору, а не заменить его. */
+  /** true — add styleFormats to the standard set instead of replacing it. */
   styleFormatsMerge?: boolean;
   /**
-   * Какие классы сохранять в HTML кроме классов из форматов: список или true — все.
-   * По умолчанию только классы форматов (вставленный мусор вроде MsoNormal не попадает в документ).
+   * Which classes to keep in the HTML besides those of the formats: a list, or true for all. By
+   * default only format classes (pasted clutter such as MsoNormal stays out of the document).
    */
   validClasses?: string[] | true;
   /**
-   * Стили таблиц на выбор в свойствах таблицы (как table_class_list в TinyMCE):
-   * [{ title: 'С рамками', value: 'grid' }]. Внешний вид задаёт ваш CSS (contentCss).
+   * Table styles to choose from in the table properties (like table_class_list in TinyMCE):
+   * [{ title: 'Bordered', value: 'grid' }]. Your CSS (contentCss) defines how they look.
    */
   tableClassList?: ClassOption[];
-  /** Стили ячеек на выбор в свойствах ячейки (как table_cell_class_list). */
+  /** Cell styles to choose from in the cell properties (like table_cell_class_list). */
   tableCellClassList?: ClassOption[];
-  /** Язык UI (BCP-47): 'en', 'ru'… По умолчанию 'en'. */
+  /** UI language (BCP 47): 'en', 'de'… Default 'en'. */
   language?: string;
   /**
-   * Направление письма — интерфейса и текста. По умолчанию справа налево для арабского, иврита,
-   * персидского и урду (по `language`), иначе как у страницы.
+   * Writing direction of the UI and the text. By default right-to-left for Arabic, Hebrew, Persian
+   * and Urdu (from `language`), otherwise the page's direction.
    */
   direction?: 'ltr' | 'rtl';
-  /** Точечная замена строк UI. */
+  /** Override individual UI strings. */
   translations?: LanguagePack;
-  /** Загрузка изображений на ваш сервер. Без неё картинки встраиваются как data:URL. */
+  /** Upload images to your server. Without it, images are embedded as data: URLs. */
   uploadImage?: UploadImageHandler;
   /**
-   * Свой выбор файла: кнопка «Обзор» у поля адреса в диалогах ссылки, картинки и видео.
-   * Получает тип поля и текущий адрес, возвращает { url, text?, title?, alt? } или null.
+   * Your own file picker: a Browse button next to the address field of the link, image and video
+   * dialogs. Gets the field type and the current address, returns { url, text?, title?, alt? } or null.
    */
   filePicker?: FilePicker;
-  /** Для каких полей показывать «Обзор»: 'file' (ссылка), 'image', 'media'. По умолчанию — для всех. */
+  /** Which fields get Browse: 'file' (link), 'image', 'media'. Default: all of them. */
   filePickerTypes?: FilePickType[];
   fontFamilies?: FontOption[];
   fontSizes?: string[];
   lineHeights?: string[];
   colors?: string[];
-  /** Слэш-команды «/». false — выключить; массив — дополнительные команды к стандартным. */
+  /** Slash commands ("/"). false turns them off; an array adds commands to the standard ones. */
   slashCommands?: false | SlashCommand[];
   /**
-   * Плагины NovaProse: объект, имя из реестра ('insertdatetime') или ленивый загрузчик (() => import(...)).
-   * Ленивые грузятся после создания редактора; дождаться — `await editor.ready`.
+   * NovaProse plugins: an object, a registered name ('insertdatetime') or a lazy loader
+   * (() => import(...)). Lazy ones load after the editor is created; wait for them with `await editor.ready`.
    */
   plugins?: PluginEntry[];
-  /** Настройки плагинов по имени: { comments: {...}, mentions: {...} }. Встроенные — с типами. */
+  /** Plugin options by name: { comments: {...}, mentions: {...} }. Built-in plugins are typed. */
   pluginOptions?: PluginOptions;
-  /** Сырые ProseMirror-плагины (для низкоуровневых расширений). */
+  /** Raw ProseMirror plugins (for low-level extensions). */
   prosemirrorPlugins?: Plugin[];
-  /** Вызывается до отрисовки тулбара — место для editor.ui.registry.addButton(...). */
+  /** Called before the toolbar is drawn — the place for editor.ui.registry.addButton(...). */
   setup?: (editor: Editor) => void;
   onChange?: (editor: Editor) => void;
 }
 
-/** Пункт списка стилей таблицы или ячейки: подпись и класс. */
+/** An item of the table or cell style list: a label and a class. */
 export interface ClassOption {
   title: string;
   value: string;
 }
 
-/** Пункт списка блоков: подпись и тег блока. */
+/** An item of the block list: a label and the block's tag. */
 export interface BlockFormat {
   label: string;
   block: 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'pre';
@@ -297,8 +297,8 @@ let contentScopeId = 0;
 const unknownCommands = new Set<string>();
 
 /**
- * Публичный API редактора NovaProse.
- * Обёртки (React, Vue…) работают только через этот класс, а не через ProseMirror напрямую.
+ * The public API of a NovaProse editor. The framework wrappers (React, Vue…) work only through this
+ * class, never with ProseMirror directly.
  */
 export class Editor {
   readonly view: EditorView;
@@ -306,23 +306,23 @@ export class Editor {
   readonly ui: UiManager;
   readonly options: Readonly<EditorOptions>;
   private readonly listeners = new Map<EditorEvent, Set<EditorListener>>();
-  /** Выполняется, когда загружены и подключены все ленивые плагины. */
+  /** Resolves when all lazy plugins are loaded and set up. */
   readonly ready: Promise<void>;
   private toolbar: ToolbarHandle | null;
   private readonly toolbarHost: HTMLElement;
   private readonly menubar: MenubarHandle | null;
   readonly mode: EditorMode;
-  /** Направление письма редактора (опция direction, язык или dir страницы). */
+  /** The editor's writing direction (the direction option, the language or the page's dir). */
   readonly direction: 'ltr' | 'rtl';
   private readonly pluginsByName = new Map<string, NovaPlugin>();
   private readonly commandOverrides = new Map<CommandName, Command>();
   private readonly transactionTransforms: NonNullable<NovaPlugin['transformTransaction']>[] = [];
   private readonly cleanups: (() => void)[] = [];
-  /** Ограничения контента (validElements/invalidElements/validStyles) или null — без ограничений. */
+  /** Content restrictions (validElements/invalidElements/validStyles), or null when there are none. */
   readonly contentRules: ContentRules | null;
-  /** Схема документа этого редактора: базовая + узлы и марки синхронных плагинов. */
+  /** This editor's document schema: the built-in one plus nodes and marks of plugins. */
   readonly schema: NovaSchema;
-  /** Форматы: register / apply / remove / toggle / match. */
+  /** Formats: register / apply / remove / toggle / match. */
   readonly formatter: Formatter;
   private readonly statusbar: ReturnType<typeof createStatusbar> | null;
   private readonly searchBar: SearchBarHandle;
@@ -561,8 +561,8 @@ export class Editor {
   }
 
   /**
-   * Подключить механику таблиц (выделение ячеек, ширина колонок, Tab по ячейкам) после её загрузки —
-   * на место перед `anchor`, как если бы плагины были в начальном состоянии.
+   * Install table editing (cell selection, column widths, Tab between cells) once it has loaded, at
+   * its place before `anchor`, as if the plugins had been there from the start.
    */
   private async installTables(anchor: Plugin): Promise<void> {
     const tables = await loadTables();
@@ -575,7 +575,7 @@ export class Editor {
     this.updateUI();
   }
 
-  /** contentStyle сразу, contentCss — по мере загрузки. Каждый редактор — своя область. */
+  /** contentStyle right away, contentCss as it loads. Each editor gets its own scope. */
   private applyContentStyles(): Promise<void> | undefined {
     const { contentStyle, contentCss } = this.options;
     const files =
@@ -609,7 +609,7 @@ export class Editor {
 
   // ---------- плагины ----------
 
-  /** Разрешён ли контрол/команда/тег по ограничениям контента (без ограничений — всегда да). */
+  /** Whether content restrictions allow a control, command or tag (always true without restrictions). */
   isAllowed(name: string): boolean {
     return this.contentRules?.isAllowed(name) ?? true;
   }
@@ -634,7 +634,7 @@ export class Editor {
     }
   }
 
-  /** setup с изоляцией ошибок: упавший плагин не ломает редактор. */
+  /** setup with errors isolated: a failing plugin doesn't break the editor. */
   private setupPlugin(plugin: NovaPlugin): void {
     try {
       const cleanup = plugin.setup?.(this);
@@ -680,15 +680,15 @@ export class Editor {
   }
 
   /**
-   * Обновить состояние кнопок (нажата / доступна) без изменения документа — например, после того как
-   * плагин переключил режим отображения. Изменения документа обновляют UI сами.
+   * Refresh the button state (pressed / enabled) without changing the document — for example, after a
+   * plugin switched a display mode. Document changes refresh the UI by themselves.
    */
   updateUI(): void {
     if (this.destroyed) return;
     this.toolbar?.update();
   }
 
-  /** Перестроить тулбар (после регистрации новых кнопок плагинами). */
+  /** Rebuild the toolbar (after plugins registered new buttons). */
   rebuildToolbar(): void {
     if (!this.toolbar || this.destroyed) return;
     this.toolbar.destroy();
@@ -700,7 +700,7 @@ export class Editor {
     );
   }
 
-  /** Конфиг тулбара: пользовательский как есть; по умолчанию — плюс кнопки подключённых плагинов. */
+  /** Toolbar configuration: yours as it is; the default one plus the buttons of active plugins. */
   private toolbarConfig(): ToolbarConfig {
     if (this.options.toolbar) return this.options.toolbar;
     const extra = [...this.pluginsByName.values()].map((p) => p.toolbar).filter(Boolean);
@@ -740,7 +740,7 @@ export class Editor {
 
   // ---------- содержимое ----------
 
-  /** HTML документа. Детерминирован: одинаков во всех браузерах и в Node. */
+  /** The document's HTML. Deterministic: the same in every browser and in Node. */
   getHTML(): string {
     return htmlSerializer.serializeFragment(this.view.state.doc.content);
   }
@@ -753,7 +753,7 @@ export class Editor {
     return this.view.state.doc.textBetween(0, this.view.state.doc.content.size, '\n\n');
   }
 
-  /** Заменить содержимое. По умолчанию попадает в историю undo. */
+  /** Replace the content. By default it can be undone. */
   setContent(content: string | Record<string, unknown>, { addToHistory = true } = {}): void {
     const detail = { content };
     this.emit('beforeSetContent', detail);
@@ -766,10 +766,10 @@ export class Editor {
   }
 
   /**
-   * Вставить HTML в позицию курсора (как insertContent в TinyMCE). HTML разбирается схемой
-   * редактора — как вставка: без скриптов, опасных ссылок и лишних тегов.
-   * Блоки (абзацы, таблицы) встают отдельными блоками. Таблица, вставляемая при курсоре
-   * внутри таблицы, встаёт после неё (а не заменяет её ячейки).
+   * Insert HTML at the cursor (like insertContent in TinyMCE). The HTML is parsed by the editor's
+   * schema, as a paste is: no scripts, unsafe links or unknown tags. Blocks (paragraphs, tables) are
+   * inserted as separate blocks. A table inserted with the cursor inside a table goes after it
+   * rather than replacing its cells.
    */
   insertContent(html: string): boolean {
     if (!this.isEditable()) return false;
@@ -782,8 +782,7 @@ export class Editor {
 
   // ---------- команды ----------
 
-  /** Выполнить именованную команду или произвольную ProseMirror-команду. */
-  /** Команда по имени: переопределение плагина или встроенная. */
+  /** The command for a name: a plugin's override or the built-in one; unknown names return false. */
   resolveCommand(name: CommandName): Command {
     const command =
       this.commandOverrides.get(name) ??
@@ -804,6 +803,7 @@ export class Editor {
     if (plugin.transformTransaction) this.transactionTransforms.push(plugin.transformTransaction);
   }
 
+  /** Run a named command or any ProseMirror command; returns whether it ran. */
   exec(command: CommandName | Command): boolean {
     const cmd = typeof command === 'string' ? this.resolveCommand(command) : command;
     const result = cmd(this.view.state, this.view.dispatch, this.view);
@@ -812,9 +812,9 @@ export class Editor {
   }
 
   /**
-   * Несколько команд одной правкой — одно действие отмены, одно событие change:
-   * `editor.chain().exec('h2').exec('alignCenter').run()`. Шаг не удался — документ не меняется
-   * и run() возвращает false; `chain().….can()` — проверка без изменений (для кнопок).
+   * Several commands as one edit — one undo step, one change event:
+   * `editor.chain().exec('h2').exec('alignCenter').run()`. If a step fails, the document doesn't
+   * change and run() returns false; `chain().….can()` checks without changing anything (for buttons).
    */
   chain(): CommandChain {
     return createChain({
@@ -825,20 +825,20 @@ export class Editor {
     });
   }
 
-  /** Можно ли выполнить команду в текущем состоянии (для disabled-кнопок). */
+  /** Whether the command can run in the current state (for disabled buttons). */
   can(command: CommandName | Command): boolean {
     const cmd = typeof command === 'string' ? this.resolveCommand(command) : command;
     return cmd(this.view.state, undefined, this.view);
   }
 
-  /** Активна ли именованная команда в текущем выделении (для своих кнопок тулбара). */
+  /** Whether a named command is active for the current selection (for your own toolbar buttons). */
   isActive(command: CommandName): boolean {
     return isCommandActive(this.view.state, command);
   }
 
   /**
-   * Состояние именованной команды для своего тулбара: активна ли (подсветка кнопки) и доступна ли
-   * сейчас. Аналог queryCommandState / queryCommandEnabled.
+   * The state of a named command for your own toolbar: whether it is active (a pressed button) and
+   * whether it can run now. The equivalent of queryCommandState / queryCommandEnabled.
    */
   getCommandState(command: CommandName): { active: boolean; enabled: boolean } {
     return { active: this.isActive(command), enabled: this.isEditable() && this.can(command) };
@@ -848,7 +848,7 @@ export class Editor {
     if (!this.destroyed) this.view.focus();
   }
 
-  /** Режим «вставлять как текст» (переключатель pastetext). */
+  /** "Paste as text" mode (the pastetext toggle). */
   isPasteAsText(): boolean {
     return this.pasteAsText;
   }
@@ -858,7 +858,7 @@ export class Editor {
     this.toolbar?.update();
   }
 
-  /** Открыть панель «Найти и заменить» (Ctrl/Cmd+F). */
+  /** Open the find and replace bar (Ctrl/Cmd+F). */
   openSearch(): void {
     this.searchBar.open();
   }
@@ -867,7 +867,7 @@ export class Editor {
     this.searchBar.close();
   }
 
-  /** Можно ли сейчас править текст: не «только чтение» и не отключён. */
+  /** Whether the text can be edited now: neither read-only nor disabled. */
   isEditable(): boolean {
     return this.editable && !this.disabled;
   }
@@ -876,7 +876,7 @@ export class Editor {
     return this.disabled;
   }
 
-  /** Отключить или включить редактор (как disabled у поля формы). */
+  /** Disable or enable the editor (like disabled on a form field). */
   setDisabled(value: boolean): void {
     if (this.disabled === value) return;
     this.disabled = value;

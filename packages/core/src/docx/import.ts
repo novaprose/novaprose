@@ -4,21 +4,21 @@ import { element, elements, parseXml, path, textContent, type XmlElement } from 
 import { unzip } from './zip';
 
 /**
- * .docx → HTML без DOM (работает и на сервере). HTML потом разбирает схема редактора — со всей
- * обычной очисткой: чего схема не знает, то отбрасывается, адреса проверяются.
+ * .docx → HTML without a DOM (also works on the server). The editor's schema then parses the HTML
+ * with all the usual cleanup: what the schema doesn't know is dropped, addresses are checked.
  *
- * Что переносится: абзацы и заголовки (стили Word, в том числе локализованные — встроенные имена
- * в файле английские, — и уровень структуры), списки по нумерации документа (и заданной в стиле,
- * как «Маркированный список»), таблицы с объединёнными ячейками, заливкой и ширинами, картинки
- * (drawing и старый VML), ссылки (и поле HYPERLINK), форматирование текста, сноски — в конце,
- * исправления — принятыми, лист и поля.
+ * What comes across: paragraphs and headings (Word styles, including localized ones — built-in names
+ * in the file are English — and the outline level), lists from the document's numbering (and from
+ * a style, like "List Bullet"), tables with merged cells, fill and widths, images (drawing and the
+ * old VML), links (and the HYPERLINK field), text formatting, footnotes at the end, tracked changes
+ * as accepted, and the sheet and margins.
  */
 
 export interface DocxImportResult {
   html: string;
-  /** Лист и поля документа — для режима страниц. */
+  /** The document's sheet and margins, for page layout. */
   page?: PageLayoutOptions;
-  /** Что не удалось перенести (для сообщения пользователю). */
+  /** What couldn't be brought across (to tell the user). */
   warnings: string[];
 }
 
@@ -791,7 +791,7 @@ class ListState {
   }
 }
 
-/** .docx → HTML (+ лист и поля). Ошибка — не .docx или повреждённый файл. */
+/** .docx → HTML (plus the sheet and margins). Throws when the file isn't a .docx or is damaged. */
 export async function fromDocx(input: Uint8Array | ArrayBuffer): Promise<DocxImportResult> {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
   const files = await unzip(bytes);

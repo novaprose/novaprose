@@ -8,58 +8,58 @@ import type {
 import type { Editor } from './editor';
 
 /**
- * Вид узла, нарисованный своим кодом — компонентом React, Vue или обычным DOM. Ядро берёт на себя
- * ProseMirror (редактируемое содержимое, выделение, мутации, события), отрисовщик — только разметку:
+ * A node drawn by your own code — a React or Vue component, or plain DOM. The core takes care of
+ * ProseMirror (editable content, selection, mutations, events); the renderer only draws markup:
  *
  *   nodeViews: { callout: defineNodeView(() => ({ mount(dom, props) {…}, update(props) {…}, destroy() {…} })) }
  *
- * Обёртки фреймворков дают готовые отрисовщики: reactNodeView(Component), vueNodeView(Component).
- * На HTML документа вид не влияет: getHTML() и сервер берут toDOM схемы.
+ * The framework wrappers provide ready renderers: reactNodeView(Component), vueNodeView(Component).
+ * A view doesn't change the document's HTML: getHTML() and the server use the schema's toDOM.
  */
 
 export interface NodeViewProps {
   editor: Editor;
-  /** Узел документа: `node.attrs`, `node.type.name`, `node.textContent`. */
+  /** The document node: `node.attrs`, `node.type.name`, `node.textContent`. */
   node: PMNode;
-  /** Узел выделен целиком (щелчок по узлу без содержимого, выделение рамкой). */
+  /** The whole node is selected (a click on a node without content, or a selection around it). */
   selected: boolean;
-  /** Позиция узла в документе; undefined — узел уже удалён. */
+  /** The node's position in the document; undefined when the node is already gone. */
   getPos(): number | undefined;
-  /** Изменить атрибуты узла — одна правка, отменяется Ctrl+Z. */
+  /** Change the node's attributes — one edit, undone with Ctrl+Z. */
   updateAttributes(attrs: Record<string, unknown>): void;
-  /** Удалить узел. */
+  /** Delete the node. */
   deleteNode(): void;
   /**
-   * Элемент редактируемого содержимого (у узлов с content, иначе null). Отрисовщик ставит его в
-   * своё место разметки (компонент NodeViewContent); до этого он лежит прямо в корне вида.
+   * The element of the editable content (for nodes with content, null otherwise). The renderer puts
+   * it in its place in the markup (the NodeViewContent component); until then it sits in the view's root.
    */
   contentDOM: HTMLElement | null;
 }
 
 export interface NodeViewRenderer {
-  /** Нарисовать вид в элементе dom (он уже создан, в документ его вставит редактор). */
+  /** Draw the view in the dom element (already created; the editor inserts it into the document). */
   mount(dom: HTMLElement, props: NodeViewProps): void;
-  /** Узел, его атрибуты или выделение изменились. */
+  /** The node, its attributes or the selection changed. */
   update(props: NodeViewProps): void;
-  /** Узел ушёл из документа (или редактор уничтожен). */
+  /** The node left the document (or the editor was destroyed). */
   destroy(): void;
 }
 
 export interface NodeViewOptions {
-  /** Тег корня вида: по умолчанию div, у строчных узлов — span. */
+  /** Tag of the view's root: div by default, span for inline nodes. */
   as?: string;
-  /** Тег элемента содержимого: по умолчанию как у корня. */
+  /** Tag of the content element: the same as the root's by default. */
   contentAs?: string;
-  /** Класс корня вида. */
+  /** Class of the view's root. */
   className?: string;
   /**
-   * Забирает ли вид событие у редактора. По умолчанию — события полей ввода, списков и кнопок
-   * вида (вне содержимого): ввод в них не попадает в документ.
+   * Whether the view takes an event away from the editor. By default it takes events of the view's
+   * inputs, lists and buttons (outside the content), so typing in them doesn't reach the document.
    */
   stopEvent?: (event: Event) => boolean;
 }
 
-/** Фабрика вида для NovaPlugin.nodeViews: ядро вызывает её со своим редактором. */
+/** A view factory for NovaPlugin.nodeViews: the core calls it with its editor. */
 export type NodeViewFactory = (editor: Editor) => NodeViewConstructor;
 
 /** Свои элементы управления вида — их события редактору не нужны. */
@@ -185,7 +185,7 @@ class RenderedNodeView implements NodeView {
   }
 }
 
-/** Вид узла из своего отрисовщика (React, Vue, DOM): `create` вызывается для каждого узла. */
+/** A node view from your own renderer (React, Vue, DOM): `create` is called for each node. */
 export function defineNodeView(
   create: (editor: Editor) => NodeViewRenderer,
   options: NodeViewOptions = {},

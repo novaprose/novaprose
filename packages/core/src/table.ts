@@ -70,7 +70,7 @@ export const tableCommands = {
 
 export { isInTable };
 
-/** Фон выделенных ячеек (null — убрать). */
+/** Background of the selected cells (null removes it). */
 export function setCellBackground(color: string | null): Command {
   return setCellAttr('background', color);
 }

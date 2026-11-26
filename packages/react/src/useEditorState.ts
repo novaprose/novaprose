@@ -9,7 +9,7 @@ const STATE_EVENTS: EditorEvent[] = [
   'editableChange',
 ];
 
-/** Поверхностное сравнение: подходит для селекторов вида `e => ({ bold: ..., italic: ... })`. */
+/** Shallow comparison: fits selectors like `e => ({ bold: ..., italic: ... })`. */
 export function shallowEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
@@ -24,9 +24,8 @@ export function shallowEqual(a: unknown, b: unknown): boolean {
 }
 
 /**
- * Подписка на состояние редактора для собственного UI (headless-режим).
- * Компонент перерисовывается, только когда результат `selector` изменился по `isEqual`
- * (по умолчанию — поверхностное сравнение).
+ * Subscribe to the editor's state for your own UI (headless mode). The component re-renders only
+ * when the result of `selector` changes by `isEqual` (shallow comparison by default).
  *
  * ```tsx
  * const { bold, canUndo } = useEditorState(editor, (e) => ({
@@ -82,16 +81,16 @@ export function useEditorState<T>(
 }
 
 export interface UseCommandResult {
-  /** Выполнить команду (возвращает `false`, если редактора нет или команда неприменима). */
+  /** Run the command (returns `false` when there is no editor or the command doesn't apply). */
   run: () => boolean;
-  /** Применима ли команда в текущем выделении. */
+  /** Whether the command applies to the current selection. */
   enabled: boolean;
-  /** Активна ли команда (для марок и узлов: выделение уже в этом формате). */
+  /** Whether the command is active (for marks and nodes: the selection already has this format). */
   active: boolean;
 }
 
 /**
- * Состояние и запуск именованной команды — для своей кнопки тулбара.
+ * The state of a named command and a way to run it, for your own toolbar button.
  *
  * ```tsx
  * const bold = useCommand(editor, 'bold');

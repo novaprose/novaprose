@@ -1,10 +1,10 @@
 /**
- * Комментарии к тексту: модель данных и хранилище.
+ * Comments on the text: the data model and the store.
  *
- * Текст документа хранит только якорь — марку `<span data-comment="id">` вокруг обсуждаемого фрагмента.
- * Сами обсуждения (ветки) лежат в хранилище: по умолчанию в памяти (сохраняйте их через `onChange`
- * рядом с HTML), при совместном редактировании — в общем Y.Doc (`collabSession.commentStore()`),
- * или в вашем собственном хранилище с тем же интерфейсом.
+ * The document's text keeps only the anchor — a `<span data-comment="id">` mark around the discussed
+ * fragment. The discussions (threads) themselves live in a store: in memory by default (save them
+ * next to the HTML with `onChange`), in the shared Y.Doc when collaborating
+ * (`collabSession.commentStore()`), or in your own store with the same interface.
  */
 
 export interface CommentAuthor {
@@ -16,28 +16,28 @@ export interface Comment {
   id: string;
   author: CommentAuthor;
   text: string;
-  /** Время создания, мс с 1970 (Date.now()). */
+  /** When it was created, ms since 1970 (Date.now()). */
   createdAt: number;
   editedAt?: number;
-  /** Упомянутые через «@» (в тексте — «@Имя»): кого уведомить. */
+  /** People mentioned with "@" ("@Name" in the text): whom to notify. */
   mentions?: CommentAuthor[];
 }
 
 export interface CommentThread {
-  /** Совпадает с data-comment у фрагмента текста. */
+  /** Matches data-comment of the text fragment. */
   id: string;
   createdAt: number;
-  /** Первый комментарий — суть обсуждения, остальные — ответы. */
+  /** The first comment starts the discussion, the rest are replies. */
   comments: Comment[];
-  /** Ветка решена: подсветка в тексте скрывается, обсуждение остаётся в истории. */
+  /** The thread is resolved: its highlight in the text is hidden, the discussion stays in the history. */
   resolved?: { by: CommentAuthor; at: number } | null;
 }
 
-/** Хранилище веток. Методы синхронные: интерфейс обновляется сразу, сохранение — на вашей стороне. */
+/** A store of threads. Its methods are synchronous: the UI updates at once, saving is up to you. */
 export interface CommentStore {
-  /** Снимок всех веток (новый массив после каждого изменения). */
+  /** A snapshot of all threads (a new array after every change). */
   threads(): readonly CommentThread[];
-  /** Подписка на любые изменения (в том числе пришедшие от других участников). Возвращает отписку. */
+  /** Subscribe to any change (including ones from other participants). Returns an unsubscribe function. */
   subscribe(listener: () => void): () => void;
   createThread(thread: CommentThread): void;
   reply(threadId: string, comment: Comment): void;
@@ -59,7 +59,7 @@ export function newCommentId(prefix = 'c'): string {
   return prefix + Array.from(bytes, (b) => (b % 36).toString(36)).join('');
 }
 
-/** Привести данные из внешнего источника (JSON, сеть) к безопасному виду; негодное — отбросить. */
+/** Make data from an outside source (JSON, network) safe; drop whatever doesn't fit. */
 export function sanitizeThread(value: unknown): CommentThread | null {
   if (!value || typeof value !== 'object') return null;
   const raw = value as Record<string, unknown>;
@@ -109,7 +109,7 @@ function sanitizeComment(value: unknown): Comment | null {
 }
 
 /**
- * Хранилище в памяти. `initial` — ветки, сохранённые раньше (из вашего бэкенда), `onChange` — сохранить.
+ * An in-memory store. `initial` — threads saved earlier (from your backend), `onChange` — save them.
  *
  * ```ts
  * const store = createCommentStore(saved.threads, (threads) => api.saveComments(postId, threads));

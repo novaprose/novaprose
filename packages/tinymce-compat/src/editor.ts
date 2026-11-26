@@ -72,9 +72,9 @@ function openDialog(
 }
 
 /**
- * Обёртка над редактором NovaProse с API редактора TinyMCE (по публичной документации): методы,
- * события и реестр кнопок, которыми пользуются существующие интеграции. Всё делается через публичный
- * API `Editor` — ProseMirror напрямую не трогаем (кроме вставки HTML через view.pasteHTML).
+ * A NovaProse editor with the TinyMCE editor API (from its public documentation): the methods,
+ * events and control registry that existing integrations use. Everything goes through the public
+ * `Editor` API — ProseMirror is never touched directly (except inserting HTML via view.pasteHTML).
  */
 
 type Handler = (event: Record<string, unknown>) => unknown;
@@ -311,9 +311,9 @@ export class CompatEditor {
   }
 
   /**
-   * Вставить HTML на место выделения. Блоки (<p>, списки, таблицы) — отдельными блоками (абзац
-   * разрезается), строчное содержимое — в текущую строку. Разбор — схемой редактора: те же проверки
-   * ссылок и разметки, что при загрузке содержимого.
+   * Insert HTML in place of the selection. Blocks (<p>, lists, tables) go in as separate blocks (the
+   * paragraph is split), inline content into the current line. Parsed by the editor's schema: the
+   * same link and markup checks as when content is loaded.
    */
   insertContent(content: string): void {
     this.core.insertContent(content);
@@ -352,7 +352,7 @@ export class CompatEditor {
 
   // ---------- команды ----------
 
-  /** Значение команды: ToggleSidebar — имя открытой боковой панели. */
+  /** The value of a command: for ToggleSidebar, the name of the open sidebar. */
   queryCommandValue(command: string): string {
     if (command.toLowerCase() === 'togglesidebar') return this.core.ui.sidebar.active ?? '';
     return '';
@@ -411,9 +411,9 @@ export class CompatEditor {
   }
 
   /**
-   * InsertAccordion / RemoveAccordion — как кнопка accordion (в блоке — снять рамку, иначе вставить);
-   * ToggleAccordion / ToggleAllAccordions — value true раскрывает, false сворачивает, без value —
-   * переключает. Сворачивание — вид, а не правка: в историю отмены не попадает.
+   * InsertAccordion / RemoveAccordion — like the accordion button (inside one, remove the frame;
+   * otherwise insert); ToggleAccordion / ToggleAllAccordions — value true expands, false collapses,
+   * no value toggles. Collapsing is a view, not an edit: it doesn't go into the undo history.
    */
   private accordionCommand(name: string, value: unknown): boolean {
     const { view } = this.core;
@@ -513,7 +513,7 @@ export class CompatEditor {
     return payload;
   }
 
-  /** DOM-событие текста (keydown, click…) — обработчикам передаётся само событие браузера. */
+  /** A DOM event of the text (keydown, click…): handlers get the browser's event itself. */
   fireNative(name: string, event: Event): void {
     for (const handler of [...(this.handlers.get(name) ?? [])]) {
       try {
@@ -524,12 +524,12 @@ export class CompatEditor {
     }
   }
 
-  /** Иконка для кнопок по имени (tinymce.IconManager / editor.ui.registry.addIcon). */
+  /** An icon for buttons by name (tinymce.IconManager / editor.ui.registry.addIcon). */
   static registerIcon(name: string, svg: string): void {
     customIcons.set(name, svg);
   }
 
-  /** Новое имя fire в последних версиях API. */
+  /** The newer name of fire in recent versions of the API. */
   dispatch(name: string, event?: Record<string, unknown>): Record<string, unknown> {
     return this.fire(name, event);
   }
@@ -550,7 +550,7 @@ export class CompatEditor {
     if (changed && state) this.fire('Dirty');
   }
 
-  /** Записать содержимое в исходный <textarea> (как при отправке формы). */
+  /** Write the content into the original <textarea> (as on form submit). */
   save(): string {
     const content = this.getContent();
     const event = this.fire('SaveContent', { content });
@@ -642,14 +642,14 @@ export class CompatEditor {
       const pos = toStart ? state.selection.from : state.selection.to;
       dispatch(state.tr.setSelection(TextSelection.near(state.doc.resolve(pos))));
     },
-    /** Курсор в узел DOM редактора (по умолчанию — в начало). */
+    /** Put the cursor in a DOM node of the editor (at its start by default). */
     setCursorLocation: (node?: Node, offset = 0) => {
       const { view } = this.core;
       if (!node || !view.dom.contains(node)) return;
       const pos = view.posAtDOM(node, offset);
       view.dispatch(view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(pos))));
     },
-    /** Выделить элемент: content = true — только его содержимое. */
+    /** Select an element: content = true — only its content. */
     select: (node: Node, content = false) => {
       const { view } = this.core;
       if (!view.dom.contains(node)) return;
@@ -708,7 +708,7 @@ export class CompatEditor {
       openDialog(this.core, spec, (next) => this.windowManager.open(next)),
   };
 
-  /** editor.ui.registry — кнопки и пункты меню в формате TinyMCE поверх реестра NovaProse. */
+  /** editor.ui.registry — buttons and menu items in TinyMCE format on top of the NovaProse registry. */
   readonly ui = {
     registry: {
       addIcon: (name: string, svg: string) => {
@@ -750,8 +750,8 @@ export class CompatEditor {
         });
       },
       /**
-       * Контекстная панель: predicate(node) получает элемент под курсором, items — кнопки тулбара.
-       * position: 'node' (над элементом) или 'selection'/'line' (у выделения).
+       * A context toolbar: predicate(node) gets the element at the cursor, items are toolbar buttons.
+       * position: 'node' (above the element) or 'selection'/'line' (at the selection).
        */
       addContextToolbar: (
         name: string,
@@ -773,8 +773,8 @@ export class CompatEditor {
         });
       },
       /**
-       * Боковая панель: onSetup(api) рисует содержимое в api.element() (один раз), onShow/onHide —
-       * при показе. Кнопка-переключатель с именем панели — для toolbar; ToggleSidebar — командой.
+       * A sidebar: onSetup(api) draws the content into api.element() (once), onShow/onHide run when it
+       * is shown or hidden. A toggle button named after the sidebar is for the toolbar; ToggleSidebar is the command.
        */
       addSidebar: (
         name: string,
@@ -832,9 +832,9 @@ export class CompatEditor {
   }
 
   /**
-   * editor.dom — то, что имеет смысл поверх модели документа: поиск и чтение. Менять DOM текста
-   * напрямую нельзя (редактор перерисует его из модели) — для правок есть setContent/insertContent/
-   * formatter; такие вызовы пишут предупреждение.
+   * editor.dom — what makes sense on top of a document model: finding and reading. The text's DOM
+   * can't be changed directly (the editor redraws it from the model); use setContent, insertContent
+   * or formatter for edits — such calls log a warning.
    */
   readonly dom = {
     select: (selector: string, scope?: Element): Element[] => [
@@ -876,7 +876,7 @@ export class CompatEditor {
       textarea.innerHTML = html;
       return textarea.value;
     },
-    /** Новый (не вставленный) элемент: атрибуты — через setAttribute, содержимое — текстом. */
+    /** A new (not inserted) element: attributes via setAttribute, the content as text. */
     create: (tag: string, attrs: Record<string, string> = {}, text?: string) => {
       const node = document.createElement(tag);
       for (const [name, value] of Object.entries(attrs)) {
@@ -894,8 +894,8 @@ export class CompatEditor {
   };
 
   /**
-   * editor.formatter — встроенные форматы TinyMCE: apply/remove/toggle/match.
-   * Свои форматы (register) пока не поддержаны.
+   * editor.formatter — the built-in TinyMCE formats: apply/remove/toggle/match. Your own formats
+   * (register) are not supported yet.
    */
   readonly formatter = {
     apply: (name: string, vars: { value?: string } = {}) => this.applyFormat(name, vars, 'apply'),
@@ -991,7 +991,7 @@ export class CompatEditor {
     console.warn(`[nova] tinymce-compat: format "${name}" is not supported yet`);
   }
 
-  /** Убрать редактор и вернуть исходный элемент (как editor.remove()). */
+  /** Remove the editor and restore the original element (like editor.remove()). */
   remove(): void {
     if (this.removed) return;
     this.fire('remove');

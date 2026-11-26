@@ -1,7 +1,7 @@
 import { activeElement, h, icon, logicalKey } from './dom';
 import { icons } from './icons';
 
-/** Палитра по умолчанию: 8 оттенков × (тёмный, основной, светлый) + шкала серого. */
+/** The default palette: 8 hues × (dark, base, light) plus a gray scale. */
 export const defaultColors: string[] = [
   '#000000',
   '#434343',

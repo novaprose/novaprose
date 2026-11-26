@@ -29,31 +29,31 @@ export function loadPasteCleaner(): Promise<PasteCleaner | null> {
 }
 
 /**
- * Обработка вставки:
- * - режим «Вставить как текст» (переключатель pastetext) — любое содержимое вставляется без форматирования;
- * - Ctrl/Cmd+Shift+V — разовая вставка без форматирования (ProseMirror сам отдаёт text/plain
- *   при зажатом Shift; мы лишь гарантируем, что HTML-ветка не перехватит её);
- * - хуки pastePreprocess (строка HTML до разбора) и pastePostprocess (DOM после разбора браузером).
+ * Paste handling:
+ * - "Paste as text" mode (the pastetext toggle): any content is pasted without formatting;
+ * - Ctrl/Cmd+Shift+V pastes once without formatting (ProseMirror itself hands over text/plain when
+ *   Shift is held; we only make sure the HTML branch doesn't take it);
+ * - the pastePreprocess (HTML string before parsing) and pastePostprocess (DOM after the browser parsed it) hooks.
  */
 
 export interface PasteOptions {
-  /** Изменить HTML до разбора: вернуть новую строку. */
+  /** Change the HTML before it is parsed: return a new string. */
   pastePreprocess?: (html: string, editor: Editor) => string;
-  /** Изменить DOM после разбора: можно удалять/менять узлы на месте. */
+  /** Change the DOM after it is parsed: nodes can be removed or changed in place. */
   pastePostprocess?: (fragment: HTMLElement, editor: Editor) => void;
-  /** Включить режим «вставить как текст» сразу. */
+  /** Start in "paste as text" mode. */
   pasteAsText?: boolean;
   /**
-   * Оформление при вставке из Word, Google Docs, Excel и веб-страниц.
-   * 'clean' (по умолчанию) — сохраняются жирный, курсив, цвета, списки, таблицы, ссылки, но не шрифт,
-   * кегль и интервалы документа-источника; 'keep' — переносить и их.
+   * Formatting when pasting from Word, Google Docs, Excel and web pages. 'clean' (default) keeps
+   * bold, italic, colors, lists, tables and links, but not the source document's font, size and
+   * spacing; 'keep' brings those too.
    */
   pasteStyles?: PasteStyles;
 }
 
 const key = new PluginKey('nova-paste');
 
-/** Превращает HTML в простой текст с сохранением абзацев (для режима «как текст»). */
+/** Turns HTML into plain text, keeping paragraphs (for "paste as text" mode). */
 export function htmlToPlainText(html: string): string {
   const template = document.createElement('template');
   template.innerHTML = html;

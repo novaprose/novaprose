@@ -6,19 +6,19 @@ import {
   type EditorOptions,
 } from '@novaprose/core';
 
-/** Имя тега по умолчанию. */
+/** The default tag name. */
 export const DEFAULT_TAG = 'novaprose-editor';
 
-/** Опции, которые можно передать свойством `init` до подключения элемента в DOM. */
+/** Options that can be passed with the `init` property before the element is connected to the DOM. */
 export type NovaProseElementInit = Omit<EditorOptions, 'element' | 'content'>;
 
-/** Публичный интерфейс элемента `<novaprose-editor>`. */
+/** The public interface of the `<novaprose-editor>` element. */
 export interface NovaProseEditorElement extends HTMLElement {
-  /** Экземпляр редактора; `null`, пока элемент не подключён к DOM. */
+  /** The editor instance; `null` until the element is connected to the DOM. */
   readonly editor: Editor | null;
-  /** Текущий HTML. Установка не попадает в undo и не вызывает `input` — как у `<textarea>`. */
+  /** The current HTML. Setting it skips undo and doesn't fire `input`, like a `<textarea>`. */
   value: string;
-  /** Опции ядра; читаются при подключении элемента. */
+  /** Core options; read when the element connects. */
   init: NovaProseElementInit;
   readonly form: HTMLFormElement | null;
   readonly validity: ValidityState | undefined;
@@ -32,7 +32,7 @@ const OBSERVED = ['readonly', 'disabled', 'required'] as const;
 let elementClass: (new () => NovaProseEditorElement) | undefined;
 
 /**
- * Класс элемента. Создаётся лениво: на сервере (SSR) нет `HTMLElement`, и импорт пакета не должен падать.
+ * The element class. Created lazily: there is no `HTMLElement` on the server (SSR), and importing the package must not throw.
  */
 export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
   if (elementClass) return elementClass;
@@ -278,8 +278,8 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
 }
 
 /**
- * Регистрирует `<novaprose-editor>` (или свой тег). Повторный вызов безопасен.
- * На сервере ничего не делает.
+ * Registers `<novaprose-editor>` (or your own tag). Calling it again is safe. Does nothing on the
+ * server.
  */
 export function defineNovaProseEditor(tagName: string = DEFAULT_TAG): void {
   if (typeof customElements === 'undefined' || customElements.get(tagName)) return;

@@ -13,9 +13,9 @@ export const LABELS = {
 };
 
 export interface ExportWordOptions {
-  /** Имя файла (по умолчанию document.docx). */
+  /** The file name (document.docx by default). */
   filename?: string;
-  /** Шрифт текста в Word (по умолчанию Calibri) и размер в пунктах (12). */
+  /** Text font in Word (Calibri by default) and size in points (12). */
   font?: string;
   fontSize?: number;
 }

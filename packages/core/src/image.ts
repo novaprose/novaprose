@@ -18,8 +18,8 @@ import { icons } from './ui/icons';
 import { isSafeImageUrl } from './url';
 
 /**
- * Загрузчик изображений (аналог images_upload_handler): получает файл, возвращает URL.
- * progress(0..100) — необязательный индикатор.
+ * Image upload handler (like images_upload_handler): gets a file, returns its URL. progress(0..100)
+ * is an optional progress indicator.
  */
 export type UploadImageHandler = (
   file: File,
@@ -53,9 +53,9 @@ function findImage(view: EditorView, src: string): number | null {
 }
 
 /**
- * Вставить и загрузить файлы изображений. Пока файл грузится, показываем его локальную копию
- * (blob:) полупрозрачной; после загрузки подменяем src, при ошибке — убираем и сообщаем.
- * Без uploadImage картинка встраивается как data:URL (как делает TinyMCE без обработчика).
+ * Insert and upload image files. While a file uploads, its local copy (blob:) is shown
+ * semi-transparent; after the upload src is replaced, and on an error the image is removed with a
+ * message. Without uploadImage the image is embedded as a data: URL (as TinyMCE does without a handler).
  */
 export function uploadImages(editor: Editor, files: File[], pos?: number): void {
   const images = files.filter(isSupportedImage);
@@ -267,7 +267,7 @@ export function imageDropPastePlugin(editor: Editor): Plugin {
   });
 }
 
-/** Диалог вставки изображения: загрузка файла или URL + обязательный по смыслу alt. */
+/** The insert image dialog: upload a file or enter a URL, plus the alt text that should always be there. */
 export function openImageDialog(editor: Editor): void {
   const { t } = editor.ui;
   const fileInput = h('input', {
@@ -341,17 +341,17 @@ export function openImageDialog(editor: Editor): void {
 
 // ---------- выделенная картинка: размер, выравнивание, alt ----------
 
-/** Выделенная картинка: узел (image или figure), его позиция и атрибуты картинки. */
+/** The selected image: the node (image or figure), its position and the image's attributes. */
 export interface SelectedImage {
   node: PMNode;
   pos: number;
-  /** src, alt, title, width, height, align — для figure собраны из figure и figure_image. */
+  /** src, alt, title, width, height, align — for figure, collected from figure and figure_image. */
   attrs: Record<string, unknown>;
 }
 
 /**
- * Выделенная картинка: картинка в строке, картинка с подписью (figure) или подпись, в которой стоит
- * курсор. Действия тулбара картинки (выравнивание, размер, alt) работают для обеих.
+ * The selected image: an image in a line, an image with a caption (figure), or the caption the
+ * cursor is in. The image toolbar actions (alignment, size, alt) work for both.
  */
 export function getSelectedImage(state: EditorState): SelectedImage | null {
   const { selection } = state;
@@ -444,9 +444,9 @@ export const exitImageCaption: Command = (state, dispatch) => {
 };
 
 /**
- * Изменить атрибуты выделенной картинки. У figure выравнивание — на figure, остальное — на картинке
- * внутри. Выделение: картинка в строке остаётся выделенной узлом; у figure курсор не трогаем
- * (можно продолжать писать подпись).
+ * Change the attributes of the selected image. For figure, alignment goes on figure and the rest
+ * on the image inside. Selection: an image in a line stays selected as a node; for figure the
+ * cursor isn't touched (you can keep typing the caption).
  */
 export function setImageAttrs(
   attrs: Partial<Record<'alt' | 'title' | 'width' | 'height' | 'align', unknown>>,
@@ -475,7 +475,7 @@ export function setImageAttrs(
   };
 }
 
-/** Ширина картинки как доля ширины области текста (с сохранением пропорций); null — исходный размер. */
+/** Image width as a fraction of the text area width (aspect ratio kept); null — the original size. */
 export function setImageWidthFraction(editor: Editor, fraction: number | null): boolean {
   const image = getSelectedImage(editor.view.state);
   if (!image) return false;
@@ -492,7 +492,7 @@ export function setImageWidthFraction(editor: Editor, fraction: number | null): 
   return editor.exec(setImageAttrs({ width, height: ratio ? Math.round(width * ratio) : null }));
 }
 
-/** Диалог альтернативного текста — главный пункт доступности картинки. */
+/** The alternative text dialog — the most important accessibility setting of an image. */
 export function openImageAltDialog(editor: Editor): void {
   const image = getSelectedImage(editor.view.state);
   if (!image) return;

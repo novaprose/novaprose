@@ -3,28 +3,28 @@ import { Plugin, PluginKey } from 'prosemirror-state';
 import type { NovaSchema } from './schema';
 
 /**
- * Ограничение контента (аналог valid_elements / invalid_elements / valid_styles).
+ * Content restrictions (like valid_elements / invalid_elements / valid_styles).
  *
- * Схема NovaProse одна на процесс, поэтому ограничения — не другая схема, а нормализатор:
- * всё запрещённое деградирует (жирный → текст, h1 → абзац, список → абзацы, таблица → содержимое)
- * при любом изменении документа — вставке, перетаскивании, setContent, горячих клавишах.
+ * There is one NovaProse schema per process, so restrictions are not another schema but a
+ * normalizer: everything disallowed degrades (bold → text, h1 → paragraph, list → paragraphs,
+ * table → its content) on any change of the document — paste, drag and drop, setContent, shortcuts.
  */
 export interface ContentRulesOptions {
   /**
-   * Разрешены ТОЛЬКО эти элементы: 'p,strong/b,em/i,a[href|title],ul,ol'. Список атрибутов в [...] —
-   * полный список для элемента; элемент без [...] сохраняет встроенные атрибуты.
+   * ONLY these elements are allowed: 'p,strong/b,em/i,a[href|title],ul,ol'. An attribute list in
+   * [...] is the complete list for the element; an element without [...] keeps its built-in attributes.
    */
   validElements?: string;
   /**
-   * Дополнительные элементы и атрибуты (синтаксис validElements): 'div[class],h2[id],i[class]'.
-   * Правило для элемента заменяет его список атрибутов; `@[id|title]` — атрибуты всех элементов.
+   * More elements and attributes (validElements syntax): 'div[class],h2[id],i[class]'. A rule for an
+   * element replaces its attribute list; `@[id|title]` — attributes of all elements.
    */
   extendedValidElements?: string;
-  /** Свои элементы: 'my-widget,~my-chip' (~ — строчный, как span; без ~ — блочный, как div). */
+  /** Your own elements: 'my-widget,~my-chip' (~ — inline, like span; without ~ — a block, like div). */
   customElements?: string;
-  /** Запрещённые элементы: 'img,table,h1'. */
+  /** Disallowed elements: 'img,table,h1'. */
   invalidElements?: string;
-  /** Разрешённые CSS-свойства: 'color,text-align' или { '*': 'color', img: 'float' }. */
+  /** Allowed CSS properties: 'color,text-align' or { '*': 'color', img: 'float' }. */
   validStyles?: string | Record<string, string>;
 }
 
@@ -213,7 +213,7 @@ export class ContentRules {
     return !this.styles || this.styles.has(property.toLowerCase());
   }
 
-  /** Доступен ли контрол / пункт меню / слэш-команда (по имени). Неизвестные имена — разрешены. */
+  /** Whether a control, menu item or slash command is available (by name). Unknown names are allowed. */
   isAllowed(name: string): boolean {
     const req = REQUIREMENTS[name.toLowerCase()];
     if (!req) return true;
@@ -253,7 +253,7 @@ export class ContentRules {
     }
   }
 
-  /** Атрибуты блока без запрещённых стилей. */
+  /** Block attributes without disallowed styles. */
   private blockAttrs(attrs: Record<string, unknown>): Record<string, unknown> {
     return {
       ...attrs,
@@ -263,7 +263,7 @@ export class ContentRules {
     };
   }
 
-  /** Привести узел к правилам. Возвращает 0…n узлов (запрещённый блок может «раствориться»). */
+  /** Bring a node in line with the rules. Returns 0…n nodes (a disallowed block can dissolve). */
   normalize(node: PMNode): PMNode[] {
     // Схема узла, а не общая базовая: у редактора с плагинами она своя.
     const schema = node.type.schema as NovaSchema;
@@ -373,7 +373,7 @@ export class ContentRules {
     return Fragment.from(out);
   }
 
-  /** Нормализовать документ целиком (начальное содержимое). */
+  /** Normalize the whole document (the initial content). */
   normalizeDoc(doc: PMNode): PMNode {
     const content = this.normalizeChildren(doc.content);
     const schema = doc.type.schema as NovaSchema;

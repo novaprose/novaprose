@@ -5,11 +5,11 @@ import { escapeXml } from './xml';
 import { zip, type ZipEntry } from './zip';
 
 /**
- * Документ → .docx (Office Open XML) без сторонних библиотек и без DOM — работает и на сервере.
- * Абзацы, заголовки (с закладками для ссылок оглавления), списки (настоящая нумерация Word),
- * таблицы с объединёнными ячейками и фоном, картинки, ссылки, форматирование текста, предложенные
- * правки — как исправления Word (принять/отклонить), лист и поля — из режима страниц.
- * Порядок дочерних элементов в pPr/rPr/tcPr/tblPr/sectPr — как требует схема: Word строг к нему.
+ * A document → .docx (Office Open XML) without third-party libraries or a DOM, so it also works on
+ * the server. Paragraphs, headings (with bookmarks for table-of-contents links), lists (real Word
+ * numbering), tables with merged cells and fill, images, links, text formatting, suggested edits as
+ * Word tracked changes (accept/reject), and the sheet and margins from page layout. Child elements of
+ * pPr/rPr/tcPr/tblPr/sectPr come in the order the schema requires: Word is strict about it.
  */
 
 export interface DocxImage {
@@ -20,14 +20,14 @@ export interface DocxImage {
 }
 
 export interface DocxExportOptions {
-  /** Лист и поля; по умолчанию A4 с полями 20 мм (из редактора — его режим страниц). */
+  /** Sheet and margins; A4 with 20 mm margins by default (from an editor — its page layout). */
   page?: PageLayoutOptions | PageLayout;
-  /** Шрифт текста (по умолчанию Calibri) и размер в пунктах (12 — как 16px в редакторе). */
+  /** Text font (Calibri by default) and size in points (12 — like 16px in the editor). */
   font?: string;
   fontSize?: number;
-  /** Заголовок в свойствах файла. */
+  /** Title in the file properties. */
   title?: string;
-  /** Байты картинки по адресу. По умолчанию data: разбираются, остальные — fetch(). */
+  /** An image's bytes by its address. By default data: URLs are decoded and others fetched. */
   loadImage?: (src: string) => Promise<DocxImage | null>;
 }
 
@@ -819,7 +819,7 @@ function imageSources(doc: PMNode): string[] {
   return [...sources];
 }
 
-/** Документ ProseMirror → байты .docx. */
+/** A ProseMirror document → the bytes of a .docx. */
 export async function toDocx(doc: PMNode, options: DocxExportOptions = {}): Promise<Uint8Array> {
   const layout =
     options.page && 'width' in options.page && typeof options.page.width === 'number'

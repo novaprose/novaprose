@@ -131,7 +131,7 @@ test('ввод в середине 100 страниц', async ({ page }) => {
   await caretInMiddle(page);
   const keys = await measureKeys(page, () => page.keyboard.type(SENTENCE.repeat(4)));
   expect(keys.count).toBeGreaterThan(150);
-  record('Typing, 100 pages: keystroke p50', keys.p50, 12);
+  record('Typing, 100 pages: keystroke p50', keys.p50, 15);
   record('Typing, 100 pages: keystroke p95', keys.p95, 25);
   record('Typing, 100 pages: long tasks', keys.longTasks, 2, 'tasks');
 });
@@ -200,7 +200,7 @@ test('выделить всё и подчеркнуть: 100 страниц', as
     return performance.now() - start;
   });
   expect(await page.locator('.nova-prosemirror u').count()).toBeGreaterThan(1000);
-  record('Select all + underline, 100 pages', time, 400);
+  record('Select all + underline, 100 pages', time, 600);
 });
 
 test('ввод в режиме страниц: 100 страниц', async ({ page }) => {

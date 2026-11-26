@@ -23,30 +23,30 @@ import {
 } from 'vue';
 import { createWithTeleports, NodeViewHost, NodeViewTeleports } from './nodeViews';
 
-/** Опции композабла: всё из `EditorOptions`, кроме `element` — его даёт `el`. */
+/** Composable options: everything from `EditorOptions` except `element`, which `el` provides. */
 export type UseEditorOptions = Omit<EditorOptions, 'element'> & {
-  /** Вызывается сразу после создания экземпляра. */
+  /** Called right after the instance is created. */
   onCreate?: (editor: Editor) => void;
-  /** Вызывается перед уничтожением экземпляра. */
+  /** Called before the instance is destroyed. */
   onDestroy?: (editor: Editor) => void;
 };
 
 export interface UseEditorResult {
-  /** Template ref для контейнера: `<div ref="el" />` (верните `el` из setup). */
+  /** Template ref for the container: `<div ref="el" />` (return `el` from setup). */
   el: Ref<HTMLElement | null>;
-  /** Экземпляр редактора; `null` до монтирования и на сервере. */
+  /** The editor instance; `null` before mounting and on the server. */
   editor: ShallowRef<Editor | null>;
   /**
-   * Виды узлов на Vue (vueNodeView): отрисуйте рядом с контейнером — `<component :is="nodeViews" />`.
-   * Компоненты видов получают provide/inject того места, где он стоит.
+   * Vue node views (vueNodeView): render them next to the container — `<component :is="nodeViews" />`.
+   * View components get the provide/inject of the place where it is rendered.
    */
   nodeViews: Component;
 }
 
 /**
- * Создаёт редактор в элементе `el`, когда он появляется в DOM, и уничтожает при размонтировании.
- * Опции читаются в момент создания. На сервере ничего не делает: watch с `flush: 'post'`
- * не срабатывает при SSR.
+ * Creates the editor in the `el` element when it appears in the DOM and destroys it on unmount.
+ * Options are read when the editor is created. Does nothing on the server: a watch with
+ * `flush: 'post'` doesn't run during SSR.
  */
 export function useEditor(options: UseEditorOptions = {}): UseEditorResult {
   const el = shallowRef<HTMLElement | null>(null);
@@ -93,7 +93,7 @@ const STATE_EVENTS: EditorEvent[] = [
   'editableChange',
 ];
 
-/** Поверхностное сравнение: подходит для селекторов вида `e => ({ bold: ..., italic: ... })`. */
+/** Shallow comparison: fits selectors like `e => ({ bold: ..., italic: ... })`. */
 export function shallowEqual(a: unknown, b: unknown): boolean {
   if (Object.is(a, b)) return true;
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false;
@@ -108,8 +108,8 @@ export function shallowEqual(a: unknown, b: unknown): boolean {
 }
 
 /**
- * Реактивное состояние редактора для своего UI. Значение обновляется только когда результат
- * `selector` изменился по `isEqual` (по умолчанию — поверхностное сравнение).
+ * Reactive editor state for your own UI. The value updates only when the result of `selector`
+ * changes by `isEqual` (shallow comparison by default).
  *
  * ```ts
  * const state = useEditorState(editor, (e) => ({ bold: e.isActive('bold'), canUndo: e.can('undo') }));
@@ -145,16 +145,16 @@ export function useEditorState<T>(
 }
 
 export interface UseCommandResult {
-  /** Применима ли команда в текущем выделении. */
+  /** Whether the command applies to the current selection. */
   enabled: ComputedRef<boolean>;
-  /** Активна ли команда (выделение уже в этом формате). */
+  /** Whether the command is active (the selection already has this format). */
   active: ComputedRef<boolean>;
-  /** Выполнить команду (`false`, если редактора нет или команда неприменима). */
+  /** Run the command (`false` when there is no editor or the command doesn't apply). */
   run: () => boolean;
 }
 
 /**
- * Состояние и запуск именованной команды — для своей кнопки тулбара.
+ * The state of a named command and a way to run it, for your own toolbar button.
  *
  * ```vue
  * <button :aria-pressed="bold.active.value" :disabled="!bold.enabled.value" @click="bold.run">B</button>

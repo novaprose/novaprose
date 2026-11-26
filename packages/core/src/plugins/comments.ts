@@ -20,29 +20,29 @@ import { findMentionUsers, type MentionUser, type MentionsOptions } from './ment
 import { pickLabels } from './shared';
 
 /**
- * Плагин comments: обсуждения фрагментов текста (как комментарии в Google Docs / Word).
- * `plugins: ['comments']`, настройки — `pluginOptions.comments` ({@link CommentsOptions}).
- * Кнопки (имена TinyMCE): `addcomment`, `showcomments`. Ctrl+Alt+M — комментировать выделение.
+ * The comments plugin: discussions about parts of the text (like comments in Google Docs or Word).
+ * `plugins: ['comments']`, options in `pluginOptions.comments` ({@link CommentsOptions}).
+ * Buttons (TinyMCE names): `addcomment`, `showcomments`. Ctrl+Alt+M comments on the selection.
  *
- * Марка в схеме — поэтому плагин подключается сразу; панель обсуждений грузится лениво при открытии.
+ * A mark in the schema, so the plugin is set up right away; the discussion panel loads lazily when opened.
  */
 
 export interface CommentsOptions {
-  /** Кто комментирует. По умолчанию — «Гость». */
+  /** Who is commenting. Default: "Guest". */
   author?: CommentAuthor;
-  /** Хранилище веток. По умолчанию — в памяти, с `threads` и `onChange`. */
+  /** Where threads are stored. Default: in memory, with `threads` and `onChange`. */
   store?: CommentStore;
-  /** Сохранённые ранее ветки (для хранилища по умолчанию). */
+  /** Previously saved threads (for the default store). */
   threads?: readonly CommentThread[];
-  /** Ветки изменились — сохраните их (для хранилища по умолчанию). */
+  /** The threads changed — save them (for the default store). */
   onChange?: (threads: readonly CommentThread[]) => void;
-  /** Можно ли менять и удалять комментарий. По умолчанию — только автору. */
+  /** Whether a comment can be edited and deleted. Default: only by its author. */
   canEdit?: (comment: Comment, author: CommentAuthor) => boolean;
   /**
-   * Поиск людей для «@» в комментариях. По умолчанию — `pluginOptions.mentions.fetch` (плагин mentions).
+   * Finding people for "@" in comments. Default: `pluginOptions.mentions.fetch` (the mentions plugin).
    */
   mentions?: MentionsOptions['fetch'];
-  /** В новом комментарии кого-то упомянули — отправьте уведомление. */
+  /** Someone was mentioned in a new comment — send them a notification. */
   onMention?: (event: { threadId: string; comment: Comment; users: CommentAuthor[] }) => void;
 }
 
@@ -85,7 +85,7 @@ const ICON_SHOW = icons.comments;
 const SHORTCUT = 'Mod-Alt-m';
 
 interface PluginState {
-  /** Выделение, к которому пишется новый комментарий (ещё не сохранён — без марки в тексте). */
+  /** The selection a new comment is being written for (not saved yet, so no mark in the text). */
   pending: { from: number; to: number } | null;
   active: string | null;
 }
@@ -94,7 +94,7 @@ type Meta = Partial<PluginState> & { refresh?: true };
 
 export const commentsKey = new PluginKey<PluginState>('nova-comments');
 
-/** Управление комментариями редактора — общий объект для плагина и ленивой панели. */
+/** Controls the editor's comments: one object shared by the plugin and the lazy panel. */
 export interface CommentsController {
   readonly editor: Editor;
   readonly store: CommentStore;
@@ -104,18 +104,18 @@ export interface CommentsController {
   pending(): PluginState['pending'];
   active(): string | null;
   setActive(id: string | null, scroll?: boolean): void;
-  /** Начать комментарий к выделению: подсветить его и открыть панель с полем ввода. */
+  /** Start a comment on the selection: highlight it and open the panel with an input. */
   startComment(): boolean;
   cancelPending(): void;
-  /** Сохранить новый комментарий к отложенному выделению. Возвращает id ветки. */
+  /** Save a new comment on the pending selection. Returns the thread ID. */
   submitPending(text: string, mentions?: CommentAuthor[]): string | null;
   reply(threadId: string, text: string, mentions?: CommentAuthor[]): void;
-  /** Поиск людей для «@» (null — источник не настроен, упоминания в комментариях выключены). */
+  /** Finding people for "@" (null when no source is set up and mentions in comments are off). */
   findUsers: ((query: string) => Promise<MentionUser[]>) | null;
-  /** Фрагменты текста ветки (пусто — текст удалён). */
+  /** Text fragments of a thread (empty when the text was deleted). */
   ranges(id: string): { from: number; to: number }[];
   quote(id: string): string;
-  /** Порядок веток по месту в документе. */
+  /** Threads in the order of their place in the document. */
   positionOf(id: string): number;
   deleteThread(id: string): void;
   setResolved(id: string, resolved: boolean): void;
@@ -127,7 +127,7 @@ export interface CommentsController {
 
 const controllers = new WeakMap<Editor, CommentsController>();
 
-/** Контроллер комментариев редактора (если подключён плагин comments). */
+/** The editor's comments controller (when the comments plugin is active). */
 export function getComments(editor: Editor): CommentsController | undefined {
   return controllers.get(editor);
 }

@@ -3,28 +3,28 @@ import type { EditorView } from 'prosemirror-view';
 import type { CommandName } from './commands';
 
 /**
- * Цепочка команд: несколько шагов — одна правка (одно действие отмены, одно событие change).
+ * A command chain: several steps as one edit (one undo step, one change event).
  *
  *   editor.chain().exec('h2').exec('alignCenter').run();
  *   editor.chain().insertContent('<p>Note</p>').exec(setStyle('color', '#e03e2d')).run();
  *
- * Шаги работают с общей транзакцией: каждый видит документ и выделение после предыдущих (как
- * цепочки в других редакторах на ProseMirror). Отличие — «всё или ничего»: шаг не удался —
- * документ не меняется, run() возвращает false. can() проверяет цепочку честно: шаги выполняются
- * на черновике транзакции, который не применяется.
+ * Steps work on a shared transaction: each sees the document and the selection after the previous
+ * ones (like chains in other ProseMirror editors). The difference is all-or-nothing: if a step
+ * fails, the document doesn't change and run() returns false. can() checks the chain honestly: the
+ * steps run on a draft transaction that is never applied.
  */
 
-/** Именованные команды для цепочки: отмена и повтор работают только отдельно (editor.exec). */
+/** Named commands for a chain: undo and redo only work on their own (editor.exec). */
 export type ChainCommandName = Exclude<CommandName, 'undo' | 'redo'>;
 
 export interface CommandChain {
-  /** Шаг — именованная команда или команда ProseMirror (setStyle(…), applyLink(…), своя). */
+  /** A step: a named command or a ProseMirror command (setStyle(…), applyLink(…), your own). */
   exec(command: ChainCommandName | Command): CommandChain;
-  /** Шаг — вставить HTML в позицию курсора, как editor.insertContent(). */
+  /** A step: insert HTML at the cursor, like editor.insertContent(). */
   insertContent(html: string): CommandChain;
-  /** Выполнить шаги одной правкой. Шаг не удался — документ не меняется, ответ false. */
+  /** Run the steps as one edit. If a step fails, the document doesn't change and the result is false. */
   run(): boolean;
-  /** Получится ли run() сейчас (для кнопок). Документ не меняется. */
+  /** Whether run() would succeed now (for buttons). The document doesn't change. */
   can(): boolean;
 }
 

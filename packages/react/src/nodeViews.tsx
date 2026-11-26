@@ -89,7 +89,7 @@ export function NodeViewHost({ portals }: { portals: NodeViewPortals }): ReactNo
 
 const NodeViewContext = createContext<NodeViewProps | null>(null);
 
-/** Свойства вида узла во вложенных компонентах (те же, что у компонента вида). */
+/** Node view props in nested components (the same as the view component's). */
 export function useNodeView(): NodeViewProps {
   const props = useContext(NodeViewContext);
   if (!props) throw new Error('[nova] useNodeView() works only inside a node view component');
@@ -97,11 +97,11 @@ export function useNodeView(): NodeViewProps {
 }
 
 export type NodeViewContentProps = HTMLAttributes<HTMLElement> & {
-  /** Тег обёртки содержимого (по умолчанию div; у строчных узлов — span). */
+  /** Tag of the content wrapper (div by default; span for inline nodes). */
   as?: ElementType;
 };
 
-/** Место редактируемого содержимого узла в разметке компонента. */
+/** Where the node's editable content goes in the component's markup. */
 export function NodeViewContent({ as, ...rest }: NodeViewContentProps): ReactNode {
   const props = useContext(NodeViewContext);
   const contentDOM = props?.contentDOM ?? null;
@@ -118,7 +118,7 @@ export function NodeViewContent({ as, ...rest }: NodeViewContentProps): ReactNod
 let counter = 0;
 let warned = false;
 
-/** Вид узла из React-компонента — для `nodeViews` плагина. */
+/** A node view from a React component, for a plugin's `nodeViews`. */
 export function reactNodeView(
   Component: ComponentType<NodeViewProps>,
   options?: NodeViewOptions,

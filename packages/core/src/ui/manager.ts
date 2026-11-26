@@ -13,16 +13,16 @@ import { Sidebars } from './sidebar';
 import { Tooltip } from './tooltip';
 
 /**
- * UI-слой экземпляра редактора: реестр кнопок, оверлеи (поповеры, диалоги, подсказки),
- * уведомления и переводы. Доступен как editor.ui.
+ * The UI layer of an editor instance: the control registry, overlays (popovers, dialogs, tooltips),
+ * notifications and translations. Available as editor.ui.
  */
 export class UiManager {
   readonly registry = new Registry();
   readonly t: Translator;
-  /** Слой для всех плавающих элементов. Лежит внутри .nova-editor, поэтому наследует тему. */
+  /** The layer for all floating elements. It sits inside .nova-editor, so it inherits the theme. */
   readonly overlayHost: HTMLDivElement;
   readonly tooltip: Tooltip;
-  /** Боковые панели плагинов: show / hide / toggle (регистрация — registry.addSidebar). */
+  /** Plugin sidebars: show / hide / toggle (register them with registry.addSidebar). */
   readonly sidebar: Sidebars;
   private readonly notifications: Notifications;
   private popover: Popover | null = null;
@@ -46,10 +46,10 @@ export class UiManager {
   }
 
   /**
-   * Подключить стили плагина к документу (или теневому корню) редактора — один раз на страницу,
-   * сколько бы редакторов ни было. Для панелей и диалогов, которые грузятся лениво: их стили не
-   * нужны в style.css первой загрузки. Конструируемые таблицы стилей не требуют 'unsafe-inline'
-   * в CSP; где их нет — обычный <style>. Переопределяйте такие стили селектором не слабее.
+   * Add a plugin's styles to the editor's document (or shadow root) — once per page, however many
+   * editors there are. For panels and dialogs that load lazily: their styles don't belong in the
+   * first-load style.css. Constructed style sheets don't need 'unsafe-inline' in your CSP; where they
+   * aren't supported, a plain <style> is used. Override such styles with a selector at least as specific.
    */
   addStyles(id: string, css: string): void {
     const root = this.rootEl.getRootNode() as Document | ShadowRoot;
@@ -74,8 +74,8 @@ export class UiManager {
   }
 
   /**
-   * Диалог по описанию полей (для плагинов): проверка, ошибки у полей, доступность.
-   * Возвращает данные или null, если диалог закрыли. Реализация грузится при первом открытии.
+   * A dialog described by its fields (for plugins): validation, errors at the fields, accessibility.
+   * Returns the data, or null if the dialog was closed. The implementation loads when first opened.
    */
   async dialog(spec: DialogSpec): Promise<DialogData | null> {
     const { openFormDialog, formDialogCss } = await import('./form-dialog');
@@ -83,7 +83,7 @@ export class UiManager {
     return openFormDialog(spec, this.t, (options) => this.openDialog(options));
   }
 
-  /** Открыть поповер; одновременно открыт только один (кроме панели переполнения тулбара). */
+  /** Open a popover; only one is open at a time (except the toolbar overflow panel). */
   openPopover(options: Omit<PopoverOptions, 'host'>): Popover {
     this.closePopover();
     this.tooltip.hide();
@@ -111,8 +111,8 @@ export class UiManager {
   private readonly dialogListeners = new Set<() => void>();
 
   /**
-   * Подписаться на открытие диалога (вернёт отписку). Тулбар так закрывает панель «⋯»: иначе на узком
-   * экране она оставалась открытой поверх текста после закрытия диалога, открытого из неё.
+   * Subscribe to a dialog opening (returns an unsubscribe function). The toolbar uses it to close
+   * its "⋯" panel, which on a narrow screen otherwise stayed over the text after a dialog opened from it closed.
    */
   onDialogOpen(listener: () => void): () => void {
     this.dialogListeners.add(listener);
@@ -120,8 +120,8 @@ export class UiManager {
   }
 
   /**
-   * Закрыть всплывающие панели и «⋯» тулбара — перед тем как плагин открывает свою панель или вид
-   * (история версий, комментарии), чтобы они не остались поверх.
+   * Close floating panels and the toolbar's "⋯" before a plugin opens its own panel or view (version
+   * history, comments), so they don't stay on top.
    */
   closeOverlays(): void {
     this.closePopover();

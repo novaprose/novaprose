@@ -13,7 +13,7 @@ import {
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
 import { moveBlock } from './blocks';
 
-/** Именованные команды редактора. Имена — часть публичного API (см. Editor.exec). */
+/** The editor's named commands. The names are part of the public API (see Editor.exec). */
 export type CommandName =
   | 'bold'
   | 'italic'
@@ -48,8 +48,8 @@ export type CommandName =
   | 'moveBlockDown';
 
 /**
- * Типы узлов и марок берём из схемы конкретного редактора (state.schema): у редакторов с плагинами
- * она своя, и сравнение с типами общей базовой схемы дало бы ложь.
+ * Node and mark types come from the schema of the specific editor (state.schema): editors with
+ * plugins have their own, and comparing with the shared base schema's types would give false.
  */
 export const nodesOf = (state: EditorState) => (state.schema as NovaSchema).nodes;
 export const marksOf = (state: EditorState) => (state.schema as NovaSchema).marks;
@@ -288,7 +288,7 @@ function toggleList(listType: NodeType): Command {
   };
 }
 
-/** Вставить или обновить ссылку на выделении. */
+/** Insert or update a link on the selection. */
 export function setLink(href: string, attrs: { title?: string; target?: string } = {}): Command {
   return (state, dispatch) => {
     if (!isSafeLinkUrl(href)) return false;
@@ -316,7 +316,7 @@ export function setLink(href: string, attrs: { title?: string; target?: string }
   };
 }
 
-/** Вставить изображение на место выделения. */
+/** Insert an image in place of the selection. */
 export function insertImage(src: string, alt?: string): Command {
   return (state, dispatch) => {
     if (!isSafeImageUrl(src)) return false;
@@ -361,8 +361,8 @@ export function getActiveAlign(state: EditorState): TextAlign {
 }
 
 /**
- * Активна ли команда в текущем выделении: марка применена, блок нужного типа, выравнивание совпадает.
- * Для команд-действий (undo, indent, horizontalRule…) всегда `false`.
+ * Whether a command is active for the current selection: the mark is applied, the block has the
+ * right type, the alignment matches. Always `false` for action commands (undo, indent, horizontalRule…).
  */
 export function isCommandActive(state: EditorState, command: CommandName): boolean {
   const parent = state.selection.$from.parent;

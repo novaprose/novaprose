@@ -2,27 +2,27 @@ import type { Editor, EditorOptions } from '@novaprose/core';
 import { defineComponent, h, ref, watch, type PropType } from 'vue';
 import { useEditor, type UseEditorOptions } from './composables';
 
-/** Опции редактора без тех, что задаются отдельными пропсами компонента. */
+/** Editor options except those set through separate component props. */
 export type NovaProseInit = Omit<EditorOptions, 'element' | 'content' | 'onChange'>;
 
 /**
- * Vue-компонент редактора NovaProse.
+ * The NovaProse editor component for Vue.
  *
  * ```vue
  * <NovaProseEditor v-model="html" :init="{ menubar: true }" />
  * ```
  *
- * SSR-безопасен: на сервере рендерит пустой контейнер, редактор создаётся после монтирования.
- * Атрибуты (`class`, `style`, `id`, `aria-*`) уходят на контейнер.
+ * SSR-safe: renders an empty container on the server; the editor is created after mounting.
+ * Attributes (`class`, `style`, `id`, `aria-*`) go to the container.
  */
 export const NovaProseEditor = defineComponent({
   name: 'NovaProseEditor',
   inheritAttrs: false,
   props: {
-    /** HTML для `v-model`. Без него — uncontrolled-режим с начальным значением `defaultValue`. */
+    /** HTML for `v-model`. Without it, the uncontrolled mode with the initial value `defaultValue`. */
     modelValue: { type: String, default: undefined },
     defaultValue: { type: String, default: undefined },
-    /** Любые опции ядра. Читаются при монтировании; чтобы применить новые — смените `key`. */
+    /** Any core options. Read on mount; to apply new ones, change `key`. */
     init: { type: Object as PropType<NovaProseInit>, default: undefined },
     // Для Boolean явный default: undefined, иначе Vue превращает отсутствующий проп в false.
     editable: { type: Boolean, default: undefined },
@@ -37,7 +37,7 @@ export const NovaProseEditor = defineComponent({
       default: undefined,
     },
     language: { type: String, default: undefined },
-    /** Имя поля обычной HTML-формы: рядом рендерится `<input type="hidden">` с актуальным HTML. */
+    /** Field name for a plain HTML form: an `<input type="hidden">` with the current HTML is rendered next to it. */
     name: { type: String, default: undefined },
   },
   emits: {

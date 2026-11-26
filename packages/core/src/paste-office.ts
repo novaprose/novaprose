@@ -18,7 +18,7 @@ export type PasteSource =
   | 'libreoffice'
   | 'web';
 
-/** 'clean' (по умолчанию) — без шрифтов, кегля, интервалов и цветов «по умолчанию»; 'keep' — как есть. */
+/** 'clean' (default) — without fonts, sizes, spacing and "default" colors; 'keep' — as it is. */
 export type PasteStyles = 'clean' | 'keep';
 
 /** Откуда скопирован HTML (по характерным признакам разметки). */

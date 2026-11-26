@@ -2,23 +2,23 @@ import type { Editor } from '../editor';
 import { h, icon } from './dom';
 import { icons } from './icons';
 
-/** Что выбрал пользователь в вашем файловом менеджере. */
+/** What the user chose in your file manager. */
 export interface FilePickResult {
   url: string;
-  /** Текст ссылки (диалог ссылки, если текст ещё пуст). */
+  /** Link text (in the link dialog, when the text is still empty). */
   text?: string;
-  /** Подсказка (title) ссылки или название видео. */
+  /** The link's tooltip (title) or the video's name. */
   title?: string;
-  /** Альтернативный текст картинки. */
+  /** The image's alternative text. */
   alt?: string;
 }
 
-/** Какое поле просит файл: ссылка на любой файл, картинка или видео. */
+/** Which field asks for a file: a link to any file, an image or a video. */
 export type FilePickType = 'file' | 'image' | 'media';
 
 /**
- * Ваш выбор файла (как file_picker_callback в TinyMCE): открыть свой менеджер файлов и вернуть адрес.
- * null/undefined — пользователь передумал.
+ * Your own file picker (like file_picker_callback in TinyMCE): open your file manager and return an
+ * address. null/undefined — the user changed their mind.
  */
 export type FilePicker = (request: {
   type: FilePickType;

@@ -3,9 +3,9 @@ import { activeElement, FOCUSABLE, h, icon, uniqueId } from './dom';
 import { icons } from './icons';
 
 /**
- * Боковые панели плагинов (комментарии, оглавление, свои инструменты): колонка рядом с текстом,
- * на узком экране — под ним. Одновременно открыта одна панель. Содержимое рисуется при первом
- * показе (можно загрузить лениво), панель остаётся в DOM и сохраняет состояние между показами.
+ * Plugin sidebars (comments, an outline, your own tools): a column next to the text, below it on a
+ * narrow screen. One sidebar is open at a time. Its content is drawn on first show (it can load
+ * lazily), and the sidebar stays in the DOM, keeping its state between shows.
  *
  *   editor.ui.registry.addSidebar('outline', {
  *     title: 'Outline',
@@ -15,20 +15,20 @@ import { icons } from './icons';
  *   editor.ui.sidebar.toggle('outline');
  */
 export interface SidebarSpec {
-  /** Заголовок панели (виден и озвучивается) и подпись кнопки по умолчанию. */
+  /** The sidebar's title (visible and announced) and the default button label. */
   title: string;
-  /** Иконка кнопки тулбара (SVG-строка). */
+  /** Icon of the toolbar button (an SVG string). */
   icon?: string;
-  /** Подсказка кнопки (по умолчанию — title). */
+  /** Tooltip of the button (title by default). */
   tooltip?: string;
   /**
-   * Кнопка-переключатель тулбара и пункт меню с именем панели (по умолчанию — да, если имя свободно).
-   * false — переключайте панель своими кнопками через editor.ui.sidebar.
+   * A toolbar toggle button and a menu item named after the sidebar (yes by default, if the name is
+   * free). false — toggle the sidebar with your own buttons through editor.ui.sidebar.
    */
   button?: boolean;
-  /** false — заголовок и кнопку закрытия рисует сама панель (у контейнера тогда нет роли). */
+  /** false — the sidebar draws its own title and close button (the container then has no role). */
   header?: boolean;
-  /** Отрисовать содержимое — один раз, при первом показе. Может вернуть функцию очистки. */
+  /** Draw the content — once, on first show. May return a cleanup function. */
   render: (
     container: HTMLElement,
     editor: Editor,
@@ -52,7 +52,7 @@ export class Sidebars {
 
   constructor(private readonly editor: Editor) {}
 
-  /** Имя открытой панели или null. */
+  /** Name of the open sidebar, or null. */
   get active(): string | null {
     return this.current;
   }
@@ -62,8 +62,8 @@ export class Sidebars {
   }
 
   /**
-   * Показать панель (другая открытая закрывается). \`focus\` — перевести фокус в панель
-   * (например, когда её открыли с клавиатуры, чтобы сразу работать с ней).
+   * Show a sidebar (another open one closes). `focus` — move focus into the sidebar (for example,
+   * when it was opened from the keyboard, to work with it right away).
    */
   async show(name: string, options: { focus?: boolean } = {}): Promise<void> {
     const spec = this.editor.ui.registry.getSidebar(name);
@@ -95,7 +95,7 @@ export class Sidebars {
     }
   }
 
-  /** Закрыть открытую панель. Фокус из неё возвращается в текст. */
+  /** Close the open sidebar. Focus returns from it to the text. */
   hide(options: { restoreFocus?: boolean } = {}): void {
     const name = this.current;
     if (!name) return;
@@ -124,7 +124,7 @@ export class Sidebars {
     this.mounted.clear();
   }
 
-  /** Колонка «текст + панель»: создаётся при первой панели, без панелей разметка не меняется. */
+  /** The "text + sidebar" column: created with the first sidebar; without sidebars the markup doesn't change. */
   private host(): HTMLElement {
     if (this.column) return this.column;
     const content = this.editor.view.dom.parentElement!;

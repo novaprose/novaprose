@@ -8,8 +8,8 @@ import { h } from './ui/dom';
 import { isSafeLinkUrl } from './url';
 
 /**
- * Приводит ввод пользователя к URL: 'example.com' → 'https://example.com',
- * 'a@b.ru' → 'mailto:a@b.ru'. Относительные пути и якоря не трогает.
+ * Turns user input into a URL: 'example.com' → 'https://example.com', 'a@b.com' → 'mailto:a@b.com'.
+ * Relative paths and anchors are left alone.
  */
 export function normalizeUrl(input: string): string {
   const url = input.trim();
@@ -35,8 +35,8 @@ function linkTarget(state: EditorState): { from: number; to: number } {
 }
 
 /**
- * Создать или обновить ссылку. Если передан text и он отличается от текущего —
- * текст заменяется, остальные марки (жирный и т.п.) сохраняются.
+ * Create or update a link. If `text` is given and differs from the current text, the text is
+ * replaced and other marks (bold and so on) are kept.
  */
 export function applyLink(attrs: LinkAttrs): Command {
   return (state, dispatch) => {
@@ -75,7 +75,7 @@ export function removeLink(): Command {
   };
 }
 
-/** Диалог вставки/редактирования ссылки. */
+/** The insert/edit link dialog. */
 export function openLinkDialog(editor: Editor): void {
   const { t } = editor.ui;
   const state = editor.view.state;

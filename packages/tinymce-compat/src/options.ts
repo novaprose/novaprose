@@ -10,9 +10,9 @@ import {
 import type { CompatEditor } from './editor';
 
 /**
- * Перевод конфигурации `tinymce.init({...})` в опции NovaProse. Имена опций и их смысл — из публичной
- * документации TinyMCE (описание поведения); незнакомые опции не ломают инициализацию, а
- * перечисляются в предупреждении, чтобы при переходе было видно, что ещё не поддержано.
+ * Translates a `tinymce.init({...})` configuration into NovaProse options. Option names and their
+ * meaning come from TinyMCE's public documentation (a description of behavior); unknown options
+ * don't break initialization but are listed in a warning, so it's clear what isn't supported yet.
  */
 
 export type TinyConfig = Record<string, unknown> & {
@@ -244,9 +244,9 @@ function toStyleFormats(value: unknown): StyleFormat[] {
 
 export interface MappedOptions {
   options: Omit<EditorOptions, 'element'>;
-  /** Опции, которые NovaProse пока не понимает (для предупреждения). */
+  /** Options NovaProse doesn't understand yet (for the warning). */
   unknown: string[];
-  /** Плагины, которых нет ни в ядре, ни в каталоге. */
+  /** Plugins found neither in the core nor in the catalog. */
   missingPlugins: string[];
 }
 

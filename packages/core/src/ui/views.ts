@@ -9,7 +9,7 @@ export function isFullscreen(editor: Editor): boolean {
   return editor.root.classList.contains('nova-fullscreen');
 }
 
-/** Редактор на весь экран; прокрутка страницы под ним блокируется. */
+/** The editor on the whole screen; the page under it doesn't scroll. */
 export function toggleFullscreen(editor: Editor, value = !isFullscreen(editor)): void {
   editor.root.classList.toggle('nova-fullscreen', value);
   document.documentElement.classList.toggle('nova-fullscreen-lock', value);
@@ -21,8 +21,8 @@ export function toggleFullscreen(editor: Editor, value = !isFullscreen(editor)):
 // ---------- предпросмотр ----------
 
 /**
- * Предпросмотр результата. Строим DOM сериализатором схемы (без разбора HTML-строки),
- * в контейнере с теми же стилями контента, но без редактирования.
+ * A preview of the result. The DOM is built by the schema's serializer (no HTML string parsing), in
+ * a container with the same content styles, without editing.
  */
 export function openPreview(editor: Editor): void {
   const { t } = editor.ui;
@@ -45,7 +45,7 @@ export function openPreview(editor: Editor): void {
 
 // ---------- HTML-код ----------
 
-/** Перенос строк после блочных тегов — чтобы HTML было удобно читать и править. */
+/** Line breaks after block tags, so the HTML is easy to read and edit. */
 export function formatHTML(html: string): string {
   return html
     .replace(/(<\/(p|h[1-6]|ul|ol|li|blockquote|pre|table|tbody|tr)>|<hr>)/g, '$1\n')
@@ -54,7 +54,7 @@ export function formatHTML(html: string): string {
     .trim();
 }
 
-/** Просмотр и правка HTML (плагин code). Сохранение — через схему, т.е. с той же очисткой. */
+/** View and edit the HTML (the code plugin). Saving goes through the schema, with the same cleanup. */
 export function openSourceCode(editor: Editor): void {
   const { t } = editor.ui;
   const original = formatHTML(editor.getHTML());

@@ -46,12 +46,12 @@ export const LABELS = {
 
 export interface CodeSampleOptions {
   /**
-   * Языки в меню и диалоге, по порядку. Значение — имя для класса `language-…`; подсветка — по
-   * встроенной грамматике с тем же именем или синонимом (js, ts, sh, html, markup…).
+   * Languages in the menu and dialog, in order. The value is the name for the `language-…` class;
+   * highlighting uses the built-in grammar with the same name or alias (js, ts, sh, html, markup…).
    */
   languages?: CodeLanguage[];
   /**
-   * Свои грамматики highlight.js для языков вне встроенного набора, по значению языка:
+   * Your own highlight.js grammars for languages outside the built-in set, by language value:
    * `{ '1c': () => import('highlight.js/lib/languages/1c') }`.
    */
   grammars?: Record<string, CodeGrammarLoader>;

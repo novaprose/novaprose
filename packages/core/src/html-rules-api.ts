@@ -1,8 +1,8 @@
 import type { MarkSpec, NodeSpec, Schema } from 'prosemirror-model';
 
 /**
- * Точка подключения правил элементов и атрибутов. Реализация — отдельный импорт
- * `@novaprose/core/html-rules` (~3 КБ gzip): нужна немногим, поэтому не входит в первую загрузку.
+ * The hook for element and attribute rules. The implementation is a separate import,
+ * `@novaprose/core/html-rules` (~3 KB gzip): few need it, so it isn't part of the first load.
  *
  *   import { registerHtmlRules } from '@novaprose/core';
  *   import { htmlRules } from '@novaprose/core/html-rules';
@@ -10,13 +10,13 @@ import type { MarkSpec, NodeSpec, Schema } from 'prosemirror-model';
  */
 
 export interface HtmlRulesOptions {
-  /** Разрешены только эти элементы; атрибуты в [...] — полный список для элемента. */
+  /** Only these elements are allowed; attributes in [...] are the complete list for the element. */
   validElements?: string;
-  /** Дополнительные элементы и атрибуты: 'div[class],h2[id],i[class],a[href|rel|data-*]'. */
+  /** More elements and attributes: 'div[class],h2[id],i[class],a[href|rel|data-*]'. */
   extendedValidElements?: string;
-  /** Запрещённые элементы. */
+  /** Disallowed elements. */
   invalidElements?: string;
-  /** Свои элементы: 'my-widget,~my-chip' (~ — строчный, как span; без ~ — блок, как div). */
+  /** Your own elements: 'my-widget,~my-chip' (~ — inline, like span; without ~ — a block, like div). */
   customElements?: string;
 }
 
@@ -25,11 +25,11 @@ export interface SchemaSpecs {
   marks: Record<string, MarkSpec>;
 }
 
-/** Правила одного редактора: меняют спеки схемы. */
+/** The rules of one editor: they change the schema specs. */
 export interface HtmlRulesInstance {
-  /** Правила разрешают class у встроенного элемента — тогда классы сохраняются. */
+  /** Whether the rules allow class on a built-in element (then classes are kept). */
   readonly classOnBuiltIn: boolean;
-  /** Спеки с правилами; после создания схемы её нужно записать в `ref.schema`. */
+  /** Specs with the rules applied; after the schema is created, store it in `ref.schema`. */
   apply(specs: SchemaSpecs, ref: { schema?: Schema }): SchemaSpecs;
 }
 
@@ -42,7 +42,7 @@ export const OWN_STYLE = 'data-nova-own-style';
 
 let registered: HtmlRulesModule | null = null;
 
-/** Подключить правила элементов и атрибутов (один раз на страницу). */
+/** Install the element and attribute rules (once per page). */
 export function registerHtmlRules(module: HtmlRulesModule): void {
   registered = module;
 }

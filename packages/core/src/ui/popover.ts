@@ -55,16 +55,16 @@ export interface PopoverOptions {
   content: HTMLElement;
   placement?: Placement;
   className?: string;
-  /** Закрывать по клику вне панели (по умолчанию да). */
+  /** Close on a click outside the panel (yes by default). */
   dismissOnOutside?: boolean;
-  /** Элементы, клик по которым не считается «вне» (например, кнопка-якорь). */
+  /** Elements whose clicks don't count as "outside" (for example, the anchor button). */
   ignore?: HTMLElement[];
   onClose?: (reason: 'escape' | 'outside' | 'api') => void;
 }
 
 const openStack: Popover[] = [];
 
-/** Всплывающая панель: меню, палитра цветов, панель ссылки, переполнение тулбара. */
+/** A floating panel: a menu, the color palette, the link panel, the toolbar overflow. */
 export class Popover {
   readonly el: HTMLDivElement;
   private readonly options: PopoverOptions;
@@ -112,7 +112,7 @@ export class Popover {
     this.options.onClose?.(reason);
   }
 
-  /** Был ли фокус внутри панели в момент закрытия (тогда его надо вернуть на кнопку). */
+  /** Whether focus was inside the panel when it closed (then it goes back to the button). */
   focusWasInside = false;
 
   private onKeyDown = (event: KeyboardEvent, target: Node | null): void => {
