@@ -26,4 +26,9 @@ export default function report(): void {
   writeFileSync('perf-results/perf.json', `${JSON.stringify(results, null, 2)}\n`);
   if (process.env.GITHUB_STEP_SUMMARY)
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Performance (Chromium)\n\n${table}\n`);
+  // Аннотация видна в API проверок без входа в GitHub: цифры каждого прогона и запас до порога.
+  if (process.env.GITHUB_ACTIONS) {
+    const lines = results.map((r) => `${r.name}: ${r.value} ${r.unit} (limit ${r.limit})`);
+    console.log(`::notice title=Performance (Chromium)::${lines.join('%0A')}`);
+  }
 }

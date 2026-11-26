@@ -43,6 +43,8 @@ jobs:
       # Примеры — из этих же архивов, их версии и ссылки CDN — на выпускаемый минор.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify:examples --strict
+      # Замеры скорости с порогами — как в CI.
+      - run: pnpm perf
 
       - name: Publish to npm (core first)
         run: |

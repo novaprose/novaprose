@@ -64,6 +64,10 @@ export default defineConfig({
           label: 'Reference',
           items: [{ slug: 'reference/options' }, { slug: 'reference/api' }],
         },
+        {
+          label: 'Project',
+          items: [{ slug: 'project/versioning' }, { slug: 'project/testing' }],
+        },
         { label: 'Pricing', link: '/pricing/' },
         { label: 'NovaProse Cloud', link: '/cloud/' },
         { label: 'Changelog', slug: 'changelog' },
