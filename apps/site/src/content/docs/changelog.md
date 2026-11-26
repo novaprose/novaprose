@@ -70,6 +70,11 @@ All packages in this repository are versioned together. The format follows
 
 ### API
 
+- Command chains: `editor.chain().exec('h2').exec('alignCenter').run()` applies several commands
+  as one edit — one undo step, one `change` event. Steps are named commands, ProseMirror commands
+  (`setStyle(…)`, `applyLink(…)`) or `insertContent(html)`, and each sees the result of the
+  previous ones. If any step does not apply, nothing changes and `run()` returns `false`;
+  `chain().….can()` checks the whole chain without changing the document.
 - Rendering on the server: `createRenderer(options).html(json)` and `renderHTML(json, options)`
   turn a saved JSON document into the same HTML as `getHTML()` (and `text(json)` into the same
   text as `getText()`) without an editor or a DOM — in Node, workers and build steps. They take the

@@ -97,6 +97,7 @@ editor.setContent(html, { addToHistory: false });
 editor.insertContent('<p>Inserted</p>'); // at the cursor; a table never overwrites table cells
 editor.exec('bold');
 editor.can('undo');
+editor.chain().exec('h2').exec('alignCenter').run(); // several commands, one undo step
 editor.isActive('h2');
 editor.setEditable(false);
 editor.setDisabled(true);

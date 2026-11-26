@@ -51,6 +51,30 @@ Named commands — part of the public API, stable across minor versions:
 
 `exec()` and `can()` also accept a raw ProseMirror `Command` for advanced use.
 
+### Chains
+
+`chain()` joins several commands into one edit: one undo step, one `change` event.
+
+```ts
+import { setStyle } from '@novaprose/core';
+
+editor.chain().exec('h2').exec('alignCenter').run();
+editor.chain().insertContent('<p>Note</p>').exec(setStyle('color', '#e03e2d')).run();
+
+const enabled = editor.chain().exec('h2').exec('alignCenter').can(); // for a button
+```
+
+| Method                | Description                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| `exec(command)`       | a named command or a ProseMirror `Command` (`setStyle(…)`, `applyLink(…)`, your own) |
+| `insertContent(html)` | insert HTML at the cursor, as `editor.insertContent()`                               |
+| `run(): boolean`      | apply all steps; returns `false` and changes nothing if any step does not apply      |
+| `can(): boolean`      | whether `run()` would succeed now; the document does not change                      |
+
+Each step sees the document and selection left by the previous steps. `undo` and `redo` run on
+their own and are not accepted in a chain. A custom command in a chain must build its changes on
+`state.tr` (as ProseMirror commands do), not on `view.state.tr`.
+
 ## State and UI
 
 | Method / property                          | Description                                                                                                 |

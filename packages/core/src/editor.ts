@@ -45,6 +45,7 @@ import {
   type NovaPlugin,
   type PluginEntry,
 } from './plugins';
+import { createChain, type CommandChain } from './chain';
 import { searchPlugin } from './search';
 import { createSearchBar, type SearchBarHandle } from './ui/search-bar';
 import { openHelp, toggleFullscreen } from './ui/views';
@@ -245,6 +246,41 @@ export interface BlockFormat {
 const INSERT_BLOCK_TAGS = new Set(
   'P H1 H2 H3 H4 H5 H6 UL OL TABLE BLOCKQUOTE PRE HR DIV FIGURE'.split(' '),
 );
+
+/** Команда «вставить HTML в позицию курсора» (editor.insertContent и шаг цепочки). */
+function insertContentCommand(html: string): Command {
+  return (state, dispatch) => {
+    if (!dispatch) return true;
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    const container = document.createElement('div');
+    container.append(template.content);
+    const parser = parserFor(state.schema as NovaSchema);
+    const hasBlocks = [...container.children].some((el) => INSERT_BLOCK_TAGS.has(el.tagName));
+    const slice = hasBlocks
+      ? new Slice(parser.parse(container).content, 0, 0)
+      : parser.parseSlice(container);
+    let hasTable = false;
+    slice.content.descendants((node) => {
+      if (node.type.spec.tableRole === 'table') hasTable = true;
+      return !hasTable;
+    });
+    const { $from } = state.selection;
+    let tableDepth = 0;
+    for (let depth = 1; depth <= $from.depth; depth++) {
+      if ($from.node(depth).type.spec.tableRole === 'table') {
+        tableDepth = depth;
+        break;
+      }
+    }
+    const tr =
+      hasTable && tableDepth
+        ? state.tr.insert($from.after(tableDepth), slice.content)
+        : state.tr.replaceSelection(slice);
+    dispatch(tr.setMeta(API_CHANGE_META, true).scrollIntoView());
+    return true;
+  };
+}
 
 /** Номер области стилей содержимого (contentStyle/contentCss) — уникален на странице. */
 let contentScopeId = 0;
@@ -719,35 +755,7 @@ export class Editor {
    */
   insertContent(html: string): boolean {
     if (!this.isEditable()) return false;
-    const template = document.createElement('template');
-    template.innerHTML = html;
-    const container = document.createElement('div');
-    container.append(template.content);
-    const parser = parserFor(this.schema);
-    const hasBlocks = [...container.children].some((el) => INSERT_BLOCK_TAGS.has(el.tagName));
-    const { state } = this.view;
-    const slice = hasBlocks
-      ? new Slice(parser.parse(container).content, 0, 0)
-      : parser.parseSlice(container);
-    let hasTable = false;
-    slice.content.descendants((node) => {
-      if (node.type.spec.tableRole === 'table') hasTable = true;
-      return !hasTable;
-    });
-    const { $from } = state.selection;
-    let tableDepth = 0;
-    for (let depth = 1; depth <= $from.depth; depth++) {
-      if ($from.node(depth).type.spec.tableRole === 'table') {
-        tableDepth = depth;
-        break;
-      }
-    }
-    const tr =
-      hasTable && tableDepth
-        ? state.tr.insert($from.after(tableDepth), slice.content)
-        : state.tr.replaceSelection(slice);
-    this.view.dispatch(tr.setMeta(API_CHANGE_META, true).scrollIntoView());
-    return true;
+    return insertContentCommand(html)(this.view.state, this.view.dispatch);
   }
 
   isEmpty(): boolean {
@@ -774,6 +782,20 @@ export class Editor {
     const result = cmd(this.view.state, this.view.dispatch, this.view);
     if (result) this.view.focus();
     return result;
+  }
+
+  /**
+   * Несколько команд одной правкой — одно действие отмены, одно событие change:
+   * `editor.chain().exec('h2').exec('alignCenter').run()`. Шаг не удался — документ не меняется
+   * и run() возвращает false; `chain().….can()` — проверка без изменений (для кнопок).
+   */
+  chain(): CommandChain {
+    return createChain({
+      view: () => (this.destroyed ? null : this.view),
+      resolve: (name) => this.resolveCommand(name),
+      insertContent: (html) => (state, dispatch, view) =>
+        this.isEditable() && insertContentCommand(html)(state, dispatch, view),
+    });
   }
 
   /** Можно ли выполнить команду в текущем состоянии (для disabled-кнопок). */

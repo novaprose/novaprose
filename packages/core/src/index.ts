@@ -12,6 +12,7 @@ export {
   type BlockFormat,
   type ClassOption,
 } from './editor';
+export type { CommandChain, ChainCommandName } from './chain';
 export {
   createRenderer,
   renderHTML,
