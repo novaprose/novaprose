@@ -15,7 +15,7 @@ import { Node as PMNode, Slice, type MarkSpec, type NodeSpec } from 'prosemirror
 import { EditorState, type Command, type Plugin, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { commands, isCommandActive, type CommandName } from './commands';
-import { createTranslator, type Messages } from './i18n';
+import { createTranslator, type LanguagePack } from './i18n';
 import { embeddedImageUploadPlugin, imageDropPastePlugin, type UploadImageHandler } from './image';
 import { buildInputRules } from './inputrules';
 import { buildKeymap } from './keymap';
@@ -159,7 +159,7 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   /** Язык UI (BCP-47): 'en', 'ru'… По умолчанию 'en'. */
   language?: string;
   /** Точечная замена строк UI. */
-  translations?: Partial<Messages>;
+  translations?: LanguagePack;
   /** Загрузка изображений на ваш сервер. Без неё картинки встраиваются как data:URL. */
   uploadImage?: UploadImageHandler;
   /**

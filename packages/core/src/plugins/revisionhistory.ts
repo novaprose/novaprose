@@ -38,7 +38,7 @@ export interface RevisionHistoryOptions {
   onRestore?: (revision: Revision) => void;
 }
 
-const LABELS = {
+export const LABELS = {
   en: {
     button: 'Version history',
     title: 'Version history',
@@ -91,7 +91,7 @@ function toDoc(editor: Editor, content: string | Record<string, unknown>): PMNod
 }
 
 function openHistory(editor: Editor, options: RevisionHistoryOptions) {
-  const labels = pickLabels(editor, LABELS);
+  const labels = pickLabels(editor, 'revisionhistory', LABELS);
   const lang = editor.options.language ?? 'en';
   const dateFormat = new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' });
   const titleId = uniqueId('nova-history-title');
@@ -339,7 +339,7 @@ export default definePlugin({
       console.warn('[nova] revisionhistory: set pluginOptions.revisionhistory.list and .load');
       return;
     }
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'revisionhistory', LABELS);
     let current: ReturnType<typeof openHistory> | null = null;
     const open = () => {
       if (current?.element.isConnected) return;

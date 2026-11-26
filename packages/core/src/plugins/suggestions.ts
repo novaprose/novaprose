@@ -61,7 +61,7 @@ export interface Suggestion {
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
 const USER_ID_RE = /^[\w.@:+-]{1,128}$/;
 
-const LABELS = {
+export const LABELS = {
   en: {
     toggle: 'Suggest edits',
     review: 'Review suggestions',
@@ -418,7 +418,7 @@ export default definePlugin({
             suggestionsKey.getState(state)?.enabled ? { class: 'nova-suggesting' } : {},
           decorations(state) {
             if (cache?.doc === state.doc) return cache.set;
-            const labels = pickLabels(editor, LABELS);
+            const labels = pickLabels(editor, 'suggestions', LABELS);
             const time = new Intl.DateTimeFormat(editor.options.language ?? 'en', {
               dateStyle: 'medium',
               timeStyle: 'short',
@@ -455,7 +455,7 @@ export default definePlugin({
   transformTransaction(tr, state, editor) {
     if (!isSuggesting(state)) return tr;
     const options = (editor.options.pluginOptions?.suggestions ?? {}) as SuggestionsOptions;
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'suggestions', LABELS);
     const author = {
       id: USER_ID_RE.test(options.author?.id ?? '') ? options.author!.id : 'guest',
       name: String(options.author?.name || labels.guest).slice(0, 80),
@@ -464,7 +464,7 @@ export default definePlugin({
   },
   setup(editor) {
     const options = (editor.options.pluginOptions?.suggestions ?? {}) as SuggestionsOptions;
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'suggestions', LABELS);
     const canReview = options.canReview !== false;
     const dispatch = (tr: Transaction) => editor.view.dispatch(tr);
     const current = () => suggestionAt(editor.view.state);

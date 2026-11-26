@@ -63,6 +63,9 @@ export {
   type Messages,
   type MessageKey,
   type Translator,
+  type LanguagePack,
+  type PluginMessageKey,
+  getPluginMessages,
 } from './i18n';
 export { defaultToolbar, parseToolbar, type ToolbarConfig, type ToolbarMode } from './ui/toolbar';
 export {

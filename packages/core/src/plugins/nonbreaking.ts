@@ -7,7 +7,7 @@ import { insertText, pickLabels } from './shared';
 
 const NBSP = String.fromCharCode(0xa0);
 const ICON = icons.nonBreaking;
-const LABELS = { en: { title: 'Nonbreaking space' }, ru: { title: 'Неразрывный пробел' } };
+export const LABELS = { en: { title: 'Nonbreaking space' }, ru: { title: 'Неразрывный пробел' } };
 
 export default definePlugin({
   name: 'nonbreaking',
@@ -21,7 +21,7 @@ export default definePlugin({
     }),
   ],
   setup(editor) {
-    const { title } = pickLabels(editor, LABELS);
+    const { title } = pickLabels(editor, 'nonbreaking', LABELS);
     const spec = {
       icon: ICON,
       tooltip: title,

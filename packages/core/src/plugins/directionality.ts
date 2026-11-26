@@ -16,7 +16,7 @@ const ICONS = {
   ltr: icons.ltr,
   rtl: icons.rtl,
 };
-const LABELS = {
+export const LABELS = {
   en: { ltr: 'Left to right', rtl: 'Right to left' },
   ru: { ltr: 'Слева направо', rtl: 'Справа налево' },
 };
@@ -46,7 +46,7 @@ export default definePlugin({
   name: 'directionality',
   toolbar: 'ltr rtl',
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'directionality', LABELS);
     for (const dir of ['ltr', 'rtl'] as const) {
       const isActive = () => currentDir(editor) === dir;
       const onAction = () => {

@@ -25,7 +25,7 @@ export interface MentionsOptions {
   maxResults?: number;
 }
 
-const LABELS = {
+export const LABELS = {
   en: { list: 'People', empty: 'No matches' },
   ru: { list: 'Люди', empty: 'Никого не найдено' },
 };
@@ -103,7 +103,7 @@ export default definePlugin({
       console.warn('[nova] mentions: set pluginOptions.mentions.fetch to search people');
       return;
     }
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'mentions', LABELS);
     const max = options.maxResults ?? 8;
     let found = new Map<string, MentionUser>();
 

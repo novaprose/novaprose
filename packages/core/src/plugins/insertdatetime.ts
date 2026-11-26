@@ -1,7 +1,7 @@
 import { icons } from '../ui/icons';
-import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
 import type { MenuEntry } from '../ui/menu';
+import { insertText, pickLabels } from './shared';
 
 /**
  * Плагин insertdatetime: вставка текущей даты/времени в формате языка редактора.
@@ -10,7 +10,7 @@ import type { MenuEntry } from '../ui/menu';
 
 const ICON = icons.dateTime;
 
-const LABELS: Record<string, Record<'title' | 'date' | 'time' | 'dateTime' | 'long', string>> = {
+export const LABELS = {
   en: {
     title: 'Insert date/time',
     date: 'Date',
@@ -34,18 +34,12 @@ const FORMATS: Record<'date' | 'time' | 'dateTime' | 'long', Intl.DateTimeFormat
   dateTime: { dateStyle: 'short', timeStyle: 'short' },
 };
 
-function insertText(editor: Editor, text: string): void {
-  const { state, dispatch } = editor.view;
-  dispatch(state.tr.insertText(text).scrollIntoView());
-  editor.focus();
-}
-
 export default definePlugin({
   name: 'insertdatetime',
   toolbar: 'insertdatetime',
   setup(editor) {
     const lang = editor.options.language ?? 'en';
-    const labels = LABELS[lang.split('-')[0]!] ?? LABELS.en!;
+    const labels = pickLabels(editor, 'insertdatetime', LABELS);
     // `now` — подменяемая точка для тестов.
     const now = () =>
       (editor.options.pluginOptions?.insertdatetime as { now?: () => Date } | undefined)?.now?.() ??

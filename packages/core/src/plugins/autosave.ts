@@ -26,7 +26,7 @@ interface Draft {
 
 const ICON = icons.save;
 
-const LABELS = {
+export const LABELS = {
   en: {
     restore: 'Restore last draft',
     found: 'An unsaved draft was found. Use “Restore last draft” to bring it back.',
@@ -53,7 +53,7 @@ export default definePlugin({
   toolbar: 'restoredraft',
   setup(editor) {
     const options = (editor.options.pluginOptions?.autosave ?? {}) as AutosaveOptions;
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'autosave', LABELS);
     const store = storage();
     const key =
       options.key ??

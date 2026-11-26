@@ -35,7 +35,7 @@ export interface MergeTagsOptions {
   attribute?: string;
 }
 
-const LABELS = {
+export const LABELS = {
   en: {
     insert: 'Insert variable',
     search: 'Variables',
@@ -184,7 +184,7 @@ export default definePlugin({
   toolbar: 'mergetags',
   nodes: buildNodes,
   prosemirrorPlugins: (editor) => {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'mergetags', LABELS);
     return [
       new PMPlugin({
         props: {
@@ -197,7 +197,7 @@ export default definePlugin({
     ];
   },
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'mergetags', LABELS);
 
     editor.ui.registry.addMenuButton('mergetags', {
       icon: icons.mergeTags,

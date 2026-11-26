@@ -40,4 +40,22 @@ registerLanguage('de', {
 createEditor({ element, language: 'de' });
 ```
 
+## Plugin strings
+
+Plugins (comments, merge tags, media, special characters…) use the same system. Their keys are
+prefixed with the plugin name — `comments.reply`, `anchor.title` — and work both in
+`registerLanguage` and in `translations`:
+
+```ts
+registerLanguage('de', {
+  bold: 'Fett',
+  'anchor.title': 'Anker',
+  'comments.reply': 'Antworten',
+  'charmap.groups.0': 'Häufig verwendet', // lists are numbered: groups.0, groups.1…
+});
+```
+
+To see every key a plugin uses, load it and call `getPluginMessages()`: it returns the strings of
+all loaded plugins by language, English included — a ready template for a translator.
+
 Content is never translated; `language` only affects the editor interface.

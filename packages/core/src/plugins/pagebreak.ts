@@ -9,7 +9,7 @@ import { pickLabels } from './shared';
  */
 
 const ICON = icons.pageBreak;
-const LABELS = { en: { title: 'Page break' }, ru: { title: 'Разрыв страницы' } };
+export const LABELS = { en: { title: 'Page break' }, ru: { title: 'Разрыв страницы' } };
 
 export default definePlugin({
   name: 'pagebreak',
@@ -35,7 +35,7 @@ export default definePlugin({
     },
   },
   setup(editor) {
-    const { title } = pickLabels(editor, LABELS);
+    const { title } = pickLabels(editor, 'pagebreak', LABELS);
     const insert = () => {
       const { state, dispatch } = editor.view;
       const type = editor.schema.nodes.pagebreak!;

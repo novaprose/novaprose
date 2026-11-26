@@ -12,7 +12,7 @@ import { pickLabels } from './shared';
 
 const ICON = icons.anchor;
 
-const LABELS = {
+export const LABELS = {
   en: {
     title: 'Anchor',
     id: 'ID',
@@ -63,7 +63,7 @@ export default definePlugin({
     },
   },
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'anchor', LABELS);
     const selectedAnchor = () => {
       const { selection } = editor.view.state;
       return selection instanceof NodeSelection && selection.node.type.name === 'anchor'

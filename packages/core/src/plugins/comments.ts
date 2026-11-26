@@ -46,7 +46,7 @@ export interface CommentsOptions {
   onMention?: (event: { threadId: string; comment: Comment; users: CommentAuthor[] }) => void;
 }
 
-const LABELS = {
+export const LABELS = {
   en: {
     add: 'Add comment',
     show: 'Comments',
@@ -298,7 +298,7 @@ export default definePlugin({
   },
 
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'comments', LABELS);
     const options = (editor.options.pluginOptions?.comments ?? {}) as CommentsOptions;
     const store = options.store ?? createCommentStore(options.threads ?? [], options.onChange);
     const author: CommentAuthor = {

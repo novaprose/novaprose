@@ -9,7 +9,7 @@ import { insertText, openSymbolDialog, pickLabels, symbolPanel, type SymbolGroup
 
 const ICON = icons.emoji;
 
-const LABELS = {
+export const LABELS = {
   en: {
     title: 'Emoji',
     search: 'Search emoji',
@@ -169,7 +169,7 @@ export default definePlugin({
   name: 'emoticons',
   toolbar: 'emoticons',
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'emoticons', LABELS);
     const groups: SymbolGroup[] = EMOJI.map((items, i) => ({ title: labels.groups[i]!, items }));
     const all = EMOJI.flat();
     const panel = (close: () => void) =>

@@ -6,6 +6,15 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Localization
+
+- Plugin strings are now part of the common translation system. `registerLanguage()` and the
+  `translations` option translate plugins too, with keys prefixed by the plugin name
+  (`'anchor.title'`, `'comments.reply'`, `'charmap.groups.0'`). Before, a custom language
+  translated the core UI only and plugins stayed in English.
+- `getPluginMessages()` lists the strings of loaded plugins by language — a template for translators.
+- New types `LanguagePack` and `PluginMessageKey`; `translations` accepts plugin keys.
+
 ### Performance
 
 - Smaller first load: the Word / Google Docs / Excel paste cleanup is now a separate chunk, loaded in

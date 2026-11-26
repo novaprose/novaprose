@@ -44,7 +44,7 @@ export function parseMediaUrl(url: string): MediaSource | null {
 
 const ICON = icons.media;
 
-const LABELS = {
+export const LABELS = {
   en: {
     title: 'Video',
     url: 'Video URL',
@@ -172,7 +172,7 @@ export default definePlugin({
     }),
   ],
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'media', LABELS);
     const selected = () => {
       const { selection } = editor.view.state;
       return selection instanceof NodeSelection && selection.node.type.name === 'media'

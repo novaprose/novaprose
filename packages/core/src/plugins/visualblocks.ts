@@ -9,13 +9,13 @@ import { pickLabels } from './shared';
  */
 
 const ICON = icons.visualBlocks;
-const LABELS = { en: { title: 'Show blocks' }, ru: { title: 'Показать блоки' } };
+export const LABELS = { en: { title: 'Show blocks' }, ru: { title: 'Показать блоки' } };
 
 export default definePlugin({
   name: 'visualblocks',
   toolbar: 'visualblocks',
   setup(editor) {
-    const { title } = pickLabels(editor, LABELS);
+    const { title } = pickLabels(editor, 'visualblocks', LABELS);
     const options = (editor.options.pluginOptions?.visualblocks ?? {}) as { default?: boolean };
     const isOn = () => editor.root.classList.contains('nova-visualblocks');
     const toggle = () => {

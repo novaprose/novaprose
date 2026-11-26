@@ -1,13 +1,26 @@
 import type { Editor } from '../editor';
 import { h } from '../ui/dom';
+import { registerPluginMessages, type PluginLabels } from '../i18n';
 
 /**
- * Общие помощники встроенных плагинов. Плагины грузятся лениво, поэтому их подписи живут в самом
- * плагине (а не в i18n ядра): en — эталон, остальные языки — по коду языка редактора.
+ * Подписи встроенного плагина. Плагины грузятся лениво, поэтому строки живут в самом плагине
+ * (en — эталон, ru — встроенный перевод), но переводятся общей системой i18n под ключами
+ * `<плагин>.<ключ>`: registerLanguage('de', { 'anchor.title': … }) и опция `translations` их видят.
  */
-export function pickLabels<T>(editor: Editor, dict: { en: T } & Record<string, T>): T {
-  const lang = (editor.options.language ?? 'en').toLowerCase();
-  return dict[lang] ?? dict[lang.split('-')[0]!] ?? dict.en;
+export function pickLabels<T extends PluginLabels>(
+  editor: Editor,
+  namespace: string,
+  dict: { en: T } & Record<string, PluginLabels | undefined>,
+): T {
+  registerPluginMessages(namespace, dict);
+  const out: Record<string, string | string[]> = {};
+  for (const [key, value] of Object.entries(dict.en)) {
+    out[key] =
+      typeof value === 'string'
+        ? editor.ui.t(`${namespace}.${key}`)
+        : value.map((_, i) => editor.ui.t(`${namespace}.${key}.${i}`));
+  }
+  return out as T;
 }
 
 export function insertText(editor: Editor, text: string): void {

@@ -19,7 +19,7 @@ export interface AdvlistOptions {
   numbers?: (typeof ORDERED_STYLES)[number][];
 }
 
-const LABELS = {
+export const LABELS = {
   en: {
     disc: 'Default',
     circle: 'Circle',
@@ -82,7 +82,7 @@ function applyStyle(
 export default definePlugin({
   name: 'advlist',
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'advlist', LABELS);
     const options = (editor.options.pluginOptions?.advlist ?? {}) as AdvlistOptions;
     const lists = [
       {

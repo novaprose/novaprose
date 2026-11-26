@@ -6,7 +6,7 @@ import { insertText, openSymbolDialog, pickLabels, symbolPanel, type SymbolGroup
 
 const ICON = icons.charmap;
 
-const LABELS = {
+export const LABELS = {
   en: {
     title: 'Special character',
     search: 'Search characters',
@@ -164,7 +164,7 @@ export default definePlugin({
   name: 'charmap',
   toolbar: 'charmap',
   setup(editor) {
-    const labels = pickLabels(editor, LABELS);
+    const labels = pickLabels(editor, 'charmap', LABELS);
     const groups: SymbolGroup[] = SYMBOLS.map((items, i) => ({ title: labels.groups[i]!, items }));
     const panel = (close: () => void) =>
       symbolPanel({
