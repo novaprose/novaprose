@@ -276,6 +276,8 @@ const de: LanguagePack = {
   'mergetags.empty': 'Keine Variablen gefunden',
   'mergetags.unknown': 'Unbekannte Variable',
   'nonbreaking.title': 'Geschütztes Leerzeichen',
+  'checklist.checklist': 'Checkliste',
+  'checklist.done': 'Erledigt',
   'pagebreak.title': 'Seitenumbruch',
   'revisionhistory.button': 'Versionsverlauf',
   'revisionhistory.title': 'Versionsverlauf',

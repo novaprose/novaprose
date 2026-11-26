@@ -123,6 +123,7 @@ const REQUIREMENTS: Record<string, string[]> = {
   tablecolheader: ['th'],
   tablecellbackground: ['style:background-color'],
   bullist: ['ul'],
+  checklist: ['ul'],
   bulletlist: ['ul'],
   numlist: ['ol'],
   orderedlist: ['ol'],

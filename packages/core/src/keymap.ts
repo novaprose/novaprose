@@ -1,7 +1,7 @@
 import { baseKeymap, chainCommands, exitCode } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { splitListItem } from 'prosemirror-schema-list';
-import type { Command, Plugin } from 'prosemirror-state';
+import type { Command, EditorState, Plugin } from 'prosemirror-state';
 import { commands, listIndent, listOutdent, nodesOf, type CommandName } from './commands';
 import { exitImageCaption } from './image';
 
@@ -46,9 +46,12 @@ export function buildKeymap(resolve: Resolve = (name) => commands[name]): Plugin
     'Mod-Shift-j': commands.alignJustify,
     'Mod-\\': commands.clearFormatting,
     'Shift-Enter': insertHardBreak,
-    Enter: chainCommands(exitImageCaption, (state, dispatch) =>
-      splitListItem(nodesOf(state).list_item)(state, dispatch),
-    ),
+    Enter: chainCommands(exitImageCaption, (state, dispatch) => {
+      // Новый пункт чек-листа — неотмеченный (а не копия отмеченного и не обычный пункт).
+      const item = parentListItem(state);
+      const attrs = typeof item?.attrs.checked === 'boolean' ? { checked: false } : undefined;
+      return splitListItem(nodesOf(state).list_item, attrs)(state, dispatch);
+    }),
     // Tab — только для списков (в абзаце остаётся переходом фокуса). Отступ абзаца — Mod-] / Mod-[.
     Tab: listIndent,
     'Shift-Tab': listOutdent,
@@ -57,4 +60,14 @@ export function buildKeymap(resolve: Resolve = (name) => commands[name]): Plugin
   };
   if (!mac) keys['Mod-y'] = byName(resolve, 'redo');
   return [keymap(keys), keymap(baseKeymap)];
+}
+
+/** Ближайший пункт списка вокруг курсора. */
+function parentListItem(state: EditorState) {
+  const { $from } = state.selection;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    const node = $from.node(depth);
+    if (node.type === nodesOf(state).list_item) return node;
+  }
+  return null;
 }

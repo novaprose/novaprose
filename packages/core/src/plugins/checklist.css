@@ -1,0 +1,63 @@
+/*
+ * Чек-листы (плагин checklist): галочка в первой колонке пункта, содержимое — во второй.
+ * Подключается при подключении плагина через editor.ui.addStyles.
+ */
+
+.nova-prosemirror ul[data-type='taskList'] {
+  padding-inline-start: 0.25em;
+  list-style: none;
+}
+
+/* Галочка — в отступе пункта, абсолютно: текст течёт как обычный абзац. С grid/flex браузеры
+   путали движение курсора (End в пункте уводил курсор в начало первого пункта — найдено e2e). */
+.nova-prosemirror li[data-type='taskItem'] {
+  position: relative;
+  padding-inline-start: 1.6em;
+}
+
+.nova-check {
+  display: inline-flex;
+  position: absolute;
+  top: 0.22em;
+  inset-inline-start: 0;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1.1em;
+  height: 1.1em;
+  border: 1.5px solid var(--nova-border-strong);
+  border-radius: 4px;
+  background: var(--nova-bg);
+  cursor: pointer;
+  user-select: none;
+}
+
+.nova-check:hover {
+  border-color: var(--nova-accent);
+}
+
+.nova-check[aria-checked='true'] {
+  border-color: var(--nova-accent-strong);
+  background: var(--nova-accent-strong);
+}
+
+/* Галочка — рамка из двух сторон, повёрнутая на 45°. */
+.nova-check[aria-checked='true']::after {
+  content: '';
+  width: 0.28em;
+  height: 0.55em;
+  margin-top: -0.12em;
+  border: solid var(--nova-accent-fg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.nova-prosemirror li[data-checked='true'] > p {
+  color: var(--nova-muted);
+  text-decoration: line-through;
+}
+
+.nova-disabled .nova-check,
+.nova-readonly .nova-check {
+  cursor: default;
+}

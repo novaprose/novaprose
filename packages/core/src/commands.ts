@@ -1,8 +1,8 @@
 import { lift, setBlockType, toggleMark, wrapIn } from 'prosemirror-commands';
 import { redo, undo } from 'prosemirror-history';
-import type { MarkType, NodeType } from 'prosemirror-model';
+import type { MarkType, Node as PMNode, NodeType } from 'prosemirror-model';
 import { liftListItem, sinkListItem, wrapInList } from 'prosemirror-schema-list';
-import type { Command, EditorState } from 'prosemirror-state';
+import type { Command, EditorState, Transaction } from 'prosemirror-state';
 import {
   indentLevel,
   type MarkName,
@@ -225,10 +225,58 @@ export const commands: Record<CommandName, Command> = {
   redo,
 };
 
+/** Ближайший список вокруг курсора (маркированный, нумерованный, чек-лист) и его позиция. */
+export function findParentList(state: EditorState): { node: PMNode; pos: number } | null {
+  const nodes = nodesOf(state);
+  const { $from } = state.selection;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    const node = $from.node(depth);
+    if (node.type === nodes.bullet_list || node.type === nodes.ordered_list) {
+      return { node, pos: $from.before(depth) };
+    }
+  }
+  return null;
+}
+
+/**
+ * Сменить вид списка на месте: маркированный ↔ нумерованный ↔ чек-лист. Пункты получают checked по
+ * виду списка (чек-лист — true/false, сохраняя отметки; иначе null).
+ */
+export function convertList(
+  tr: Transaction,
+  list: { node: PMNode; pos: number },
+  type: NodeType,
+  checklist = false,
+): Transaction {
+  const nodes = (tr.doc.type.schema as NovaSchema).nodes;
+  const isChecklist = type === nodes.bullet_list && checklist;
+  tr.setNodeMarkup(
+    list.pos,
+    type,
+    type === nodes.bullet_list ? { listStyle: null, checklist: isChecklist } : { start: 1 },
+  );
+  list.node.forEach((item, offset) => {
+    const previous = item.attrs.checked;
+    const checked = isChecklist ? (typeof previous === 'boolean' ? previous : false) : null;
+    if (checked !== previous) {
+      tr.setNodeMarkup(list.pos + 1 + offset, undefined, { ...item.attrs, checked });
+    }
+  });
+  return tr;
+}
+
 function toggleList(listType: NodeType): Command {
   return (state, dispatch) => {
-    if (isNodeActive(state, listType))
-      return liftListItem(nodesOf(state).list_item)(state, dispatch);
+    const nodes = nodesOf(state);
+    // Тот же вид списка — снять список. Чек-лист — не «маркированный»: кнопка маркеров его не снимает.
+    const plain = listType === nodes.bullet_list ? { checklist: false } : undefined;
+    if (isNodeActive(state, listType, plain)) return liftListItem(nodes.list_item)(state, dispatch);
+    // Внутри другого вида списка — сменить вид (а не вкладывать новый список).
+    const list = findParentList(state);
+    if (list) {
+      if (dispatch) dispatch(convertList(state.tr, list, listType).scrollIntoView());
+      return true;
+    }
     return wrapInList(listType)(state, dispatch);
   };
 }
@@ -336,7 +384,7 @@ export function isCommandActive(state: EditorState, command: CommandName): boole
     case 'blockquote':
       return isNodeActive(state, nodes.blockquote);
     case 'bulletList':
-      return isNodeActive(state, nodes.bullet_list);
+      return isNodeActive(state, nodes.bullet_list, { checklist: false });
     case 'orderedList':
       return isNodeActive(state, nodes.ordered_list);
     case 'alignLeft':

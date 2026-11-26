@@ -275,6 +275,8 @@ const es: LanguagePack = {
   'mergetags.empty': 'No se encontraron variables',
   'mergetags.unknown': 'Variable desconocida',
   'nonbreaking.title': 'Espacio de no separación',
+  'checklist.checklist': 'Lista de tareas',
+  'checklist.done': 'Hecho',
   'pagebreak.title': 'Salto de página',
   'revisionhistory.button': 'Historial de versiones',
   'revisionhistory.title': 'Historial de versiones',

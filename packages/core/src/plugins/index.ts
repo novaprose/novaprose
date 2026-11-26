@@ -16,6 +16,7 @@ registerPlugin('quickbars', () => import('./quickbars'));
 registerPlugin('charmap', () => import('./charmap'));
 registerPlugin('emoticons', () => import('./emoticons'));
 registerPlugin('nonbreaking', () => import('./nonbreaking'));
+registerPlugin('checklist', () => import('./checklist'));
 registerPlugin('autolink', () => import('./autolink'));
 registerPlugin('autosave', () => import('./autosave'));
 registerPlugin('autoresize', () => import('./autoresize'));

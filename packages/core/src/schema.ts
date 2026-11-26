@@ -347,6 +347,30 @@ export type ClassFilter = (className: string) => boolean;
 const NO_CLASSES: ClassFilter = () => false;
 const CLASS_TOKEN = /^-?[_a-zA-Z][\w-]*$/;
 
+/** Список-чек-лист в чужой разметке: Tiptap, TinyMCE (плагин checklist), GitHub/Markdown. */
+function isChecklistElement(dom: HTMLElement): boolean {
+  return (
+    dom.getAttribute('data-type') === 'taskList' ||
+    dom.classList.contains('tox-checklist') ||
+    dom.classList.contains('contains-task-list')
+  );
+}
+
+/** Отмечен ли пункт чек-листа (null — обычный пункт списка). */
+function readChecked(dom: HTMLElement): boolean | null {
+  const list = dom.parentElement;
+  if (!list || !isChecklistElement(list)) return null;
+  const data = dom.getAttribute('data-checked');
+  if (data === 'true' || data === 'false') return data === 'true';
+  if (dom.classList.contains('tox-checklist--checked')) return true;
+  // Флажок в начале пункта (GitHub, Tiptap): сам <input> схема не сохраняет.
+  const box = [...dom.querySelectorAll('input[type="checkbox"]')].find(
+    (el) => el.closest('li') === dom,
+  );
+  if (box) return box.hasAttribute('checked');
+  return false;
+}
+
 /** Уровень заголовка 1–6 (значение могло прийти из JSON строкой, числом вне диапазона, null). */
 function headingLevel(value: unknown): number {
   const level = Math.trunc(Number(value));
@@ -457,23 +481,31 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       ],
     },
 
+    // Чек-лист — маркированный список с флагом checklist (пункты с checked): вся механика списков
+    // (Enter, Tab, отступы, вставка, Markdown) работает без второго типа списка. HTML — как у Tiptap
+    // (data-type="taskList"/"taskItem", data-checked); при разборе понимаем и TinyMCE, и GitHub.
     bullet_list: {
       group: 'block',
       content: 'list_item+',
-      attrs: { listStyle: { default: null } },
+      attrs: { listStyle: { default: null }, checklist: { default: false } },
       parseDOM: [
         {
           tag: 'ul',
-          getAttrs: (dom) => ({
-            listStyle: readListStyle(dom as HTMLElement, BULLET_STYLES, 'disc'),
-          }),
+          getAttrs: (dom) => {
+            const checklist = isChecklistElement(dom as HTMLElement);
+            return {
+              listStyle: checklist
+                ? null
+                : readListStyle(dom as HTMLElement, BULLET_STYLES, 'disc'),
+              checklist,
+            };
+          },
         },
       ],
-      toDOM: (node): DOMOutputSpec => [
-        'ul',
-        listStyleAttrs(node.attrs.listStyle, BULLET_STYLES),
-        0,
-      ],
+      toDOM: (node): DOMOutputSpec =>
+        node.attrs.checklist === true
+          ? ['ul', { 'data-type': 'taskList' }, 0]
+          : ['ul', listStyleAttrs(node.attrs.listStyle, BULLET_STYLES), 0],
     },
 
     ordered_list: {
@@ -505,8 +537,13 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
     list_item: {
       content: 'paragraph block*',
       defining: true,
-      parseDOM: [{ tag: 'li' }],
-      toDOM: (): DOMOutputSpec => ['li', 0],
+      // checked: null — обычный пункт; true/false — пункт чек-листа (отмечен / нет).
+      attrs: { checked: { default: null } },
+      parseDOM: [{ tag: 'li', getAttrs: (dom) => ({ checked: readChecked(dom as HTMLElement) }) }],
+      toDOM: (node): DOMOutputSpec =>
+        typeof node.attrs.checked === 'boolean'
+          ? ['li', { 'data-type': 'taskItem', 'data-checked': String(node.attrs.checked) }, 0]
+          : ['li', 0],
     },
 
     text: { group: 'inline' },

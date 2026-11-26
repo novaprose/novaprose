@@ -11,6 +11,17 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Editing
+
+- Checklists (`plugins: ['checklist']`, button `checklist`): tick an item with a click or Ctrl/Cmd+Enter,
+  type `[ ]` or `[x]` at the start of a line, Enter starts a new unticked item; nesting, indent and
+  paste work as in other lists. HTML uses the Tiptap task list format (`data-type="taskList"`,
+  `data-checked`); TinyMCE (`tox-checklist`) and GitHub checklists are converted on load and paste,
+  even without the plugin. Markdown: `- [ ]` / `- [x]` both ways. Keyboard and screen readers:
+  each box is a `role="checkbox"` with its state.
+- The numbered list button inside a bulleted list (and the other way round) now switches the list
+  type. It used to do nothing.
+
 ### Plugin UI
 
 - `editor.ui.dialog`: tabs (`tabs: [{ title, fields }]`, WAI-ARIA keyboard, switches to the tab with

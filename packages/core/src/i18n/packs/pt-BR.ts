@@ -276,6 +276,8 @@ const ptBR: LanguagePack = {
   'mergetags.empty': 'Nenhuma variável encontrada',
   'mergetags.unknown': 'Variável desconhecida',
   'nonbreaking.title': 'Espaço não separável',
+  'checklist.checklist': 'Lista de tarefas',
+  'checklist.done': 'Concluído',
   'pagebreak.title': 'Quebra de página',
   'revisionhistory.button': 'Histórico de versões',
   'revisionhistory.title': 'Histórico de versões',

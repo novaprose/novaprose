@@ -50,6 +50,8 @@ const ATTR_NAMES = [
   'colspan',
   'rowspan',
   'alt',
+  'checked',
+  'checklist',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));
@@ -72,6 +74,11 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
       { type: 'figure_image', attrs },
       { type: 'figcaption', content: [text] },
     ],
+  }),
+  bullet_list: (attrs) => ({
+    type: 'bullet_list',
+    attrs,
+    content: [{ type: 'list_item', attrs, content: [para(text)] }],
   }),
   ordered_list: (attrs) => ({
     type: 'ordered_list',

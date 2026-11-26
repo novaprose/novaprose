@@ -190,6 +190,8 @@ const ATTRS = [
   'data-name',
   'data-author',
   'data-id',
+  'data-checked',
+  'data-type',
 ];
 
 const STYLE_VALUES = [
@@ -391,6 +393,8 @@ describe('безопасность и стабильность HTML (property-ba
       listStyle: anyValue,
       start: anyValue,
       colspan: anyValue,
+      checked: anyValue,
+      checklist: anyValue,
       rowspan: anyValue,
       colwidth: fc.oneof(anyValue, fc.array(fc.integer({ min: -5, max: 900 }), { maxLength: 2 })),
     });
@@ -433,6 +437,27 @@ describe('безопасность и стабильность HTML (property-ba
       attrs,
       content: fc.array(textblock, { minLength: 1, maxLength: 1 }),
     });
+    // Списки, в т.ч. чек-листы: checked/checklist из JSON — чем угодно.
+    const list = fc.record({
+      type: fc.constantFrom('bullet_list', 'ordered_list'),
+      attrs,
+      content: fc.array(
+        fc.record({
+          type: fc.constant('list_item'),
+          attrs,
+          // Пункт списка начинается с абзаца (иначе JSON отвергается целиком — тест проверял бы меньше).
+          content: fc.array(
+            fc.record({
+              type: fc.constant('paragraph'),
+              attrs,
+              content: fc.array(fc.oneof(text, atom), { maxLength: 3 }),
+            }),
+            { minLength: 1, maxLength: 1 },
+          ),
+        }),
+        { minLength: 1, maxLength: 2 },
+      ),
+    });
     const table = fc.record({
       type: fc.constant('table'),
       attrs,
@@ -450,7 +475,10 @@ describe('безопасность и стабильность HTML (property-ba
     let accepted = 0;
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(textblock, textblock, blockAtom, table), { minLength: 1, maxLength: 3 }),
+        fc.array(fc.oneof(textblock, textblock, blockAtom, table, list), {
+          minLength: 1,
+          maxLength: 3,
+        }),
         (content) => {
           const json = { type: 'doc', content };
           try {

@@ -277,6 +277,8 @@ const ru: LanguagePack = {
   'mergetags.empty': 'Переменные не найдены',
   'mergetags.unknown': 'Неизвестная переменная',
   'nonbreaking.title': 'Неразрывный пробел',
+  'checklist.checklist': 'Чек-лист',
+  'checklist.done': 'Выполнено',
   'pagebreak.title': 'Разрыв страницы',
   'revisionhistory.button': 'История версий',
   'revisionhistory.title': 'История версий',

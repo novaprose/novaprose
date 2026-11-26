@@ -151,6 +151,22 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'диалог со вкладками и файлами');
     });
 
+    test('чек-лист с галочками', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          '<ul data-type="taskList"><li data-type="taskItem" data-checked="true"><p>Готово</p></li>' +
+            '<li data-type="taskItem" data-checked="false"><p>Сделать</p></li></ul>',
+        );
+      });
+      await expect(page.locator('.nova-check').first()).toBeVisible();
+      await audit(page, 'чек-лист');
+    });
+
     test('боковая панель плагина открыта', async ({ page }) => {
       await open(page, theme);
       await page.evaluate(async () => {

@@ -77,6 +77,8 @@ const BLOCK_LEVEL = new Set([
 /** Без этих атрибутов встроенный элемент не работает — их список в [...] не снимает. */
 const ESSENTIAL: Record<string, string[]> = {
   a: ['href'],
+  ul: ['data-type'],
+  li: ['data-type', 'data-checked'],
   img: ['src'],
   td: ['colspan', 'rowspan'],
   th: ['colspan', 'rowspan'],

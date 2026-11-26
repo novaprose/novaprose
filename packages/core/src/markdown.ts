@@ -25,6 +25,44 @@ export interface MarkdownToHTMLOptions {
   breaks?: boolean;
 }
 
+/**
+ * Задачи GFM («- [ ] пункт», «- [x] сделано») → чек-лист NovaProse (data-type/data-checked, как у
+ * Tiptap). Только в маркированных списках: нумерованных чек-листов в редакторе нет.
+ */
+function taskLists(md: InstanceType<typeof MarkdownIt>): void {
+  md.core.ruler.after('inline', 'nova-task-lists', (state) => {
+    const tokens = state.tokens;
+    for (let i = 2; i < tokens.length; i++) {
+      const inline = tokens[i]!;
+      const item = tokens[i - 2]!;
+      if (inline.type !== 'inline' || tokens[i - 1]!.type !== 'paragraph_open') continue;
+      if (item.type !== 'list_item_open') continue;
+      const match = /^\[([ xX])\](?:\s+|$)/.exec(inline.content);
+      if (!match) continue;
+      let list = -1;
+      for (let j = i - 3; j >= 0; j--) {
+        if (tokens[j]!.level === item.level - 1 && tokens[j]!.type.endsWith('_list_open')) {
+          list = j;
+          break;
+        }
+      }
+      if (list < 0 || tokens[list]!.type !== 'bullet_list_open') continue;
+      // Снять «[ ] » с начала текста пункта (он может быть разбит на несколько текстовых токенов).
+      let rest = match[0].length;
+      for (const child of inline.children ?? []) {
+        if (rest <= 0 || child.type !== 'text') break;
+        const cut = Math.min(rest, child.content.length);
+        child.content = child.content.slice(cut);
+        rest -= cut;
+      }
+      inline.content = inline.content.slice(match[0].length);
+      item.attrSet('data-type', 'taskItem');
+      item.attrSet('data-checked', String(match[1] !== ' '));
+      tokens[list]!.attrSet('data-type', 'taskList');
+    }
+  });
+}
+
 /** Markdown (CommonMark + таблицы и ~~зачёркивание~~ GFM) → HTML для `setContent` / `insertContent`. */
 export function markdownToHTML(markdown: string, options: MarkdownToHTMLOptions = {}): string {
   const md = new MarkdownIt('default', {
@@ -32,6 +70,7 @@ export function markdownToHTML(markdown: string, options: MarkdownToHTMLOptions 
     linkify: options.linkify ?? true,
     breaks: options.breaks ?? false,
   });
+  taskLists(md);
   // markdown-it заканчивает код в блоке служебным «\n» — в редакторе он был бы лишней пустой
   // строкой внизу блока (а в цитате ещё и размножался при сохранении). Содержимое экранировано,
   // так что «</code></pre>» в тексте кода встретиться не может.
@@ -156,7 +195,10 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
     // они слились бы в один список (найдено property-based тестом).
     bullet_list(state, node, parent, index) {
       const marker = siblingsBefore(parent, index, node) % 2 ? '-' : '*';
-      state.renderList(node, '  ', () => `${marker} `);
+      // Чек-лист — задачи GFM: «- [ ] пункт», «- [x] сделано».
+      const box = (i: number) =>
+        node.attrs.checklist === true ? `[${node.child(i).attrs.checked ? 'x' : ' '}] ` : '';
+      state.renderList(node, '  ', (i) => `${marker} ${box(i)}`);
     },
     ordered_list(state, node, parent, index) {
       const start = (node.attrs.start as number | null) ?? 1;
@@ -297,6 +339,8 @@ class NovaMarkdownState extends BaseState {
     const lineStart =
       startOfLine || lastLine === self.delim || lastLine.trim() === self.delim.trim();
     let out = super.esc(str, lineStart);
+    // Обычный пункт списка, который начинается с «[ ]» / «[x]», не должен стать задачей при чтении.
+    if (/^\s*(?:[*+-]|\d{1,9}[.)])\s$/.test(lastLine)) out = out.replace(/^\[([ xX])\]/, '\\[$1]');
     if (lineStart) {
       out = out
         .replace(/^(\s*\d{1,9})([.)])(?=\s|$)/, '$1\\$2')

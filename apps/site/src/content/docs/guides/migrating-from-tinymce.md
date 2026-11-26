@@ -58,11 +58,11 @@ When you're ready, move to the native API below — it is smaller, typed and fra
 
 ## Plugins
 
-| Status            | TinyMCE open-source plugins                                                                                                                                                                                      |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Built into core   | `lists`, `link`, `table`, `code`, `preview`, `fullscreen`, `searchreplace`, `help`, `wordcount` (status bar), `image` (partial), `codesample` (code blocks without highlighting), PowerPaste-style paste cleanup |
-| Optional plugin   | `autolink`, `autoresize`, `autosave`, `charmap`, `emoticons`, `insertdatetime`, `nonbreaking`, `quickbars`, `visualblocks`                                                                                       |
-| Not available yet | `advlist`, `media`, `anchor`, `accordion`, `directionality`, `pagebreak`, `visualchars`, `importcss`, `save`                                                                                                     |
+| Status            | TinyMCE open-source plugins                                                                                                                                                                                                                                                                   |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Built into core   | `lists`, `link`, `table`, `code`, `preview`, `fullscreen`, `searchreplace`, `help`, `wordcount` (status bar), `image` (partial), `codesample` (code blocks without highlighting), PowerPaste-style paste cleanup                                                                              |
+| Optional plugin   | `advlist`, `anchor`, `autolink`, `autoresize`, `autosave`, `charmap`, `directionality`, `emoticons`, `insertdatetime`, `media`, `nonbreaking`, `pagebreak`, `quickbars`, `visualblocks`; `checklist` (a premium plugin in TinyMCE, free here — existing `tox-checklist` content is converted) |
+| Not available yet | `accordion`, `visualchars`, `importcss`, `save`                                                                                                                                                                                                                                               |
 
 Built-in features don't need to be listed in `plugins`. Unknown plugin names are reported in the
 console and ignored.

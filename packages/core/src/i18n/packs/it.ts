@@ -275,6 +275,8 @@ const it: LanguagePack = {
   'mergetags.empty': 'Nessuna variabile trovata',
   'mergetags.unknown': 'Variabile sconosciuta',
   'nonbreaking.title': 'Spazio unificatore',
+  'checklist.checklist': 'Lista di controllo',
+  'checklist.done': 'Fatto',
   'pagebreak.title': 'Interruzione di pagina',
   'revisionhistory.button': 'Cronologia versioni',
   'revisionhistory.title': 'Cronologia versioni',

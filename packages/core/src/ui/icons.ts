@@ -216,6 +216,9 @@ export const icons = {
   media: svg(
     '<rect x="3" y="3" width="18" height="18" rx="2" /><path d="M9 9.003a1 1 0 0 1 1.517-.859l4.997 2.997a1 1 0 0 1 0 1.718l-4.997 2.997A1 1 0 0 1 9 14.996z" />',
   ),
+  checklist: svg(
+    '<rect x="3" y="5" width="6" height="6" rx="1" /><path d="m4.5 8 1 1 2-2" /><path d="M13 8h8" /><rect x="3" y="14" width="6" height="6" rx="1" /><path d="M13 17h8" />',
+  ),
   nonBreaking: svg('<path d="M22 17v1c0 .5-.5 1-1 1H3c-.5 0-1-.5-1-1v-1" />'),
   pageBreak: svg(
     '<path d="M5.42 9.42 8 12" /><circle cx="4" cy="8" r="2" /><path d="m14 6-8.58 8.58" /><circle cx="4" cy="16" r="2" /><path d="M10.8 14.8 14 18" /><path d="M16 12h-2" /><path d="M22 12h-2" />',
