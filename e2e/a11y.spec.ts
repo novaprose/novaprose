@@ -128,6 +128,29 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'диалог по описанию полей');
     });
 
+    test('диалог со вкладками и полем файлов', async ({ page }) => {
+      await open(page, theme);
+      await page.evaluate(() => {
+        const ui = (window as unknown as { editor: { ui: { dialog(spec: object): void } } }).editor
+          .ui;
+        ui.dialog({
+          title: 'Вложения',
+          tabs: [
+            {
+              title: 'Файлы',
+              fields: [
+                { type: 'file', name: 'files', label: 'Файлы', multiple: true, required: true },
+              ],
+            },
+            { title: 'Подробно', fields: [{ type: 'text', name: 'note', label: 'Заметка' }] },
+          ],
+        });
+      });
+      await page.locator('[role="dialog"] button[type="submit"]').click();
+      await expect(page.locator('.nova-field-error:visible').first()).toBeVisible();
+      await audit(page, 'диалог со вкладками и файлами');
+    });
+
     test('боковая панель плагина открыта', async ({ page }) => {
       await open(page, theme);
       await page.evaluate(async () => {

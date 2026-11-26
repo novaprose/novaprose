@@ -84,12 +84,45 @@ if (data) insertVideo(editor, String(data.src)); // your function
 ```
 
 Field types: `text`, `url`, `email`, `tel`, `number`, `textarea`, `select`, `checkbox`, `color`,
-plus `message` (a note, `tone: 'info' | 'warning' | 'error'`) and `custom` (`render(api)` returns your
+`file`, plus `message` (a note, `tone: 'info' | 'warning' | 'error'`) and `custom` (`render(api)` returns your
 own element). Each field can have `hint`, `required`, `disabled` and `validate(value, data)`.
 `onChange(data, { name }, api)` runs on every edit. `onSubmit`, `onChange` and `custom` fields get an `api`
 with `getData`, `setData`, `setFieldError`, `setError`, `setEnabled`, `setBusy`, `focus` and `close`. Pass
-`signal` (an `AbortSignal`) to close the dialog from outside. The dialog code (about 1.5 KB) loads the
+`signal` (an `AbortSignal`) to close the dialog from outside. The dialog code (about 2.5 KB) loads the
 first time a dialog opens.
+
+**Tabs.** Pass `tabs` instead of `fields`; the data of all tabs comes back in one object. Tabs follow
+the WAI-ARIA pattern (arrow keys, Home/End, mirrored in right-to-left mode). If a field on a hidden tab
+is invalid, the dialog switches to that tab and focuses the field.
+
+**Files.** A `file` field shows a drop zone with a Browse button and a list of chosen files that can be
+removed one by one. Its value is an array of `File` objects; upload them yourself in `onSubmit`.
+
+```ts
+const data = await editor.ui.dialog({
+  title: 'Attach files',
+  tabs: [
+    {
+      title: 'Files',
+      fields: [
+        {
+          type: 'file',
+          name: 'files',
+          label: 'Attachments',
+          accept: 'image/*,.pdf', // like <input accept>
+          multiple: true,
+          maxSize: 10 * 1024 * 1024, // bytes, per file
+          required: true,
+        },
+      ],
+    },
+    { title: 'Details', fields: [{ type: 'text', name: 'note', label: 'Note' }] },
+  ],
+  onSubmit: async (data) => upload(data.files as File[]), // your function
+});
+```
+
+Files of other types or over `maxSize` are rejected with a message under the field.
 
 ## A sidebar
 

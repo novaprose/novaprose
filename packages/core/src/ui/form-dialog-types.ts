@@ -12,7 +12,8 @@
  *   }); // данные или null, если диалог закрыли
  */
 
-export type DialogFieldValue = string | number | boolean | null;
+/** Значение поля; у поля файлов — массив выбранных файлов (пустой, если ничего не выбрано). */
+export type DialogFieldValue = string | number | boolean | null | File[];
 export type DialogData = Record<string, DialogFieldValue>;
 
 interface FieldBase {
@@ -32,12 +33,25 @@ export type DialogField =
   | (FieldBase & { type: 'textarea'; rows?: number; placeholder?: string })
   | (FieldBase & { type: 'select'; options: { value: string; label: string }[] })
   | (FieldBase & { type: 'checkbox' | 'color' })
+  | (FieldBase & {
+      type: 'file';
+      /** Допустимые типы, как у <input accept>: 'image/*,.pdf'. */
+      accept?: string;
+      multiple?: boolean;
+      /** Наибольший размер одного файла в байтах. */
+      maxSize?: number;
+    })
   | { type: 'message'; text: string; tone?: 'info' | 'warning' | 'error' }
   | { type: 'custom'; render: (api: DialogApi) => HTMLElement };
 
-export interface DialogSpec {
+/** Вкладка диалога: подпись и свои поля (данные всех вкладок — в одном объекте). */
+export interface DialogTab {
   title: string;
   fields: DialogField[];
+}
+
+interface DialogSpecBase {
+  title: string;
   initialData?: DialogData;
   /** Подпись кнопки отправки (по умолчанию «Сохранить»). */
   submitLabel?: string;
@@ -58,6 +72,10 @@ export interface DialogSpec {
   signal?: AbortSignal;
 }
 
+/** Поля — списком или по вкладкам (`tabs`). */
+export type DialogSpec = DialogSpecBase &
+  ({ fields: DialogField[]; tabs?: undefined } | { tabs: DialogTab[]; fields?: undefined });
+
 export interface DialogApi {
   getData(): DialogData;
   setData(data: DialogData): void;
@@ -68,5 +86,7 @@ export interface DialogApi {
   setBusy(busy: boolean): void;
   setEnabled(name: string, enabled: boolean): void;
   focus(name: string): void;
+  /** Показать вкладку (по номеру, с нуля). */
+  showTab(index: number): void;
   close(): void;
 }

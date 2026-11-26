@@ -105,6 +105,10 @@ export const en = {
   'status.words': '{count} words',
   'status.resize': 'Resize editor',
   'dialog.browse': 'Browse',
+  'dialog.dropFiles': 'Drop files here or',
+  'dialog.fileType': 'This file type is not allowed',
+  'dialog.fileTooLarge': 'The file is too large',
+  'dialog.removeFile': 'Remove',
 
   pasteAsText: 'Paste as text',
 

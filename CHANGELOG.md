@@ -4,6 +4,14 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## Unreleased
+
+### Plugin UI
+
+- `editor.ui.dialog`: tabs (`tabs: [{ title, fields }]`, WAI-ARIA keyboard, switches to the tab with
+  an invalid field) and a `file` field with a drop zone, a Browse button, a removable list of chosen
+  files, `accept`, `multiple` and `maxSize`. The value is an array of `File` objects.
+
 ## 0.7.0 — 2026-11-26
 
 ### Breaking
