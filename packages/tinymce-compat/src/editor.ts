@@ -45,6 +45,14 @@ const COMMANDS: Record<string, CommandName> = {
   mceblockquote: 'blockquote',
 };
 
+/** Команды раскрывающихся блоков (плагин accordion), как в документации TinyMCE. */
+const ACCORDION_COMMANDS = new Set([
+  'insertaccordion',
+  'removeaccordion',
+  'toggleaccordion',
+  'toggleallaccordions',
+]);
+
 const FORMAT_BLOCKS: Record<string, CommandName> = {
   p: 'paragraph',
   h1: 'h1',
@@ -307,6 +315,8 @@ export class CompatEditor {
     } else if (name === 'mcesetcontent') {
       this.setContent(String(value ?? ''));
       done = true;
+    } else if (ACCORDION_COMMANDS.has(name)) {
+      done = this.accordionCommand(name, value);
     } else if (name === 'codesample') {
       // Диалог «Пример кода» (плагин codesample) — как нажатие его кнопки.
       const button = this.core.ui.registry.get('codesample');
@@ -329,6 +339,46 @@ export class CompatEditor {
     }
     if (done) this.fire('ExecCommand', { command, ui: _ui, value });
     return done;
+  }
+
+  /**
+   * InsertAccordion / RemoveAccordion — как кнопка accordion (в блоке — снять рамку, иначе вставить);
+   * ToggleAccordion / ToggleAllAccordions — value true раскрывает, false сворачивает, без value —
+   * переключает. Сворачивание — вид, а не правка: в историю отмены не попадает.
+   */
+  private accordionCommand(name: string, value: unknown): boolean {
+    const { view } = this.core;
+    const { state } = view;
+    const $from = state.selection.$from;
+    let around: { pos: number; open: boolean } | null = null;
+    for (let depth = $from.depth; depth > 0 && !around; depth--) {
+      const node = $from.node(depth);
+      if (node.type.name === 'details') {
+        around = { pos: $from.before(depth), open: node.attrs.open !== false };
+      }
+    }
+    if (name === 'insertaccordion' || name === 'removeaccordion') {
+      if ((name === 'removeaccordion') !== !!around) return false;
+      const button = this.core.ui.registry.get('accordion');
+      if (button?.type !== 'button') return false;
+      button.onAction(this.core);
+      return true;
+    }
+    const all: { pos: number; open: boolean }[] = [];
+    if (name === 'toggleaccordion') {
+      if (around) all.push(around);
+    } else {
+      state.doc.descendants((node, pos) => {
+        if (node.type.name === 'details') all.push({ pos, open: node.attrs.open !== false });
+        return !node.isTextblock;
+      });
+    }
+    if (!all.length) return false;
+    const open = typeof value === 'boolean' ? value : !all.every((d) => d.open);
+    const tr = state.tr;
+    for (const details of all) tr.setNodeAttribute(details.pos, 'open', open);
+    view.dispatch(tr.setMeta('addToHistory', false));
+    return true;
   }
 
   queryCommandState(command: string): boolean {

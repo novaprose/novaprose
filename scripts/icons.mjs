@@ -113,6 +113,7 @@ const editor = {
   checklist: 'list-todo',
   codeSample: 'file-code',
   dragHandle: 'grip-vertical',
+  accordion: 'list-collapse',
   duplicate: 'copy-plus',
   nonBreaking: 'space',
   pageBreak: 'scissors-line-dashed',

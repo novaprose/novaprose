@@ -49,7 +49,6 @@ const BUILT_IN = new Set([
   'imagetools',
   'powerpaste',
   'importcss',
-  'accordion',
 ]);
 
 /** Плагины с другим именем в NovaProse. */
@@ -131,6 +130,8 @@ const IGNORED = new Set([
   'tinycomments_author',
   'tinycomments_author_name',
   'codesample_languages',
+  'details_initial_state',
+  'details_serialized_state',
   // Подсветка — своя (highlight.js, лениво); Prism на странице сайта для неё не нужен.
   'codesample_global_prismjs',
 ]);
@@ -444,6 +445,19 @@ export function mapOptions(config: TinyConfig): MappedOptions {
         : [];
     });
     pluginOptions.codesample = { languages };
+  }
+  // Раскрывающиеся блоки: состояние при загрузке и в HTML на выходе.
+  const detailsState = (value: unknown) =>
+    value === 'inherited' || value === 'collapsed' || value === 'expanded' ? value : undefined;
+  if (config.details_initial_state || config.details_serialized_state) {
+    pluginOptions.accordion = {
+      ...(detailsState(config.details_initial_state)
+        ? { initialState: detailsState(config.details_initial_state) }
+        : {}),
+      ...(detailsState(config.details_serialized_state)
+        ? { serializedState: detailsState(config.details_serialized_state) }
+        : {}),
+    };
   }
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 

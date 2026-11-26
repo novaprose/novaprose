@@ -185,13 +185,14 @@ const wordLimit = definePlugin({
 createEditor({ element, plugins: [wordLimit] });
 ```
 
-| Field                | Description                                                         |
-| -------------------- | ------------------------------------------------------------------- |
-| `name`               | unique name, also used in `requires` of other plugins               |
-| `requires`           | plugins that must be set up first                                   |
-| `setup`              | register controls and listeners; may return a cleanup function      |
-| `toolbar`            | controls appended to the default toolbar                            |
-| `prosemirrorPlugins` | `(editor) => Plugin[]` for low-level input handling and decorations |
+| Field                | Description                                                                              |
+| -------------------- | ---------------------------------------------------------------------------------------- |
+| `name`               | unique name, also used in `requires` of other plugins                                    |
+| `requires`           | plugins that must be set up first                                                        |
+| `setup`              | register controls and listeners; may return a cleanup function                           |
+| `toolbar`            | controls appended to the default toolbar                                                 |
+| `prosemirrorPlugins` | `(editor) => Plugin[]` for low-level input handling and decorations                      |
+| `load`               | `() => import(...)`: the rest of a plugin with nodes, loaded after the editor is created |
 
 ### New content types
 
@@ -221,7 +222,17 @@ plugins. The output of your `toDOM` is still checked: event handler attributes, 
 CSS, and elements like `<script>` or `<style>` never reach `getHTML()`.
 
 Plugins that add nodes or marks must be passed as objects, not lazy loaders, because the schema is
-created together with the editor.
+created together with the editor. To keep the page light, put only the nodes in that object and
+move the rest (buttons, commands, node views, key bindings) into a separate module named in
+`load`; it is downloaded right after the editor is created and is part of `editor.ready`:
+
+```ts
+const callout = definePlugin({
+  name: 'callout',
+  nodes: { callout: calloutSpec },
+  load: () => import('./callout-ui'), // definePlugin({ name: 'callout-ui', setup… })
+});
+```
 
 ### Loading plugins
 
@@ -238,25 +249,26 @@ chunk: `tableCommands` return `false` until it is loaded).
 
 ### Built-in plugins
 
-| Name             | What it adds                                                                                                                                                                                                                                     | Controls                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
-| `advlist`        | bullet and numbering styles (circle, square, a/A, i/I, α); `bullist` and `numlist` become split buttons (`pluginOptions.advlist`: `bullets`, `numbers`)                                                                                          | `bullist`, `numlist`         |
-| `anchor`         | named anchors `<a id>` for `#section` links                                                                                                                                                                                                      | `anchor`                     |
-| `autolink`       | URLs and e-mail addresses become links as you type; pasting a URL over selected text links it                                                                                                                                                    | —                            |
-| `autoresize`     | height follows the content between `minHeight` and `maxHeight` (`pluginOptions.autoresize`)                                                                                                                                                      | —                            |
-| `autosave`       | local draft in the browser; offers to restore it after a reload or crash (`pluginOptions.autosave`: `key`, `delay`, `retention` in minutes)                                                                                                      | `restoredraft`               |
-| `checklist`      | checklists: click a box or press Ctrl/Cmd+Enter to tick an item, type `[ ]` or `[x]` at the start of a line; HTML is compatible with Tiptap task lists, TinyMCE and GitHub checklists are recognized                                             | `checklist`                  |
-| `codesample`     | syntax highlighting in code blocks (27 languages, loaded on demand), language menu, dialog to insert or edit code; see [Code blocks](/guides/code-blocks/)                                                                                       | `codesample`, `codelanguage` |
-| `charmap`        | special characters with search (currency, typography, math, arrows, Latin, Greek)                                                                                                                                                                | `charmap`                    |
-| `draghandle`     | a handle to the left of the block under the mouse: drag it to move the block (paragraph, heading, list item, table, image), click it for move up/down, duplicate and delete; the keyboard equivalent is Alt+Shift+↑/↓ (core). Mouse and pen only | —                            |
-| `directionality` | right-to-left text for Arabic, Hebrew, Persian (`dir` on paragraphs and headings)                                                                                                                                                                | `ltr`, `rtl`                 |
-| `emoticons`      | emoji picker and `:name` autocompletion while typing                                                                                                                                                                                             | `emoticons`                  |
-| `insertdatetime` | insert the current date or time                                                                                                                                                                                                                  | `insertdatetime`             |
-| `media`          | YouTube, Vimeo and .mp4/.webm video; only these sources are ever embedded                                                                                                                                                                        | `media`                      |
-| `nonbreaking`    | nonbreaking space, also Ctrl/Cmd+Shift+Space                                                                                                                                                                                                     | `nonbreaking`                |
-| `pagebreak`      | page break for printing and PDF                                                                                                                                                                                                                  | `pagebreak`                  |
-| `quickbars`      | formatting next to the selection and quick insert on empty lines                                                                                                                                                                                 | —                            |
-| `visualblocks`   | outlines blocks and shows their tags; `pluginOptions.visualblocks.default` to start enabled                                                                                                                                                      | `visualblocks`               |
+| Name             | What it adds                                                                                                                                                                                                                                                                                                | Controls                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| `advlist`        | bullet and numbering styles (circle, square, a/A, i/I, α); `bullist` and `numlist` become split buttons (`pluginOptions.advlist`: `bullets`, `numbers`)                                                                                                                                                     | `bullist`, `numlist`         |
+| `anchor`         | named anchors `<a id>` for `#section` links                                                                                                                                                                                                                                                                 | `anchor`                     |
+| `autolink`       | URLs and e-mail addresses become links as you type; pasting a URL over selected text links it                                                                                                                                                                                                               | —                            |
+| `autoresize`     | height follows the content between `minHeight` and `maxHeight` (`pluginOptions.autoresize`)                                                                                                                                                                                                                 | —                            |
+| `autosave`       | local draft in the browser; offers to restore it after a reload or crash (`pluginOptions.autosave`: `key`, `delay`, `retention` in minutes)                                                                                                                                                                 | `restoredraft`               |
+| `checklist`      | checklists: click a box or press Ctrl/Cmd+Enter to tick an item, type `[ ]` or `[x]` at the start of a line; HTML is compatible with Tiptap task lists, TinyMCE and GitHub checklists are recognized                                                                                                        | `checklist`                  |
+| `codesample`     | syntax highlighting in code blocks (27 languages, loaded on demand), language menu, dialog to insert or edit code; see [Code blocks](/guides/code-blocks/)                                                                                                                                                  | `codesample`, `codelanguage` |
+| `accordion`      | collapsible sections `<details><summary>`: click the arrow or press Ctrl/Cmd+Enter in the title to collapse, Enter in the title starts the content, Backspace at its start removes the frame; Tiptap and TinyMCE accordions load as they are (`pluginOptions.accordion`: `initialState`, `serializedState`) | `accordion`                  |
+| `charmap`        | special characters with search (currency, typography, math, arrows, Latin, Greek)                                                                                                                                                                                                                           | `charmap`                    |
+| `draghandle`     | a handle to the left of the block under the mouse: drag it to move the block (paragraph, heading, list item, table, image), click it for move up/down, duplicate and delete; the keyboard equivalent is Alt+Shift+↑/↓ (core). Mouse and pen only                                                            | —                            |
+| `directionality` | right-to-left text for Arabic, Hebrew, Persian (`dir` on paragraphs and headings)                                                                                                                                                                                                                           | `ltr`, `rtl`                 |
+| `emoticons`      | emoji picker and `:name` autocompletion while typing                                                                                                                                                                                                                                                        | `emoticons`                  |
+| `insertdatetime` | insert the current date or time                                                                                                                                                                                                                                                                             | `insertdatetime`             |
+| `media`          | YouTube, Vimeo and .mp4/.webm video; only these sources are ever embedded                                                                                                                                                                                                                                   | `media`                      |
+| `nonbreaking`    | nonbreaking space, also Ctrl/Cmd+Shift+Space                                                                                                                                                                                                                                                                | `nonbreaking`                |
+| `pagebreak`      | page break for printing and PDF                                                                                                                                                                                                                                                                             | `pagebreak`                  |
+| `quickbars`      | formatting next to the selection and quick insert on empty lines                                                                                                                                                                                                                                            | —                            |
+| `visualblocks`   | outlines blocks and shows their tags; `pluginOptions.visualblocks.default` to start enabled                                                                                                                                                                                                                 | `visualblocks`               |
 
 Most built-in plugins are loaded lazily as separate chunks, so they don't increase the core bundle.
 `anchor`, `media` and `pagebreak` add document nodes, so they are part of the core and enabled by name

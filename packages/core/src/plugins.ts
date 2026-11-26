@@ -48,6 +48,12 @@ export interface NovaPlugin {
    * Вызывается для каждой транзакции редактора; вернуть ту же, если менять нечего.
    */
   transformTransaction?: (tr: Transaction, state: EditorState, editor: Editor) => Transaction;
+  /**
+   * Ленивая часть плагина с узлами: интерфейс, команды, представления узлов, клавиши. Схема
+   * создаётся сразу, поэтому узлы — в самом плагине (первая загрузка), а остальное — отдельным
+   * чанком после создания редактора (входит в `editor.ready`). Часть — обычный плагин без узлов.
+   */
+  load?: Loader;
 }
 
 type Loader = () => Promise<NovaPlugin | { default: NovaPlugin }>;

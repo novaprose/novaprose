@@ -1,0 +1,99 @@
+/*
+ * Раскрывающиеся блоки (плагин accordion). Подключается вместе с ленивой частью плагина через
+ * editor.ui.addStyles. В HTML документа — обычные <details><summary>, это только вид в редакторе.
+ */
+.nova-details {
+  position: relative;
+  margin: 0 0 0.75em;
+  padding-block: 6px;
+  padding-inline: 34px 12px;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+}
+
+.nova-details-toggle {
+  position: absolute;
+  top: 7px;
+  inset-inline-start: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--nova-muted);
+  cursor: pointer;
+}
+
+.nova-details-toggle:hover {
+  background: var(--nova-hover);
+  color: var(--nova-fg);
+}
+
+.nova-details-toggle:focus-visible {
+  outline: 2px solid var(--nova-accent);
+  outline-offset: 1px;
+}
+
+.nova-details-toggle svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 120ms ease;
+}
+
+/* Свёрнутый — стрелка вбок (по направлению текста). */
+.nova-details:not(.nova-details-open) > .nova-details-toggle svg {
+  transform: rotate(-90deg);
+}
+
+[dir='rtl'] .nova-details:not(.nova-details-open) > .nova-details-toggle svg {
+  transform: rotate(90deg);
+}
+
+.nova-details-content > summary {
+  position: relative;
+  display: block;
+  margin: 0;
+  font-weight: 600;
+  cursor: text;
+  list-style: none;
+}
+
+.nova-details-content > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Пустой заголовок — приглашение на языке интерфейса (текст в --nova-summary-placeholder). */
+.nova-details-content > summary:has(> br.ProseMirror-trailingBreak:only-child)::before {
+  content: var(--nova-summary-placeholder, '');
+  position: absolute;
+  color: var(--nova-muted);
+  font-weight: 400;
+  pointer-events: none;
+}
+
+.nova-details-open > .nova-details-content > summary {
+  margin-bottom: 0.4em;
+}
+
+.nova-details:not(.nova-details-open) > .nova-details-content > :not(summary) {
+  display: none;
+}
+
+.nova-details-content > :last-child {
+  margin-bottom: 0;
+}
+
+.nova-details.ProseMirror-selectednode {
+  outline: 2px solid var(--nova-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nova-details-toggle svg {
+    transition: none;
+  }
+}

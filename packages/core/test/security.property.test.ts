@@ -22,6 +22,7 @@ const RUNS = Number(process.env.FC_RUNS) || 300;
 
 // Все плагины со своими узлами схемы — максимальная поверхность разбора.
 const SCHEMA_PLUGINS = [
+  'accordion',
   'anchor',
   'pagebreak',
   'media',
@@ -395,6 +396,7 @@ describe('безопасность и стабильность HTML (property-ba
       colspan: anyValue,
       checked: anyValue,
       checklist: anyValue,
+      open: anyValue,
       rowspan: anyValue,
       colwidth: fc.oneof(anyValue, fc.array(fc.integer({ min: -5, max: 900 }), { maxLength: 2 })),
     });
@@ -472,10 +474,22 @@ describe('безопасность и стабильность HTML (property-ba
         },
       ),
     });
+    // Раскрывающийся блок: open из JSON — чем угодно, заголовок со строчными узлами.
+    const details = fc.record({
+      type: fc.constant('details'),
+      attrs,
+      content: fc.tuple(
+        fc.record({
+          type: fc.constant('details_summary'),
+          content: fc.array(fc.oneof(text, atom), { maxLength: 3 }),
+        }),
+        textblock,
+      ),
+    });
     let accepted = 0;
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(textblock, textblock, blockAtom, table, list), {
+        fc.array(fc.oneof(textblock, textblock, blockAtom, table, list, details), {
           minLength: 1,
           maxLength: 3,
         }),

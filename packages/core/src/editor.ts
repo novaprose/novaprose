@@ -1,3 +1,4 @@
+import type { AccordionOptions } from './plugins/accordion';
 import type { AutosaveOptions } from './plugins/autosave';
 import type { CodeSampleOptions } from './plugins/codesample';
 import { Formatter, formatClasses, type FormatSpec, type StyleFormat } from './formats';
@@ -118,6 +119,7 @@ export interface PluginOptions {
   autosave?: AutosaveOptions;
   quickbars?: QuickbarsOptions;
   codesample?: CodeSampleOptions;
+  accordion?: AccordionOptions;
   [plugin: string]: unknown;
 }
 
@@ -374,6 +376,8 @@ export class Editor {
     resolved.errors.forEach((message) => reportPluginError(message));
     const { ordered: syncPlugins, errors: orderErrors } = orderPlugins(resolved.plugins);
     orderErrors.forEach((message) => reportPluginError(message));
+    // Ленивые части плагинов с узлами (NovaPlugin.load) грузятся вместе с ленивыми плагинами.
+    for (const plugin of syncPlugins) if (plugin.load) resolved.loaders.push(plugin.load);
     const pluginPm = syncPlugins.flatMap((plugin) => this.collectPmPlugins(plugin));
 
     const hasRules =

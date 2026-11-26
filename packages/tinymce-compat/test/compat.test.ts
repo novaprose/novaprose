@@ -373,6 +373,44 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/codesample/);
   });
 
+  it('accordion: <details>, details_*_state, InsertAccordion / ToggleAccordion / ToggleAllAccordions', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page(
+      '<textarea id="t"><details open><summary>Q</summary><p>A</p></details><p>text</p></textarea>',
+    );
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'accordion',
+      toolbar: 'accordion',
+      details_initial_state: 'collapsed',
+      details_serialized_state: 'inherited',
+    });
+    // Загружено свёрнутым (details_initial_state), на выходе — как в редакторе.
+    expect(editor!.getContent()).toBe('<details><summary>Q</summary><p>A</p></details><p>text</p>');
+    const { core } = editor!;
+    expect(core.root.querySelector('[data-control="accordion"]')).not.toBeNull();
+    // Курсор в заголовок: «развернуть» по команде.
+    core.view.dispatch(
+      core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, 3)),
+    );
+    expect(editor!.execCommand('ToggleAccordion', false, true)).toBe(true);
+    expect(editor!.getContent()).toContain('<details open="">');
+    expect(editor!.execCommand('ToggleAllAccordions', false, false)).toBe(true);
+    expect(editor!.getContent()).toContain('<details><summary>');
+    // Вставка вокруг абзаца «text» и снятие рамки.
+    const end = core.view.state.doc.content.size - 1;
+    core.view.dispatch(
+      core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, end)),
+    );
+    expect(editor!.execCommand('InsertAccordion')).toBe(true);
+    expect(editor!.getContent()).toContain(
+      '<details open=""><summary></summary><p>text</p></details>',
+    );
+    expect(editor!.execCommand('RemoveAccordion')).toBe(true);
+    expect(editor!.getContent()).toMatch(/<\/details><p>text<\/p>$/);
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/accordion|details_/);
+  });
+
   it('незнакомые опции и плагины — предупреждение, а не ошибка', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

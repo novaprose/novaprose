@@ -274,6 +274,14 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
     pagebreak(state, node) {
       state.closeBlock(node);
     },
+    // Раскрывающегося блока в Markdown нет: заголовок — абзацем, содержимое — как есть.
+    details(state, node) {
+      state.renderContent(node);
+    },
+    details_summary(state, node) {
+      state.renderInline(node);
+      state.closeBlock(node);
+    },
   },
   {
     ...marks,

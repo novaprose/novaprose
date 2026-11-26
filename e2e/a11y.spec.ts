@@ -199,6 +199,23 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'диалог примера кода');
     });
 
+    test('раскрывающиеся блоки: раскрытый, свёрнутый, пустой заголовок', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          '<details open><summary>Вопрос</summary><p>Ответ</p></details>' +
+            '<details><summary>Свёрнутый</summary><p>Скрыто</p></details>' +
+            '<details open><summary></summary><p>Без заголовка</p></details>',
+        );
+      });
+      await expect(page.locator('.nova-details-toggle').first()).toBeVisible();
+      await audit(page, 'раскрывающиеся блоки');
+    });
+
     test('ручка блока и её меню', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.locator('.nova-prosemirror h2').hover();

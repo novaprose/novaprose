@@ -8,6 +8,7 @@ import { createEditor } from '../src';
  * Найдено property-based тестом (security.property.test.ts).
  */
 const PLUGINS = [
+  'accordion',
   'anchor',
   'pagebreak',
   'media',
@@ -56,6 +57,7 @@ const ATTR_NAMES = [
   'alt',
   'checked',
   'checklist',
+  'open',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));
@@ -66,6 +68,11 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
   paragraph: (attrs) => ({ type: 'paragraph', attrs, content: [text] }),
   heading: (attrs) => ({ type: 'heading', attrs, content: [text] }),
   code_block: (attrs) => ({ type: 'code_block', attrs, content: [text] }),
+  details: (attrs) => ({
+    type: 'details',
+    attrs,
+    content: [{ type: 'details_summary', content: [text] }, para(text)],
+  }),
   image: (attrs) => para({ type: 'image', attrs }),
   mention: (attrs) => para({ type: 'mention', attrs }),
   mergetag: (attrs) => para({ type: 'mergetag', attrs }),

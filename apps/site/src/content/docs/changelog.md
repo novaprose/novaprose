@@ -13,6 +13,15 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Collapsible sections (`plugins: ['accordion']`, button `accordion`, as in TinyMCE):
+  `<details><summary>` with an arrow to collapse and expand, Ctrl/Cmd+Enter in the title, Enter
+  in the title to start the content, Backspace at the start of the title to remove the frame. The
+  toolbar button turns the selected blocks into a section. Accordions from TinyMCE and Tiptap load
+  as they are; `pluginOptions.accordion.initialState` and `serializedState` (TinyMCE
+  `details_initial_state` and `details_serialized_state`) set the state on load and in
+  `getHTML()`. Collapsing is not an edit: Ctrl+Z does not undo it. The cursor never stays inside
+  hidden content.
+
 - Move blocks with the keyboard: Alt+Shift+↑/↓ moves the paragraph, heading, list item (among its
   siblings) or selected table or image up or down; with several blocks selected, they move
   together. New named commands `moveBlockUp` and `moveBlockDown`.
@@ -43,6 +52,11 @@ All packages in this repository are versioned together. The format follows
 - Multi-line fields in plugin dialogs (`editor.ui.dialog`, `type: 'textarea'`) are as tall as their
   `rows` — they used to be one line high. New `code: true` for code: monospace, no spell check.
 - Context toolbars accept `placement: 'top-end' | 'bottom-end'` or a function of the editor.
+
+### Plugins API
+
+- `NovaPlugin.load`: a plugin with nodes keeps only its nodes in the first load and names the rest
+  (buttons, commands, node views) as a lazy module, loaded after the editor is created.
 
 ### Distribution
 

@@ -124,6 +124,7 @@ const REQUIREMENTS: Record<string, string[]> = {
   tablecellbackground: ['style:background-color'],
   bullist: ['ul'],
   checklist: ['ul'],
+  accordion: ['details'],
   bulletlist: ['ul'],
   numlist: ['ol'],
   orderedlist: ['ol'],
@@ -315,6 +316,15 @@ export class ContentRules {
         return filled ? [filled] : children.content.length ? asBlocks(children) : [];
       }
     };
+
+    if (node.type.name === 'details' && !this.isTagAllowed('details')) {
+      const out: PMNode[] = [];
+      children.forEach((child) => {
+        if (child.type.name !== 'details_summary') out.push(child);
+        else if (child.content.size) out.push(nodes.paragraph.create(null, child.content));
+      });
+      return out;
+    }
 
     switch (node.type) {
       case nodes.paragraph:
