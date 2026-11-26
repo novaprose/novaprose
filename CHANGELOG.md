@@ -59,6 +59,10 @@ All packages in this repository are versioned together. The format follows
 
 ### Plugins API
 
+- The plugins `anchor`, `media`, `pagebreak`, `mentions`, `mergetags` and `suggestions` keep only
+  their nodes, marks and rendering in the first load; their buttons, dialogs and lists are a lazy part
+  that registers right after creation. **Changed:** like other lazy plugins, their buttons exist after
+  `await editor.ready`. Collapsible sections (`accordion`) now render from the first frame.
 - `NovaPlugin.load`: a plugin with nodes keeps only its nodes in the first load and names the rest
   (buttons, commands, node views) as a lazy module, loaded after the editor is created.
 

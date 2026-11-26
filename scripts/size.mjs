@@ -1,6 +1,9 @@
 /**
  * Бюджет размера. Считает то, что реально скачает пользователь, в gzip:
- *  - первая загрузка ядра: точка входа + все статически подключённые чанки (вместе с ProseMirror);
+ *  - первая загрузка ядра: точка входа + все статически подключённые чанки (вместе с ProseMirror),
+ *    сжатые одним файлом — так их отдаёт сборка приложения (Vite/Rollup, webpack кладут всё, что
+ *    нужно точке входа, в один чанк; проверено сборкой Vite: 135.2 КБ при 135.4 КБ здесь). Сумма
+ *    отдельно сжатых чанков esbuild — для сведения: она растёт от дробления на чанки, а не от кода;
  *  - ленивые плагины: всё, что грузится через import() — отдельно, только для информации;
  *  - CSS и CDN-сборки (готовые файлы).
  * Падает (exit 1), если превышен любой бюджет. Нужна сборка: pnpm build.
@@ -9,6 +12,7 @@
  *   node scripts/size.mjs --json    то же + JSON в stdout (для отчётов CI)
  */
 import { build } from 'esbuild';
+import { Buffer } from 'node:buffer';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
@@ -17,7 +21,8 @@ const gz = (buf) => gzipSync(buf, { level: 9 }).length;
 
 /** Бюджеты в КБ gzip. Поднимать только осознанно, с записью в CHANGELOG. */
 const BUDGET = {
-  coreFirstLoad: 150,
+  // Ноябрь 2026: 135.4 КБ одним файлом (до смены способа счёта — 150 по сумме чанков, это 142.5).
+  coreFirstLoad: 145,
   coreCss: 12,
   // CDN: основной файл (ленивые части — отдельные файлы рядом, scripts/build-cdn.mjs). Ноябрь 2026:
   // 140.5 и 151.0 КБ после выноса частей (было 168.1 и 178.6 одним файлом).
@@ -41,9 +46,10 @@ async function measureEntry(entry, names) {
     metafile: true,
     logLevel: 'error',
   });
-  const sizes = new Map(
-    res.outputFiles.map((f) => [f.path.replace(/\\/g, '/').split('/size-out/')[1], gz(f.contents)]),
+  const files = new Map(
+    res.outputFiles.map((f) => [f.path.replace(/\\/g, '/').split('/size-out/')[1], f.contents]),
   );
+  const sizes = new Map([...files].map(([k, contents]) => [k, gz(contents)]));
   const outputs = Object.fromEntries(
     Object.entries(res.metafile.outputs).map(([k, v]) => [k.replace(/^size-out\//, ''), v]),
   );
@@ -59,14 +65,17 @@ async function measureEntry(entry, names) {
     }
   };
   walk(entryKey);
-  let firstLoad = 0;
+  let chunkSum = 0;
   let lazy = 0;
   for (const [k, size] of sizes) {
     if (!k.endsWith('.js')) continue;
-    if (first.has(k)) firstLoad += size;
+    if (first.has(k)) chunkSum += size;
     else lazy += size;
   }
-  return { firstLoad, lazy };
+  const firstLoad = gz(
+    Buffer.concat([...first].filter((k) => k.endsWith('.js')).map((k) => files.get(k))),
+  );
+  return { firstLoad, chunkSum, chunks: first.size, lazy };
 }
 
 function fileSize(path) {
@@ -85,6 +94,7 @@ function chunksSize(dir) {
 const core = await measureEntry('./packages/core/dist/index.js', 'Editor');
 const rows = [
   ['@novaprose/core — первая загрузка (с ProseMirror)', core.firstLoad, BUDGET.coreFirstLoad],
+  [`  то же суммой ${core.chunks} отдельно сжатых чанков esbuild`, core.chunkSum, null],
   ['@novaprose/core — ленивые плагины (все вместе)', core.lazy, null],
   ['@novaprose/core — style.css', fileSize('packages/core/src/style.css'), BUDGET.coreCss],
   [

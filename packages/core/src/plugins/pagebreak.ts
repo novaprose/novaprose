@@ -1,15 +1,10 @@
-import { icons } from '../ui/icons';
 import { definePlugin } from '../plugins';
-import { pickLabels } from './shared';
 
 /**
  * Плагин pagebreak: разрыв страницы для печати и PDF —
  * `<div class="nova-pagebreak" style="break-after: page;"></div>`. `plugins: ['pagebreak']`.
- * Добавляет узел в схему, поэтому подключается сразу (не лениво).
+ * Здесь — узел (схема создаётся вместе с редактором); кнопка — в pagebreak-ui.ts.
  */
-
-const ICON = icons.pageBreak;
-export const LABELS = { en: { title: 'Page break' } };
 
 export default definePlugin({
   name: 'pagebreak',
@@ -34,20 +29,5 @@ export default definePlugin({
       toDOM: () => ['div', { class: 'nova-pagebreak', style: 'break-after: page;' }],
     },
   },
-  setup(editor) {
-    const { title } = pickLabels(editor, 'pagebreak', LABELS);
-    const insert = () => {
-      const { state, dispatch } = editor.view;
-      const type = editor.schema.nodes.pagebreak!;
-      dispatch(state.tr.replaceSelectionWith(type.create()).scrollIntoView());
-      editor.focus();
-    };
-    editor.ui.registry.addButton('pagebreak', {
-      icon: ICON,
-      tooltip: title,
-      isEnabled: (e) => e.isEditable(),
-      onAction: insert,
-    });
-    editor.ui.registry.addMenuItem('pagebreak', { text: title, icon: ICON, onAction: insert });
-  },
+  load: () => import('./pagebreak-ui'),
 });

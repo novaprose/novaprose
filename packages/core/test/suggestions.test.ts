@@ -172,8 +172,10 @@ describe('режим правок', () => {
     expect(editor.getHTML()).toBe('<p>Loaded</p>');
   });
 
-  it('force: режим всегда включён, кнопка недоступна; без force — переключается', () => {
+  it('force: режим всегда включён, кнопка недоступна; без force — переключается', async () => {
     const forced = mount('<p>x</p>', { force: true });
+    // Кнопки плагина регистрирует его ленивая часть — после editor.ready.
+    await forced.ready;
     setSuggesting(forced, false);
     expect(isSuggesting(forced.view.state)).toBe(true);
     expect(
@@ -181,6 +183,7 @@ describe('режим правок', () => {
     ).toBe(true);
 
     const free = mount('<p>x</p>', {});
+    await free.ready;
     setSuggesting(free, true);
     expect(isSuggesting(free.view.state)).toBe(true);
     expect(free.view.dom.classList.contains('nova-suggesting')).toBe(true);

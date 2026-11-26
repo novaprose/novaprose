@@ -47,7 +47,12 @@ function flatten(prefix, labels) {
 
 const plugins = readdirSync(join(SRC, 'plugins'))
   .filter((f) => f.endsWith('.ts'))
-  .map((f) => [`p_${f.replace(/\W/g, '_')}`, join(SRC, 'plugins', f), f.replace('.ts', '')]);
+  // Ленивая часть плагина (<имя>-ui.ts) пишет подписи под именем плагина: '<имя>.<ключ>'.
+  .map((f) => [
+    `p_${f.replace(/\W/g, '_')}`,
+    join(SRC, 'plugins', f),
+    f.replace(/(-ui)?\.ts$/, ''),
+  ]);
 const packFiles = readdirSync(PACKS).filter((f) => f.endsWith('.ts'));
 
 const mods = await load([

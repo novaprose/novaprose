@@ -12,7 +12,6 @@ import { elementId } from '../element-id';
 import { definePlugin } from '../plugins';
 import { icons } from '../ui/icons';
 import { LABELS, tocEntries, tocSettings, type TocEntry } from './tableofcontents';
-import css from './tableofcontents.css?raw';
 import { pickLabels } from './shared';
 
 /**
@@ -147,12 +146,9 @@ export default definePlugin({
   toolbar: 'tableofcontents',
   prosemirrorPlugins: (editor) => [tocPlugin(editor, tocSettings(editor).depth)],
   setup(editor) {
-    editor.ui.addStyles('nova-tableofcontents', css);
     const labels = pickLabels(editor, 'tableofcontents', LABELS);
     const settings = tocSettings(editor);
     const title = settings.title ?? labels.title;
-    // Пустое оглавление — подсказка на языке интерфейса (в HTML документа её нет).
-    editor.root.style.setProperty('--nova-toc-empty', JSON.stringify(labels.empty));
     const insert = insertToc(title || null);
     const enabled = (e: Editor) => e.isEditable() && e.isAllowed('tableofcontents');
     editor.ui.registry.addButton('tableofcontents', {

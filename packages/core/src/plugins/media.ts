@@ -1,16 +1,12 @@
-import { icons } from '../ui/icons';
-import { attachFilePicker } from '../ui/file-picker';
 import type { Node as PMNode } from 'prosemirror-model';
-import { NodeSelection, Plugin } from 'prosemirror-state';
+import { Plugin } from 'prosemirror-state';
 import { definePlugin } from '../plugins';
 import { imageSize } from '../schema';
-import { textField } from '../ui/dialog';
 import { h } from '../ui/dom';
-import { pickLabels } from './shared';
 
 /**
  * Плагин media: видео YouTube и Vimeo, а также видеофайлы (mp4, webm, ogg) по https.
- * `plugins: ['media']`. Добавляет узел в схему, поэтому подключается сразу (не лениво).
+ * `plugins: ['media']`. Здесь — узел и его вид в редакторе; диалог и кнопка — в media-ui.ts.
  *
  * Безопасность: встраиваются только адреса из списка поставщиков. Любой другой <iframe> — из вставки,
  * setContent или JSON — отбрасывается и при разборе, и при выводе. YouTube — через youtube-nocookie.com.
@@ -41,19 +37,6 @@ export function parseMediaUrl(url: string): MediaSource | null {
   if (VIDEO_FILE.test(value)) return { kind: 'video', src: value };
   return null;
 }
-
-const ICON = icons.media;
-
-export const LABELS = {
-  en: {
-    title: 'Video',
-    url: 'Video URL',
-    hint: 'YouTube, Vimeo or a link to an .mp4 / .webm file',
-    name: 'Title (for screen readers)',
-    invalid: 'This video address is not supported',
-    save: 'Insert',
-  },
-};
 
 function mediaAttrs(dom: HTMLElement, src: string | null) {
   const source = src ? parseMediaUrl(src) : null;
@@ -163,61 +146,5 @@ export default definePlugin({
       },
     }),
   ],
-  setup(editor) {
-    const labels = pickLabels(editor, 'media', LABELS);
-    const selected = () => {
-      const { selection } = editor.view.state;
-      return selection instanceof NodeSelection && selection.node.type.name === 'media'
-        ? selection
-        : null;
-    };
-
-    const open = () => {
-      const current = selected();
-      const url = textField({
-        label: labels.url,
-        type: 'url',
-        placeholder: 'https://',
-        hint: labels.hint,
-        value: (current?.node.attrs.src as string | undefined) ?? '',
-      });
-      const title = textField({
-        label: labels.name,
-        value: (current?.node.attrs.title as string | undefined) ?? '',
-      });
-      attachFilePicker(editor, url, 'media', (picked) => {
-        if (picked.title) title.input.value = picked.title;
-      });
-      editor.ui.openDialog({
-        title: labels.title,
-        body: h('div', { className: 'nova-form' }, url.el, title.el),
-        submitLabel: labels.save,
-        onSubmit: () => {
-          const source = parseMediaUrl(url.input.value);
-          if (!source) return labels.invalid;
-          const { state, dispatch } = editor.view;
-          const attrs = { ...source, title: title.input.value.trim() };
-          const sel = selected();
-          if (sel)
-            dispatch(state.tr.setNodeMarkup(sel.from, undefined, { ...sel.node.attrs, ...attrs }));
-          else
-            dispatch(
-              state.tr
-                .replaceSelectionWith(editor.schema.nodes.media!.create(attrs))
-                .scrollIntoView(),
-            );
-          return true;
-        },
-      });
-    };
-
-    editor.ui.registry.addToggleButton('media', {
-      icon: ICON,
-      tooltip: labels.title,
-      isActive: () => selected() !== null,
-      isEnabled: (e) => e.isEditable(),
-      onAction: open,
-    });
-    editor.ui.registry.addMenuItem('media', { text: labels.title, icon: ICON, onAction: open });
-  },
+  load: () => import('./media-ui'),
 });

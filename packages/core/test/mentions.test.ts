@@ -53,6 +53,7 @@ describe('упоминания в тексте', () => {
   it('«@» ищет людей: негодные id отброшены, выбор вставляет упоминание и пробел', async () => {
     const onMention = vi.fn();
     const editor = mount('<p>Hi</p>', { mentions: { fetch: fetchPeople, onMention } });
+    await editor.ready;
     const items = await spec(editor).fetch('', editor);
     expect(items.map((i) => i.label)).toEqual(['Anna Ivanova', 'Boris Petrov']);
     expect(items[0]!.detail).toBe('Head of Sales');

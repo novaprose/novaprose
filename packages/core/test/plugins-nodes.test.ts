@@ -39,6 +39,8 @@ describe('anchor', () => {
 
   it('диалог вставляет якорь, повторно — переименовывает выделенный', async () => {
     const editor = mount('<p>Section</p>', ['anchor'], 'anchor');
+    // Кнопки плагина регистрирует его ленивая часть — после editor.ready.
+    await editor.ready;
     editor.root.querySelector<HTMLElement>('[data-control="anchor"]')!.click();
     submitDialog(['bad id']);
     await new Promise((r) => setTimeout(r, 0));
@@ -69,8 +71,9 @@ describe('pagebreak', () => {
     );
   });
 
-  it('кнопка вставляет разрыв', () => {
+  it('кнопка вставляет разрыв', async () => {
     const editor = mount('<p>a</p>', ['pagebreak'], 'pagebreak');
+    await editor.ready;
     editor.root.querySelector<HTMLElement>('[data-control="pagebreak"]')!.click();
     expect(editor.getHTML()).toContain(
       '<div class="nova-pagebreak" style="break-after: page;"></div>',
@@ -121,6 +124,7 @@ describe('media', () => {
 
   it('диалог вставляет видео по обычной ссылке YouTube', async () => {
     const editor = mount('<p></p>', ['media'], 'media');
+    await editor.ready;
     editor.root.querySelector<HTMLElement>('[data-control="media"]')!.click();
     submitDialog(['https://evil.example.com/v']);
     await new Promise((r) => setTimeout(r, 0));

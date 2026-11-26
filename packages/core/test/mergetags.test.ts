@@ -114,8 +114,10 @@ describe('mergetags: HTML', () => {
 });
 
 describe('mergetags: вставка', () => {
-  it('меню: группы, вставка в позицию курсора', () => {
+  it('меню: группы, вставка в позицию курсора', async () => {
     const e = mount('<p>Заказ №</p>', { list: LIST }, { toolbar: 'mergetags' });
+    // Кнопки плагина регистрирует его ленивая часть — после editor.ready.
+    await e.ready;
     const button = e.root.querySelector<HTMLButtonElement>('[data-control="mergetags"]')!;
     expect(button.getAttribute('aria-label')).toBe('Insert variable');
     const { state } = e.view;
@@ -133,8 +135,9 @@ describe('mergetags: вставка', () => {
     );
   });
 
-  it('пустой список — кнопка неактивна', () => {
+  it('пустой список — кнопка неактивна', async () => {
     const e = mount('<p>x</p>', { list: [] }, { toolbar: 'mergetags' });
+    await e.ready;
     expect(e.root.querySelector<HTMLButtonElement>('[data-control="mergetags"]')!.disabled).toBe(
       true,
     );
@@ -142,6 +145,7 @@ describe('mergetags: вставка', () => {
 
   it('«{{» и поиск по подписи: Enter вставляет переменную вместо набранного', async () => {
     const e = mount('<p>Здравствуйте, </p>');
+    await e.ready;
     type(e, ' {{тел');
     await flush();
     const list = e.root.querySelector<HTMLElement>('.nova-ac')!;

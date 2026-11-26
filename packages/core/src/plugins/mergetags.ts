@@ -3,8 +3,6 @@ import { Plugin as PMPlugin } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
-import { icons } from '../ui/icons';
-import type { MenuEntry } from '../ui/menu';
 import { pickLabels } from './shared';
 
 /**
@@ -14,6 +12,7 @@ import { pickLabels } from './shared';
  *
  * `plugins: ['mergetags']`, список — `pluginOptions.mergetags.list`. Вставка — кнопка `mergetags`
  * или ввод `{{` в тексте. Переменные, которых нет в списке, не теряются: показываются по ключу.
+ * Здесь — узел и его вид в редакторе; меню и ввод `{{` — в mergetags-ui.ts.
  */
 
 export interface MergeTag {
@@ -49,7 +48,7 @@ const KEY_RE = /^[\w.:-]{1,100}$/;
 /** Атрибут: только data-* (не даём назвать его onclick или href). */
 const ATTR_RE = /^data-[a-z0-9-]{1,40}$/;
 
-function optionsOf(editor: Editor): MergeTagsOptions {
+export function optionsOf(editor: Editor): MergeTagsOptions {
   return (editor.options.pluginOptions?.mergetags as MergeTagsOptions | undefined) ?? {};
 }
 
@@ -62,10 +61,10 @@ function attributeOf(editor: Editor): string {
   return 'data-mergetag';
 }
 
-const isGroup = (entry: MergeTag | MergeTagGroup): entry is MergeTagGroup =>
+export const isGroup = (entry: MergeTag | MergeTagGroup): entry is MergeTagGroup =>
   Array.isArray((entry as MergeTagGroup).items);
 
-function flatList(editor: Editor): MergeTag[] {
+export function flatList(editor: Editor): MergeTag[] {
   return (optionsOf(editor).list ?? []).flatMap((entry) =>
     isGroup(entry) ? entry.items : [entry],
   );
@@ -163,16 +162,6 @@ class MergeTagView {
   }
 }
 
-function insertTag(editor: Editor, tag: MergeTag, range?: { from: number; to: number }): void {
-  const { state, dispatch } = editor.view;
-  const node = editor.schema.nodes.mergetag!.create({ key: tag.key, label: tag.label });
-  const tr = range
-    ? state.tr.replaceWith(range.from, range.to, node)
-    : state.tr.replaceSelectionWith(node, false);
-  dispatch(tr.scrollIntoView());
-  editor.focus();
-}
-
 export default definePlugin({
   name: 'mergetags',
   toolbar: 'mergetags',
@@ -190,49 +179,5 @@ export default definePlugin({
       }),
     ];
   },
-  setup(editor) {
-    const labels = pickLabels(editor, 'mergetags', LABELS);
-
-    editor.ui.registry.addMenuButton('mergetags', {
-      icon: icons.mergeTags,
-      tooltip: labels.insert,
-      isEnabled: (e) => e.isEditable() && flatList(e).length > 0,
-      items: (e) => {
-        const entries: MenuEntry[] = [];
-        const item = (tag: MergeTag, id: string): MenuEntry => ({
-          id,
-          label: tag.label,
-          onSelect: () => insertTag(e, tag),
-        });
-        (optionsOf(e).list ?? []).forEach((entry, index) => {
-          if (isGroup(entry)) {
-            if (entries.length) entries.push({ type: 'separator' });
-            entries.push({ type: 'heading', label: entry.title });
-            entry.items.forEach((tag, i) => entries.push(item(tag, `mergetag-${index}-${i}`)));
-          } else {
-            entries.push(item(entry, `mergetag-${index}`));
-          }
-        });
-        return entries;
-      },
-    });
-
-    // {{ в тексте — список с поиском по подписи и ключу.
-    editor.ui.registry.addAutocompleter('mergetags', {
-      trigger: '{{',
-      label: labels.search,
-      emptyText: labels.empty,
-      maxResults: 12,
-      fetch: (query, e) => {
-        const q = query.toLowerCase();
-        return flatList(e)
-          .filter((tag) => tag.label.toLowerCase().includes(q) || tag.key.toLowerCase().includes(q))
-          .map((tag) => ({ value: tag.key, label: tag.label, detail: tag.key }));
-      },
-      onSelect: (item, range, e) => {
-        const tag = flatList(e).find((t) => t.key === item.value);
-        if (tag) insertTag(e, tag, range);
-      },
-    });
-  },
+  load: () => import('./mergetags-ui'),
 });

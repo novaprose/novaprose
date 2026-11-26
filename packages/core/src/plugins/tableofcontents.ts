@@ -2,14 +2,16 @@ import type { DOMOutputSpec, NodeSpec } from 'prosemirror-model';
 import type { Editor } from '../editor';
 import { elementId } from '../element-id';
 import { definePlugin } from '../plugins';
+import css from './tableofcontents.css?raw';
+import { pickLabels } from './shared';
 
 /**
  * Плагин tableofcontents: оглавление документа — блок со ссылками на заголовки (как у TinyMCE).
  * Обновляется само при правке заголовков; заголовкам выдаются устойчивые id (`toc-…`), пока
  * в документе есть оглавление. `plugins: ['tableofcontents']`.
  *
- * Здесь — узел (схема создаётся вместе с редактором) и его HTML; кнопки, обновление и переход
- * по ссылкам — ленивой частью tableofcontents-ui.ts.
+ * Здесь — узел, его HTML и стили (видны с первой отрисовки); кнопки, обновление и переход по
+ * ссылкам — ленивой частью tableofcontents-ui.ts.
  */
 
 export const LABELS = {
@@ -155,5 +157,11 @@ function tocNodes(editor: Editor): Record<string, NodeSpec> {
 export default definePlugin({
   name: 'tableofcontents',
   nodes: tocNodes,
+  // Оглавление видно с первой отрисовки — его стили и подсказка нужны сразу, а не с ленивой частью.
+  setup(editor) {
+    editor.ui.addStyles('nova-tableofcontents', css);
+    const { empty } = pickLabels(editor, 'tableofcontents', LABELS);
+    editor.root.style.setProperty('--nova-toc-empty', JSON.stringify(empty));
+  },
   load: () => import('./tableofcontents-ui'),
 });

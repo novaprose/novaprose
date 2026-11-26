@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 describe('язык не подключён', () => {
-  it('английский интерфейс и подсказка в консоли (один раз)', () => {
+  it('английский интерфейс и подсказка в консоли (один раз)', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     for (let i = 0; i < 2; i++) {
       const element = document.createElement('div');
@@ -23,6 +23,7 @@ describe('язык не подключён', () => {
         plugins: ['anchor'],
         toolbar: 'bold anchor',
       });
+      await editor.ready;
       expect(element.querySelector('[data-control="bold"]')?.getAttribute('aria-label')).toBe(
         'Bold',
       );
