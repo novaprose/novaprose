@@ -9,6 +9,32 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## Unreleased
+
+### Fixes
+
+- Spaces you type are no longer lost on save: leading spaces (indentation), double spaces, a space
+  after a line break (Shift+Enter) and a trailing space now survive `getHTML()` → `setContent()`.
+  They are written as `&nbsp;` where the browser would otherwise collapse them.
+- Pasted or loaded HTML with formulas (MathML, e.g. from Word) or inline SVG no longer throws:
+  a formula is kept as its text, SVG markup is dropped.
+- JSON documents from outside (database, API, older versions) with attribute values of the wrong
+  type — `null`, numbers, out-of-range heading levels, `colspan: null` — no longer make
+  `setContent()` or `getHTML()` throw. Invalid values fall back to defaults instead of rejecting
+  the whole document; a heading level outside 1–6 becomes 1.
+- CommonJS users get correct TypeScript types: `exports` now point `require` to `.d.cts`.
+  `@novaprose/react` and `@novaprose/vue` are marked side-effect free for better tree-shaking.
+
+### Accessibility
+
+- Toolbar menu buttons with visible text (block format, font, size) start their accessible name
+  with that text (WCAG 2.5.3), so voice control finds them.
+- The color palette grid has proper rows for screen readers.
+- The editing area no longer carries `aria-expanded`, which is not allowed on a text box.
+- Contrast (WCAG AA, 4.5:1) in light and dark themes: muted text, shortcut hints, the placeholder,
+  the dialog divider and primary buttons (new tokens `--nova-accent-strong`,
+  `--nova-accent-strong-hover`).
+
 ## 0.6.0 — 2026-11-25
 
 Templates and documents: merge tags, formats, table styles and scoped content styles — enough to
