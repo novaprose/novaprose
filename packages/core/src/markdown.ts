@@ -274,6 +274,14 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
     pagebreak(state, node) {
       state.closeBlock(node);
     },
+    // Формулы — в долларах, как в большинстве диалектов (GitHub, Obsidian, Pandoc).
+    math_inline(state, node) {
+      state.write(`$${String(node.attrs.latex ?? '')}$`);
+    },
+    math_block(state, node) {
+      state.write(`$$\n${String(node.attrs.latex ?? '')}\n$$`);
+      state.closeBlock(node);
+    },
     // Оглавление собирается из заголовков — в Markdown его строят сами читатели (и сайты).
     toc() {},
     // Раскрывающегося блока в Markdown нет: заголовок — абзацем, содержимое — как есть.

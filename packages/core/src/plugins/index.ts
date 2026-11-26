@@ -1,6 +1,7 @@
 import { registerPlugin } from '../plugins';
 import accordion from './accordion';
 import anchor from './anchor';
+import math from './math';
 import tableofcontents from './tableofcontents';
 import comments from './comments';
 import mentions from './mentions';
@@ -31,6 +32,7 @@ registerPlugin('anchor', anchor);
 // Узлы — сразу, интерфейс и команды — ленивой частью (NovaPlugin.load).
 registerPlugin('accordion', accordion);
 registerPlugin('tableofcontents', tableofcontents);
+registerPlugin('math', math);
 registerPlugin('pagebreak', pagebreak);
 registerPlugin('media', media);
 registerPlugin('comments', comments);

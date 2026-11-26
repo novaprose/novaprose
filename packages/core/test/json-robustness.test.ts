@@ -9,6 +9,7 @@ import { createEditor } from '../src';
  */
 const PLUGINS = [
   'accordion',
+  'math',
   'tableofcontents',
   'anchor',
   'pagebreak',
@@ -60,6 +61,7 @@ const ATTR_NAMES = [
   'checklist',
   'open',
   'entries',
+  'latex',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));
@@ -71,6 +73,8 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
   heading: (attrs) => ({ type: 'heading', attrs, content: [text] }),
   code_block: (attrs) => ({ type: 'code_block', attrs, content: [text] }),
   toc: (attrs) => ({ type: 'toc', attrs }),
+  math_block: (attrs) => ({ type: 'math_block', attrs }),
+  math_inline: (attrs) => para({ type: 'math_inline', attrs }),
   details: (attrs) => ({
     type: 'details',
     attrs,

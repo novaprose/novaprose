@@ -1,0 +1,55 @@
+/* Формулы (плагин math): вид в редакторе. Подключается вместе с плагином (видна с первой отрисовки). */
+.nova-math {
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.nova-math-inline {
+  display: inline-block;
+  padding: 0 2px;
+}
+
+.nova-math-block {
+  display: block;
+  margin: 0 0 0.75em;
+  padding: 6px 8px;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.nova-math:hover {
+  background: var(--nova-hover);
+}
+
+.nova-math.is-selected {
+  outline: 2px solid var(--nova-accent);
+}
+
+/* Пока движок не загрузился — исходник моноширинным; пустая — подпись приглушённым. */
+.nova-math:not(:has(math)) {
+  font-family: var(--nova-mono);
+  font-size: 0.9em;
+}
+
+/* Ошибка в формуле — исходник цветом ошибки с волнистой линией (текст ошибки — в подсказке). */
+.nova-math-error {
+  color: var(--nova-danger);
+  text-decoration: underline wavy;
+  text-underline-offset: 3px;
+}
+
+.nova-math-empty::before {
+  content: var(--nova-math-empty, '');
+  color: var(--nova-muted);
+  font-family: var(--nova-font);
+}
+
+/* Просмотр в диалоге «Формула». */
+.nova-math-preview {
+  min-height: 2.5em;
+  padding: 8px;
+  overflow-x: auto;
+  border: 1px dashed var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  text-align: center;
+}

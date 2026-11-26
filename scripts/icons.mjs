@@ -115,6 +115,7 @@ const editor = {
   dragHandle: 'grip-vertical',
   accordion: 'list-collapse',
   tableOfContents: 'table-of-contents',
+  math: 'sigma',
   duplicate: 'copy-plus',
   nonBreaking: 'space',
   pageBreak: 'scissors-line-dashed',

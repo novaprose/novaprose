@@ -16,7 +16,7 @@ const grammars = [
 
 export default defineConfig({
   optimizeDeps: {
-    include: ['@novaprose/core > highlight.js/lib/core', ...grammars],
+    include: ['@novaprose/core > highlight.js/lib/core', '@novaprose/core > temml', ...grammars],
   },
   resolve: {
     // Playground работает напрямую с исходниками ядра — правки видны сразу, без сборки.

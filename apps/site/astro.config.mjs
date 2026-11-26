@@ -39,6 +39,7 @@ export default defineConfig({
             { slug: 'guides/pasting-from-office' },
             { slug: 'guides/markdown' },
             { slug: 'guides/code-blocks' },
+            { slug: 'guides/math' },
             { slug: 'guides/content-restrictions' },
             { slug: 'guides/collaboration' },
             { slug: 'guides/comments' },

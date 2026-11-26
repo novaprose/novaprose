@@ -8,6 +8,12 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Formulas (`plugins: ['math']`, button `math`): LaTeX in a line (type `$E=mc^2$`) and on its own
+  line (`$$` and a space), with a dialog and live preview. Drawn as MathML by the browser; the
+  converter (Temml, about 58 KB gzip) downloads only when a document has a formula. The HTML keeps
+  the LaTeX source (`data-latex`, Tiptap's format) with `\( \)` / `\[ \]` text that KaTeX and
+  MathJax render on your site. LaTeX commands such as `\href` are not executed; a formula with an
+  error shows its source underlined, with the error in its tooltip.
 - Table of contents (`plugins: ['tableofcontents']`, button `tableofcontents`, as in TinyMCE): a
   block with links to the headings that updates in the same edit when a heading is added, renamed
   or removed (undo reverts both). While a table of contents exists, headings get stable ids

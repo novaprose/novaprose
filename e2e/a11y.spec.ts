@@ -232,6 +232,27 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'оглавление');
     });
 
+    test('формулы и диалог «Формула»', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          '<p>Энергия <span data-type="inline-math" data-latex="E=mc^2"></span></p>' +
+            '<div data-type="block-math" data-latex="\\frac{a}{b}"></div>' +
+            '<p><span data-type="inline-math" data-latex=""></span> <span data-type="inline-math" data-latex="\\frac{1"></span></p>',
+        );
+      });
+      await expect(page.locator('.nova-math-block math')).toBeVisible();
+      await page.locator('.nova-math-inline').first().click();
+      await expect(page.locator('.nova-dialog .nova-math-preview math')).toBeVisible();
+      // Диалог появляется плавно: контраст считаем после анимации, а не на полупрозрачном кадре.
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      await audit(page, 'формулы');
+    });
+
     test('ручка блока и её меню', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.locator('.nova-prosemirror h2').hover();

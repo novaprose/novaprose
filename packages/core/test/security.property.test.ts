@@ -23,6 +23,7 @@ const RUNS = Number(process.env.FC_RUNS) || 300;
 // Все плагины со своими узлами схемы — максимальная поверхность разбора.
 const SCHEMA_PLUGINS = [
   'accordion',
+  'math',
   'tableofcontents',
   'anchor',
   'pagebreak',
@@ -401,6 +402,8 @@ describe('безопасность и стабильность HTML (property-ba
       checked: anyValue,
       checklist: anyValue,
       open: anyValue,
+      // Исходник формулы идёт в data-latex и в текст — что угодно из JSON.
+      latex: fc.oneof(anyValue, attrValue),
       // Пункты оглавления: уровень, id и текст — тоже чем угодно (id идёт в href).
       entries: fc.oneof(
         anyValue,
@@ -430,7 +433,7 @@ describe('безопасность и стабильность HTML (property-ba
       marks: fc.uniqueArray(mark, { maxLength: 2, selector: (m) => m.type }),
     });
     const atom = fc.record({
-      type: fc.constantFrom('image', 'hard_break', 'mergetag', 'mention', 'anchor'),
+      type: fc.constantFrom('image', 'hard_break', 'mergetag', 'mention', 'anchor', 'math_inline'),
       attrs,
       marks: fc.uniqueArray(mark, { maxLength: 1, selector: (m) => m.type }),
     });
@@ -440,7 +443,7 @@ describe('безопасность и стабильность HTML (property-ba
       content: fc.array(fc.oneof(text, atom), { maxLength: 4 }),
     });
     const blockAtom = fc.record({
-      type: fc.constantFrom('media', 'pagebreak', 'horizontal_rule', 'toc'),
+      type: fc.constantFrom('media', 'pagebreak', 'horizontal_rule', 'toc', 'math_block'),
       attrs,
     });
     const cell = fc.record({
