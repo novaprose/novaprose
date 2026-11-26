@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# Временные копии сборки (dist-hold и т.п.) — тоже не в репозиторий.
+dist-*/
 coverage/
 .vite/
 *.tsbuildinfo
