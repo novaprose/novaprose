@@ -70,7 +70,7 @@ All packages in this repository are versioned together. The format follows
   the background right after the editor is created (core: 149.9 → 146.4 KB gzip). A paste in the
   first milliseconds waits for it, so nothing is lost; `await editor.ready` covers it too.
 - Table editing (cell selection, column resizing, row/column commands, sorting, properties) is a
-  separate chunk too, loaded in the background on creation (core: 144.2 → 133.7 KB gzip). Tables
+  separate chunk too, loaded in the background on creation (core: 144.2 → 133.9 KB gzip). Tables
   in the content render and insert immediately; `tableCommands` and the other table helpers return
   `false` until the chunk is loaded — call them after `await editor.ready`.
 
