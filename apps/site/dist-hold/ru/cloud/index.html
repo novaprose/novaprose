@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NovaProse Cloud — NovaProse</title>
+    <meta
+      name="description"
+      content="Всё, что редактору нужно на сервере, — в ЕС и под нашим управлением. Сейчас в раннем доступе."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://novaprose.com/ru/cloud/" />
+    <link rel="alternate" hreflang="en" href="https://novaprose.com/cloud/" />
+    <link rel="alternate" hreflang="ru" href="https://novaprose.com/ru/cloud/" />
+    <link rel="alternate" hreflang="x-default" href="https://novaprose.com/cloud/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="NovaProse Cloud — NovaProse" />
+    <meta
+      property="og:description"
+      content="Всё, что редактору нужно на сервере, — в ЕС и под нашим управлением. Сейчас в раннем доступе."
+    />
+    <meta property="og:url" content="https://novaprose.com/ru/cloud/" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta name="theme-color" content="#4f46e5" />
+    <script>
+      // Тема до отрисовки (без мигания): тот же ключ, что у документации.
+      (() => {
+        const stored = localStorage.getItem('starlight-theme');
+        const theme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="stylesheet" href="/_astro/Marketing.C7SpJ_br.css" />
+    <script type="module" src="/_astro/page.cNngjUgL.js"></script>
+  </head>
+  <body class="np-site">
+    <a class="np-skip" href="#main">Перейти к содержимому</a>
+    <header class="np-header">
+      <div class="np-container np-header-row">
+        <a class="np-brand" href="/ru/" aria-label="NovaProse"
+          ><img
+            src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20fill='none'%20role='img'%20aria-label='NovaProse'%3e%3crect%20width='32'%20height='32'%20rx='8'%20fill='%234f46e5'/%3e%3cpath%20d='M9%2023V9l14%2014V9'%20stroke='%23fff'%20stroke-width='3'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3ccircle%20cx='23'%20cy='9'%20r='2.2'%20fill='%23fbbf24'/%3e%3c/svg%3e"
+            alt=""
+            width="32"
+            height="32"
+          /><span>NovaProse</span></a
+        >
+        <nav class="np-nav" id="np-nav" aria-label="Меню">
+          <ul>
+            <li><a href="/ru/#features">Возможности</a></li>
+            <li><a href="/demo/collaboration/">Демо</a></li>
+            <li><a href="/ru/pricing/">Цены</a></li>
+            <li><a href="/getting-started/">Документация</a></li>
+          </ul>
+          <div class="np-nav-tools">
+            <a
+              class="np-icon-btn"
+              href="https://github.com/novaprose/novaprose"
+              aria-label="GitHub"
+              title="GitHub"
+              ><svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"
+                /></svg></a
+            ><a class="np-lang" href="/cloud/" hreflang="en" lang="en" aria-label="Язык: English"
+              ><svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="m5 8 6 6" />
+                <path d="m4 14 6-6 2-3" />
+                <path d="M2 5h12" />
+                <path d="M7 2h1" />
+                <path d="m22 22-5-10-5 10" />
+                <path d="M14 18h6" /></svg
+              >EN</a
+            ><button
+              type="button"
+              class="np-icon-btn"
+              id="np-theme"
+              data-labels='{"light":"Светлая","dark":"Тёмная","auto":"Как в системе"}'
+              aria-label="Тема"
+              title="Тема"
+            >
+              <span class="np-theme-icon" data-for="light"
+                ><svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="m4.93 4.93 1.41 1.41" />
+                  <path d="m17.66 17.66 1.41 1.41" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="m6.34 17.66-1.41 1.41" />
+                  <path d="m19.07 4.93-1.41 1.41" /></svg></span
+              ><span class="np-theme-icon" data-for="dark"
+                ><svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
+                  /></svg
+              ></span></button
+            ><a class="np-btn np-btn-primary np-btn-sm" href="/getting-started/">Начать</a>
+          </div>
+        </nav>
+        <button
+          type="button"
+          class="np-icon-btn np-menu-btn"
+          aria-controls="np-nav"
+          aria-expanded="false"
+          aria-label="Меню"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M4 5h16" />
+            <path d="M4 12h16" />
+            <path d="M4 19h16" />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <main id="main" tabindex="-1">
+      <section class="np-hero" aria-labelledby="cloud-title">
+        <div class="np-container">
+          <div class="np-hero-copy">
+            <p class="np-eyebrow">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+                />
+                <path d="M20 2v4" />
+                <path d="M22 4h-4" />
+                <circle cx="4" cy="20" r="2" /></svg
+              >Ранний доступ
+            </p>
+            <h1 class="np-h1" id="cloud-title">NovaProse Cloud</h1>
+            <p class="np-lead">
+              Всё, что редактору нужно на сервере, — в ЕС и под нашим управлением. Сейчас в раннем
+              доступе.
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="np-section" style="padding-top: 24px" aria-labelledby="waitlist-heading">
+        <div class="np-container">
+          <h2 class="np-sr-only" id="waitlist-heading">Лист ожидания раннего доступа</h2>
+          <div class="np-form-card" id="waitlist">
+            <h2 class="np-h3">Лист ожидания раннего доступа</h2>
+            <p class="np-muted">
+              Попробуйте облако первыми. Первые участники получат скидку при запуске.
+            </p>
+            <form
+              class="np-form"
+              id="np-waitlist"
+              novalidate
+              data-lang="ru"
+              data-messages='{"email":"Проверьте адрес почты.","consent":"Чтобы встать в лист, примите политику конфиденциальности.","rate":"Слишком много попыток. Попробуйте через час.","network":"Что-то пошло не так. Попробуйте ещё раз или напишите на hello@novaprose.com.","success":"Вы в списке. Мы напишем, когда откроется ранний доступ.","sending":"Отправляем…","submit":"Встать в лист ожидания"}'
+            >
+              <div class="np-field">
+                <label for="wl-email">Рабочая почта <span class="np-req">(обязательно)</span></label
+                ><input
+                  class="np-input"
+                  id="wl-email"
+                  name="email"
+                  type="email"
+                  autocomplete="email"
+                  inputmode="email"
+                  required
+                  aria-describedby="wl-email-error"
+                />
+                <p class="np-error" id="wl-email-error" role="alert"></p>
+              </div>
+              <div class="np-row-2">
+                <div class="np-field">
+                  <label for="wl-role">Ваша роль</label
+                  ><select class="np-input" id="wl-role" name="role">
+                    <option value="developer">Разработчик</option>
+                    <option value="product">Продукт или дизайн</option>
+                    <option value="founder">Основатель или CTO</option>
+                    <option value="other">Другое</option>
+                  </select>
+                </div>
+                <div class="np-field">
+                  <label for="wl-team">Размер команды</label
+                  ><select class="np-input" id="wl-team" name="team">
+                    <option value="1">1</option>
+                    <option value="2-10">2-10</option>
+                    <option value="11-50">11-50</option>
+                    <option value="51-200">51-200</option>
+                    <option value="200+">200+</option>
+                  </select>
+                </div>
+              </div>
+              <div class="np-hp" aria-hidden="true">
+                <label for="wl-website">Website</label
+                ><input
+                  id="wl-website"
+                  name="website"
+                  type="text"
+                  tabindex="-1"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="np-field">
+                <label class="np-consent"
+                  ><input
+                    id="wl-consent"
+                    name="consent"
+                    type="checkbox"
+                    required
+                    aria-describedby="wl-consent-error"
+                  /><span
+                    >Я согласен получать письма о NovaProse Cloud и принимаю
+                    <a href="/ru/privacy/">политику конфиденциальности</a>.</span
+                  ></label
+                >
+                <p class="np-error" id="wl-consent-error" role="alert"></p>
+              </div>
+              <button class="np-btn np-btn-primary" type="submit">Встать в лист ожидания</button>
+              <p class="np-status" id="wl-status" role="status" aria-live="polite"></p>
+            </form>
+          </div>
+          <script type="module">
+            var e = document.getElementById(`np-waitlist`);
+            if (e) {
+              let t = JSON.parse(e.dataset.messages ?? `{}`),
+                n = e.querySelector(`#wl-email`),
+                r = e.querySelector(`#wl-consent`),
+                i = e.querySelector(`#wl-email-error`),
+                a = e.querySelector(`#wl-consent-error`),
+                o = e.querySelector(`#wl-status`),
+                s = e.querySelector(`button[type="submit"]`),
+                c = () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(n.value.trim()),
+                l = (e, t, n) => {
+                  ((t.textContent = n), e.setAttribute(`aria-invalid`, n ? `true` : `false`));
+                };
+              (n.addEventListener(`blur`, () => {
+                n.value && l(n, i, c() ? `` : (t.email ?? ``));
+              }),
+                r.addEventListener(`change`, () => l(r, a, ``)),
+                e.addEventListener(`submit`, async (u) => {
+                  if (
+                    (u.preventDefault(),
+                    (o.textContent = ``),
+                    (o.className = `np-status`),
+                    l(n, i, c() ? `` : (t.email ?? ``)),
+                    l(r, a, r.checked ? `` : (t.consent ?? ``)),
+                    !c())
+                  )
+                    return n.focus();
+                  if (!r.checked) return r.focus();
+                  ((s.disabled = !0), (s.textContent = t.sending ?? ``));
+                  let d = new FormData(e);
+                  try {
+                    let r = await fetch(`https://sync.novaprose.cloud/waitlist`, {
+                        method: `POST`,
+                        headers: { 'Content-Type': `application/json` },
+                        body: JSON.stringify({
+                          email: n.value.trim(),
+                          role: d.get(`role`),
+                          team: d.get(`team`),
+                          website: d.get(`website`),
+                          locale: e.dataset.lang,
+                          consent: !0,
+                        }),
+                      }),
+                      a = await r.json().catch(() => ({}));
+                    r.ok && a.ok
+                      ? ((o.textContent = t.success ?? ``),
+                        o.classList.add(`is-success`),
+                        e.reset())
+                      : a.error === `email`
+                        ? (l(n, i, t.email ?? ``), n.focus())
+                        : r.status === 429
+                          ? ((o.textContent = t.rate ?? ``), o.classList.add(`is-error`))
+                          : ((o.textContent = t.network ?? ``), o.classList.add(`is-error`));
+                  } catch {
+                    ((o.textContent = t.network ?? ``), o.classList.add(`is-error`));
+                  } finally {
+                    ((s.disabled = !1), (s.textContent = t.submit ?? ``));
+                  }
+                }));
+            }
+          </script>
+        </div>
+      </section>
+      <section class="np-section np-section-soft" aria-labelledby="cloud-what">
+        <div class="np-container">
+          <div class="np-section-head is-center">
+            <h2 class="np-h2" id="cloud-what">Что будет в облаке</h2>
+          </div>
+          <div class="np-grid np-grid-4">
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <circle cx="9" cy="7" r="4" /></svg
+              ></span>
+              <h3 class="np-h3">Совместная работа</h3>
+              <p>Синхронизация, присутствие, комментарии и история версий без своего сервера.</p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <ellipse cx="12" cy="5" rx="9" ry="3" />
+                  <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+                  <path d="M3 12A9 3 0 0 0 21 12" /></svg
+              ></span>
+              <h3 class="np-h3">Хранение</h3>
+              <p>Документы, версии, картинки и файлы — с резервными копиями.</p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                  />
+                  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                  <path d="M10 9H8" />
+                  <path d="M16 13H8" />
+                  <path d="M16 17H8" /></svg
+              ></span>
+              <h3 class="np-h3">Конвертация</h3>
+              <p>Импорт документов Word, экспорт в PDF и Word.</p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                  <path d="M2 12h20" /></svg
+              ></span>
+              <h3 class="np-h3">Быстрая доставка</h3>
+              <p>Редактор с CDN, ключи привязаны к вашим доменам.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section class="np-section" aria-labelledby="cloud-today">
+        <div class="np-container">
+          <div class="np-section-head is-center">
+            <h2 class="np-h2" id="cloud-today">Можно не ждать</h2>
+            <p class="np-lead">
+              Всё работает уже сейчас без облака: установите редактор из npm и запустите открытый
+              сервер синхронизации через Docker.
+            </p>
+            <div class="np-actions">
+              <a class="np-btn np-btn-ghost" href="/guides/collaboration/"
+                >Как развернуть совместную работу у себя<svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" /></svg
+              ></a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="np-footer">
+      <div class="np-container np-footer-grid">
+        <div>
+          <a class="np-brand" href="/ru/"
+            ><img
+              src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20fill='none'%20role='img'%20aria-label='NovaProse'%3e%3crect%20width='32'%20height='32'%20rx='8'%20fill='%234f46e5'/%3e%3cpath%20d='M9%2023V9l14%2014V9'%20stroke='%23fff'%20stroke-width='3'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3ccircle%20cx='23'%20cy='9'%20r='2.2'%20fill='%23fbbf24'/%3e%3c/svg%3e"
+              alt=""
+              width="28"
+              height="28"
+            /><span>NovaProse</span></a
+          >
+          <p class="np-muted">Открытый редактор текста со встроенной совместной работой.</p>
+        </div>
+        <nav aria-label="Продукт">
+          <h2>Продукт</h2>
+          <ul>
+            <li><a href="/ru/#features">Возможности</a></li>
+            <li><a href="/demo/collaboration/">Демо</a></li>
+            <li><a href="/ru/pricing/">Цены</a></li>
+            <li><a href="/ru/cloud/">NovaProse Cloud</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Ресурсы">
+          <h2>Ресурсы</h2>
+          <ul>
+            <li><a href="/getting-started/">Документация</a></li>
+            <li><a href="/migrate/">Перенос с другого редактора</a></li>
+            <li><a href="/changelog/">Что нового</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Проект">
+          <h2>Проект</h2>
+          <ul>
+            <li><a href="https://github.com/novaprose/novaprose">GitHub</a></li>
+            <li>
+              <a href="https://github.com/novaprose/novaprose/blob/main/SECURITY.md"
+                >Безопасность</a
+              >
+            </li>
+            <li><a href="/ru/privacy/">Конфиденциальность</a></li>
+            <li><a href="mailto:hello@novaprose.com">Контакты</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="np-container np-footer-bottom">
+        <p>© 2026 NovaProse · MIT · NovaProse — независимый проект с открытым кодом.</p>
+      </div>
+    </footer>
+    <script type="module">
+      var e = document.querySelector(`.np-menu-btn`),
+        t = document.getElementById(`np-nav`);
+      (e?.addEventListener(`click`, () => {
+        let n = e.getAttribute(`aria-expanded`) !== `true`;
+        (e.setAttribute(`aria-expanded`, String(n)), t?.classList.toggle(`is-open`, n));
+      }),
+        document.addEventListener(`keydown`, (n) => {
+          n.key === `Escape` &&
+            t?.classList.contains(`is-open`) &&
+            (t.classList.remove(`is-open`), e?.setAttribute(`aria-expanded`, `false`), e?.focus());
+        }));
+      var n = document.getElementById(`np-theme`),
+        r = JSON.parse(n?.dataset.labels ?? `{}`),
+        i = n?.getAttribute(`aria-label`) ?? ``,
+        a = () => (document.documentElement.dataset.theme === `dark` ? `dark` : `light`),
+        o = () => {
+          let e = a();
+          document.documentElement.dataset.themeMode = e;
+          let t = `${i}: ${r[e] ?? e}`;
+          (n?.setAttribute(`title`, t), n?.setAttribute(`aria-label`, t));
+        };
+      (o(),
+        n?.addEventListener(`click`, () => {
+          let e = a() === `dark` ? `light` : `dark`;
+          (localStorage.setItem(`starlight-theme`, e),
+            (document.documentElement.dataset.theme = e),
+            o());
+        }));
+    </script>
+  </body>
+</html>

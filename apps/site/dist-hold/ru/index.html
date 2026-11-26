@@ -1,0 +1,1178 @@
+<!doctype html>
+<html lang="ru" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NovaProse — редактор текста со встроенной совместной работой</title>
+    <meta
+      name="description"
+      content="Встройте быстрый и доступный WYSIWYG-редактор в любое веб-приложение. Совместное редактирование, комментарии и история версий уже внутри. Открытый код, лицензия MIT."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://novaprose.com/ru/" />
+    <link rel="alternate" hreflang="en" href="https://novaprose.com/" />
+    <link rel="alternate" hreflang="ru" href="https://novaprose.com/ru/" />
+    <link rel="alternate" hreflang="x-default" href="https://novaprose.com/" />
+    <meta property="og:type" content="website" />
+    <meta
+      property="og:title"
+      content="NovaProse — редактор текста со встроенной совместной работой"
+    />
+    <meta
+      property="og:description"
+      content="Встройте быстрый и доступный WYSIWYG-редактор в любое веб-приложение. Совместное редактирование, комментарии и история версий уже внутри. Открытый код, лицензия MIT."
+    />
+    <meta property="og:url" content="https://novaprose.com/ru/" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta name="theme-color" content="#4f46e5" />
+    <script>
+      // Тема до отрисовки (без мигания): тот же ключ, что у документации.
+      (() => {
+        const stored = localStorage.getItem('starlight-theme');
+        const theme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+    <link rel="stylesheet" href="/_astro/style.BVTW-pQL.css" />
+    <link rel="stylesheet" href="/_astro/Marketing.C7SpJ_br.css" />
+    <script type="module" src="/_astro/page.cNngjUgL.js"></script>
+  </head>
+  <body class="np-site">
+    <a class="np-skip" href="#main">Перейти к содержимому</a>
+    <header class="np-header">
+      <div class="np-container np-header-row">
+        <a class="np-brand" href="/ru/" aria-label="NovaProse"
+          ><img
+            src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20fill='none'%20role='img'%20aria-label='NovaProse'%3e%3crect%20width='32'%20height='32'%20rx='8'%20fill='%234f46e5'/%3e%3cpath%20d='M9%2023V9l14%2014V9'%20stroke='%23fff'%20stroke-width='3'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3ccircle%20cx='23'%20cy='9'%20r='2.2'%20fill='%23fbbf24'/%3e%3c/svg%3e"
+            alt=""
+            width="32"
+            height="32"
+          /><span>NovaProse</span></a
+        >
+        <nav class="np-nav" id="np-nav" aria-label="Меню">
+          <ul>
+            <li><a href="/ru/#features">Возможности</a></li>
+            <li><a href="/demo/collaboration/">Демо</a></li>
+            <li><a href="/ru/pricing/">Цены</a></li>
+            <li><a href="/getting-started/">Документация</a></li>
+          </ul>
+          <div class="np-nav-tools">
+            <a
+              class="np-icon-btn"
+              href="https://github.com/novaprose/novaprose"
+              aria-label="GitHub"
+              title="GitHub"
+              ><svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"
+                /></svg></a
+            ><a class="np-lang" href="/" hreflang="en" lang="en" aria-label="Язык: English"
+              ><svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="m5 8 6 6" />
+                <path d="m4 14 6-6 2-3" />
+                <path d="M2 5h12" />
+                <path d="M7 2h1" />
+                <path d="m22 22-5-10-5 10" />
+                <path d="M14 18h6" /></svg
+              >EN</a
+            ><button
+              type="button"
+              class="np-icon-btn"
+              id="np-theme"
+              data-labels='{"light":"Светлая","dark":"Тёмная","auto":"Как в системе"}'
+              aria-label="Тема"
+              title="Тема"
+            >
+              <span class="np-theme-icon" data-for="light"
+                ><svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2" />
+                  <path d="M12 20v2" />
+                  <path d="m4.93 4.93 1.41 1.41" />
+                  <path d="m17.66 17.66 1.41 1.41" />
+                  <path d="M2 12h2" />
+                  <path d="M20 12h2" />
+                  <path d="m6.34 17.66-1.41 1.41" />
+                  <path d="m19.07 4.93-1.41 1.41" /></svg></span
+              ><span class="np-theme-icon" data-for="dark"
+                ><svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"
+                  /></svg
+              ></span></button
+            ><a class="np-btn np-btn-primary np-btn-sm" href="/getting-started/">Начать</a>
+          </div>
+        </nav>
+        <button
+          type="button"
+          class="np-icon-btn np-menu-btn"
+          aria-controls="np-nav"
+          aria-expanded="false"
+          aria-label="Меню"
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M4 5h16" />
+            <path d="M4 12h16" />
+            <path d="M4 19h16" />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <main id="main" tabindex="-1">
+      <section class="np-hero" aria-labelledby="hero-title">
+        <div class="np-container">
+          <div class="np-hero-copy">
+            <p class="np-eyebrow">
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"
+                />
+                <path d="M20 2v4" />
+                <path d="M22 4h-4" />
+                <circle cx="4" cy="20" r="2" /></svg
+              >Открытый код · лицензия MIT
+            </p>
+            <h1 class="np-h1" id="hero-title">Редактор текста со встроенной совместной работой</h1>
+            <p class="np-lead">
+              Добавьте быстрый и доступный WYSIWYG-редактор в своё веб-приложение за несколько
+              минут. Совместное редактирование, комментарии, история версий и режим правок уже
+              включены — не отдельными продуктами.
+            </p>
+            <div class="np-actions">
+              <a class="np-btn np-btn-primary" href="/getting-started/"
+                >Начать бесплатно<svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" /></svg></a
+              ><a class="np-btn np-btn-ghost" href="/demo/collaboration/">Посмотреть вживую</a>
+            </div>
+            <p class="np-note">Без аккаунта и ключей · React, Vue, Angular и обычный HTML</p>
+          </div>
+          <div class="np-hero-demo">
+            <span class="np-demo-label">Попробуйте: это настоящий редактор</span>
+            <div class="np-demo not-content">
+              <div id="np-demo-editor" data-lang="ru">
+                <h2>Попробуйте NovaProse</h2>
+                <p>
+                  Это <strong>настоящий редактор</strong>. Выделите текст и воспользуйтесь панелью
+                  или горячими клавишами: <code>Ctrl+B</code>, <code>Ctrl+I</code>,
+                  <code>Ctrl+K</code> для ссылки.
+                </p>
+                <ul>
+                  <li>
+                    <p>
+                      Наберите <code>#</code> и пробел для заголовка, <code>-</code> для списка,
+                      <code>/</code> для команд.
+                    </p>
+                  </li>
+                  <li><p>Вставьте текст с другой страницы — опасная разметка будет удалена.</p></li>
+                </ul>
+                <blockquote><p>Открытый код, лицензия MIT, основан на ProseMirror.</p></blockquote>
+              </div>
+              <details class="np-demo-output">
+                <summary>Output HTML</summary>
+                <pre><code id="np-demo-html"></code></pre>
+              </details>
+            </div>
+            <script
+              type="module"
+              src="/_astro/LiveDemo.astro_astro_type_script_index_0_lang.Y4Ribnwt.js"
+            ></script>
+          </div>
+        </div>
+      </section>
+      <section class="np-section" aria-labelledby="audience-title">
+        <div class="np-container">
+          <div class="np-section-head is-center">
+            <h2 class="np-h2" id="audience-title">Для команд, которые делают продукты</h2>
+          </div>
+          <div class="np-grid">
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"
+                  />
+                  <rect x="14" y="2" width="8" height="8" rx="1" /></svg
+              ></span>
+              <h3 class="np-h3">SaaS и продуктовые команды</h3>
+              <p>
+                Привычный редактор для заметок, задач, коммерческих предложений и баз знаний — с
+                совместной работой, которую пользователи ждут от современных сервисов.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"
+                  />
+                  <path d="M14 2v5a1 1 0 0 0 1 1h5" />
+                  <path d="M10 9H8" />
+                  <path d="M16 13H8" />
+                  <path d="M16 17H8" /></svg
+              ></span>
+              <h3 class="np-h3">CMS и издательства</h3>
+              <p>
+                Чистый предсказуемый HTML, вставка из Word и Google Docs, таблицы и картинки — текст
+                выглядит правильно везде, где публикуется.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+                  />
+                  <path d="m9 12 2 2 4-4" /></svg
+              ></span>
+              <h3 class="np-h3">Внутренние системы</h3>
+              <p>
+                Добавьте в админку или форму одним тегом. Работает как обычное поле формы и доступен
+                каждому сотруднику.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section class="np-section np-section-soft" id="features" aria-labelledby="features-title">
+        <div class="np-container">
+          <div class="np-section-head is-center">
+            <h2 class="np-h2" id="features-title">Всё, что нужно современному редактору</h2>
+            <p class="np-lead">
+              Все возможности входят в открытый редактор. Ничего не спрятано за тарифом.
+            </p>
+          </div>
+          <div class="np-grid">
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                  <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                  <circle cx="9" cy="7" r="4" /></svg
+              ></span>
+              <h3 class="np-h3">Совместное редактирование</h3>
+              <p>
+                Работайте вместе: видно курсоры и имена. «Отменить» отменяет только ваши правки.
+                Сервер синхронизации открыт — запустите его у себя.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"
+                  />
+                  <path d="M7 11h10" />
+                  <path d="M7 15h6" />
+                  <path d="M7 7h8" /></svg
+              ></span>
+              <h3 class="np-h3">Комментарии и @упоминания</h3>
+              <p>
+                Обсуждайте любой фрагмент в ветке, упоминайте коллег и закрывайте обсуждение, когда
+                вопрос решён.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                  <path d="M12 7v5l4 2" /></svg
+              ></span>
+              <h3 class="np-h3">История версий и режим правок</h3>
+              <p>
+                Смотрите, что изменилось между версиями, восстанавливайте любую или предлагайте
+                правки, которые другие примут или отклонят.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M11 14h10" />
+                  <path d="M16 4h2a2 2 0 0 1 2 2v1.344" />
+                  <path d="m17 18 4-4-4-4" />
+                  <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 1.793-1.113" />
+                  <rect x="8" y="2" width="8" height="4" rx="1" /></svg
+              ></span>
+              <h3 class="np-h3">Вставка из Word и Google Docs</h3>
+              <p>
+                Списки, таблицы, форматирование и картинки переносятся без лишней скрытой разметки.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"
+                  />
+                  <rect x="14" y="2" width="8" height="8" rx="1" /></svg
+              ></span>
+              <h3 class="np-h3">Работает с вашим фреймворком</h3>
+              <p>
+                Нативные пакеты для React, Vue и Angular, веб-компонент для всего остального и
+                подключение одной строкой с CDN.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"
+                  />
+                  <path d="m9 12 2 2 4-4" /></svg
+              ></span>
+              <h3 class="np-h3">Безопасный и доступный</h3>
+              <p>
+                Каждая ссылка и картинка проверяется, опасная разметка удаляется. Полная поддержка
+                клавиатуры и экранных дикторов.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section class="np-section" aria-labelledby="collab-title">
+        <div class="np-container np-split">
+          <div>
+            <h2 class="np-h2" id="collab-title">Совместная работа, которую заметят пользователи</h2>
+            <p class="np-lead">
+              Откройте демо в двух окнах — или отправьте ссылку коллеге — и печатайте одновременно.
+              Оставьте комментарий, упомяните кого-нибудь, сравните версии или включите режим
+              правок.
+            </p>
+            <ul class="np-checklist">
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m16 9-5.5 5.5L8 12" /></svg
+                ><span>Курсоры участников с именами и цветами</span>
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m16 9-5.5 5.5L8 12" /></svg
+                ><span>Комментарии и @упоминания синхронизируются мгновенно</span>
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m16 9-5.5 5.5L8 12" /></svg
+                ><span>История версий с отличиями по словам</span>
+              </li>
+              <li>
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m16 9-5.5 5.5L8 12" /></svg
+                ><span>Предложенные правки: принять или отклонить</span>
+              </li>
+            </ul>
+            <a class="np-btn np-btn-primary" href="/demo/collaboration/"
+              >Открыть живое демо<svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" /></svg
+            ></a>
+          </div>
+          <!-- Иллюстрация (не скриншот): как выглядят курсоры, комментарий и правка в редакторе. -->
+          <div class="np-collab-visual" aria-hidden="true">
+            <p><strong>План на квартал</strong></p>
+            <p>
+              Запускаем новые тарифы в <span class="np-mark-del">мае</span
+              ><span class="np-mark-ins">июне</span
+              ><span class="np-cursor" style="--c: #db2777" data-name="Борис"></span> и выходим в
+              <span class="np-mark-comment">два новых региона</span>.
+            </p>
+            <p>
+              Бюджет остаётся прежним<span
+                class="np-cursor"
+                style="--c: #2563eb"
+                data-name="Анна"
+              ></span>
+            </p>
+            <div class="np-bubble">
+              <span class="np-avatar" style="--c: #16a34a">К</span
+              ><span><strong>Карла:</strong> @Анна, юристы согласовали регионы?</span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="np-section np-section-soft" aria-labelledby="integrations-title">
+        <div class="np-container">
+          <div class="np-section-head is-center">
+            <h2 class="np-h2" id="integrations-title">Встраивается в ваш стек</h2>
+          </div>
+          <ul class="np-chips">
+            <li>React</li>
+            <li>Vue</li>
+            <li>Angular</li>
+            <li>Web Component</li>
+            <li>Обычный HTML</li>
+          </ul>
+          <p class="np-center-note">
+            Переносите готовую интеграцию другого редактора?
+            <a href="/migrate/">Руководства по переносу</a>
+          </p>
+        </div>
+      </section>
+      <section class="np-section" aria-labelledby="trust-title">
+        <div class="np-container">
+          <div class="np-section-head is-center">
+            <h2 class="np-h2" id="trust-title">Делаем открыто</h2>
+          </div>
+          <div class="np-grid np-grid-4">
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"
+                  /></svg
+              ></span>
+              <h3 class="np-h3">Открытый код на GitHub</h3>
+              <p>
+                Читайте каждую строку, заводите задачи, присылайте правки. Лицензия MIT — можно
+                использовать в коммерческих продуктах.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"
+                  />
+                  <path d="m16 9-5.5 5.5L8 12" /></svg
+              ></span>
+              <h3 class="np-h3">Подписанные релизы</h3>
+              <p>
+                Пакеты npm собирает GitHub Actions с подписью происхождения — можно проверить,
+                откуда они взялись.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m16 9-5.5 5.5L8 12" /></svg
+              ></span>
+              <h3 class="np-h3">Проверено в настоящих браузерах</h3>
+              <p>
+                Сотни автоматических тестов на каждое изменение в Chromium, Firefox, WebKit и
+                мобильном Chrome.
+              </p>
+            </article>
+            <article class="np-card">
+              <span class="np-card-icon"
+                ><svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg
+              ></span>
+              <h3 class="np-h3">Безопасность прежде всего</h3>
+              <p>
+                Безопасные настройки по умолчанию, опубликованная политика безопасности и закрытый
+                канал для сообщений об уязвимостях.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+      <section class="np-section np-section-soft" aria-labelledby="pricing-title">
+        <div class="np-container">
+          <div class="np-section-head is-center">
+            <h2 class="np-h2" id="pricing-title">Простые цены</h2>
+            <p class="np-lead">
+              Редактор бесплатный и открытый. NovaProse Cloud будет размещать серверную часть для
+              команд, которые не хотят её обслуживать.
+            </p>
+          </div>
+          <div class="np-plans">
+            <article class="np-plan" aria-labelledby="plan-oss">
+              <h3 class="np-plan-name" id="plan-oss">Open Source</h3>
+              <p class="np-plan-price">Бесплатно</p>
+              <p class="np-plan-period">навсегда</p>
+              <p class="np-plan-text">Весь редактор и все плагины на вашем сервере.</p>
+              <ul>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Все возможности редактирования и плагины</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Совместная работа, комментарии, история, режим правок</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Открытый сервер синхронизации (Docker)</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>React, Vue, Angular, веб-компонент</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Лицензия MIT — коммерческое использование разрешено</span>
+                </li>
+              </ul>
+              <a class="np-btn np-btn-ghost" href="/getting-started/">Начать</a>
+            </article>
+            <article class="np-plan is-featured" aria-labelledby="plan-cloud">
+              <h3 class="np-plan-name" id="plan-cloud">Cloud</h3>
+              <p class="np-plan-price">Ранний доступ</p>
+              <p class="np-plan-period">цены — к запуску</p>
+              <p class="np-plan-text">Совместная работа и сервисы на нашей стороне.</p>
+              <p class="np-plan-badge">Первым участникам — скидка</p>
+              <ul>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Сервер синхронизации в облаке</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Хранение документов и версий</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Загрузка картинок и файлов</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Импорт Word, экспорт в PDF и Word</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Серверы в ЕС, честная оплата по использованию</span>
+                </li>
+              </ul>
+              <a class="np-btn np-btn-primary" href="/ru/cloud/#waitlist">Встать в лист ожидания</a>
+            </article>
+            <article class="np-plan" aria-labelledby="plan-enterprise">
+              <h3 class="np-plan-name" id="plan-enterprise">Enterprise</h3>
+              <p class="np-plan-price">Индивидуально</p>
+              <p class="np-plan-period">напишите нам</p>
+              <p class="np-plan-text">Для организаций с особыми требованиями.</p>
+              <ul>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Поддержка со сроками ответа</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Помощь с установкой на ваших серверах</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Доработки и интеграции под вас</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m16 9-5.5 5.5L8 12" /></svg
+                  ><span>Помощь с проверкой безопасности</span>
+                </li>
+              </ul>
+              <a
+                class="np-btn np-btn-ghost"
+                href="mailto:hello@novaprose.com?subject=NovaProse%20Enterprise"
+                >Написать нам</a
+              >
+            </article>
+          </div>
+        </div>
+      </section>
+      <section class="np-section" aria-labelledby="faq-title">
+        <div class="np-container">
+          <div class="np-section-head is-center"><h2 class="np-h2" id="faq-title">Вопросы</h2></div>
+          <div class="np-faq">
+            <details>
+              <summary>Редактор правда бесплатный?</summary>
+              <p>
+                Да. Редактор, все плагины и сервер совместной работы открыты под лицензией MIT. Их
+                можно использовать в коммерческих продуктах без оплаты и разрешений.
+              </p>
+            </details>
+            <details>
+              <summary>Зачем тогда облако?</summary>
+              <p>
+                Для совместной работы нужен сервер. Наш можно запустить у себя через Docker, а
+                облако — для команд, которые не хотят его обслуживать, масштабировать и бэкапить.
+              </p>
+            </details>
+            <details>
+              <summary>Сколько будет стоить облако?</summary>
+              <p>
+                Мы опубликуем цены до открытия. Участники листа ожидания узнают первыми, а первые
+                клиенты получат скидку.
+              </p>
+            </details>
+            <details>
+              <summary>Нужен ли ключ или аккаунт, чтобы пользоваться редактором?</summary>
+              <p>
+                Нет. Установите из npm или подключите с публичного CDN — без регистрации, ключей и
+                ограничений.
+              </p>
+            </details>
+            <details>
+              <summary>Можно ли перенести готовую интеграцию другого редактора?</summary>
+              <p>
+                Часто да. Есть слой совместимости для настроек tinymce.init(): готовая интеграция
+                сначала заработает как есть, а на нативный API можно перейти позже.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+      <section class="np-section np-section-cta" aria-labelledby="cta-title">
+        <div class="np-container">
+          <div class="np-cta">
+            <h2 class="np-h2" id="cta-title">Начните за несколько минут</h2>
+            <p>Установите из npm или добавьте один тег script. Аккаунт не нужен.</p>
+            <div class="np-actions">
+              <a class="np-btn np-btn-primary" href="/getting-started/">Быстрый старт</a
+              ><a class="np-btn np-btn-ghost" href="https://github.com/novaprose/novaprose"
+                ><svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M10.226 17.284c-2.965-.36-5.054-2.493-5.054-5.256 0-1.123.404-2.336 1.078-3.144-.292-.741-.247-2.314.09-2.965.898-.112 2.111.36 2.83 1.01.853-.269 1.752-.404 2.853-.404 1.1 0 1.999.135 2.807.382.696-.629 1.932-1.1 2.83-.988.315.606.36 2.179.067 2.942.72.854 1.101 2 1.101 3.167 0 2.763-2.089 4.852-5.098 5.234.763.494 1.28 1.572 1.28 2.807v2.336c0 .674.561 1.056 1.235.786 4.066-1.55 7.255-5.615 7.255-10.646C23.5 6.188 18.334 1 11.978 1 5.62 1 .5 6.188.5 12.545c0 4.986 3.167 9.12 7.435 10.669.606.225 1.19-.18 1.19-.786V20.63a2.9 2.9 0 0 1-1.078.224c-1.483 0-2.359-.808-2.987-2.313-.247-.607-.517-.966-1.034-1.033-.27-.023-.359-.135-.359-.27 0-.27.45-.471.898-.471.652 0 1.213.404 1.797 1.235.45.651.921.943 1.483.943.561 0 .92-.202 1.437-.719.382-.381.674-.718.944-.943"
+                  /></svg
+                >Звезда на GitHub</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer class="np-footer">
+      <div class="np-container np-footer-grid">
+        <div>
+          <a class="np-brand" href="/ru/"
+            ><img
+              src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%20fill='none'%20role='img'%20aria-label='NovaProse'%3e%3crect%20width='32'%20height='32'%20rx='8'%20fill='%234f46e5'/%3e%3cpath%20d='M9%2023V9l14%2014V9'%20stroke='%23fff'%20stroke-width='3'%20stroke-linecap='round'%20stroke-linejoin='round'/%3e%3ccircle%20cx='23'%20cy='9'%20r='2.2'%20fill='%23fbbf24'/%3e%3c/svg%3e"
+              alt=""
+              width="28"
+              height="28"
+            /><span>NovaProse</span></a
+          >
+          <p class="np-muted">Открытый редактор текста со встроенной совместной работой.</p>
+        </div>
+        <nav aria-label="Продукт">
+          <h2>Продукт</h2>
+          <ul>
+            <li><a href="/ru/#features">Возможности</a></li>
+            <li><a href="/demo/collaboration/">Демо</a></li>
+            <li><a href="/ru/pricing/">Цены</a></li>
+            <li><a href="/ru/cloud/">NovaProse Cloud</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Ресурсы">
+          <h2>Ресурсы</h2>
+          <ul>
+            <li><a href="/getting-started/">Документация</a></li>
+            <li><a href="/migrate/">Перенос с другого редактора</a></li>
+            <li><a href="/changelog/">Что нового</a></li>
+          </ul>
+        </nav>
+        <nav aria-label="Проект">
+          <h2>Проект</h2>
+          <ul>
+            <li><a href="https://github.com/novaprose/novaprose">GitHub</a></li>
+            <li>
+              <a href="https://github.com/novaprose/novaprose/blob/main/SECURITY.md"
+                >Безопасность</a
+              >
+            </li>
+            <li><a href="/ru/privacy/">Конфиденциальность</a></li>
+            <li><a href="mailto:hello@novaprose.com">Контакты</a></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="np-container np-footer-bottom">
+        <p>© 2026 NovaProse · MIT · NovaProse — независимый проект с открытым кодом.</p>
+      </div>
+    </footer>
+    <script type="module">
+      var e = document.querySelector(`.np-menu-btn`),
+        t = document.getElementById(`np-nav`);
+      (e?.addEventListener(`click`, () => {
+        let n = e.getAttribute(`aria-expanded`) !== `true`;
+        (e.setAttribute(`aria-expanded`, String(n)), t?.classList.toggle(`is-open`, n));
+      }),
+        document.addEventListener(`keydown`, (n) => {
+          n.key === `Escape` &&
+            t?.classList.contains(`is-open`) &&
+            (t.classList.remove(`is-open`), e?.setAttribute(`aria-expanded`, `false`), e?.focus());
+        }));
+      var n = document.getElementById(`np-theme`),
+        r = JSON.parse(n?.dataset.labels ?? `{}`),
+        i = n?.getAttribute(`aria-label`) ?? ``,
+        a = () => (document.documentElement.dataset.theme === `dark` ? `dark` : `light`),
+        o = () => {
+          let e = a();
+          document.documentElement.dataset.themeMode = e;
+          let t = `${i}: ${r[e] ?? e}`;
+          (n?.setAttribute(`title`, t), n?.setAttribute(`aria-label`, t));
+        };
+      (o(),
+        n?.addEventListener(`click`, () => {
+          let e = a() === `dark` ? `light` : `dark`;
+          (localStorage.setItem(`starlight-theme`, e),
+            (document.documentElement.dataset.theme = e),
+            o());
+        }));
+    </script>
+  </body>
+</html>

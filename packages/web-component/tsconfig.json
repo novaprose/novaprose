@@ -4,7 +4,8 @@
     "outDir": "dist",
     "rootDir": "..",
     "paths": {
-      "@novaprose/core": ["../core/src/index.ts"]
+      "@novaprose/core": ["../core/src/index.ts"],
+      "@novaprose/core/i18n/*": ["../core/src/i18n/packs/*"]
     }
   },
   "include": ["src", "test"]

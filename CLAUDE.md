@@ -108,6 +108,9 @@ Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-pus
   (plugin-views.ts): представления сохраняются, а не пересоздаются.
   Синхронный хук нельзя сделать ленивым напрямую — образец: paste.ts (фоновая загрузка + `editor.ready` +
   перехват события, если чанк ещё не готов).
+- **Подпути пакетов** (`@novaprose/core/i18n/*`, `/html-rules`, `/markdown`): в CI типы проверяются ДО сборки, без
+  `dist` — каждому пакету, который их импортирует, нужен путь в `paths` его tsconfig (на исходник). Локально
+  `dist` есть, и ошибка не видна: проверять `pnpm -r --no-bail typecheck` без папок dist. После push — смотреть CI.
 - **SSR:** никакого обращения к `window`/`document` на уровне модуля.
 - **Shadow DOM:** фокус — только `activeElement(node)`, события документа — `listenDocument(node, …)` из
   `ui/dom.ts` (в теневом корне document.activeElement — хост, цель события подменена). Следит ESLint;
