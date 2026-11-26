@@ -31,6 +31,10 @@ packages/core/src
                     HTML из JSON без DOM (тот же, что getHTML; равенство проверяет property-тест)
   commands.ts       именованные команды (CommandName); chain.ts — editor.chain(): шаги одной правкой
   node-view.ts      defineNodeView: виды узлов из своего отрисовщика (React/Vue-адаптеры в их пакетах)
+  docx/             Word без сторонних библиотек и без DOM (вход @novaprose/core/docx): zip.ts (Compression-
+                    Stream), xml.ts, export.ts, import.ts; кнопки — плагины exportword/importword. Экспорт проверен
+                    в Microsoft Word; test/fixtures/docx/saved-by-word.docx — файл, сохранённый самим Word
+  ui/print.ts       печать «как на экране» (лениво): копия текста + стили страницы; лист — из plugins/pagelayout
   styles.ts, link.ts, image.ts — команды стилей, ссылок, картинок (+ их диалоги)
   html-rules.ts     отдельный вход @novaprose/core/html-rules: атрибуты в validElements,
                     extendedValidElements, customElements; в ядре — только html-rules-api.ts
@@ -106,7 +110,7 @@ Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-pus
   не должны падать (приводить типы, а не доверять). Новый узел/марку добавлять в генераторы
   `security.property.test.ts` и `json-robustness.test.ts`.
 - **Именованные команды** (`CommandName` в `commands.ts`) — часть публичного API: переименование = breaking change.
-- **Бюджет размера:** ядро ≤ 145 КБ gzip при первой загрузке, вместе с ProseMirror (ноябрь 2026: 137.0 КБ;
+- **Бюджет размера:** ядро ≤ 145 КБ gzip при первой загрузке, вместе с ProseMirror (ноябрь 2026: 137.4 КБ;
   style.css 10.5 из 12 КБ; ленивые чанки отдельно). Проверяет `pnpm size` в CI. Первая загрузка считается
   ОДНИМ сжатым файлом — так её отдаёт сборка приложения (проверено Vite: 135.2 КБ); сумма отдельно сжатых
   чанков esbuild (142.5) печатается для сведения: она растёт от дробления на чанки, а не от кода. Новая тяжёлая
@@ -141,7 +145,7 @@ Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-pus
   Новая строка → добавить её во ВСЕ пакеты `src/i18n/packs/*.ts` (иначе `node scripts/i18n.mjs check` в `pnpm check`
   упадёт). Русский (`packs/ru.ts`) — полный, в CDN-сборках встроен; de/es/fr/it/pt-BR — черновые (перевод Claude), до вычитки
   носителем статус «draft». CDN-сборки — основной файл + ленивые части рядом
-  (scripts/build-cdn.mjs): веб-компонент 148.1 КБ из 150, совместимость 157.2 КБ из 160 (ноябрь 2026; запас
+  (scripts/build-cdn.mjs): веб-компонент 148.4 КБ из 150, совместимость 157.7 КБ из 160 (ноябрь 2026; запас
   у совместимости мал — новое в её основной файл только с выносом чего-то другого).
 - **Необязательная функциональность — плагином** в `src/plugins/` (`definePlugin`, ленивая регистрация
   в `src/plugins/index.ts`). В ядро — только то, без чего редактор не редактор.

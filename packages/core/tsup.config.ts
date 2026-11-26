@@ -18,6 +18,8 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     markdown: 'src/markdown.ts',
+    // Word (.docx): экспорт и импорт без сторонних библиотек, работает и на сервере.
+    docx: 'src/docx/index.ts',
     // Правила элементов и атрибутов (extendedValidElements…): ~3 КБ, нужны немногим.
     'html-rules': 'src/html-rules.ts',
     ...packs,

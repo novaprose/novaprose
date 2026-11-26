@@ -54,6 +54,16 @@
         "default": "./dist/markdown.cjs"
       }
     },
+    "./docx": {
+      "import": {
+        "types": "./dist/docx.d.ts",
+        "default": "./dist/docx.js"
+      },
+      "require": {
+        "types": "./dist/docx.d.cts",
+        "default": "./dist/docx.cjs"
+      }
+    },
     "./html-rules": {
       "import": {
         "types": "./dist/html-rules.d.ts",
@@ -107,6 +117,7 @@
     "access": "public"
   },
   "devDependencies": {
-    "@types/markdown-it": "^14.2.0"
+    "@types/markdown-it": "^14.2.0",
+    "docx": "^9"
   }
 }

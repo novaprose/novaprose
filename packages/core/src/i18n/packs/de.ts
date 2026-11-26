@@ -304,6 +304,13 @@ const de: LanguagePack = {
   'math.block': 'Eigene Zeile',
   'math.preview': 'Vorschau',
   'pagelayout.page': 'Seite {page}',
+  'exportword.export': 'Nach Word exportieren',
+  'exportword.failed': 'Die Word-Datei konnte nicht erstellt werden',
+  'importword.import': 'Aus Word importieren',
+  'importword.failed':
+    'Diese Datei konnte nicht geöffnet werden. Wählen Sie ein Word-Dokument (.docx).',
+  'importword.partial':
+    'Importiert. Einige Teile werden nicht unterstützt und wurden übersprungen.',
   'pagebreak.title': 'Seitenumbruch',
   'revisionhistory.button': 'Versionsverlauf',
   'revisionhistory.title': 'Versionsverlauf',

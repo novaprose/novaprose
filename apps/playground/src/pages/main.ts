@@ -30,7 +30,7 @@ const content = [
 const editor = createEditor({
   element: document.querySelector<HTMLElement>('#editor')!,
   content,
-  plugins: ['pagelayout', 'pagebreak'],
+  plugins: ['pagelayout', 'pagebreak', 'exportword', 'importword'],
   pluginOptions: { pagelayout: { size: 'A5', margins: 15 } },
   menubar: true,
 });

@@ -305,6 +305,12 @@ const fr: LanguagePack = {
   'math.block': 'Sur sa propre ligne',
   'math.preview': 'Aperçu',
   'pagelayout.page': 'Page {page}',
+  'exportword.export': 'Exporter vers Word',
+  'exportword.failed': 'Impossible de créer le fichier Word',
+  'importword.import': 'Importer depuis Word',
+  'importword.failed': 'Impossible d’ouvrir ce fichier. Choisissez un document Word (.docx).',
+  'importword.partial':
+    'Importé. Certaines parties ne sont pas prises en charge et ont été ignorées.',
   'pagebreak.title': 'Saut de page',
   'revisionhistory.button': 'Historique des versions',
   'revisionhistory.title': 'Historique des versions',

@@ -13,7 +13,7 @@ export interface MenuDefinition {
 
 /** Стандартные меню. Имена пунктов — из реестра пунктов меню или кнопок тулбара. */
 export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
-  file: { title: 'menu.file', items: 'preview | print' },
+  file: { title: 'menu.file', items: 'importword exportword | preview | print' },
   edit: { title: 'menu.edit', items: 'undo redo | selectall | searchreplace pastetext' },
   view: { title: 'menu.view', items: 'code preview | fullscreen' },
   insert: { title: 'menu.insert', items: 'image link inserttable hr | insertdatetime' },

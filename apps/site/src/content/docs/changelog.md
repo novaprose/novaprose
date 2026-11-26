@@ -13,6 +13,13 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Word documents: `plugins: ['importword', 'exportword']` open a `.docx` and save the document as
+  `.docx` (buttons and File menu items, as in TinyMCE) — in the browser, with no conversion
+  service. Headings, formatting, links and bookmarks, real Word lists, tables with merged cells,
+  images, quotes, code, page breaks, suggested edits as Word tracked changes, and the page layout's
+  sheet and margins both ways; imported footnotes go to the end. `@novaprose/core/docx`
+  (`exportDocx`, `importDocx`, `fromDocx`) does the same from code and on the server (Node 18+,
+  no DOM). Exported files are checked in Microsoft Word; files saved by Word are imported in tests.
 - Page layout (`plugins: ['pagelayout']`): the text sits on a sheet of the real paper size
   (`size`: A3–A6, Letter, Legal or your own in mm; `orientation`; `margins` in mm), so lines wrap
   as on paper, and a dashed line with the page number marks where each page ends — including after
