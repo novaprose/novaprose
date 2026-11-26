@@ -18,7 +18,6 @@ const ICONS = {
 };
 export const LABELS = {
   en: { ltr: 'Left to right', rtl: 'Right to left' },
-  ru: { ltr: 'Слева направо', rtl: 'Справа налево' },
 };
 
 function currentDir(editor: Editor): TextDirection | null {

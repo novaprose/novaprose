@@ -7,7 +7,7 @@ import { insertText, pickLabels } from './shared';
 
 const NBSP = String.fromCharCode(0xa0);
 const ICON = icons.nonBreaking;
-export const LABELS = { en: { title: 'Nonbreaking space' }, ru: { title: 'Неразрывный пробел' } };
+export const LABELS = { en: { title: 'Nonbreaking space' } };
 
 export default definePlugin({
   name: 'nonbreaking',

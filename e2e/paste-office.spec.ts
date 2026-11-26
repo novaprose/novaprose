@@ -18,6 +18,10 @@ for (const file of fixtures) {
     const input = readFileSync(join(FIXTURES, file), 'utf8');
     const expected = readFileSync(join(FIXTURES, file.replace('.html', '.expected.html')), 'utf8');
     await page.goto('/?lang=en');
+    // Очистка вставки из Office — ленивый чанк: программная вставка ждёт готовности редактора.
+    await page.evaluate(
+      () => (window as unknown as { editor: { ready: Promise<void> } }).editor.ready,
+    );
     const result = await page.evaluate((html) => {
       const editor = (
         window as unknown as {
@@ -53,6 +57,10 @@ test('вставка из Word: картинки берутся из RTF вме�
   const html =
     '<meta name=Generator content="Microsoft Word 15"><p class=MsoNormal>Logo: <![if !vml]><img width=26 height=26 src="file:///C:/Temp/clip_image001.png"><![endif]><o:p></o:p></p>';
   await page.goto('/?lang=en');
+  // Очистка вставки из Office — ленивый чанк: программная вставка ждёт готовности редактора.
+  await page.evaluate(
+    () => (window as unknown as { editor: { ready: Promise<void> } }).editor.ready,
+  );
   const result = await page.evaluate(
     ({ html, rtf }) => {
       const editor = (

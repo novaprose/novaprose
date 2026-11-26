@@ -7,6 +7,11 @@ import {
   rankSlashCommands,
   type Editor,
 } from '../src';
+import ruPack from '../src/i18n/packs/ru';
+import { registerLanguage } from '../src/i18n';
+
+// Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
+registerLanguage('ru', ruPack);
 
 let editor: Editor | null = null;
 

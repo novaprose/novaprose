@@ -9,7 +9,7 @@ import { pickLabels } from './shared';
  */
 
 const ICON = icons.visualBlocks;
-export const LABELS = { en: { title: 'Show blocks' }, ru: { title: 'Показать блоки' } };
+export const LABELS = { en: { title: 'Show blocks' } };
 
 export default definePlugin({
   name: 'visualblocks',

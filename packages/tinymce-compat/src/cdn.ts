@@ -2,7 +2,12 @@
  * Сборка для тега <script>: задаёт window.tinymce и подключает стили NovaProse (файл рядом со скриптом),
  * чтобы замена `<script src="…/tinymce.min.js">` на этот файл работала без других правок страницы.
  */
+import { registerLanguage } from '@novaprose/core';
+import ru from '@novaprose/core/i18n/ru';
 import { tinymce } from './index';
+
+// В npm-ядре языки — отдельные пакеты; CDN-сборка без сборщика, поэтому русский встроен заранее.
+registerLanguage('ru', ru);
 
 declare global {
   interface Window {

@@ -15,6 +15,10 @@ import {
   type Editor,
   type EditorOptions,
 } from '../src';
+import ruPack from '../src/i18n/packs/ru';
+
+// Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
+registerLanguage('ru', ruPack);
 
 let editor: Editor | null = null;
 

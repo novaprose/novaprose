@@ -32,11 +32,6 @@ export const LABELS = {
     found: 'An unsaved draft was found. Use “Restore last draft” to bring it back.',
     restored: 'Draft restored',
   },
-  ru: {
-    restore: 'Восстановить черновик',
-    found: 'Найден несохранённый черновик. Его можно вернуть кнопкой «Восстановить черновик».',
-    restored: 'Черновик восстановлен',
-  },
 };
 
 function storage(): Storage | null {

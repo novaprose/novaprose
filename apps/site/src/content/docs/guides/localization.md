@@ -3,12 +3,20 @@ title: Localization
 description: Change the UI language, override individual strings or add your own language.
 ---
 
-The UI ships in English (default) and Russian; German, Spanish, French, Italian and Portuguese are
-available as [language packs](#ready-made-language-packs).
+The UI ships in English. Other languages are [language packs](#ready-made-language-packs) — a
+separate import each, so an English-only site never downloads them:
 
 ```ts
+import { createEditor, registerLanguage } from '@novaprose/core';
+import ru from '@novaprose/core/i18n/ru';
+
+registerLanguage('ru', ru);
 createEditor({ element, language: 'ru' });
 ```
+
+If `language` names a language that isn't registered, the editor uses English and logs a hint
+with the import to add. The CDN builds (`novaprose.global.js`, `tinymce.global.js`) include
+Russian already.
 
 Language codes follow BCP 47 with fallback: `ru-RU` uses `ru`, and an unknown language falls back
 to English.
@@ -24,13 +32,13 @@ createEditor({
 
 ## Ready-made language packs
 
-Each pack covers the whole interface — core and every built-in plugin (289 strings) — and is a
+Each pack covers the whole interface — core and every built-in plugin (293 strings) — and is a
 separate import of about 4 KB gzip, so you only download the languages you use.
 
 | Language            | Import                       | Status                       |
 | ------------------- | ---------------------------- | ---------------------------- |
 | English             | built in                     | reference                    |
-| Russian             | built in (`language: 'ru'`)  | complete, used in production |
+| Russian             | `@novaprose/core/i18n/ru`    | complete, used in production |
 | German              | `@novaprose/core/i18n/de`    | draft, native review needed  |
 | Spanish             | `@novaprose/core/i18n/es`    | draft, native review needed  |
 | French              | `@novaprose/core/i18n/fr`    | draft, native review needed  |

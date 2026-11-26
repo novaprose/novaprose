@@ -53,14 +53,6 @@ export const LABELS = {
     invalid: 'This video address is not supported',
     save: 'Insert',
   },
-  ru: {
-    title: 'Видео',
-    url: 'Адрес видео',
-    hint: 'YouTube, Vimeo или ссылка на файл .mp4 / .webm',
-    name: 'Название (для экранного диктора)',
-    invalid: 'Этот адрес видео не поддерживается',
-    save: 'Вставить',
-  },
 };
 
 function mediaAttrs(dom: HTMLElement, src: string | null) {

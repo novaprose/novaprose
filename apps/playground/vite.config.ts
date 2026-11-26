@@ -30,6 +30,10 @@ export default defineConfig({
       '@novaprose/collab': fileURLToPath(
         new URL('../../packages/collab/src/index.ts', import.meta.url),
       ),
+      // Языковые пакеты — до общего псевдонима ядра (иначе он перехватит путь).
+      '@novaprose/core/i18n': fileURLToPath(
+        new URL('../../packages/core/src/i18n/packs', import.meta.url),
+      ),
       '@novaprose/core': fileURLToPath(
         new URL('../../packages/core/src/index.ts', import.meta.url),
       ),

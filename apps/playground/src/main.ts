@@ -1,6 +1,10 @@
-import { createEditor, type Editor } from '@novaprose/core';
+import { createEditor, registerLanguage, type Editor } from '@novaprose/core';
 import '@novaprose/core/style.css';
 import './playground.css';
+import ru from '@novaprose/core/i18n/ru';
+
+// Русский — пакет (в ядро не встроен): playground по умолчанию на русском.
+registerLanguage('ru', ru);
 
 /** Люди для «@» в песочнице (?comments=1). */
 /** Версии для истории в песочнице (?comments=1). */

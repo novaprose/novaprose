@@ -18,13 +18,6 @@ export const LABELS = {
     dateTime: 'Date and time',
     long: 'Long date',
   },
-  ru: {
-    title: 'Вставить дату/время',
-    date: 'Дата',
-    time: 'Время',
-    dateTime: 'Дата и время',
-    long: 'Дата прописью',
-  },
 };
 
 const FORMATS: Record<'date' | 'time' | 'dateTime' | 'long', Intl.DateTimeFormatOptions> = {

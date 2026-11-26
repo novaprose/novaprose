@@ -9,7 +9,7 @@ import { pickLabels } from './shared';
  */
 
 const ICON = icons.pageBreak;
-export const LABELS = { en: { title: 'Page break' }, ru: { title: 'Разрыв страницы' } };
+export const LABELS = { en: { title: 'Page break' } };
 
 export default definePlugin({
   name: 'pagebreak',

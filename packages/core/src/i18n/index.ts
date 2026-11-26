@@ -1,8 +1,7 @@
 import { en, type MessageKey, type Messages } from './en';
-import { ru } from './ru';
 
 export type { MessageKey, Messages };
-export { en, ru };
+export { en };
 
 /**
  * Строки плагинов: `<плагин>.<ключ>` («comments.reply», «anchor.title»). Плагины грузятся лениво,
@@ -19,7 +18,12 @@ export type LanguagePack = Partial<Messages> & { [key: PluginMessageKey]: string
 
 /** Пакеты, переданные через registerLanguage: только то, что дал пользователь (без подмешанного en). */
 const userPacks: Record<string, LanguagePack> = {};
-const builtin: Record<string, Messages> = { en, ru };
+/**
+ * Встроен только английский (эталон). Остальные языки — пакеты @novaprose/core/i18n/<код>,
+ * подключаются через registerLanguage: каждый клиент скачивает только свой язык.
+ */
+const builtin: Record<string, Messages> = { en };
+const warned = new Set<string>();
 
 /** Строки плагина на одном языке: строка или список строк (названия групп и т.п.). */
 export type PluginLabels = Record<string, string | readonly string[]>;
@@ -81,6 +85,13 @@ export function createTranslator(language = 'en', overrides: LanguagePack = {}):
   const code = language.toLowerCase();
   const base = code.split('-')[0]!;
   const pack = builtin[code] ?? builtin[base] ?? en;
+  if (pack === en && base !== 'en' && !warned.has(base)) {
+    warned.add(base);
+    console.warn(
+      `[nova] language "${language}" is not registered, using English. ` +
+        `import pack from '@novaprose/core/i18n/${base}'; registerLanguage('${base}', pack);`,
+    );
+  }
   const messages: Record<string, string> = { ...en, ...pack, ...overrides };
   const user = { ...userPacks[base], ...userPacks[code] } as Record<string, string | undefined>;
   const own = overrides as Record<string, string | undefined>;

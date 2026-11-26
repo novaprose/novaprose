@@ -6,6 +6,15 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Breaking
+
+- **Russian is now a language pack, like the others.** `language: 'ru'` needs
+  `import ru from '@novaprose/core/i18n/ru'; registerLanguage('ru', ru);` (other languages
+  already worked this way). Without it the editor uses English and logs a hint. Plugins no longer
+  embed their own Russian strings; every translation lives in the packs. The `ru` export of
+  `@novaprose/core` is removed. The CDN builds (`novaprose.global.js`, `tinymce.global.js`) still
+  include Russian. The core first load drops from 147.6 to 144.2 KB gzip.
+
 ### Editing
 
 - Paragraph and heading indent: the indent/outdent buttons and Ctrl+] / Ctrl+[ now work outside

@@ -63,7 +63,6 @@ export {
   createTranslator,
   registerLanguage,
   en,
-  ru,
   type Messages,
   type MessageKey,
   type Translator,
@@ -164,4 +163,9 @@ export {
   type SuggestionsOptions,
 } from './plugins/suggestions';
 export { icons } from './ui/icons';
+export type {
+  NotificationAction,
+  NotificationHandle,
+  NotificationOptions,
+} from './ui/notification';
 export { HTMLSerializer } from './serializer';

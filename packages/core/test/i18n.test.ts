@@ -1,8 +1,12 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createEditor, en, registerLanguage, ru, type Editor, type LanguagePack } from '../src';
+import { createEditor, en, registerLanguage, type Editor, type LanguagePack } from '../src';
 import { getPluginMessages } from '../src/i18n';
+import ruPack from '../src/i18n/packs/ru';
+
+// Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
+registerLanguage('ru', ruPack);
 
 /**
  * Единая система переводов: строки ядра и плагинов переводятся одинаково — через registerLanguage
@@ -43,9 +47,9 @@ const tooltip = (e: Editor, control: string) =>
   e.root.querySelector(`[data-control="${control}"]`)?.getAttribute('aria-label');
 
 describe('переводы плагинов через общую систему', () => {
-  it('русский из коробки — и у ядра, и у плагинов', async () => {
+  it('русский пакет переводит и ядро, и плагины', async () => {
     const e = await mount({ language: 'ru', toolbar: 'bold anchor charmap' });
-    expect(tooltip(e, 'bold')).toBe(ru.bold);
+    expect(tooltip(e, 'bold')).toBe('Жирный');
     expect(tooltip(e, 'anchor')).toBe('Якорь');
     expect(e.ui.t('charmap.groups.0')).not.toBe('charmap.groups.0');
   });
@@ -94,9 +98,8 @@ describe('полнота встроенных переводов', () => {
     }
   });
 
-  it('ядро: русский перевод полный и без пустых строк', () => {
-    expect(Object.keys(ru).sort()).toEqual(Object.keys(en).sort());
-    for (const [key, value] of Object.entries(ru)) expect(value, key).not.toBe('');
+  it('у плагинов нет встроенных переводов — только en (остальное в пакетах)', () => {
+    for (const [name, labels] of plugins) expect(Object.keys(labels), name).toEqual(['en']);
   });
 
   it('зарегистрированные плагины видны для шаблона переводчиков', async () => {

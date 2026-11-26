@@ -74,3 +74,10 @@ notification — nothing is lost.
 
 If you have a document that doesn't paste well, send it to **hello@novaprose.com** — real-world
 samples become part of our test suite.
+
+## Loading
+
+The Office cleanup is a separate chunk that loads in the background as soon as the editor is
+created. A paste from the clipboard in the first milliseconds simply waits for it. If you paste
+**programmatically** (`editor.view.pasteHTML(...)`) right after creating the editor, wait for
+`await editor.ready` first.

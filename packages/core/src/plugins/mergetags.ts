@@ -42,12 +42,6 @@ export const LABELS = {
     empty: 'No variables found',
     unknown: 'Unknown variable',
   },
-  ru: {
-    insert: 'Вставить переменную',
-    search: 'Переменные',
-    empty: 'Переменные не найдены',
-    unknown: 'Неизвестная переменная',
-  },
 };
 
 /** Ключ без пробелов и кавычек — он уходит в атрибут и на ваш сервер. */

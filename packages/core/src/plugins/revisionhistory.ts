@@ -57,24 +57,6 @@ export const LABELS = {
     restored: 'Restored the version from {date}. Undo with Ctrl+Z.',
     versions: 'Versions',
   },
-  ru: {
-    button: 'История версий',
-    title: 'История версий',
-    current: 'Текущая версия',
-    restore: 'Восстановить эту версию',
-    close: 'Закрыть',
-    save: 'Сохранить версию',
-    saved: 'Версия сохранена',
-    highlight: 'Показывать изменения',
-    onlyHere: 'Только в этой версии',
-    onlyNow: 'Только в текущем тексте',
-    loading: 'Загрузка…',
-    failed: 'Не удалось загрузить историю версий.',
-    retry: 'Повторить',
-    empty: 'Сохранённых версий пока нет.',
-    restored: 'Восстановлена версия от {date}. Отменить — Ctrl+Z.',
-    versions: 'Версии',
-  },
 };
 
 const ICON = icons.history;

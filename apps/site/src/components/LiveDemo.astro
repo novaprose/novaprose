@@ -31,8 +31,11 @@ const initial = lang === 'ru' ? initialRu : initialEn;
 </div>
 
 <script>
-  import { createEditor } from '@novaprose/core';
+  import { createEditor, registerLanguage } from '@novaprose/core';
+  import ru from '@novaprose/core/i18n/ru';
   import '@novaprose/core/style.css';
+
+  registerLanguage('ru', ru);
 
   const host = document.getElementById('np-demo-editor')!;
   const output = document.getElementById('np-demo-html')!;

@@ -18,8 +18,11 @@ pnpm check    # формат, линт, типы, тесты
 ## Использование
 
 ```ts
-import { createEditor } from '@novaprose/core';
+import { createEditor, registerLanguage } from '@novaprose/core';
+import ru from '@novaprose/core/i18n/ru';
 import '@novaprose/core/style.css';
+
+registerLanguage('ru', ru); // языки — отдельные пакеты: каждый скачивает только свой
 
 const editor = createEditor({
   element: document.querySelector('#editor')!,

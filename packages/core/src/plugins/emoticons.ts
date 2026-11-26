@@ -16,12 +16,6 @@ export const LABELS = {
     empty: 'No emoji found',
     groups: ['Smileys', 'Gestures', 'Hearts', 'Nature', 'Food', 'Activities', 'Objects', 'Symbols'],
   },
-  ru: {
-    title: 'Эмодзи',
-    search: 'Поиск эмодзи',
-    empty: 'Эмодзи не найдены',
-    groups: ['Смайлы', 'Жесты', 'Сердца', 'Природа', 'Еда', 'Занятия', 'Предметы', 'Символы'],
-  },
 };
 
 const EMOJI: (readonly (readonly [string, string])[])[] = [

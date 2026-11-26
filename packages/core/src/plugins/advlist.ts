@@ -31,17 +31,6 @@ export const LABELS = {
     'upper-roman': 'Upper roman (I, II, III)',
     'lower-greek': 'Lower greek (α, β, γ)',
   },
-  ru: {
-    disc: 'По умолчанию',
-    circle: 'Кружок',
-    square: 'Квадрат',
-    decimal: 'По умолчанию (1, 2, 3)',
-    'lower-alpha': 'Строчные буквы (a, b, c)',
-    'upper-alpha': 'Прописные буквы (A, B, C)',
-    'lower-roman': 'Римские строчные (i, ii, iii)',
-    'upper-roman': 'Римские прописные (I, II, III)',
-    'lower-greek': 'Греческие (α, β, γ)',
-  },
 };
 
 /** Ближайший список нужного типа вокруг выделения. */

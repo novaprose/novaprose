@@ -77,21 +77,6 @@ export const LABELS = {
     guest: 'Guest',
     none: 'No suggestions',
   },
-  ru: {
-    toggle: 'Предлагать правки',
-    review: 'Правки',
-    accept: 'Принять',
-    reject: 'Отклонить',
-    acceptAll: 'Принять все правки',
-    rejectAll: 'Отклонить все правки',
-    next: 'Следующая правка',
-    previous: 'Предыдущая правка',
-    inserted: 'Вставлено: {name}',
-    deleted: 'Удалено: {name}',
-    toolbar: 'Правка',
-    guest: 'Гость',
-    none: 'Правок нет',
-  },
 };
 
 const ICON_TOGGLE = icons.suggest;

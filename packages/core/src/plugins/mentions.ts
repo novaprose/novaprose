@@ -27,7 +27,6 @@ export interface MentionsOptions {
 
 export const LABELS = {
   en: { list: 'People', empty: 'No matches' },
-  ru: { list: 'Люди', empty: 'Никого не найдено' },
 };
 
 /** id пользователя: UUID, числа, e-mail, логины — без пробелов, кавычек и угловых скобок. */
