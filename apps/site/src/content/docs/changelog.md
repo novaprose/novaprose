@@ -11,6 +11,16 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Editing
+
+- Paragraph and heading indent: the indent/outdent buttons and Ctrl+] / Ctrl+[ now work outside
+  lists too (`margin-left` in 40 px steps, `margin-right` for right-to-left text, up to 10 levels;
+  pasted `padding-left` / `pt` / `em` indents are normalized). Tab still indents list items only,
+  so keyboard users are never trapped in the editor.
+- Image uploads retry automatically twice on failure. If the upload still fails, the image stays in
+  place and the notification offers **Retry** and **Remove image** instead of silently deleting it.
+- Notifications can carry action buttons (`actions`, `onClose` in `editor.ui.notify()`).
+
 ### Markdown
 
 - `@novaprose/core/markdown`: `markdownToHTML()` (CommonMark + GitHub tables and strikethrough,
