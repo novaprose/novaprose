@@ -19,6 +19,10 @@ All packages in this repository are versioned together. The format follows
   so keyboard users are never trapped in the editor.
 - Image uploads retry automatically twice on failure. If the upload still fails, the image stays in
   place and the notification offers **Retry** and **Remove image** instead of silently deleting it.
+- Image captions: the **Caption** button in the image toolbar wraps the image in
+  `<figure>` with an editable `<figcaption>` (formatting and links allowed, Enter continues below,
+  alignment/size/alt keep working). Removing a caption keeps its text as a paragraph. `<figure>`
+  from pasted or loaded HTML is recognized; Markdown export writes the image and the caption text.
 - Notifications can carry action buttons (`actions`, `onClose` in `editor.ui.notify()`).
 
 ### Markdown

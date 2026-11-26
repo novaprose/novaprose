@@ -505,6 +505,89 @@ const buildNodes = (allow: ClassFilter) =>
 
     text: { group: 'inline' },
 
+    /**
+     * Картинка с подписью: <figure><img><figcaption>…</figcaption></figure> — как в HTML, два блока
+     * внутри. Поэтому подпись нельзя превратить в заголовок или список (схема не пустит другой блок
+     * в figure) — картинка не потеряется. Атрибуты картинки — у figure_image, выравнивание — у figure.
+     */
+    figure: {
+      group: 'block',
+      content: 'figure_image figcaption',
+      draggable: true,
+      isolating: true,
+      attrs: { align: { default: null }, ...classSpec },
+      parseDOM: [
+        {
+          tag: 'figure',
+          getAttrs: (dom) => {
+            const el = dom as HTMLElement;
+            // Только «картинка + подпись»; прочие <figure> (с таблицей, цитатой) разбираются как обычно.
+            const img = el.querySelector('img');
+            if (!img || !isSafeImageUrl(img.getAttribute('src') ?? '')) return false;
+            return { align: readImageAlign(el), class: readClass(el, allow) };
+          },
+        },
+      ],
+      toDOM: (node): DOMOutputSpec => {
+        const width = imageSize(node.firstChild?.attrs.width);
+        const align = IMAGE_ALIGN_STYLES[node.attrs.align as ImageAlign] ?? '';
+        const style = `${align}${width ? `${align ? ' ' : ''}width: ${width}px;` : ''}`;
+        return ['figure', { ...classAttr(node.attrs.class), ...(style ? { style } : {}) }, 0];
+      },
+    },
+    /** Картинка внутри figure (блочная, в отличие от картинки в строке). */
+    figure_image: {
+      atom: true,
+      selectable: false,
+      attrs: {
+        // Значение по умолчанию нужно ProseMirror, чтобы обязательный узел можно было достроить.
+        src: { default: '' },
+        alt: { default: null },
+        title: { default: null },
+        width: { default: null },
+        height: { default: null },
+      },
+      parseDOM: [
+        {
+          tag: 'img[src]',
+          context: 'figure/',
+          priority: 60,
+          getAttrs: (dom) => {
+            const el = dom as HTMLElement;
+            if (!isSafeImageUrl(el.getAttribute('src') ?? '')) return false;
+            return {
+              src: el.getAttribute('src'),
+              alt: el.getAttribute('alt'),
+              title: el.getAttribute('title'),
+              width: imageSize(el.getAttribute('width') ?? el.style.width),
+              height: imageSize(el.getAttribute('height') ?? el.style.height),
+            };
+          },
+        },
+      ],
+      toDOM: (node): DOMOutputSpec => {
+        const { alt, title } = node.attrs;
+        // Документ мог прийти из JSON в обход parseDOM — проверяем и на выходе.
+        const src = isSafeImageUrl(node.attrs.src) ? node.attrs.src : '';
+        const width = imageSize(node.attrs.width);
+        const height = imageSize(node.attrs.height);
+        return [
+          'img',
+          {
+            src,
+            ...(alt ? { alt } : {}),
+            ...(title ? { title } : {}),
+            ...(width ? { width: String(width) } : {}),
+            ...(height ? { height: String(height) } : {}),
+          },
+        ];
+      },
+    },
+    figcaption: {
+      content: 'inline*',
+      parseDOM: [{ tag: 'figcaption', context: 'figure/' }],
+      toDOM: (): DOMOutputSpec => ['figcaption', 0],
+    },
     image: {
       group: 'inline',
       inline: true,

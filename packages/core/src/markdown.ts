@@ -50,6 +50,14 @@ const linkify = new MarkdownIt('default', { linkify: true }).linkify;
  * Только для адресов, которые автор оставил без ссылки, — редкий случай.
  * Найдено property-based тестом (packages/core/test/markdown.test.ts).
  */
+/** ![alt](src "title") — для картинки и для картинки с подписью (figure). */
+function imageNode(state: MarkdownSerializerState, node: PMNode): void {
+  const src = String(node.attrs.src ?? '');
+  const alt = state.esc(String(node.attrs.alt ?? ''));
+  const title = node.attrs.title ? ` "${String(node.attrs.title).replace(/"/g, '\\"')}"` : '';
+  state.write(`![${alt}](${src.replace(/[()]/g, '\\$&')}${title})`);
+}
+
 /** Сколько узлов того же типа стоит подряд прямо перед этим (для чередования маркеров списков). */
 function siblingsBefore(parent: PMNode, index: number, node: PMNode): number {
   let count = 0;
@@ -160,12 +168,19 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
         return `${' '.repeat(maxW - n.length)}${n}${delimiter} `;
       });
     },
-    image(state, node) {
-      const src = String(node.attrs.src ?? '');
-      const alt = state.esc(String(node.attrs.alt ?? ''));
-      const title = node.attrs.title ? ` "${String(node.attrs.title).replace(/"/g, '\\"')}"` : '';
-      state.write(`![${alt}](${src.replace(/[()]/g, '\\$&')}${title})`);
+    image: imageNode,
+    // В Markdown нет подписей: картинка, затем подпись отдельным абзацем — текст сохраняется.
+    figure(state, node) {
+      if (node.firstChild) imageNode(state, node.firstChild);
+      state.closeBlock(node);
+      const caption = node.childCount > 1 ? node.child(1) : null;
+      if (caption?.content.size) {
+        state.renderInline(caption);
+        state.closeBlock(caption);
+      }
     },
+    figcaption() {},
+    figure_image() {},
     table(state, node) {
       const rows: string[][] = [];
       node.forEach((row) => {

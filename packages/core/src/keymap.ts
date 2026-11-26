@@ -3,6 +3,7 @@ import { keymap } from 'prosemirror-keymap';
 import { splitListItem } from 'prosemirror-schema-list';
 import type { Command, Plugin } from 'prosemirror-state';
 import { commands, listIndent, listOutdent, nodesOf, type CommandName } from './commands';
+import { exitImageCaption } from './image';
 
 const mac = typeof navigator !== 'undefined' && /Mac|iP(hone|[oa]d)/.test(navigator.platform);
 
@@ -45,7 +46,9 @@ export function buildKeymap(resolve: Resolve = (name) => commands[name]): Plugin
     'Mod-Shift-j': commands.alignJustify,
     'Mod-\\': commands.clearFormatting,
     'Shift-Enter': insertHardBreak,
-    Enter: (state, dispatch) => splitListItem(nodesOf(state).list_item)(state, dispatch),
+    Enter: chainCommands(exitImageCaption, (state, dispatch) =>
+      splitListItem(nodesOf(state).list_item)(state, dispatch),
+    ),
     // Tab — только для списков (в абзаце остаётся переходом фокуса). Отступ абзаца — Mod-] / Mod-[.
     Tab: listIndent,
     'Shift-Tab': listOutdent,

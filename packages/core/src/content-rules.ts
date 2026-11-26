@@ -30,6 +30,7 @@ const ALIASES: Record<string, string> = {
   caption: 'table',
   colgroup: 'table',
   col: 'table',
+  figcaption: 'figure',
 };
 
 /** Все теги, которыми оперирует NovaProse. p и текст разрешены всегда. */
@@ -48,6 +49,7 @@ export const KNOWN_TAGS = [
   'ol',
   'li',
   'img',
+  'figure',
   'br',
   'table',
   'tr',
@@ -243,6 +245,7 @@ export class ContentRules {
       ...attrs,
       ...(this.isStyleAllowed('text-align') ? {} : { align: null }),
       ...(this.isStyleAllowed('line-height') ? {} : { lineHeight: null }),
+      ...(this.isStyleAllowed('margin-left') ? {} : { indent: 0 }),
     };
   }
 
@@ -266,6 +269,21 @@ export class ContentRules {
             marks,
           ),
         ];
+      case nodes.figure: {
+        // Картинки запрещены — от подписи остаётся текст; figure запрещён — картинка и подпись абзацами.
+        const caption = node.childCount > 1 ? node.child(1).content : null;
+        const captionBlocks = caption?.size
+          ? [nodes.paragraph.create(null, this.normalizeChildren(caption))]
+          : [];
+        const image = node.firstChild;
+        if (!this.isTagAllowed('img') || !image) return captionBlocks;
+        const align = this.isStyleAllowed('float') ? node.attrs.align : null;
+        if (!this.isTagAllowed('figure')) {
+          const inline = nodes.image.create({ ...image.attrs, align });
+          return [nodes.paragraph.create(null, inline), ...captionBlocks];
+        }
+        return [nodes.figure.create({ ...node.attrs, align }, node.content)];
+      }
       case nodes.hard_break:
         return this.isTagAllowed('br') ? [node.mark(marks)] : [schema.text(' ', marks)];
       case nodes.horizontal_rule:

@@ -96,6 +96,8 @@ const de: LanguagePack = {
   'image.sizeFull': 'Volle Breite',
   'image.sizeOriginal': 'Originalgröße',
   'image.delete': 'Bild entfernen',
+  'image.caption': 'Bildunterschrift',
+  'image.captionPlaceholder': 'Bildunterschrift hinzufügen…',
   'status.words': 'Wörter: {count}',
   'status.resize': 'Editorgröße ändern',
   'dialog.browse': 'Durchsuchen',

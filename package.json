@@ -16,7 +16,7 @@
     "test:deep": "node scripts/test-deep.mjs",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
-    "format": "prettier --write .",
+    "format": "node apps/site/scripts/sync-docs.mjs && prettier --write .",
     "format:check": "prettier --check .",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && node scripts/i18n.mjs check && node apps/site/scripts/sync-docs.mjs --check",
     "e2e": "playwright test",

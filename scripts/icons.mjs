@@ -54,6 +54,7 @@ const editor = {
   imageRight: 'align-end-vertical',
   resize: 'scaling',
   altText: 'captions',
+  imageCaption: 'subtitles',
   trash: 'trash-2',
   paragraph: 'pilcrow',
   h1: 'heading-1',

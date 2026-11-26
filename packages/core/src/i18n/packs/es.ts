@@ -96,6 +96,8 @@ const es: LanguagePack = {
   'image.sizeFull': 'Ancho completo',
   'image.sizeOriginal': 'Tamaño original',
   'image.delete': 'Quitar imagen',
+  'image.caption': 'Pie de foto',
+  'image.captionPlaceholder': 'Añade un pie de foto…',
   'status.words': 'Palabras: {count}',
   'status.resize': 'Cambiar el tamaño del editor',
   'dialog.browse': 'Examinar',

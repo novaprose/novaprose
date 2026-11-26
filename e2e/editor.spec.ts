@@ -585,3 +585,27 @@ test('отступ абзаца кнопкой; Tab в абзаце уводит
   );
   expect(focusedInEditor).toBe(false);
 });
+
+test('подпись к картинке: кнопка в панели картинки, набор подписи, Enter — дальше текст', async ({
+  page,
+}) => {
+  // Картинка 1×1 PNG — без сети.
+  const png =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  await open(page, `<p><img src="${png}" width="120" height="80"></p>`);
+  await page.locator('.nova-prosemirror img[src^="data:"]').click();
+  const imageToolbar = page.getByRole('toolbar', { name: 'Image options' });
+  await imageToolbar.locator('[data-control="imagecaption"]').click();
+  await page.keyboard.type('Sunset');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('Next');
+  expect(await html(page)).toBe(
+    `<figure style="width: 120px;"><img src="${png}" width="120" height="80"><figcaption>Sunset</figcaption></figure><p>Next</p>`,
+  );
+  // Убрать подпись: текст подписи не теряется.
+  await page.locator('.nova-prosemirror figcaption').click();
+  await imageToolbar.locator('[data-control="imagecaption"]').click();
+  expect(await html(page)).toBe(
+    `<p><img src="${png}" width="120" height="80"></p><p>Sunset</p><p>Next</p>`,
+  );
+});

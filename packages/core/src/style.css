@@ -522,6 +522,43 @@
   border-radius: 2px;
 }
 
+/* Картинка с подписью: таблица — подпись по ширине картинки, при любом выравнивании. */
+.nova-prosemirror figure {
+  display: table !important;
+  margin: 0.75em 0;
+}
+
+.nova-prosemirror figure[style*='margin-left: auto'] {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.nova-prosemirror figure img {
+  display: block;
+  width: 100%;
+}
+
+.nova-prosemirror figcaption {
+  display: table-caption;
+  caption-side: bottom;
+  padding-top: 0.4em;
+  color: var(--nova-muted);
+  font-size: 0.9em;
+  text-align: center;
+}
+
+/* Пустая подпись — приглашение на языке интерфейса (текст в --nova-caption-placeholder). */
+.nova-prosemirror figcaption:has(> br.ProseMirror-trailingBreak:only-child)::before {
+  content: var(--nova-caption-placeholder, '');
+  color: var(--nova-muted);
+  pointer-events: none;
+}
+
+.nova-prosemirror figure.ProseMirror-selectednode {
+  outline: 2px solid var(--nova-accent);
+  outline-offset: 2px;
+}
+
 .nova-prosemirror img[src^='blob:'] {
   opacity: 0.5;
   animation: nova-pulse 1.2s ease-in-out infinite;

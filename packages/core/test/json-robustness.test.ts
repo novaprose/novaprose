@@ -65,6 +65,14 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
   mergetag: (attrs) => para({ type: 'mergetag', attrs }),
   anchor: (attrs) => para({ type: 'anchor', attrs }),
   media: (attrs) => ({ type: 'media', attrs }),
+  figure: (attrs) => ({
+    type: 'figure',
+    attrs,
+    content: [
+      { type: 'figure_image', attrs },
+      { type: 'figcaption', content: [text] },
+    ],
+  }),
   ordered_list: (attrs) => ({
     type: 'ordered_list',
     attrs,

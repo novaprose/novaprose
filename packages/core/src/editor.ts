@@ -307,6 +307,11 @@ export class Editor {
       createTranslator(options.language, options.translations),
       () => this.focus(),
     );
+    // Приглашение в пустой подписи картинки — через CSS-переменную (в HTML документа его нет).
+    this.root.style.setProperty(
+      '--nova-caption-placeholder',
+      JSON.stringify(this.ui.t('image.captionPlaceholder')),
+    );
 
     const editorKeys = keymap({
       'Mod-k': () => (openLinkDialog(this), true),

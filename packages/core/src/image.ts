@@ -2,6 +2,7 @@ import type { Node as PMNode } from 'prosemirror-model';
 import { attachFilePicker } from './ui/file-picker';
 import {
   NodeSelection,
+  TextSelection,
   Plugin,
   PluginKey,
   type Command,
@@ -340,15 +341,113 @@ export function openImageDialog(editor: Editor): void {
 
 // ---------- выделенная картинка: размер, выравнивание, alt ----------
 
-export function getSelectedImage(state: EditorState): { node: PMNode; pos: number } | null {
+/** Выделенная картинка: узел (image или figure), его позиция и атрибуты картинки. */
+export interface SelectedImage {
+  node: PMNode;
+  pos: number;
+  /** src, alt, title, width, height, align — для figure собраны из figure и figure_image. */
+  attrs: Record<string, unknown>;
+}
+
+/**
+ * Выделенная картинка: картинка в строке, картинка с подписью (figure) или подпись, в которой стоит
+ * курсор. Действия тулбара картинки (выравнивание, размер, alt) работают для обеих.
+ */
+export function getSelectedImage(state: EditorState): SelectedImage | null {
   const { selection } = state;
-  if (selection instanceof NodeSelection && selection.node.type === nodesOf(state).image) {
-    return { node: selection.node, pos: selection.from };
+  const nodes = nodesOf(state);
+  const result = (node: PMNode, pos: number): SelectedImage =>
+    node.type === nodes.figure
+      ? { node, pos, attrs: { ...node.firstChild?.attrs, align: node.attrs.align } }
+      : { node, pos, attrs: node.attrs };
+  if (
+    selection instanceof NodeSelection &&
+    (selection.node.type === nodes.image || selection.node.type === nodes.figure)
+  ) {
+    return result(selection.node, selection.from);
+  }
+  const { $from } = selection;
+  for (let depth = $from.depth; depth > 0; depth--) {
+    if ($from.node(depth).type === nodes.figure)
+      return result($from.node(depth), $from.before(depth));
   }
   return null;
 }
 
-/** Изменить атрибуты выделенной картинки (выделение узла сохраняется). */
+/** Есть ли у выделенной картинки подпись. */
+export function hasImageCaption(state: EditorState): boolean {
+  return getSelectedImage(state)?.node.type === nodesOf(state).figure;
+}
+
+const IMAGE_ATTRS = ['src', 'alt', 'title', 'width', 'height'] as const;
+const pick = (attrs: Record<string, unknown>) =>
+  Object.fromEntries(IMAGE_ATTRS.map((name) => [name, attrs[name] ?? null]));
+
+/**
+ * Включить или убрать подпись у выделенной картинки.
+ * Включить: картинка становится отдельным блоком <figure>, курсор — в подписи.
+ * Убрать: картинка возвращается в абзац; текст подписи не теряется — он становится абзацем ниже.
+ */
+export const toggleImageCaption: Command = (state, dispatch) => {
+  const image = getSelectedImage(state);
+  if (!image) return false;
+  const nodes = nodesOf(state);
+  const { pos, node, attrs } = image;
+  if (!dispatch) return true;
+  const tr = state.tr;
+
+  if (node.type === nodes.figure) {
+    const inline = nodes.image.create({ ...pick(attrs), align: attrs.align ?? null });
+    const blocks = [nodes.paragraph.create(null, inline)];
+    const caption = node.child(1);
+    if (caption.content.size) blocks.push(nodes.paragraph.create(null, caption.content));
+    tr.replaceWith(pos, pos + node.nodeSize, blocks);
+    tr.setSelection(NodeSelection.create(tr.doc, pos + 1));
+    dispatch(tr.scrollIntoView());
+    return true;
+  }
+
+  // Картинка в строке: вынести её блоком после своего абзаца (абзац без неё остаётся, если не пуст).
+  const $pos = state.doc.resolve(pos);
+  const blockStart = $pos.before($pos.depth);
+  const blockEnd = $pos.after($pos.depth);
+  const figure = nodes.figure.create({ align: attrs.align ?? null }, [
+    nodes.figure_image.create(pick(attrs)),
+    nodes.figcaption.create(),
+  ]);
+  // Курсор в подписи: вход в figure (+1), картинка (+1), вход в подпись (+1).
+  const CAPTION = 3;
+  if ($pos.parent.childCount === 1) {
+    tr.replaceWith(blockStart, blockEnd, figure);
+    tr.setSelection(TextSelection.create(tr.doc, blockStart + CAPTION));
+  } else {
+    tr.insert(blockEnd, figure);
+    tr.delete(pos, pos + node.nodeSize);
+    // -1: позиция перед только что вставленной figure (а не после неё).
+    tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(blockEnd, -1) + CAPTION));
+  }
+  dispatch(tr.scrollIntoView());
+  return true;
+};
+
+/** Enter в подписи — новый абзац после картинки (подпись — одна строка, как в Word). */
+export const exitImageCaption: Command = (state, dispatch) => {
+  const { $from } = state.selection;
+  if ($from.parent.type !== nodesOf(state).figcaption) return false;
+  if (dispatch) {
+    const after = $from.after($from.depth - 1);
+    const tr = state.tr.insert(after, nodesOf(state).paragraph.create());
+    tr.setSelection(TextSelection.create(tr.doc, after + 1));
+    dispatch(tr.scrollIntoView());
+  }
+  return true;
+};
+
+/**
+ * Изменить атрибуты выделенной картинки. У figure выравнивание — на figure, остальное — на картинке
+ * внутри. Выделение: картинка в строке остаётся выделенной узлом; у figure курсор не трогаем
+ * (можно продолжать писать подпись).
+ */
 export function setImageAttrs(
   attrs: Partial<Record<'alt' | 'title' | 'width' | 'height' | 'align', unknown>>,
 ): Command {
@@ -356,8 +455,20 @@ export function setImageAttrs(
     const image = getSelectedImage(state);
     if (!image) return false;
     if (dispatch) {
-      const tr = state.tr.setNodeMarkup(image.pos, undefined, { ...image.node.attrs, ...attrs });
-      tr.setSelection(NodeSelection.create(tr.doc, image.pos));
+      const tr = state.tr;
+      if (image.node.type === nodesOf(state).figure) {
+        const { align, ...rest } = attrs;
+        if (align !== undefined) {
+          tr.setNodeMarkup(image.pos, undefined, { ...image.node.attrs, align });
+        }
+        if (Object.keys(rest).length) {
+          const inner = image.node.firstChild!;
+          tr.setNodeMarkup(image.pos + 1, undefined, { ...inner.attrs, ...rest });
+        }
+      } else {
+        tr.setNodeMarkup(image.pos, undefined, { ...image.node.attrs, ...attrs });
+        tr.setSelection(NodeSelection.create(tr.doc, image.pos));
+      }
       dispatch(tr);
     }
     return true;
@@ -388,10 +499,10 @@ export function openImageAltDialog(editor: Editor): void {
   const { t } = editor.ui;
   const alt = textField({
     label: t('image.alt'),
-    value: image.node.attrs.alt ?? '',
+    value: String(image.attrs.alt ?? ''),
     hint: t('image.altHint'),
   });
-  const title = textField({ label: t('link.tooltip'), value: image.node.attrs.title ?? '' });
+  const title = textField({ label: t('link.tooltip'), value: String(image.attrs.title ?? '') });
   editor.ui.openDialog({
     title: t('image.editAlt'),
     body: h('div', { className: 'nova-form' }, alt.el, title.el),

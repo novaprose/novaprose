@@ -96,6 +96,8 @@ const it: LanguagePack = {
   'image.sizeFull': 'Larghezza piena',
   'image.sizeOriginal': 'Dimensione originale',
   'image.delete': 'Rimuovi immagine',
+  'image.caption': 'Didascalia',
+  'image.captionPlaceholder': 'Aggiungi una didascalia…',
   'status.words': 'Parole: {count}',
   'status.resize': "Ridimensiona l'editor",
   'dialog.browse': 'Sfoglia',

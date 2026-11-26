@@ -96,6 +96,8 @@ const ptBR: LanguagePack = {
   'image.sizeFull': 'Largura total',
   'image.sizeOriginal': 'Tamanho original',
   'image.delete': 'Remover imagem',
+  'image.caption': 'Legenda',
+  'image.captionPlaceholder': 'Adicione uma legenda…',
   'status.words': 'Palavras: {count}',
   'status.resize': 'Redimensionar o editor',
   'dialog.browse': 'Procurar',

@@ -41,6 +41,27 @@ Select an image to open its context toolbar: alignment (`imagealignleft`, `image
 corner handle to resize. Width and height are stored as attributes, so the output stays plain
 HTML.
 
+## Captions
+
+The **Caption** button (`imagecaption`) in the image toolbar turns the image into a figure with an
+editable caption, and puts the cursor into it:
+
+```html
+<figure style="width: 320px;">
+  <img src="…" alt="…" width="320" />
+  <figcaption>Sunset, <em>July</em></figcaption>
+</figure>
+```
+
+- The caption is regular text: bold, italic and links work. **Enter** moves on to a new paragraph
+  below the image.
+- Alignment, size and alternative text work the same way for captioned images.
+- The figure gets the image width, so the caption wraps to the image even outside the editor
+  (e-mail, print).
+- Pressing **Caption** again removes it; the caption text is kept as a paragraph below the image.
+- With `validElements` that exclude `figure`, captioned images are loaded as an image followed
+  by a paragraph — nothing is lost.
+
 ## On your server
 
 - Check the file type and size on the server; never trust what the browser sends.

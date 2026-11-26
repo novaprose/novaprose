@@ -10,10 +10,12 @@ import type { StyleFormat } from '../formats';
 import type { MessageKey } from '../i18n';
 import {
   getSelectedImage,
+  hasImageCaption,
   openImageAltDialog,
   openImageDialog,
   setImageAttrs,
   setImageWidthFraction,
+  toggleImageCaption,
 } from '../image';
 import { openLinkDialog, removeLink } from '../link';
 import type { ImageAlign, MarkName, TextAlign } from '../schema';
@@ -554,7 +556,7 @@ export function registerBuiltins(editor: Editor): void {
   });
 
   // ---------- контекстный тулбар картинки ----------
-  const imageAlign = () => getSelectedImage(state())?.node.attrs.align ?? null;
+  const imageAlign = () => getSelectedImage(state())?.attrs.align ?? null;
   const imageAlignButton = (name: string, align: ImageAlign, svg: string, label: MessageKey) =>
     registry.addToggleButton(name, {
       icon: svg,
@@ -589,13 +591,21 @@ export function registerBuiltins(editor: Editor): void {
     tooltip: t('image.editAlt'),
     onAction: (e) => openImageAltDialog(e),
   });
+  registry.addToggleButton('imagecaption', {
+    icon: icons.imageCaption,
+    tooltip: t('image.caption'),
+    isActive: (e) => hasImageCaption(e.view.state),
+    onAction: (e) => e.exec(toggleImageCaption),
+  });
   registry.addButton('imagedelete', {
     icon: icons.trash,
     tooltip: t('image.delete'),
     onAction: (e) =>
       e.exec((s, dispatch) => {
-        if (!getSelectedImage(s)) return false;
-        dispatch?.(s.tr.deleteSelection().scrollIntoView());
+        // По позиции, а не по выделению: курсор может стоять в подписи.
+        const image = getSelectedImage(s);
+        if (!image) return false;
+        dispatch?.(s.tr.delete(image.pos, image.pos + image.node.nodeSize).scrollIntoView());
         return true;
       }),
   });
@@ -635,6 +645,13 @@ export function registerBuiltins(editor: Editor): void {
   registry.addContextToolbar('image', {
     label: t('image.toolbar'),
     predicate: (e) => !!getSelectedImage(e.view.state),
-    items: 'imagealignleft imagealigncenter imagealignright | imagesize imagealt | imagedelete',
+    items:
+      'imagealignleft imagealigncenter imagealignright | imagesize imagealt imagecaption | imagedelete',
+    // Над картинкой (и с подписью — над всей figure, даже когда курсор в подписи).
+    anchor: (e) => {
+      const image = getSelectedImage(e.view.state);
+      const dom = image ? (e.view.nodeDOM(image.pos) as HTMLElement | null) : null;
+      return dom?.getBoundingClientRect() ?? null;
+    },
   });
 }

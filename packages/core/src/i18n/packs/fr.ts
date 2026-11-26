@@ -96,6 +96,8 @@ const fr: LanguagePack = {
   'image.sizeFull': 'Pleine largeur',
   'image.sizeOriginal': "Taille d'origine",
   'image.delete': "Supprimer l'image",
+  'image.caption': 'Légende',
+  'image.captionPlaceholder': 'Ajouter une légende…',
   'status.words': 'Mots : {count}',
   'status.resize': "Redimensionner l'éditeur",
   'dialog.browse': 'Parcourir',

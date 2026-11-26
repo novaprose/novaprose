@@ -97,6 +97,8 @@ export const en = {
   'image.sizeFull': 'Full width',
   'image.sizeOriginal': 'Original size',
   'image.delete': 'Remove image',
+  'image.caption': 'Caption',
+  'image.captionPlaceholder': 'Add a caption…',
 
   'status.words': '{count} words',
   'status.resize': 'Resize editor',

@@ -98,6 +98,8 @@ export const ru: Messages = {
   'image.sizeFull': 'Во всю ширину',
   'image.sizeOriginal': 'Исходный размер',
   'image.delete': 'Удалить изображение',
+  'image.caption': 'Подпись',
+  'image.captionPlaceholder': 'Добавьте подпись…',
 
   'status.words': 'Слов: {count}',
   'status.resize': 'Изменить размер редактора',
