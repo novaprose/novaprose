@@ -42,11 +42,61 @@ function flatten(labels: PluginLabels): Record<string, string> {
   return out;
 }
 
-/** Зарегистрировать языковой пакет (BCP-47 код: 'de', 'pt-BR'). Недостающие ключи берутся из английского. */
-export function registerLanguage(code: string, messages: LanguagePack): void {
+/** Загрузчик пакета: `() => import('@novaprose/core/i18n/de')` — язык качается, только когда нужен. */
+export type LanguageLoader = () => Promise<LanguagePack | { default: LanguagePack }>;
+
+const loaders: Record<string, LanguageLoader> = {};
+const loading: Record<string, Promise<boolean> | undefined> = {};
+
+/** Строки пакета — в общий словарь языка: поверх прежних или под ними (загруженный пакет не затирает правки). */
+function install(lang: string, messages: LanguagePack, below = false): void {
+  userPacks[lang] = below
+    ? { ...messages, ...userPacks[lang] }
+    : { ...userPacks[lang], ...messages };
+  builtin[lang] = { ...en, ...(userPacks[lang] as Partial<Messages>) };
+}
+
+/**
+ * Зарегистрировать языковой пакет (BCP-47 код: 'de', 'pt-BR') или функцию, которая его загрузит, —
+ * тогда до создания редактора `await loadLanguage(code)`. Недостающие ключи берутся из английского.
+ */
+export function registerLanguage(code: string, messages: LanguagePack | LanguageLoader): void {
   const lang = code.toLowerCase();
-  userPacks[lang] = { ...userPacks[lang], ...messages };
-  builtin[lang] = { ...en, ...builtin[lang], ...(messages as Partial<Messages>) };
+  if (typeof messages === 'function') loaders[lang] = messages;
+  else install(lang, messages);
+}
+
+/** Язык готов для нового редактора: пакет зарегистрирован (или это английский). */
+export function hasLanguage(code: string): boolean {
+  const lang = code.toLowerCase();
+  return lang in builtin || lang.split('-')[0]! in builtin;
+}
+
+/**
+ * Загрузить язык, зарегистрированный загрузчиком (в CDN-сборках так подключены все пакеты).
+ * true — язык готов, false — ни пакета, ни загрузчика. Строки берутся при создании редактора,
+ * поэтому — до него. Ошибку загрузки можно повторить: неудачная попытка не запоминается.
+ */
+export function loadLanguage(code: string): Promise<boolean> {
+  const lang = code.toLowerCase();
+  const base = lang.split('-')[0]!;
+  const key = lang in loaders ? lang : base in loaders ? base : null;
+  if (!key) return Promise.resolve(hasLanguage(lang));
+  return (loading[key] ??= loaders[key]!().then(
+    (module) => {
+      // Модуль пакета (import()) или сам пакет.
+      install(
+        key,
+        (module as { default?: LanguagePack }).default ?? (module as LanguagePack),
+        true,
+      );
+      return true;
+    },
+    (error: unknown) => {
+      loading[key] = undefined;
+      throw error;
+    },
+  ));
 }
 
 /** Строки плагина по языкам (en — эталон). Вызывается плагином при загрузке модуля. */
@@ -88,8 +138,11 @@ export function createTranslator(language = 'en', overrides: LanguagePack = {}):
   if (pack === en && base !== 'en' && !warned.has(base)) {
     warned.add(base);
     console.warn(
-      `[nova] language "${language}" is not registered, using English. ` +
-        `import pack from '@novaprose/core/i18n/${base}'; registerLanguage('${base}', pack);`,
+      code in loaders || base in loaders
+        ? `[nova] language "${language}" is not loaded yet, using English. ` +
+            `Load it before creating the editor: await loadLanguage('${language}');`
+        : `[nova] language "${language}" is not registered, using English. ` +
+            `import pack from '@novaprose/core/i18n/${base}'; registerLanguage('${base}', pack);`,
     );
   }
   const messages: Record<string, string> = { ...en, ...pack, ...overrides };

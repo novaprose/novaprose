@@ -1,4 +1,4 @@
-import { createEditor, registerHtmlRules } from '@novaprose/core';
+import { createEditor, loadLanguage, registerHtmlRules } from '@novaprose/core';
 import { htmlRules } from '@novaprose/core/html-rules';
 import { CompatEditor } from './editor';
 import { mapOptions, type TinyConfig } from './options';
@@ -186,6 +186,14 @@ export function createTinymce(): TinyMCECompat {
         await new Promise((resolve) =>
           document.addEventListener('DOMContentLoaded', resolve, { once: true }),
         );
+      }
+      // Язык с загрузчиком (в CDN-сборке — все пакеты) — до создания редакторов, как langs/<код>.js у
+      // TinyMCE: строки интерфейса берутся при создании. Не загрузился — английский, редактор работает.
+      if (typeof config.language === 'string') {
+        await loadLanguage(config.language.replace('_', '-')).catch((error: unknown) => {
+          console.warn('[nova] tinymce-compat: language pack failed to load', error);
+          return false;
+        });
       }
       const targets: HTMLElement[] = config.target
         ? [config.target]

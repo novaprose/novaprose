@@ -76,11 +76,14 @@ export {
 export {
   createTranslator,
   registerLanguage,
+  loadLanguage,
+  hasLanguage,
   en,
   type Messages,
   type MessageKey,
   type Translator,
   type LanguagePack,
+  type LanguageLoader,
   type PluginMessageKey,
   getPluginMessages,
 } from './i18n';

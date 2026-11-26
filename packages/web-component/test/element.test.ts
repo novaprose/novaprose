@@ -1,5 +1,6 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { TextSelection } from 'prosemirror-state';
+import { registerLanguage } from '@novaprose/core';
 import { defineNovaProseEditor, type NovaProseEditorElement } from '../src';
 
 beforeAll(() => defineNovaProseEditor());
@@ -84,6 +85,37 @@ describe('<novaprose-editor>', () => {
     expect(el.editor!.isEditable()).toBe(false);
     el.removeAttribute('disabled');
     expect(el.editor!.isEditable()).toBe(true);
+  });
+
+  it('язык с загрузчиком: редактор — после загрузки пакета, сразу с переводом', async () => {
+    let release!: () => void;
+    registerLanguage(
+      'qw',
+      () => new Promise((resolve) => (release = () => resolve({ bold: 'B (qw)' }))),
+    );
+    const ready = vi.fn();
+    document.addEventListener('novaprose-ready', ready);
+    const el = create('<novaprose-editor language="qw" toolbar="bold"><p>x</p></novaprose-editor>');
+    // Пока язык грузится, видна исходная разметка; редактора ещё нет.
+    expect(el.editor).toBeNull();
+    expect(el.innerHTML).toBe('<p>x</p>');
+    release();
+    await vi.waitFor(() => expect(el.editor).not.toBeNull());
+    expect(ready).toHaveBeenCalledTimes(1);
+    expect(el.querySelector('[data-control="bold"]')?.getAttribute('aria-label')).toBe('B (qw)');
+    expect(el.value).toBe('<p>x</p>');
+    document.removeEventListener('novaprose-ready', ready);
+  });
+
+  it('язык не загрузился — редактор всё равно создаётся, на английском', async () => {
+    registerLanguage('qx', async () => {
+      throw new Error('offline');
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const el = create('<novaprose-editor language="qx" toolbar="bold"></novaprose-editor>');
+    await vi.waitFor(() => expect(el.editor).not.toBeNull());
+    expect(el.querySelector('[data-control="bold"]')?.getAttribute('aria-label')).toMatch(/^Bold/);
+    warn.mockRestore();
   });
 
   it('событие novaprose-ready несёт экземпляр', () => {

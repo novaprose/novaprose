@@ -112,6 +112,9 @@ All packages in this repository are versioned together. The format follows
   editor's options that shape the HTML: plugins and their settings, formats and classes, content
   restrictions, direction. The output is checked against `getHTML()` on thousands of random
   documents.
+- Languages on demand: `registerLanguage('de', () => import('@novaprose/core/i18n/de'))` registers
+  a pack that is downloaded only when needed; `await loadLanguage('de')` loads it before the editor
+  is created, and `hasLanguage(code)` tells whether a language is ready.
 
 ### Plugins API
 
@@ -137,6 +140,11 @@ All packages in this repository are versioned together. The format follows
 
 ### Distribution
 
+- Every ready-made language (Russian, German, Spanish, French, Italian, Portuguese) works in the
+  CDN builds: each is a separate file next to the script. `<novaprose-editor language="de">` and
+  `tinymce.init({ language: 'de' })` load it before the editor appears. **Changed:** Russian is no
+  longer inside the main file, which gets 5–6 KB gzip smaller, so with `NovaProse.createEditor`
+  call `await NovaProse.loadLanguage('ru')` first.
 - The CDN builds include `novaprose.licenses.txt` / `tinymce.licenses.txt` with the license of
   every bundled package (ProseMirror, highlight.js…), generated from the build itself, and a banner
   pointing to it.

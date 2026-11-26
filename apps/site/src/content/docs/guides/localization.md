@@ -15,11 +15,41 @@ createEditor({ element, language: 'ru' });
 ```
 
 If `language` names a language that isn't registered, the editor uses English and logs a hint
-with the import to add. The CDN builds (`novaprose.global.js`, `tinymce.global.js`) include
-Russian already.
+with the import to add.
 
 Language codes follow BCP 47 with fallback: `ru-RU` uses `ru`, and an unknown language falls back
 to English.
+
+## Load a language only when it's needed
+
+Register a function that loads the pack instead of the pack itself, and load it before creating
+the editor. Your bundler then puts each pack in its own file, downloaded only by the people who use
+that language:
+
+```ts
+import { createEditor, loadLanguage, registerLanguage } from '@novaprose/core';
+
+registerLanguage('de', () => import('@novaprose/core/i18n/de'));
+registerLanguage('fr', () => import('@novaprose/core/i18n/fr'));
+
+await loadLanguage(userLanguage); // false when there is no such pack: the editor uses English
+createEditor({ element, language: userLanguage });
+```
+
+The strings are taken when the editor is created, so load first. `hasLanguage(code)` tells whether
+a language is ready.
+
+### In the CDN builds
+
+The CDN builds (`novaprose.global.js`, `tinymce.global.js`) register every ready-made pack this
+way, as separate files next to the script. `<novaprose-editor language="de">` and
+`tinymce.init({ language: 'de' })` load the pack themselves before the editor appears; with
+`NovaProse.createEditor`, load it first:
+
+```js
+await NovaProse.loadLanguage('de');
+NovaProse.createEditor({ element, language: 'de' });
+```
 
 ## Override some strings
 
@@ -32,8 +62,8 @@ createEditor({
 
 ## Ready-made language packs
 
-Each pack covers the whole interface — core and every built-in plugin (293 strings) — and is a
-separate import of about 4 KB gzip, so you only download the languages you use.
+Each pack covers the whole interface — core and every built-in plugin (353 strings) — and is a
+separate import of about 5 KB gzip, so you only download the languages you use.
 
 | Language            | Import                       | Status                       |
 | ------------------- | ---------------------------- | ---------------------------- |

@@ -1,4 +1,5 @@
 import { TextSelection } from 'prosemirror-state';
+import { registerLanguage } from '@novaprose/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTinymce, type CompatEditor } from '../src';
 
@@ -33,6 +34,16 @@ describe('tinymce.init', () => {
     expect(tinymce.activeEditor).toBe(editor);
     editor!.setContent('<p>New</p>');
     expect(editor!.getContent({ format: 'text' })).toBe('New');
+  });
+
+  it('language с загрузчиком (как в CDN-сборке): init ждёт пакет, интерфейс сразу переведён', async () => {
+    registerLanguage('qy-QY', async () => ({ bold: 'B (qy)' }));
+    page('<textarea id="t"></textarea>');
+    const [editor] = await tinymce.init({ selector: '#t', toolbar: 'bold', language: 'qy_QY' });
+    expect(editor).toBeDefined();
+    expect(document.querySelector('[data-control="bold"]')?.getAttribute('aria-label')).toBe(
+      'B (qy)',
+    );
   });
 
   it('порядок: setup → события init → init_instance_callback; промис отдаёт редакторы', async () => {

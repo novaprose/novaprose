@@ -47,6 +47,7 @@ test('CDN: замена tinymce.min.js без других правок стра
     plugins: 'lists link image table code help wordcount charmap',
     toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter | bullist numlist | link image | code charmap',
     menubar: 'file edit insert format',
+    language: 'de',
     setup: (editor) => { editor.on('init', () => { document.body.dataset.ready = '1'; }); },
   });
 </script></head><body>
@@ -85,6 +86,9 @@ test('CDN: замена tinymce.min.js без других правок стра
     .toBe(true);
   expect(requested.some((f) => /^tinymce-chunks\/charmap-\w+\.js$/.test(f))).toBe(true);
   await expect(page.locator('[data-control="charmap"]').first()).toBeAttached();
+  // Язык — отдельная часть: init дождался её, интерфейс сразу на немецком.
+  expect(requested.some((f) => /^tinymce-chunks\/de-\w+\.js$/.test(f))).toBe(true);
+  await expect(page.locator('[data-control="bold"]').first()).toHaveAttribute('aria-label', /Fett/);
   expect(errors).toEqual([]);
 });
 
@@ -96,7 +100,7 @@ test('CDN: глобальный NovaProse из вставленного скри
     'нужна сборка: pnpm --filter "@novaprose/web-component..." build',
   );
   const requested = await serveCdn(page, 'packages/web-component/dist/');
-  // Как в CRM: скрипт добавляется кодом, редактор создаётся в onload.
+  // Как в CRM: скрипт добавляется кодом, редактор создаётся в onload — после загрузки языка.
   await site(
     page,
     `<!doctype html><html><head>
@@ -104,7 +108,8 @@ test('CDN: глобальный NovaProse из вставленного скри
 </head><body><div id="editor"></div><script>
   const script = document.createElement('script');
   script.src = 'https://cdn.example.com/novaprose.global.js';
-  script.onload = () => {
+  script.onload = async () => {
+    await NovaProse.loadLanguage('ru');
     window.editor = NovaProse.createEditor({
       element: document.getElementById('editor'),
       language: 'ru',
@@ -135,7 +140,8 @@ test('CDN: глобальный NovaProse из вставленного скри
   ).toBe('<table><tbody><tr><td><p>a</p></td><td><p>X</p></td></tr></tbody></table>');
   expect(requested.some((f) => /^novaprose-chunks\/table-\w+\.js$/.test(f))).toBe(true);
   expect(requested.some((f) => /^novaprose-chunks\/insertdatetime-\w+\.js$/.test(f))).toBe(true);
-  // Русский встроен в CDN-сборку.
+  // Русский — отдельная часть с того же адреса (loadLanguage), не в основном файле.
+  expect(requested.some((f) => /^novaprose-chunks\/ru-\w+\.js$/.test(f))).toBe(true);
   await expect(page.locator('[data-control="bold"]').first()).toHaveAttribute(
     'aria-label',
     /Жирный/,

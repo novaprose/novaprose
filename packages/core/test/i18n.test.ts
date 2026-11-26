@@ -1,7 +1,15 @@
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
-import { createEditor, en, registerLanguage, type Editor, type LanguagePack } from '../src';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  createEditor,
+  en,
+  hasLanguage,
+  loadLanguage,
+  registerLanguage,
+  type Editor,
+  type LanguagePack,
+} from '../src';
 import { getPluginMessages } from '../src/i18n';
 import ruPack from '../src/i18n/packs/ru';
 
@@ -130,5 +138,71 @@ describe('языковые пакеты @novaprose/core/i18n/*', () => {
     expect(tooltip(e, 'charmap')).toBe(pack['charmap.title']);
     // Перевод отличается от английского — пакет не пустышка.
     expect(pack.bold).not.toBe(en.bold);
+  });
+});
+
+describe('языки по требованию: registerLanguage(code, загрузчик) + loadLanguage', () => {
+  it('загрузчик вызывается один раз; после загрузки язык готов для редактора', async () => {
+    const loader = vi.fn(async () => ({ default: { bold: 'Fett (qa)' } as LanguagePack }));
+    registerLanguage('qa', loader);
+    expect(hasLanguage('qa')).toBe(false);
+    const [a, b] = await Promise.all([loadLanguage('qa'), loadLanguage('QA')]);
+    expect([a, b]).toEqual([true, true]);
+    expect(loader).toHaveBeenCalledTimes(1);
+    expect(hasLanguage('qa')).toBe(true);
+    expect(await loadLanguage('qa-BE')).toBe(true); // базовый язык
+    const e = await mount({ language: 'qa', toolbar: 'bold' });
+    expect(tooltip(e, 'bold')).toBe('Fett (qa)');
+  });
+
+  it('пакет можно вернуть и без default; неизвестный язык — false; английский готов всегда', async () => {
+    registerLanguage('qb', async () => ({ italic: 'Kursiv (qb)' }));
+    expect(await loadLanguage('qb')).toBe(true);
+    expect(await loadLanguage('zz-unknown')).toBe(false);
+    expect(await loadLanguage('en-US')).toBe(true);
+    expect(hasLanguage('en')).toBe(true);
+  });
+
+  it('ошибка загрузки не запоминается: следующий вызов пробует снова', async () => {
+    let attempt = 0;
+    registerLanguage('qc', async () => {
+      attempt++;
+      if (attempt === 1) throw new Error('network');
+      return { bold: 'B (qc)' };
+    });
+    await expect(loadLanguage('qc')).rejects.toThrow('network');
+    expect(await loadLanguage('qc')).toBe(true);
+    expect(attempt).toBe(2);
+  });
+
+  it('загруженный пакет не затирает строки, зарегистрированные раньше', async () => {
+    registerLanguage('qd', { bold: 'Своя (qd)' });
+    registerLanguage('qd', async () => ({ bold: 'Из пакета (qd)', italic: 'Курсив (qd)' }));
+    expect(await loadLanguage('qd')).toBe(true);
+    const e = await mount({ language: 'qd', toolbar: 'bold italic' });
+    expect(tooltip(e, 'bold')).toBe('Своя (qd)');
+    expect(tooltip(e, 'italic')).toBe('Курсив (qd)');
+  });
+
+  it('редактор до загрузки — английский и подсказка: await loadLanguage', async () => {
+    registerLanguage('qe', async () => ({ bold: 'B (qe)' }));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const e = await mount({ language: 'qe', toolbar: 'bold' });
+    expect(tooltip(e, 'bold')).toBe(en.bold);
+    expect(warn.mock.calls.flat().join(' ')).toContain("await loadLanguage('qe')");
+    warn.mockRestore();
+  });
+
+  it('CDN-сборки подключают загрузчиком каждый пакет из i18n/packs', () => {
+    const codes = readdirSync(join(__dirname, '../src/i18n/packs')).map((f) =>
+      f.replace('.ts', ''),
+    );
+    for (const entry of ['../../web-component/src/cdn.ts', '../../tinymce-compat/src/cdn.ts']) {
+      const source = readFileSync(join(__dirname, entry), 'utf8');
+      for (const code of codes)
+        expect(source).toContain(
+          `registerLanguage('${code}', () => import('@novaprose/core/i18n/${code}'));`,
+        );
+    }
   });
 });

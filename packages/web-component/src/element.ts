@@ -1,4 +1,10 @@
-import { createEditor, type Editor, type EditorOptions } from '@novaprose/core';
+import {
+  createEditor,
+  hasLanguage,
+  loadLanguage,
+  type Editor,
+  type EditorOptions,
+} from '@novaprose/core';
 
 /** Имя тега по умолчанию. */
 export const DEFAULT_TAG = 'novaprose-editor';
@@ -46,6 +52,8 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
     #formDisabled = false;
     #syncing = false;
     #valueAtFocus = '';
+    /** Загрузка языка перед созданием редактора: ещё не начата, идёт, закончилась (успешно или нет). */
+    #language: 'idle' | 'loading' | 'done' = 'idle';
 
     constructor() {
       super();
@@ -132,6 +140,22 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
 
     #mount(): void {
       if (this.#editor || !this.isConnected) return;
+
+      // Язык с загрузчиком (в CDN-сборке — все пакеты) грузим до создания редактора: строки интерфейса
+      // берутся при нём. Готовый язык — без задержки; не загрузился — английский, редактор работает.
+      const wanted = this.getAttribute('language') ?? this.#init.language;
+      if (wanted && this.#language !== 'done' && !hasLanguage(wanted)) {
+        if (this.#language === 'idle') {
+          this.#language = 'loading';
+          void loadLanguage(wanted)
+            .catch((error: unknown) => console.warn('[nova] language pack failed to load', error))
+            .finally(() => {
+              this.#language = 'done';
+              this.#mount();
+            });
+        }
+        return;
+      }
 
       // Прогрессивное улучшение: разметка внутри тега видна без JS и становится начальным содержимым.
       const content = this.#pending ?? this.getAttribute('value') ?? this.innerHTML.trim();
