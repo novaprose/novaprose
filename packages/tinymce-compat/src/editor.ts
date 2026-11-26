@@ -8,10 +8,68 @@ import {
   type Editor,
   type StyleMark,
 } from '@novaprose/core';
-import { openSpecDialog, type DialogApi, type DialogSpec } from './dialog';
+import type * as DialogModule from './dialog';
+import type { DialogApi, DialogSpec } from './dialog';
 import { AllSelection, NodeSelection, TextSelection } from 'prosemirror-state';
 
 const serializer = new HTMLSerializer();
+
+type Dialogs = typeof DialogModule;
+let dialogs: Dialogs | null = null;
+let dialogsLoading: Promise<Dialogs> | null = null;
+
+/**
+ * Диалоги по описанию (windowManager.open) — отдельный модуль: в CDN-сборке это ленивая часть.
+ * Редактор подгружает его заранее, поэтому open() обычно сразу рисует диалог.
+ */
+export function loadDialogs(): Promise<Dialogs> {
+  dialogsLoading ??= import('./dialog').then((module) => (dialogs = module));
+  return dialogsLoading;
+}
+
+/**
+ * API диалога — сразу. Если модуль ещё грузится: setData копит данные (диалог откроется с ними),
+ * остальные вызовы ждут открытия.
+ */
+function openDialog(
+  core: Editor,
+  spec: DialogSpec,
+  reopen: (spec: DialogSpec) => DialogApi,
+): DialogApi {
+  if (dialogs) return dialogs.openSpecDialog(core, spec, reopen);
+  let real: DialogApi | null = null;
+  let data = { ...(spec.initialData ?? {}) };
+  const queue: Array<(api: DialogApi) => void> = [];
+  void loadDialogs().then(
+    (module) => {
+      real = module.openSpecDialog(core, { ...spec, initialData: data }, reopen);
+      for (const call of queue.splice(0)) call(real);
+    },
+    (error: unknown) => console.error('[nova] windowManager: could not load dialogs', error),
+  );
+  const later =
+    <K extends keyof DialogApi>(method: K) =>
+    (...args: Parameters<DialogApi[K]>) => {
+      const call = (api: DialogApi) => (api[method] as (...a: typeof args) => void)(...args);
+      if (real) call(real);
+      else queue.push(call);
+    };
+  return {
+    getData: () => (real ? real.getData() : { ...data }),
+    setData: (next) => {
+      if (real) real.setData(next);
+      else data = { ...data, ...next };
+    },
+    close: later('close'),
+    block: later('block'),
+    unblock: later('unblock'),
+    focus: later('focus'),
+    disable: later('disable'),
+    enable: later('enable'),
+    showTab: later('showTab'),
+    redial: later('redial'),
+  };
+}
 
 /**
  * Обёртка над редактором NovaProse с API редактора TinyMCE (по публичной документации): методы,
@@ -231,6 +289,8 @@ export class CompatEditor {
     this.targetElm = target;
     this.id = id;
     this.settings = settings;
+    // Диалоги своих плагинов — заранее, в фоне: к первому open() модуль уже есть.
+    setTimeout(() => void loadDialogs().catch(() => {}), 0);
   }
 
   // ---------- содержимое ----------
@@ -645,7 +705,7 @@ export class CompatEditor {
       } as never);
     },
     open: (spec: DialogSpec): DialogApi =>
-      openSpecDialog(this.core, spec, (next) => this.windowManager.open(next)),
+      openDialog(this.core, spec, (next) => this.windowManager.open(next)),
   };
 
   /** editor.ui.registry — кнопки и пункты меню в формате TinyMCE поверх реестра NovaProse. */

@@ -20,8 +20,35 @@ async function editor(content = '<p>text</p>'): Promise<CompatEditor> {
 
 const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]')!;
 const tick = () => new Promise((r) => setTimeout(r, 0));
+/** Диалог по описанию — отдельный модуль (в CDN ленивый): ждём, пока он нарисуется. */
+const opened = () =>
+  vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
 
 describe('windowManager.open', () => {
+  it('до загрузки модуля диалогов: API сразу, setData — в открывшийся диалог', async () => {
+    vi.resetModules();
+    const fresh = await import('../src');
+    const tm = fresh.createTinymce();
+    document.body.innerHTML = '<textarea id="t"></textarea>';
+    const [ed] = await tm.init({ selector: '#t' });
+    const api = ed!.windowManager.open({
+      title: 'Early',
+      body: { type: 'panel', items: [{ type: 'input', name: 'title', label: 'Title' }] },
+      initialData: { title: 'a' },
+      buttons: [{ type: 'cancel', text: 'Close' }],
+    });
+    api.setData({ title: 'b' });
+    expect(api.getData()).toEqual({ title: 'b' });
+    api.focus('title');
+    await opened();
+    expect(dialog().querySelector<HTMLInputElement>('input')!.value).toBe('b');
+    await vi.waitFor(() => expect(document.activeElement).toBe(dialog().querySelector('input')));
+    api.close();
+    await tick();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    tm.remove();
+  });
+
   it('поля, initialData, getData и onSubmit с api.close() — типичный диалог плагина', async () => {
     const ed = await editor();
     const onSubmit = vi.fn((api: DialogApi) => {
@@ -55,6 +82,7 @@ describe('windowManager.open', () => {
       ],
       onSubmit,
     });
+    await opened();
     const box = dialog();
     expect(box.textContent).toContain('Insert card');
     const title = box.querySelector<HTMLInputElement>('input[type="text"]')!;
@@ -87,6 +115,7 @@ describe('windowManager.open', () => {
       onCancel,
       onClose,
     });
+    await opened();
     const input = dialog().querySelector<HTMLInputElement>('input')!;
     input.value = 'x';
     input.dispatchEvent(new Event('input'));
@@ -131,6 +160,7 @@ describe('windowManager.open', () => {
       buttons: [{ type: 'cancel', text: 'Close' }],
       onTabChange,
     });
+    await opened();
     const panels = dialog().querySelectorAll<HTMLElement>('[role="tabpanel"]');
     expect(panels[0]!.hidden).toBe(false);
     expect(panels[1]!.hidden).toBe(true);
