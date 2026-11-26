@@ -35,6 +35,10 @@ All packages in this repository are versioned together. The format follows
 - **Fixed:** the colors of suggestion authors and of deleted text did not reach the 4.5:1 contrast
   required for text on a white background; the palette is darker, and deleted text is no longer
   faded.
+- **Fixed (screen readers):** the placeholder of an empty editor was read as if it were text in the
+  document; it is now announced as the field's placeholder (`aria-placeholder`). In real-time
+  collaboration, the names on other participants' cursors were read as part of the text; the
+  cursors are now hidden from screen readers.
 - Word documents: `plugins: ['importword', 'exportword']` open a `.docx` and save the document as
   `.docx` (buttons and File menu items, as in TinyMCE) — in the browser, with no conversion
   service. Headings, formatting, links and bookmarks, real Word lists, tables with merged cells,

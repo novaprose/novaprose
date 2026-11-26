@@ -139,6 +139,8 @@ describe('real-time collaboration', () => {
     const label = a.root.querySelector('.nova-collab-label');
     expect(label?.textContent).toBe('Boris');
     expect((label as HTMLElement).style.backgroundColor).not.toBe('');
+    // The cursor sits inside the editable text: screen readers must not read "Boris" as document text.
+    expect(a.root.querySelector('.nova-collab-caret')?.getAttribute('aria-hidden')).toBe('true');
   });
 
   it("a participant's name is output as text, not HTML", async () => {

@@ -189,6 +189,16 @@ describe('commands', () => {
 });
 
 describe('lifecycle', () => {
+  it('exposes the placeholder to screen readers as aria-placeholder, not as text', () => {
+    const e = mount('', { placeholder: 'Start typing…' });
+    const textbox = e.root.querySelector('[role="textbox"]')!;
+    expect(textbox.getAttribute('aria-placeholder')).toBe('Start typing…');
+    // The visible copy comes from data-placeholder through CSS with empty alternative text.
+    expect(textbox.getAttribute('data-placeholder')).toBe('Start typing…');
+    e.destroy();
+    expect(mount('<p>a</p>').root.querySelector('[aria-placeholder]')).toBeNull();
+  });
+
   it('renders the toolbar by default and removes it with toolbar: false', () => {
     const e = mount('<p>a</p>');
     expect(e.root.querySelector('.nova-toolbar')).not.toBeNull();

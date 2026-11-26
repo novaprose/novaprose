@@ -101,6 +101,8 @@ function cursorBuilder(user: { name?: string; color?: string }): HTMLElement {
   const caret = document.createElement('span');
   caret.className = 'nova-collab-caret';
   caret.style.borderColor = color;
+  // The caret sits inside the editable text: without this, screen readers read the name as document text.
+  caret.setAttribute('aria-hidden', 'true');
   const label = document.createElement('span');
   label.className = 'nova-collab-label';
   label.style.backgroundColor = color;

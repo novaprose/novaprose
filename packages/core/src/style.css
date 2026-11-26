@@ -449,6 +449,8 @@
 
 .nova-prosemirror.nova-empty::before {
   content: attr(data-placeholder);
+  /* Empty alternative text: screen readers get aria-placeholder instead (older browsers skip this line). */
+  content: attr(data-placeholder) / '';
   position: absolute;
   /* Text needs AA contrast (4.5:1), so muted, not subtle. */
   color: var(--nova-muted);

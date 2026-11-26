@@ -485,7 +485,11 @@ export class Editor {
         role: 'textbox',
         'aria-multiline': 'true',
         'aria-label': this.ui.t('editor.label'),
-        ...(options.placeholder ? { 'data-placeholder': options.placeholder } : {}),
+        // The visible placeholder is CSS generated content with empty alternative text (style.css);
+        // screen readers get it as aria-placeholder, not as text inside the document.
+        ...(options.placeholder
+          ? { 'data-placeholder': options.placeholder, 'aria-placeholder': options.placeholder }
+          : {}),
       },
       // ProseMirror calls dispatchTransaction with this = the view: plugins (collaboration sync,
       // for example) may dispatch a transaction while still inside the EditorView constructor,
