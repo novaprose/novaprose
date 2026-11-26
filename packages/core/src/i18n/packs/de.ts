@@ -61,6 +61,8 @@ const de: LanguagePack = {
   'dialog.save': 'Speichern',
   'dialog.insert': 'Einfügen',
   'dialog.close': 'Schließen',
+  'dialog.required': 'Dieses Feld ist erforderlich',
+  'dialog.invalid': 'Format prüfen',
   'link.title': 'Link einfügen',
   'link.editTitle': 'Link bearbeiten',
   'link.url': 'URL',

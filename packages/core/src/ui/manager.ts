@@ -1,9 +1,12 @@
+import type { Editor } from '../editor';
 import type { Translator } from '../i18n';
 import { openDialog, type DialogHandle, type DialogOptions } from './dialog';
 import { h } from './dom';
+import type { DialogData, DialogSpec } from './form-dialog-types';
 import { Notifications, type NotificationHandle, type NotificationOptions } from './notification';
 import { Popover, type PopoverOptions } from './popover';
 import { Registry } from './registry';
+import { Sidebars } from './sidebar';
 import { Tooltip } from './tooltip';
 
 /**
@@ -16,20 +19,33 @@ export class UiManager {
   /** Слой для всех плавающих элементов. Лежит внутри .nova-editor, поэтому наследует тему. */
   readonly overlayHost: HTMLDivElement;
   readonly tooltip: Tooltip;
+  /** Боковые панели плагинов: show / hide / toggle (регистрация — registry.addSidebar). */
+  readonly sidebar: Sidebars;
   private readonly notifications: Notifications;
   private popover: Popover | null = null;
-  private dialog: DialogHandle | null = null;
+  private currentDialog: DialogHandle | null = null;
 
   constructor(
     root: HTMLElement,
     t: Translator,
     private readonly focusEditor: () => void,
+    editor: Editor,
   ) {
     this.t = t;
     this.overlayHost = h('div', { className: 'nova-overlays' });
     root.append(this.overlayHost);
     this.tooltip = new Tooltip(this.overlayHost);
     this.notifications = new Notifications(root, t('dialog.close'));
+    this.sidebar = new Sidebars(editor);
+  }
+
+  /**
+   * Диалог по описанию полей (для плагинов): проверка, ошибки у полей, доступность.
+   * Возвращает данные или null, если диалог закрыли. Реализация грузится при первом открытии.
+   */
+  async dialog(spec: DialogSpec): Promise<DialogData | null> {
+    const { openFormDialog } = await import('./form-dialog');
+    return openFormDialog(spec, this.t, (options) => this.openDialog(options));
   }
 
   /** Открыть поповер; одновременно открыт только один (кроме панели переполнения тулбара). */
@@ -84,7 +100,7 @@ export class UiManager {
   ): DialogHandle {
     this.closePopover();
     this.dialogListeners.forEach((listener) => listener());
-    this.dialog?.close();
+    this.currentDialog?.close();
     const handle = openDialog({
       cancelLabel: this.t('dialog.cancel'),
       closeLabel: this.t('dialog.close'),
@@ -92,16 +108,16 @@ export class UiManager {
       host: this.overlayHost,
       returnFocus: this.focusEditor,
       onClose: () => {
-        if (this.dialog === handle) this.dialog = null;
+        if (this.currentDialog === handle) this.currentDialog = null;
         options.onClose?.();
       },
     });
-    this.dialog = handle;
+    this.currentDialog = handle;
     return handle;
   }
 
   get activeDialog(): DialogHandle | null {
-    return this.dialog;
+    return this.currentDialog;
   }
 
   notify(options: NotificationOptions | string): NotificationHandle {
@@ -109,8 +125,9 @@ export class UiManager {
   }
 
   destroy(): void {
+    this.sidebar.destroy();
     this.closePopover();
-    this.dialog?.close();
+    this.currentDialog?.close();
     this.tooltip.destroy();
     this.notifications.destroy();
     this.overlayHost.remove();

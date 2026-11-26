@@ -39,24 +39,27 @@ Named commands — part of the public API, stable across minor versions:
 
 ## State and UI
 
-| Method / property                          | Description                                                               |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| `focus()`                                  | focus the text                                                            |
-| `isEditable()`, `setEditable(value)`       | read-only mode                                                            |
-| `isPasteAsText()`, `setPasteAsText(value)` | plain-text paste mode                                                     |
-| `openSearch()`, `closeSearch()`            | the search and replace bar                                                |
-| `isAllowed(name): boolean`                 | whether content rules allow an element or control                         |
-| `hasPlugin(name): boolean`                 | whether a plugin is active                                                |
-| `rebuildToolbar()`                         | re-render the toolbar after registering controls late                     |
-| `updateUI()`                               | refresh toolbar state (pressed/disabled) after a display-only change      |
-| `ready: Promise<void>`                     | resolves when all plugins and lazy parts (e.g. table editing) are set up  |
-| `mode`                                     | `'classic'`, `'inline'` or `'distraction-free'`                           |
-| `root: HTMLElement`                        | the editor's root element                                                 |
-| `ui.registry`                              | register controls ([Custom buttons](/guides/custom-buttons-and-plugins/)) |
-| `ui.t(key)`                                | translate a UI string                                                     |
-| `schema`                                   | this editor's document schema: built-in plus plugin nodes and marks       |
-| `view`                                     | the underlying ProseMirror `EditorView` (advanced use)                    |
-| `destroy()`                                | remove the editor and all its listeners                                   |
+| Method / property                          | Description                                                                                                 |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `focus()`                                  | focus the text                                                                                              |
+| `isEditable()`, `setEditable(value)`       | read-only mode                                                                                              |
+| `isPasteAsText()`, `setPasteAsText(value)` | plain-text paste mode                                                                                       |
+| `openSearch()`, `closeSearch()`            | the search and replace bar                                                                                  |
+| `isAllowed(name): boolean`                 | whether content rules allow an element or control                                                           |
+| `hasPlugin(name): boolean`                 | whether a plugin is active                                                                                  |
+| `rebuildToolbar()`                         | re-render the toolbar after registering controls late                                                       |
+| `updateUI()`                               | refresh toolbar state (pressed/disabled) after a display-only change                                        |
+| `ready: Promise<void>`                     | resolves when all plugins and lazy parts (e.g. table editing) are set up                                    |
+| `mode`                                     | `'classic'`, `'inline'` or `'distraction-free'`                                                             |
+| `root: HTMLElement`                        | the editor's root element                                                                                   |
+| `ui.registry`                              | register controls ([Custom buttons](/guides/custom-buttons-and-plugins/))                                   |
+| `ui.t(key)`                                | translate a UI string                                                                                       |
+| `ui.dialog(spec)`                          | a dialog from a list of fields ([Plugins](/guides/custom-buttons-and-plugins/#a-dialog))                    |
+| `ui.sidebar`                               | `show(name)`, `hide()`, `toggle(name)`, `active` ([Plugins](/guides/custom-buttons-and-plugins/#a-sidebar)) |
+| `ui.notify(text \| options)`               | a notification, optionally with action buttons                                                              |
+| `schema`                                   | this editor's document schema: built-in plus plugin nodes and marks                                         |
+| `view`                                     | the underlying ProseMirror `EditorView` (advanced use)                                                      |
+| `destroy()`                                | remove the editor and all its listeners                                                                     |
 
 ## Events
 

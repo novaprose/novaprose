@@ -61,6 +61,8 @@ const ptBR: LanguagePack = {
   'dialog.save': 'Salvar',
   'dialog.insert': 'Inserir',
   'dialog.close': 'Fechar',
+  'dialog.required': 'Este campo é obrigatório',
+  'dialog.invalid': 'Verifique o formato',
   'link.title': 'Inserir link',
   'link.editTitle': 'Editar link',
   'link.url': 'URL',

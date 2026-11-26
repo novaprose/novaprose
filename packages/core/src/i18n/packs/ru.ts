@@ -62,6 +62,8 @@ const ru: LanguagePack = {
   'dialog.save': 'Сохранить',
   'dialog.insert': 'Вставить',
   'dialog.close': 'Закрыть',
+  'dialog.required': 'Заполните это поле',
+  'dialog.invalid': 'Проверьте формат',
   'link.title': 'Вставить ссылку',
   'link.editTitle': 'Изменить ссылку',
   'link.url': 'Адрес',

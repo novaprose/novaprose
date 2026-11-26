@@ -257,6 +257,36 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toBe(html);
   });
 
+  it('addSidebar: onSetup рисует панель, кнопка и ToggleSidebar переключают её', async () => {
+    page('<textarea id="t"><p>x</p></textarea>');
+    const shown: string[] = [];
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      toolbar: 'bold mysidebar',
+      setup: (ed: CompatEditor) => {
+        ed.ui.registry.addSidebar('mysidebar', {
+          tooltip: 'My sidebar',
+          onSetup: (api) => {
+            api.element().textContent = 'Hello from sidebar';
+          },
+          onShow: () => shown.push('show'),
+          onHide: () => shown.push('hide'),
+        });
+      },
+    });
+    const button = document.querySelector<HTMLButtonElement>('[data-control="mysidebar"]')!;
+    expect(button.getAttribute('aria-label')).toBe('My sidebar');
+    editor!.execCommand('ToggleSidebar', false, 'mysidebar');
+    await new Promise((r) => setTimeout(r, 0));
+    expect(document.querySelector('[data-sidebar="mysidebar"]')!.textContent).toContain(
+      'Hello from sidebar',
+    );
+    expect(editor!.queryCommandValue('ToggleSidebar')).toBe('mysidebar');
+    button.click();
+    expect(editor!.queryCommandValue('ToggleSidebar')).toBe('');
+    expect(shown).toEqual(['show', 'hide']);
+  });
+
   it('опции: block_formats, disabled (и options.set на лету), resize', async () => {
     page('<textarea id="a"></textarea><textarea id="b"></textarea>');
     const [a] = await tinymce.init({

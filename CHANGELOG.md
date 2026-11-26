@@ -36,6 +36,20 @@ All packages in this repository are versioned together. The format follows
   toolbar buttons, and focus that leaves a dialog comes back. Tested in Chromium, Firefox and
   WebKit. See [Shadow DOM and web components](https://novaprose.com/guides/shadow-dom/).
 
+### Plugin UI
+
+- `editor.ui.dialog({ title, fields, onSubmit })`: dialogs from a list of fields — text, URL, email,
+  number, textarea, select, checkbox, color, notes and custom elements — with hints, required fields,
+  custom validation and errors next to each field (`aria-invalid`, focus on the first invalid one).
+  `await editor.ui.dialog(...)` returns the submitted data, or `null` if the dialog was closed. The
+  dialog code loads on first use, so the core first load barely grows.
+- Sidebars for plugins: `editor.ui.registry.addSidebar(name, { title, render })` adds a panel next to
+  the text (below it on narrow screens) and a toggle button; `editor.ui.sidebar.show / hide / toggle`.
+  One panel is open at a time; content is rendered on first open and can be loaded lazily. The
+  comments panel now uses it too.
+- `@novaprose/tinymce-compat`: `ui.registry.addSidebar`, `ToggleSidebar` and
+  `queryCommandValue('ToggleSidebar')`.
+
 ### Right-to-left languages
 
 - `direction: 'rtl'` (automatic for Arabic, Hebrew, Persian and Urdu, otherwise following the page)

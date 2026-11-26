@@ -329,6 +329,7 @@ export class Editor {
       this.root,
       createTranslator(options.language, options.translations),
       () => this.focus(),
+      this,
     );
     // Приглашение в пустой подписи картинки — через CSS-переменную (в HTML документа его нет).
     this.root.style.setProperty(

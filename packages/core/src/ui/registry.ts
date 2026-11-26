@@ -1,6 +1,10 @@
 import type { Editor } from '../editor';
 import type { AutocompleterSpec } from './autocompleter';
 import type { MenuEntry } from './menu';
+import { icons } from './icons';
+import type { SidebarSpec } from './sidebar';
+
+const sidebarIcon = icons.sidebar;
 
 interface ControlBase {
   /** Подпись для подсказки и aria-label. */
@@ -150,6 +154,27 @@ export class Registry {
   private readonly autocompleters = new Map<string, AutocompleterSpec>();
 
   /** Автокомплитер по символу-триггеру: '/' — команды, '@' — упоминания, ':' — эмодзи. */
+  private readonly sidebars = new Map<string, SidebarSpec>();
+
+  /**
+   * Боковая панель (показ — editor.ui.sidebar). Если имя свободно, добавляется и кнопка-переключатель
+   * с этим именем для тулбара и меню (`button: false` — без неё).
+   */
+  addSidebar(name: string, spec: SidebarSpec): void {
+    this.sidebars.set(name, spec);
+    if (spec.button === false || this.has(name)) return;
+    this.addToggleButton(name, {
+      tooltip: spec.tooltip ?? spec.title,
+      icon: spec.icon ?? sidebarIcon,
+      isActive: (editor) => editor.ui.sidebar.isOpen(name),
+      onAction: (editor) => void editor.ui.sidebar.toggle(name),
+    });
+  }
+
+  getSidebar(name: string): SidebarSpec | undefined {
+    return this.sidebars.get(name);
+  }
+
   addAutocompleter(name: string, spec: AutocompleterSpec): void {
     this.autocompleters.set(name.toLowerCase(), spec);
   }

@@ -220,6 +220,8 @@ export const icons = {
   pageBreak: svg(
     '<path d="M5.42 9.42 8 12" /><circle cx="4" cy="8" r="2" /><path d="m14 6-8.58 8.58" /><circle cx="4" cy="16" r="2" /><path d="M10.8 14.8 14 18" /><path d="M16 12h-2" /><path d="M22 12h-2" />',
   ),
+  /** Боковая панель (кнопка своих панелей плагинов по умолчанию). */
+  sidebar: svg('<rect x="3" y="4" width="18" height="16" rx="2" /><path d="M15 4v16" />'),
   history: svg(
     '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" />',
   ),

@@ -78,6 +78,9 @@ console and ignored.
 | `editor.on('change', …)`             | `editor.on('change', …)` — returns an unsubscribe function |
 | `editor.mode.set('readonly')`        | `editor.setEditable(false)`                                |
 | `editor.ui.registry.addButton(…)`    | `editor.ui.registry.addButton(…)` — same shape             |
+| `editor.windowManager.open(spec)`    | `editor.ui.dialog({ title, fields, onSubmit })`            |
+| `editor.ui.registry.addSidebar(…)`   | `editor.ui.registry.addSidebar(name, { title, render })`   |
+| `execCommand('ToggleSidebar', …)`    | `editor.ui.sidebar.toggle(name)`                           |
 | `editor.focus()`, `editor.destroy()` | `editor.focus()`, `editor.destroy()`                       |
 
 ## Content

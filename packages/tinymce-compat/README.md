@@ -60,7 +60,8 @@ editor.on('change', () => console.log(editor.getContent()));
   (`formats` option, `formatter.register`). **`editor.selection`**: `getContent`, `setContent`, `getNode`,
   `isCollapsed`, `collapse`, `setCursorLocation`, `select`.
 - **`editor.ui.registry`**: `addButton`, `addToggleButton` (with `onSetup` and `api.setActive`),
-  `addMenuButton` (`fetch`), `addMenuItem`, `addContextToolbar`, `addIcon`; TinyMCE icon names map to
+  `addMenuButton` (`fetch`), `addMenuItem`, `addContextToolbar`, `addSidebar` (with
+  `ToggleSidebar` and `queryCommandValue`), `addIcon`; TinyMCE icon names map to
   NovaProse icons.
 - **Events**: `init`, `input`, `change` (on blur after edits), `NodeChange`, `focus`, `blur`,
   `keydown`, `keyup`, `click`, `paste`, `SetContent`, `GetContent`, `SaveContent`, `ExecCommand`,

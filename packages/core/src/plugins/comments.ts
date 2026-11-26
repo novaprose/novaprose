@@ -308,14 +308,33 @@ export default definePlugin({
     let panel: { el: HTMLElement; render(): void; focusComposer(): void; destroy(): void } | null =
       null;
     let panelOpen = false;
-    let loading: Promise<void> | null = null;
 
-    // Колонка для панели: текст и панель рядом, на узком экране панель — под текстом.
-    const content = editor.view.dom.parentElement!;
-    const body = document.createElement('div');
-    body.className = 'nova-body';
-    content.parentElement!.insertBefore(body, content);
-    body.append(content);
+    // Панель — общая боковая панель редактора (editor.ui.sidebar): одна открытая за раз, рядом с
+    // текстом, на узком экране — под ним. Шапку с заголовком и закрытием рисует сама панель.
+    editor.ui.registry.addSidebar('comments', {
+      title: labels.panel,
+      button: false,
+      header: false,
+      render: async (container) => {
+        const { createCommentsPanel } = await import('./comments-panel');
+        panel = createCommentsPanel(controller);
+        container.append(panel.el);
+        return () => panel?.destroy();
+      },
+      onShow: () => {
+        panelOpen = true;
+        // hidden у самой панели — для совместимости со стилями и тестами, видимостью управляет sidebar.
+        if (panel) panel.el.hidden = false;
+        editor.root.classList.add('nova-comments-open');
+        panel?.render();
+      },
+      onHide: () => {
+        panelOpen = false;
+        if (panel) panel.el.hidden = true;
+        editor.root.classList.remove('nova-comments-open');
+        if (pluginState().pending) dispatchMeta({ pending: null });
+      },
+    });
 
     const controller: CommentsController = {
       editor,
@@ -411,30 +430,10 @@ export default definePlugin({
       canEdit: (comment) =>
         options.canEdit ? options.canEdit(comment, author) : comment.author.id === author.id,
       isPanelOpen: () => panelOpen,
-      async openPanel() {
-        if (!panel) {
-          loading ??= import('./comments-panel').then(({ createCommentsPanel }) => {
-            if (editor.view.isDestroyed) return;
-            panel = createCommentsPanel(controller);
-            body.append(panel.el);
-          });
-          await loading;
-        }
-        if (!panel || panelOpen) return;
-        editor.ui.closeOverlays();
-        panelOpen = true;
-        panel.el.hidden = false;
-        editor.root.classList.add('nova-comments-open');
-        panel.render();
-        editor.updateUI();
-      },
+      openPanel: () => editor.ui.sidebar.show('comments'),
       closePanel() {
-        if (!panel || !panelOpen) return;
-        panelOpen = false;
-        panel.el.hidden = true;
-        editor.root.classList.remove('nova-comments-open');
-        if (pluginState().pending) dispatchMeta({ pending: null });
-        editor.updateUI();
+        if (!panelOpen) return;
+        editor.ui.sidebar.hide({ restoreFocus: false });
         editor.focus();
       },
     };
@@ -481,7 +480,7 @@ export default definePlugin({
 
     return () => {
       unsubscribe();
-      panel?.destroy();
+      // Панель уничтожает editor.ui.sidebar (очистка из render).
       controllers.delete(editor);
     };
   },

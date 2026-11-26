@@ -1505,6 +1505,30 @@ html.nova-fullscreen-lock body {
   font-size: 12px;
 }
 
+/* Диалоги по описанию полей (editor.ui.dialog) */
+.nova-required {
+  color: var(--nova-danger);
+}
+.nova-field-error {
+  margin: 0;
+  color: var(--nova-danger);
+  font-size: 12px;
+}
+.nova-input[aria-invalid='true'] {
+  border-color: var(--nova-danger);
+}
+.nova-form-message {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-hover);
+}
+.nova-form-message.is-warning,
+.nova-form-message.is-error {
+  background: var(--nova-danger-bg);
+  color: var(--nova-danger);
+}
+
 .nova-input-group {
   display: flex;
   gap: 6px;
@@ -1944,17 +1968,55 @@ html.nova-fullscreen-lock body {
   flex: 999 1 360px;
 }
 
-.nova-comments {
+/* ---------- боковые панели (editor.ui.sidebar) ---------- */
+.nova-body > .nova-sidebar {
   display: flex;
   flex: 1 1 280px;
   flex-direction: column;
-  gap: 8px;
   max-height: 70vh;
   min-width: 0;
-  padding: 10px;
-  overflow: auto;
   border-inline-start: 1px solid var(--nova-border);
   background: var(--nova-toolbar-bg);
+}
+.nova-sidebar[hidden] {
+  display: none;
+}
+.nova-sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px;
+  padding-inline-start: 12px;
+  border-bottom: 1px solid var(--nova-border);
+}
+.nova-sidebar-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.nova-sidebar-body {
+  flex: 1;
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
+}
+/* Панель со своей шапкой (комментарии) сама задаёт отступы и прокрутку. */
+.nova-sidebar-bare > .nova-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.nova-comments {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
   font-size: 13px;
 }
 .nova-comments[hidden] {
@@ -2132,7 +2194,7 @@ html.nova-fullscreen-lock body {
   container-type: inline-size;
 }
 @container (max-width: 640px) {
-  .nova-body > .nova-comments {
+  .nova-body > .nova-sidebar {
     flex-basis: 100%;
     max-height: none;
     border-inline-start: 0;

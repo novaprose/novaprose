@@ -61,6 +61,8 @@ const es: LanguagePack = {
   'dialog.save': 'Guardar',
   'dialog.insert': 'Insertar',
   'dialog.close': 'Cerrar',
+  'dialog.required': 'Este campo es obligatorio',
+  'dialog.invalid': 'Revisa el formato',
   'link.title': 'Insertar enlace',
   'link.editTitle': 'Editar enlace',
   'link.url': 'URL',

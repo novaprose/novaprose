@@ -70,6 +70,14 @@ export {
   type PluginMessageKey,
   getPluginMessages,
 } from './i18n';
+export type {
+  DialogApi,
+  DialogData,
+  DialogField,
+  DialogFieldValue,
+  DialogSpec,
+} from './ui/form-dialog-types';
+export type { SidebarSpec, Sidebars } from './ui/sidebar';
 export {
   registerHtmlRules,
   type HtmlRulesModule,

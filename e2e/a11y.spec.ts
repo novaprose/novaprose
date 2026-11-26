@@ -97,6 +97,64 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'диалог картинки');
     });
 
+    test('диалог по описанию полей (editor.ui.dialog) с ошибками полей', async ({ page }) => {
+      await open(page, theme);
+      await page.evaluate(() => {
+        const ui = (window as unknown as { editor: { ui: { dialog(spec: object): void } } }).editor
+          .ui;
+        ui.dialog({
+          title: 'Вставить видео',
+          submitLabel: 'Вставить',
+          fields: [
+            { type: 'message', text: 'Поддерживаются YouTube и Vimeo', tone: 'info' },
+            { type: 'url', name: 'src', label: 'Адрес видео', required: true, hint: 'https://…' },
+            { type: 'number', name: 'width', label: 'Ширина', min: 100 },
+            {
+              type: 'select',
+              name: 'size',
+              label: 'Размер',
+              options: [
+                { value: 's', label: 'Маленький' },
+                { value: 'm', label: 'Средний' },
+              ],
+            },
+            { type: 'textarea', name: 'note', label: 'Заметка' },
+            { type: 'checkbox', name: 'autoplay', label: 'Автовоспроизведение' },
+          ],
+        });
+      });
+      await page.locator('[role="dialog"] button[type="submit"]').click();
+      await expect(page.locator('.nova-field-error:visible').first()).toBeVisible();
+      await audit(page, 'диалог по описанию полей');
+    });
+
+    test('боковая панель плагина открыта', async ({ page }) => {
+      await open(page, theme);
+      await page.evaluate(async () => {
+        const editor = (
+          window as unknown as {
+            editor: {
+              ui: {
+                registry: { addSidebar(name: string, spec: object): void };
+                sidebar: { show(name: string): Promise<void> };
+              };
+            };
+          }
+        ).editor;
+        editor.ui.registry.addSidebar('outline', {
+          title: 'Оглавление',
+          render: (container: HTMLElement) => {
+            const list = document.createElement('ul');
+            list.innerHTML = '<li><a href="#h">Заголовок</a></li>';
+            container.append(list);
+          },
+        });
+        await editor.ui.sidebar.show('outline');
+      });
+      await expect(page.locator('[data-sidebar="outline"]')).toBeVisible();
+      await audit(page, 'боковая панель');
+    });
+
     test('меню из строки меню открыто', async ({ page }) => {
       await open(page, theme, '&menubar=1');
       const menubar = page.locator('.nova-menubar [role="menuitem"]').first();

@@ -51,6 +51,69 @@ editor.ui.registry.addContextToolbar('bold-tools', {
 });
 ```
 
+## A dialog
+
+Describe the fields; the editor builds an accessible form: labels, hints, required fields, error
+messages next to each field, focus on the first invalid one, Escape and focus return. On small screens
+it opens as a bottom sheet.
+
+```ts
+const data = await editor.ui.dialog({
+  title: 'Insert video',
+  submitLabel: 'Insert',
+  initialData: { size: 'm' },
+  fields: [
+    { type: 'url', name: 'src', label: 'Video URL', required: true, hint: 'YouTube or Vimeo' },
+    { type: 'number', name: 'width', label: 'Width', min: 200 },
+    {
+      type: 'select',
+      name: 'size',
+      label: 'Size',
+      options: [
+        { value: 's', label: 'Small' },
+        { value: 'm', label: 'Medium' },
+      ],
+    },
+    { type: 'checkbox', name: 'autoplay', label: 'Autoplay' },
+  ],
+  // Return an error message (or false) to keep the dialog open; a promise blocks the buttons.
+  onSubmit: async (data) => ((await isAllowed(data.src)) ? undefined : 'This site is not allowed'),
+}); // the data, or null if the dialog was closed
+
+if (data) insertVideo(editor, String(data.src)); // your function
+```
+
+Field types: `text`, `url`, `email`, `tel`, `number`, `textarea`, `select`, `checkbox`, `color`,
+plus `message` (a note, `tone: 'info' | 'warning' | 'error'`) and `custom` (`render(api)` returns your
+own element). Each field can have `hint`, `required`, `disabled` and `validate(value, data)`.
+`onChange(data, { name }, api)` runs on every edit. `onSubmit`, `onChange` and `custom` fields get an `api`
+with `getData`, `setData`, `setFieldError`, `setError`, `setEnabled`, `setBusy`, `focus` and `close`. Pass
+`signal` (an `AbortSignal`) to close the dialog from outside. The dialog code (about 1.5 KB) loads the
+first time a dialog opens.
+
+## A sidebar
+
+A panel next to the text (below it on narrow screens), like the comments panel. One sidebar is open at
+a time. Its content is rendered on first open — you can load it lazily — and kept between openings.
+
+```ts
+editor.ui.registry.addSidebar('outline', {
+  title: 'Outline',
+  icon: '<svg viewBox="0 0 24 24">…</svg>',
+  render: async (container, editor) => {
+    const { renderOutline } = await import('./outline');
+    return renderOutline(container, editor); // may return a cleanup function
+  },
+  onShow: (editor) => {},
+  onHide: (editor) => {},
+});
+```
+
+A toggle button with the sidebar's name is added for the toolbar (`toolbar: 'bold italic | outline'`)
+unless you pass `button: false`. From code: `editor.ui.sidebar.show('outline', { focus: true })`,
+`hide()`, `toggle(name)`, `active`. The panel has a heading and a close button, Escape closes it
+and returns focus to the text.
+
 ## A plugin
 
 Package buttons and behavior into a plugin to reuse them across editors:

@@ -284,6 +284,12 @@ export class CompatEditor {
 
   // ---------- команды ----------
 
+  /** Значение команды: ToggleSidebar — имя открытой боковой панели. */
+  queryCommandValue(command: string): string {
+    if (command.toLowerCase() === 'togglesidebar') return this.core.ui.sidebar.active ?? '';
+    return '';
+  }
+
   execCommand(command: string, _ui?: boolean, value?: unknown): boolean {
     const name = command.toLowerCase();
     let done = false;
@@ -293,6 +299,10 @@ export class CompatEditor {
       done = block ? this.core.exec(block) : false;
     } else if (name === 'mceinsertcontent' || name === 'inserthtml') {
       this.insertContent(String(value ?? ''));
+      done = true;
+    } else if (name === 'togglesidebar') {
+      // Боковая панель из ui.registry.addSidebar (value — её имя).
+      void this.core.ui.sidebar.toggle(String(value ?? ''));
       done = true;
     } else if (name === 'mcesetcontent') {
       this.setContent(String(value ?? ''));
@@ -634,6 +644,35 @@ export class CompatEditor {
             const node = this.selection.getNode();
             return !!node && this.getBody().contains(node) && spec.predicate(node);
           },
+        });
+      },
+      /**
+       * Боковая панель: onSetup(api) рисует содержимое в api.element() (один раз), onShow/onHide —
+       * при показе. Кнопка-переключатель с именем панели — для toolbar; ToggleSidebar — командой.
+       */
+      addSidebar: (
+        name: string,
+        spec: {
+          tooltip?: string;
+          icon?: string;
+          onSetup?: (api: { element(): HTMLElement }) => void | (() => void);
+          onShow?: (api: { element(): HTMLElement }) => void;
+          onHide?: (api: { element(): HTMLElement }) => void;
+        },
+      ) => {
+        let element: HTMLElement | null = null;
+        const api = { element: () => element! };
+        const icon = resolveIcon(spec.icon);
+        this.core.ui.registry.addSidebar(name, {
+          title: spec.tooltip ?? name,
+          ...(icon ? { icon } : {}),
+          render: (container) => {
+            element = container;
+            const cleanup = spec.onSetup?.(api);
+            return typeof cleanup === 'function' ? cleanup : undefined;
+          },
+          onShow: () => spec.onShow?.(api),
+          onHide: () => spec.onHide?.(api),
         });
       },
       addContextForm: () => {

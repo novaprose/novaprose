@@ -60,6 +60,8 @@ export const en = {
   'dialog.save': 'Save',
   'dialog.insert': 'Insert',
   'dialog.close': 'Close',
+  'dialog.required': 'This field is required',
+  'dialog.invalid': 'Check the format',
 
   'link.title': 'Insert link',
   'link.editTitle': 'Edit link',
