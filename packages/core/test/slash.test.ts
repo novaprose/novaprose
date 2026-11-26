@@ -1,14 +1,9 @@
 import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import {
-  createEditor,
-  createTranslator,
-  defaultSlashCommands,
-  rankSlashCommands,
-  type Editor,
-} from '../src';
+import { createEditor, defaultSlashCommands, type Editor } from '../src';
 import ruPack from '../src/i18n/packs/ru';
-import { registerLanguage } from '../src/i18n';
+import { createTranslator, registerLanguage } from '../src/i18n';
+import { rankSlashCommands } from '../src/ui/slash';
 
 // Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
 registerLanguage('ru', ruPack);

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createEditor, pageLayout, resolvePageLayout, type Editor } from '../src';
+import { createEditor, pageLayout, type Editor } from '../src';
+import { resolvePageLayout } from '../src/plugins/pagelayout';
 import { paginate, type Line } from '../src/plugins/pagelayout-ui';
 import { buildPrintDocument, printCss } from '../src/ui/print';
 

@@ -7,7 +7,6 @@ export {
   type EditorEventDetails,
   type EditorListener,
   REMOTE_CHANGE_META,
-  API_CHANGE_META,
   type EditorMode,
   type BlockFormat,
   type ClassOption,
@@ -40,8 +39,6 @@ export { printContent } from './ui/menu-items';
 export {
   schema,
   createSchema,
-  cssValue,
-  imageSize,
   type ImageAlign,
   type TextAlign,
   type NodeName,
@@ -74,7 +71,6 @@ export {
   type UploadImageHandler,
 } from './image';
 export {
-  createTranslator,
   registerLanguage,
   loadLanguage,
   hasLanguage,
@@ -101,7 +97,7 @@ export {
   type HtmlRulesOptions,
   type HtmlRulesInstance,
 } from './html-rules-api';
-export { defaultToolbar, parseToolbar, type ToolbarConfig, type ToolbarMode } from './ui/toolbar';
+export { defaultToolbar, type ToolbarConfig, type ToolbarMode } from './ui/toolbar';
 export {
   defaultFontFamilies,
   defaultFontSizes,
@@ -128,11 +124,10 @@ export {
   type NovaPlugin,
   type PluginEntry,
 } from './plugins';
-export { defaultSlashCommands, rankSlashCommands, type SlashCommand } from './ui/slash';
+export { defaultSlashCommands, type SlashCommand } from './ui/slash';
 export type { AutocompleterSpec, AutocompleterItem } from './ui/autocompleter';
 export { isSafeLinkUrl, isSafeImageUrl } from './url';
 export { htmlToPlainText, type PasteOptions } from './paste';
-export { ContentRules, KNOWN_TAGS, KNOWN_STYLES, type ContentRulesOptions } from './content-rules';
 export {
   findMatches,
   setSearch,
@@ -165,7 +160,6 @@ export {
 export {
   createCommentStore,
   sanitizeThread,
-  newCommentId,
   type Comment,
   type CommentAuthor,
   type CommentStore,
@@ -174,7 +168,6 @@ export {
 export { getComments, type CommentsOptions, type CommentsController } from './plugins/comments';
 export {
   pageLayout,
-  resolvePageLayout,
   PAGE_SIZES,
   type PageLayout,
   type PageLayoutController,
@@ -182,12 +175,7 @@ export {
   type PageMargins,
   type PageSizeName,
 } from './plugins/pagelayout';
-export {
-  getMentions,
-  MENTION_ID_RE,
-  type MentionUser,
-  type MentionsOptions,
-} from './plugins/mentions';
+export { getMentions, type MentionUser, type MentionsOptions } from './plugins/mentions';
 export type { MergeTag, MergeTagGroup, MergeTagsOptions } from './plugins/mergetags';
 export type { Revision, RevisionHistoryOptions } from './plugins/revisionhistory';
 export type { PluginOptions } from './editor';

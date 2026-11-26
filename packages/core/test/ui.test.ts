@@ -4,10 +4,8 @@ import {
   applyLink,
   countWords,
   createEditor,
-  createTranslator,
   getStyle,
   normalizeUrl,
-  parseToolbar,
   registerLanguage,
   setLineHeight,
   setStyle,
@@ -15,7 +13,9 @@ import {
   type Editor,
   type EditorOptions,
 } from '../src';
+import { createTranslator } from '../src/i18n';
 import ruPack from '../src/i18n/packs/ru';
+import { parseToolbar } from '../src/ui/toolbar';
 
 // Русский — пакет (не встроен в ядро): подключаем, как это делает клиент.
 registerLanguage('ru', ruPack);

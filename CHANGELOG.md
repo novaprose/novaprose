@@ -112,6 +112,10 @@ All packages in this repository are versioned together. The format follows
   editor's options that shape the HTML: plugins and their settings, formats and classes, content
   restrictions, direction. The output is checked against `getHTML()` on thousands of random
   documents.
+- **Breaking:** `@novaprose/core` no longer exports internal helpers that were never documented:
+  `API_CHANGE_META`, `cssValue`, `imageSize`, `createTranslator` (use `editor.ui.t`),
+  `parseToolbar`, `rankSlashCommands`, `ContentRules`, `KNOWN_TAGS`, `KNOWN_STYLES`,
+  `newCommentId`, `resolvePageLayout`, `MENTION_ID_RE` — a step towards freezing the API for 1.0.
 - **Fixed:** `editor.exec()`, `editor.can()` and chain steps threw a `TypeError` for a command name
   the editor doesn't have (possible from JavaScript without types, such as the CDN build); they now
   return `false` and log a hint once.
