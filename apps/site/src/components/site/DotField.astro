@@ -1,0 +1,319 @@
+---
+/**
+ * The background of the product pages: a light purple dot grid with a slow swell of brightness
+ * that makes room around the mouse pointer; a tap or click on empty space sends a ripple through
+ * it. Decorative only. Dots fade out behind blocks of text so they never read as punctuation.
+ * Draws a single still frame when the visitor prefers reduced motion, pauses while the tab is
+ * hidden and redraws at a low rate while nobody interacts with it.
+ */
+---
+
+<canvas class="np-dots" aria-hidden="true"></canvas>
+
+<script>
+  type Rgba = [number, number, number, number];
+
+  const TAU = Math.PI * 2;
+  const RADIUS = 1.1; // dot radius at rest, CSS px
+  const REACH = 150; // how far the pointer pushes dots
+  const PUSH = 14; // largest displacement next to the pointer
+  const GROW = 2.1; // extra radius next to the pointer
+  const RIPPLE_SPEED = 0.5; // px per ms
+  const RIPPLE_LIFE = 1500; // ms
+  const RIPPLE_WIDTH = 42;
+  const SWELL_SPEED = 0.0007; // radians per ms: one swell crosses a point every ~9 s
+  const LEVELS = 8; // brightness steps (one fill call per step)
+  const IDLE_FRAME = 1000 / 24; // the swell alone needs no more than 24 frames per second
+  // The header and text blocks on the bare background: dots behind them almost disappear.
+  const TEXT_BLOCKS =
+    '.np-header, .np-hero-copy, .np-section-head, .np-split-copy, .np-after-note, .np-demo-label, .np-demo-output, .np-prose';
+  const TEXT_FADE = 0.12; // what is left of a dot in the middle of a text block
+  const TEXT_FEATHER = 36; // px around a text block over which dots come back
+  // Pressing these shouldn't make waves.
+  const QUIET = 'a, button, input, select, textarea, summary, label, .nova-editor, .np-code';
+
+  /** Reads `rgb(124 92 196 / 30%)` or `rgba(124, 92, 196, 0.3)`. */
+  function parseColor(value: string, fallback: Rgba): Rgba {
+    const parts = value.match(/[\d.]+%?/g);
+    if (!parts || parts.length < 3) return fallback;
+    const alpha = parts[3];
+    return [
+      Number.parseFloat(parts[0]!),
+      Number.parseFloat(parts[1]!),
+      Number.parseFloat(parts[2]!),
+      alpha === undefined
+        ? 1
+        : alpha.endsWith('%')
+          ? Number.parseFloat(alpha) / 100
+          : Number.parseFloat(alpha),
+    ];
+  }
+
+  function start(canvas: HTMLCanvasElement) {
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    const ctx = context;
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const blocks = Array.from(document.querySelectorAll(TEXT_BLOCKS));
+
+    let width = 0;
+    let height = 0;
+    let ratio = 1;
+    let xs = new Float32Array(0);
+    let ys = new Float32Array(0);
+    let base: Rgba = [124, 92, 196, 0.26];
+    let active: Rgba = [106, 71, 168, 0.9];
+
+    const pointer = { x: 0, y: 0, targetX: 0, targetY: 0, strength: 0, target: 0 };
+    const ripples: { x: number; y: number; born: number }[] = [];
+    let frame = 0;
+    let lastDraw = -Infinity;
+    let running = false;
+    let dirty = false; // the page scrolled: the text blocks moved under the dots
+    let pending = 0;
+
+    function readColors() {
+      const style = getComputedStyle(document.documentElement);
+      base = parseColor(style.getPropertyValue('--np-dot'), base);
+      active = parseColor(style.getPropertyValue('--np-dot-active'), active);
+    }
+
+    /** Sizes the canvas to its CSS box; false when nothing changed. */
+    function layout(): boolean {
+      const nextWidth = canvas.clientWidth;
+      const nextHeight = canvas.clientHeight;
+      if (!nextWidth || !nextHeight) return false;
+      if (nextWidth === width && nextHeight === height) return false;
+      width = nextWidth;
+      height = nextHeight;
+      ratio = Math.min(window.devicePixelRatio || 1, width * height > 1_600_000 ? 1.5 : 2);
+      canvas.width = Math.round(width * ratio);
+      canvas.height = Math.round(height * ratio);
+      // A staggered grid: every other row is shifted by half a step, which reads calmer than squares.
+      const step = Math.max(26, Math.sqrt((width * height) / 2600));
+      const rowStep = step * 0.866;
+      const cols = Math.ceil(width / step) + 2;
+      const rows = Math.ceil(height / rowStep) + 2;
+      xs = new Float32Array(cols * rows);
+      ys = new Float32Array(cols * rows);
+      let index = 0;
+      for (let row = 0; row < rows; row++) {
+        const shift = row % 2 ? step / 2 : 0;
+        for (let col = 0; col < cols; col++) {
+          xs[index] = col * step + shift - step / 2;
+          ys[index] = row * rowStep - rowStep / 2;
+          index++;
+        }
+      }
+      return true;
+    }
+
+    /** The text blocks on screen, as [left, top, right, bottom] in viewport coordinates. */
+    function visibleBlocks(): number[] {
+      const boxes: number[] = [];
+      for (const block of blocks) {
+        const rect = block.getBoundingClientRect();
+        if (!rect.width || !rect.height) continue;
+        if (rect.bottom < -TEXT_FEATHER || rect.top > height + TEXT_FEATHER) continue;
+        boxes.push(rect.left, rect.top, rect.right, rect.bottom);
+      }
+      return boxes;
+    }
+
+    /** 1 away from text, TEXT_FADE inside a text block, a smooth ramp in between. */
+    function textFade(x: number, y: number, boxes: number[]): number {
+      let fade = 1;
+      for (let i = 0; i < boxes.length; i += 4) {
+        const dx = Math.max(boxes[i]! - x, 0, x - boxes[i + 2]!);
+        const dy = Math.max(boxes[i + 1]! - y, 0, y - boxes[i + 3]!);
+        if (dx >= TEXT_FEATHER || dy >= TEXT_FEATHER) continue;
+        const t = Math.min(1, Math.hypot(dx, dy) / TEXT_FEATHER);
+        const value = TEXT_FADE + (1 - TEXT_FADE) * t * t * (3 - 2 * t);
+        if (value < fade) fade = value;
+      }
+      return fade;
+    }
+
+    function draw(time: number) {
+      const still = reduced.matches;
+      const phase = still ? 0 : time * SWELL_SPEED;
+      const strength = still ? 0 : pointer.strength;
+      const live = still ? [] : ripples;
+      const reach2 = REACH * REACH;
+      const boxes = visibleBlocks();
+      const levels = Array.from({ length: LEVELS }, () => new Path2D());
+      const lifted: number[] = [];
+
+      for (let i = 0; i < xs.length; i++) {
+        const x = xs[i]!;
+        const y = ys[i]!;
+        const fade = boxes.length ? textFade(x, y, boxes) : 1;
+        let lift = 0;
+        let pushX = 0;
+        let pushY = 0;
+        if (strength > 0.01) {
+          const dx = x - pointer.x;
+          const dy = y - pointer.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < reach2) {
+            const distance = Math.sqrt(d2) || 1;
+            const k = (1 - distance / REACH) ** 2 * strength;
+            lift = k;
+            pushX = (dx / distance) * k * PUSH;
+            pushY = (dy / distance) * k * PUSH;
+          }
+        }
+        for (const ripple of live) {
+          const age = time - ripple.born;
+          const dx = x - ripple.x;
+          const dy = y - ripple.y;
+          const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+          const band = 1 - Math.abs(distance - age * RIPPLE_SPEED) / RIPPLE_WIDTH;
+          if (band > 0) {
+            const k = band * (1 - age / RIPPLE_LIFE);
+            if (k > lift) lift = k;
+            pushX += (dx / distance) * k * 6;
+            pushY += (dy / distance) * k * 6;
+          }
+        }
+        // Over text the pointer still shows, only quieter.
+        lift *= 0.35 + 0.65 * fade;
+        if (lift > 0.03) {
+          lifted.push(x + pushX, y + pushY, lift, fade);
+        } else {
+          // The swell: a soft diagonal band of brightness that drifts across the screen.
+          const swell = 0.5 + 0.5 * Math.sin(x * 0.0105 + y * 0.0065 - phase);
+          const brightness = (0.35 + 0.65 * swell) * fade;
+          const path = levels[Math.min(LEVELS - 1, Math.floor(brightness * LEVELS))]!;
+          path.moveTo(x + RADIUS, y);
+          path.arc(x, y, RADIUS, 0, TAU);
+        }
+      }
+
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = `rgb(${base[0]} ${base[1]} ${base[2]})`;
+      for (let level = 0; level < LEVELS; level++) {
+        ctx.globalAlpha = (base[3] * (level + 0.5)) / LEVELS;
+        ctx.fill(levels[level]!);
+      }
+      ctx.globalAlpha = 1;
+      for (let i = 0; i < lifted.length; i += 4) {
+        const k = lifted[i + 2]!;
+        const mix = (from: number, to: number) => from + (to - from) * k;
+        const alpha = mix(base[3], active[3]) * (0.35 + 0.65 * lifted[i + 3]!);
+        ctx.fillStyle = `rgb(${mix(base[0], active[0])} ${mix(base[1], active[1])} ${mix(base[2], active[2])} / ${alpha})`;
+        ctx.beginPath();
+        ctx.arc(lifted[i]!, lifted[i + 1]!, RADIUS + GROW * k, 0, TAU);
+        ctx.fill();
+      }
+      lastDraw = time;
+      dirty = false;
+    }
+
+    function tick(time: number) {
+      if (!running) return;
+      frame = requestAnimationFrame(tick);
+      pointer.x += (pointer.targetX - pointer.x) * 0.2;
+      pointer.y += (pointer.targetY - pointer.y) * 0.2;
+      pointer.strength += (pointer.target - pointer.strength) * 0.08;
+      while (ripples.length && time - ripples[0]!.born > RIPPLE_LIFE) ripples.shift();
+      const moving =
+        Math.abs(pointer.targetX - pointer.x) > 0.3 ||
+        Math.abs(pointer.targetY - pointer.y) > 0.3 ||
+        Math.abs(pointer.target - pointer.strength) > 0.01;
+      if (dirty || moving || ripples.length > 0 || time - lastDraw >= IDLE_FRAME) draw(time);
+    }
+
+    function play() {
+      if (running || reduced.matches || document.hidden) return;
+      running = true;
+      frame = requestAnimationFrame(tick);
+    }
+
+    function pause() {
+      running = false;
+      cancelAnimationFrame(frame);
+    }
+
+    /** One frame soon, for when the loop isn't running (reduced motion). */
+    function drawSoon() {
+      if (running) {
+        dirty = true;
+        return;
+      }
+      if (pending) return;
+      pending = requestAnimationFrame((time) => {
+        pending = 0;
+        draw(time);
+      });
+    }
+
+    let resizeTimer = 0;
+    window.addEventListener('resize', () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        layout();
+        drawSoon();
+      }, 120);
+    });
+    window.addEventListener('scroll', drawSoon, { passive: true });
+
+    window.addEventListener(
+      'pointermove',
+      (event) => {
+        if (event.pointerType === 'touch') return;
+        if (pointer.target === 0 && pointer.strength < 0.01) {
+          // Appear where the pointer is instead of sliding in from where it was last seen.
+          pointer.x = event.clientX;
+          pointer.y = event.clientY;
+        }
+        pointer.targetX = event.clientX;
+        pointer.targetY = event.clientY;
+        pointer.target = 1;
+        play();
+      },
+      { passive: true },
+    );
+    document.addEventListener('pointerout', (event) => {
+      if (!event.relatedTarget) pointer.target = 0;
+    });
+    window.addEventListener('blur', () => (pointer.target = 0));
+
+    window.addEventListener(
+      'pointerdown',
+      (event) => {
+        if ((event.target as Element | null)?.closest?.(QUIET)) return;
+        ripples.push({ x: event.clientX, y: event.clientY, born: performance.now() });
+        if (ripples.length > 4) ripples.shift();
+        play();
+      },
+      { passive: true },
+    );
+
+    document.addEventListener('visibilitychange', () => (document.hidden ? pause() : play()));
+    reduced.addEventListener('change', () => {
+      if (reduced.matches) {
+        pause();
+        drawSoon();
+      } else {
+        play();
+      }
+    });
+
+    // The theme switch changes the dot colors; late web fonts move the text blocks.
+    new MutationObserver(() => {
+      readColors();
+      drawSoon();
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    document.fonts?.ready.then(drawSoon);
+
+    readColors();
+    layout();
+    draw(performance.now());
+    play();
+  }
+
+  const canvas = document.querySelector<HTMLCanvasElement>('canvas.np-dots');
+  if (canvas) start(canvas);
+</script>

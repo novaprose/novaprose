@@ -1,30 +1,52 @@
-/* Бренд сайта поверх темы Starlight. Цвета редактора остаются токенами --nova-* из @novaprose/core. */
+/*
+ * The documentation (Starlight) in the brand colors of the product pages: the purple of the logo
+ * for links and accents, Plus Jakarta Sans for text. Editor colors stay the --nova-* tokens of
+ * @novaprose/core; the demos below only swap the accent.
+ */
 :root {
-  --sl-color-accent-low: #1e1b4b;
-  --sl-color-accent: #6366f1;
-  --sl-color-accent-high: #c7d2fe;
+  --sl-font:
+    'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
+  --sl-color-accent-low: #241d40;
+  --sl-color-accent: #7552d0;
+  --sl-color-accent-high: #c9b8f8;
 }
 :root[data-theme='light'] {
-  --sl-color-accent-low: #e0e7ff;
-  --sl-color-accent: #4f46e5;
-  --sl-color-accent-high: #312e81;
+  --sl-color-accent-low: #efe9fc;
+  --sl-color-accent: #5b3ea4;
+  --sl-color-accent-high: #3f2f86;
 }
 
-.np-demo {
-  margin-block: 1.5rem;
-  text-align: start;
-}
-.np-demo .nova-editor {
-  min-height: 320px;
-}
-.np-demo-output {
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
-  max-height: 160px;
-  overflow: auto;
+/* The name next to the logo in the text color, as in the header of the product pages. */
+.site-title {
+  color: var(--sl-color-white);
 }
 
-/* Демо совместного редактирования: панель (статус, участники, имя, ссылка) над редактором. */
+/* The editors in the documentation demos wear the same purple. */
+.np-collab .nova-editor,
+.np-tiny .nova-editor {
+  --nova-accent: #5b3ea4;
+  --nova-accent-hover: #4c3291;
+  --nova-accent-strong: #5b3ea4;
+  --nova-accent-strong-hover: #4c3291;
+  --nova-active: #efe9fc;
+  --nova-active-fg: #4c3291;
+  --nova-focus: #6a47a8;
+  --nova-selection: rgb(124 92 196 / 22%);
+}
+:root[data-theme='dark'] .np-collab .nova-editor,
+:root[data-theme='dark'] .np-tiny .nova-editor {
+  --nova-accent: #bba5f6;
+  --nova-accent-hover: #cbb9f8;
+  --nova-accent-strong: #6f4fd0;
+  --nova-accent-strong-hover: #7d5ddb;
+  --nova-active: #2d2450;
+  --nova-active-fg: #d6c9fa;
+  --nova-focus: #bba5f6;
+  --nova-selection: rgb(187 165 246 / 28%);
+}
+
+/* The collaboration demo: a bar (status, people, name, link) above the editor. */
 .np-collab {
   margin-block: 1.5rem;
   text-align: start;
@@ -132,7 +154,7 @@
   }
 }
 
-/* Страница «Switch from TinyMCE»: конфиг и элементы управления над живым редактором. */
+/* The migration page demo: the configuration and controls above a live editor. */
 .np-tiny {
   margin-block: 1.5rem;
   text-align: start;

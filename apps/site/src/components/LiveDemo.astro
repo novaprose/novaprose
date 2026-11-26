@@ -1,29 +1,18 @@
 ---
 /**
- * Живое демо на главной: настоящий @novaprose/core в браузере. На сервере (при сборке сайта)
- * рендерится только контейнер с HTML-содержимым — его видно и без JS.
+ * The live demo on the home page: the real @novaprose/core running in the browser. At build time
+ * only the container with the starting HTML is rendered, so the text is visible without JavaScript.
  */
-interface Props {
-  lang?: 'en' | 'ru';
-}
-const { lang = 'en' } = Astro.props;
-const initialRu = `<h2>Попробуйте NovaProse</h2>
-<p>Это <strong>настоящий редактор</strong>. Выделите текст и воспользуйтесь панелью или горячими клавишами:
-<code>Ctrl+B</code>, <code>Ctrl+I</code>, <code>Ctrl+K</code> для ссылки.</p>
-<ul><li><p>Наберите <code>#</code> и пробел для заголовка, <code>-</code> для списка, <code>/</code> для команд.</p></li>
-<li><p>Вставьте текст с другой страницы — опасная разметка будет удалена.</p></li></ul>
-<blockquote><p>Открытый код, лицензия MIT, основан на ProseMirror.</p></blockquote>`;
-const initialEn = `<h2>Try NovaProse</h2>
+const initial = `<h2>Try NovaProse</h2>
 <p>This is a <strong>live editor</strong>. Select text and use the toolbar, or try the shortcuts:
 <code>Ctrl+B</code>, <code>Ctrl+I</code>, <code>Ctrl+K</code> for a link.</p>
 <ul><li><p>Type <code>#</code> and a space for a heading, <code>-</code> for a list, <code>/</code> for commands.</p></li>
 <li><p>Paste from another page: unsafe markup is dropped.</p></li></ul>
 <blockquote><p>Open source, MIT licensed, built on ProseMirror.</p></blockquote>`;
-const initial = lang === 'ru' ? initialRu : initialEn;
 ---
 
 <div class="np-demo not-content">
-  <div id="np-demo-editor" data-lang={lang} set:html={initial} />
+  <div id="np-demo-editor" set:html={initial} />
   <details class="np-demo-output">
     <summary>Output HTML</summary>
     <pre><code id="np-demo-html"></code></pre>
@@ -31,11 +20,8 @@ const initial = lang === 'ru' ? initialRu : initialEn;
 </div>
 
 <script>
-  import { createEditor, registerLanguage } from '@novaprose/core';
-  import ru from '@novaprose/core/i18n/ru';
+  import { createEditor } from '@novaprose/core';
   import '@novaprose/core/style.css';
-
-  registerLanguage('ru', ru);
 
   const host = document.getElementById('np-demo-editor')!;
   const output = document.getElementById('np-demo-html')!;
@@ -44,7 +30,6 @@ const initial = lang === 'ru' ? initialRu : initialEn;
   const editor = createEditor({
     element: host,
     content,
-    language: host.dataset.lang === 'ru' ? 'ru' : 'en',
     placeholder: 'Start typing…',
     plugins: ['insertdatetime', 'quickbars'],
     onChange: (e) => (output.textContent = e.getHTML()),

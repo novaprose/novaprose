@@ -2,7 +2,7 @@
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 
-// Сайт novaprose.com: главная с живым демо + документация (Starlight). Статический, без сервера.
+// The novaprose.com website: product pages with a live demo plus the documentation (Starlight). Static, no server.
 export default defineConfig({
   site: 'https://novaprose.com',
   integrations: [
@@ -10,14 +10,18 @@ export default defineConfig({
       title: 'NovaProse',
       description:
         'Open-source rich text editor built on ProseMirror: MIT licensed, with real-time collaboration, comments and version history built in.',
-      logo: { src: './src/assets/logo.svg', replacesTitle: false },
+      logo: {
+        light: './src/assets/logo.svg',
+        dark: './src/assets/logo-dark.svg',
+        replacesTitle: false,
+      },
       favicon: '/favicon.svg',
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/novaprose/novaprose' },
         { icon: 'npm', label: 'npm', href: 'https://www.npmjs.com/org/novaprose' },
         { icon: 'email', label: 'Contact', href: 'mailto:hello@novaprose.com' },
       ],
-      customCss: ['./src/styles/site.css'],
+      customCss: ['@fontsource-variable/plus-jakarta-sans', './src/styles/site.css'],
       sidebar: [
         { label: 'Getting started', slug: 'getting-started' },
         { label: 'Live collaboration demo', slug: 'demo/collaboration' },

@@ -1,17 +1,12 @@
 ---
-/** Три тарифа: Open Source (бесплатно), Cloud (ранний доступ), Enterprise (по запросу). */
+/** Three plans: Open Source (free), Cloud (early access), Enterprise (on request). */
 import Icon from './Icon.astro';
-import { dict, type Lang } from '../../i18n/site';
-
-interface Props {
-  lang: Lang;
-}
-const t = dict[Astro.props.lang].pricing;
+import { t } from '../../i18n/site';
 ---
 
 <div class="np-plans">
   {
-    t.plans.map((plan) => (
+    t.pricing.plans.map((plan) => (
       <article
         class:list={['np-plan', { 'is-featured': plan.id === 'cloud' }]}
         aria-labelledby={`plan-${plan.id}`}

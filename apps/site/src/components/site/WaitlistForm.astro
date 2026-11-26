@@ -1,15 +1,12 @@
 ---
 /**
- * Лист ожидания NovaProse Cloud. Заявка уходит на сервер проекта в ЕС (sync.novaprose.cloud/waitlist).
- * Подписи видимые, ошибки — рядом с полем и озвучиваются, кнопка блокируется на время отправки.
+ * The NovaProse Cloud waitlist. Entries go to the project's server in the EU
+ * (sync.novaprose.cloud/waitlist). Labels are visible, errors sit next to their field and are
+ * announced, and the button is disabled while the entry is being sent.
  */
-import { dict, localePath, type Lang } from '../../i18n/site';
+import { t as copy } from '../../i18n/site';
 
-interface Props {
-  lang: Lang;
-}
-const { lang } = Astro.props;
-const t = dict[lang].waitlist;
+const t = copy.waitlist;
 const teams = ['1', '2-10', '11-50', '51-200', '200+'];
 ---
 
@@ -20,7 +17,6 @@ const teams = ['1', '2-10', '11-50', '51-200', '200+'];
     class="np-form"
     id="np-waitlist"
     novalidate
-    data-lang={lang}
     data-messages={JSON.stringify({
       email: t.errorEmail,
       consent: t.errorConsent,
@@ -65,10 +61,14 @@ const teams = ['1', '2-10', '11-50', '51-200', '200+'];
     </div>
     <div class="np-field">
       <label class="np-consent">
-        <input id="wl-consent" name="consent" type="checkbox" required aria-describedby="wl-consent-error" />
-        <span>
-          {t.consent} <a href={localePath(lang, '/privacy/')}>{t.privacy}</a>.
-        </span>
+        <input
+          id="wl-consent"
+          name="consent"
+          type="checkbox"
+          required
+          aria-describedby="wl-consent-error"
+        />
+        <span>{t.consent} <a href="/privacy/">{t.privacy}</a>.</span>
       </label>
       <p class="np-error" id="wl-consent-error" role="alert"></p>
     </div>
@@ -94,9 +94,9 @@ const teams = ['1', '2-10', '11-50', '51-200', '200+'];
       box.textContent = text;
       input.setAttribute('aria-invalid', text ? 'true' : 'false');
     };
-    // Проверяем при уходе из поля, а не на каждое нажатие.
+    // Checked when the field loses focus, not on every keystroke.
     email.addEventListener('blur', () => {
-      if (email.value) setError(email, emailError, validEmail() ? '' : messages.email ?? '');
+      if (email.value) setError(email, emailError, validEmail() ? '' : (messages.email ?? ''));
     });
     consent.addEventListener('change', () => setError(consent, consentError, ''));
 
@@ -104,8 +104,8 @@ const teams = ['1', '2-10', '11-50', '51-200', '200+'];
       event.preventDefault();
       status.textContent = '';
       status.className = 'np-status';
-      setError(email, emailError, validEmail() ? '' : messages.email ?? '');
-      setError(consent, consentError, consent.checked ? '' : messages.consent ?? '');
+      setError(email, emailError, validEmail() ? '' : (messages.email ?? ''));
+      setError(consent, consentError, consent.checked ? '' : (messages.consent ?? ''));
       if (!validEmail()) return email.focus();
       if (!consent.checked) return consent.focus();
 
@@ -121,7 +121,7 @@ const teams = ['1', '2-10', '11-50', '51-200', '200+'];
             role: data.get('role'),
             team: data.get('team'),
             website: data.get('website'),
-            locale: form.dataset.lang,
+            locale: 'en',
             consent: true,
           }),
         });

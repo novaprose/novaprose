@@ -4,17 +4,10 @@ import LiveDemo from '../components/LiveDemo.astro';
 import Icon from '../components/site/Icon.astro';
 import Plans from '../components/site/Plans.astro';
 import Faq from '../components/site/Faq.astro';
-import { dict, type Lang } from '../i18n/site';
-
-interface Props {
-  lang: Lang;
-}
-const { lang } = Astro.props;
-const t = dict[lang];
-const audienceIcons = ['blocks', 'file', 'shield'];
+import { t } from '../i18n/site';
 ---
 
-<Marketing lang={lang} path="/">
+<Marketing path="/">
   <section class="np-hero" aria-labelledby="hero-title">
     <div class="np-container">
       <div class="np-hero-copy">
@@ -28,45 +21,38 @@ const audienceIcons = ['blocks', 'file', 'shield'];
           </a>
           <a class="np-btn np-btn-ghost" href="/demo/collaboration/">{t.hero.secondary}</a>
         </div>
+        <div class="np-install">
+          <code id="np-install-cmd">{t.hero.install}</code>
+          <button
+            type="button"
+            class="np-icon-btn"
+            id="np-install-copy"
+            aria-label={t.hero.copy}
+            title={t.hero.copy}
+            data-copied={t.hero.copied}
+          >
+            <Icon name="copy" size={16} />
+          </button>
+          <span class="np-sr-only" id="np-install-status" role="status"></span>
+        </div>
         <p class="np-note">{t.hero.note}</p>
       </div>
       <div class="np-hero-demo">
         <span class="np-demo-label">{t.hero.editorLabel}</span>
-        <LiveDemo lang={lang} />
-      </div>
-    </div>
-  </section>
-
-  <section class="np-section" aria-labelledby="audience-title">
-    <div class="np-container">
-      <div class="np-section-head is-center">
-        <h2 class="np-h2" id="audience-title">{t.audience.title}</h2>
-      </div>
-      <div class="np-grid">
-        {
-          t.audience.items.map((item, index) => (
-            <article class="np-card">
-              <span class="np-card-icon">
-                <Icon name={audienceIcons[index] ?? 'check'} />
-              </span>
-              <h3 class="np-h3">{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))
-        }
+        <LiveDemo />
       </div>
     </div>
   </section>
 
   <section class="np-section np-section-soft" id="features" aria-labelledby="features-title">
     <div class="np-container">
-      <div class="np-section-head is-center">
-        <h2 class="np-h2" id="features-title">{t.features.title}</h2>
-        <p class="np-lead">{t.features.lead}</p>
+      <div class="np-section-head">
+        <h2 class="np-h2" id="features-title">{t.included.title}</h2>
+        <p class="np-lead">{t.included.lead}</p>
       </div>
       <div class="np-grid">
         {
-          t.features.items.map((item) => (
+          t.included.items.map((item) => (
             <article class="np-card">
               <span class="np-card-icon">
                 <Icon name={item.icon} />
@@ -80,9 +66,56 @@ const audienceIcons = ['blocks', 'file', 'shield'];
     </div>
   </section>
 
-  <section class="np-section" aria-labelledby="collab-title">
+  <section class="np-section" aria-labelledby="dev-title">
     <div class="np-container np-split">
-      <div>
+      <div class="np-split-copy">
+        <h2 class="np-h2" id="dev-title">{t.developers.title}</h2>
+        <p class="np-lead">{t.developers.lead}</p>
+        <ul class="np-checklist">
+          {
+            t.developers.points.map((point) => (
+              <li>
+                <Icon name="check" size={20} />
+                <span>{point}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <a class="np-btn np-btn-ghost" href="/getting-started/">
+          {t.developers.cta}
+          <Icon name="arrow" size={18} />
+        </a>
+      </div>
+      <figure class="np-code" aria-labelledby="dev-code-label">
+        <figcaption class="np-code-bar" id="dev-code-label">{t.developers.codeLabel}</figcaption>
+        <pre><code><span class="k">import</span> {'{'} createEditor {'}'} <span class="k">from</span> <span class="s">'@novaprose/core'</span>;
+<span class="k">import</span> {'{'} collab {'}'} <span class="k">from</span> <span class="s">'@novaprose/collab'</span>;
+<span class="k">import</span> <span class="s">'@novaprose/core/style.css'</span>;
+
+<span class="k">const</span> editor = <span class="f">createEditor</span>({'{'}
+  element: document.<span class="f">querySelector</span>(<span class="s">'#editor'</span>),
+  plugins: [
+    <span class="s">'comments'</span>,
+    <span class="s">'suggestions'</span>,
+    <span class="s">'exportword'</span>,
+    <span class="f">collab</span>({'{'}
+      url: <span class="s">'wss://sync.example.com'</span>,
+      document: <span class="s">'post-42'</span>,
+    {'}'}),
+  ],
+{'}'});
+
+<span class="c">// Clean HTML, ready for your database</span>
+editor.<span class="f">on</span>(<span class="s">'change'</span>, () =&gt; {'{'}
+  <span class="f">save</span>(editor.<span class="f">getHTML</span>());
+{'}'});</code></pre>
+      </figure>
+    </div>
+  </section>
+
+  <section class="np-section np-section-soft" aria-labelledby="collab-title">
+    <div class="np-container np-split">
+      <div class="np-split-copy">
         <h2 class="np-h2" id="collab-title">{t.collab.title}</h2>
         <p class="np-lead">{t.collab.text}</p>
         <ul class="np-checklist">
@@ -100,112 +133,78 @@ const audienceIcons = ['blocks', 'file', 'shield'];
           <Icon name="arrow" size={18} />
         </a>
       </div>
-      <!-- Иллюстрация (не скриншот): как выглядят курсоры, комментарий и правка в редакторе. -->
+      <!-- An illustration, not a screenshot: cursors, a suggested edit and a comment as the editor shows them. -->
       <div class="np-collab-visual" aria-hidden="true">
-        {
-          lang === 'ru' ? (
-            <>
-              <p>
-                <strong>План на квартал</strong>
-              </p>
-              <p>
-                Запускаем новые тарифы в <span class="np-mark-del">мае</span>
-                <span class="np-mark-ins">июне</span>
-                <span class="np-cursor" style="--c:#db2777" data-name="Борис" /> и выходим в{' '}
-                <span class="np-mark-comment">два новых региона</span>.
-              </p>
-              <p>
-                Бюджет остаётся прежним
-                <span class="np-cursor" style="--c:#2563eb" data-name="Анна" />
-              </p>
-              <div class="np-bubble">
-                <span class="np-avatar" style="--c:#16a34a">
-                  К
-                </span>
-                <span>
-                  <strong>Карла:</strong> @Анна, юристы согласовали регионы?
-                </span>
-              </div>
-            </>
-          ) : (
-            <>
-              <p>
-                <strong>Q4 plan</strong>
-              </p>
-              <p>
-                We launch the new pricing in <span class="np-mark-del">May</span>
-                <span class="np-mark-ins">June</span>
-                <span class="np-cursor" style="--c:#db2777" data-name="Boris" /> and expand to{' '}
-                <span class="np-mark-comment">two new regions</span>.
-              </p>
-              <p>
-                The budget stays the same
-                <span class="np-cursor" style="--c:#2563eb" data-name="Anna" />
-              </p>
-              <div class="np-bubble">
-                <span class="np-avatar" style="--c:#16a34a">
-                  C
-                </span>
-                <span>
-                  <strong>Carla:</strong> @Anna, did legal approve the regions?
-                </span>
-              </div>
-            </>
-          )
-        }
+        <p><strong>Q4 plan</strong></p>
+        <p>
+          We launch the new pricing in <span class="np-mark-del">May</span>
+          <span class="np-mark-ins">June</span><span class="np-cursor" style="--c:#c2410c" data-name="Boris"
+          ></span> and expand to <span class="np-mark-comment">two new regions</span>.
+        </p>
+        <p>
+          The budget stays the same<span class="np-cursor" style="--c:#2563eb" data-name="Anna"></span>
+        </p>
+        <div class="np-bubble">
+          <span class="np-avatar" style="--c:#15803d">C</span>
+          <span><strong>Carla:</strong> @Anna, did legal approve the regions?</span>
+        </div>
       </div>
+    </div>
+  </section>
+
+  <section class="np-section" aria-labelledby="quality-title">
+    <div class="np-container">
+      <div class="np-section-head">
+        <h2 class="np-h2" id="quality-title">{t.quality.title}</h2>
+        <p class="np-lead">{t.quality.lead}</p>
+      </div>
+      <dl class="np-stats">
+        {
+          t.quality.items.map((item) => (
+            <div class="np-stat">
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <p class="np-after-note">
+        <a href="/project/testing/">{t.quality.link}</a>
+      </p>
     </div>
   </section>
 
   <section class="np-section np-section-soft" aria-labelledby="integrations-title">
     <div class="np-container">
-      <div class="np-section-head is-center">
+      <div class="np-section-head">
         <h2 class="np-h2" id="integrations-title">{t.integrations.title}</h2>
       </div>
       <ul class="np-chips">
         {t.integrations.items.map((item) => <li>{item}</li>)}
       </ul>
-      <p class="np-center-note">
+      <p class="np-after-note">
         {t.integrations.note} <a href="/migrate/">{t.integrations.link}</a>
       </p>
     </div>
   </section>
 
-  <section class="np-section" aria-labelledby="trust-title">
+  <section class="np-section" aria-labelledby="pricing-title">
     <div class="np-container">
-      <div class="np-section-head is-center">
-        <h2 class="np-h2" id="trust-title">{t.trust.title}</h2>
-      </div>
-      <div class="np-grid np-grid-4">
-        {
-          t.trust.items.map((item) => (
-            <article class="np-card">
-              <span class="np-card-icon">
-                <Icon name={item.icon} />
-              </span>
-              <h3 class="np-h3">{item.title}</h3>
-              <p>{item.text}</p>
-            </article>
-          ))
-        }
-      </div>
-    </div>
-  </section>
-
-  <section class="np-section np-section-soft" aria-labelledby="pricing-title">
-    <div class="np-container">
-      <div class="np-section-head is-center">
+      <div class="np-section-head">
         <h2 class="np-h2" id="pricing-title">{t.pricing.title}</h2>
         <p class="np-lead">{t.pricing.lead}</p>
       </div>
-      <Plans lang={lang} />
+      <Plans />
     </div>
   </section>
 
-  <section class="np-section" aria-labelledby="faq-title">
-    <div class="np-container">
-      <div class="np-section-head is-center">
+  <section class="np-section np-section-soft" aria-labelledby="faq-title">
+    <div class="np-container np-split np-split-top">
+      <div class="np-split-copy">
         <h2 class="np-h2" id="faq-title">{t.pricing.faqTitle}</h2>
+        <p class="np-lead">
+          {t.pricing.faqMore} <a href="mailto:hello@novaprose.com">hello@novaprose.com</a>.
+        </p>
       </div>
       <Faq items={t.pricing.faq} />
     </div>
@@ -227,3 +226,32 @@ const audienceIcons = ['blocks', 'file', 'shield'];
     </div>
   </section>
 </Marketing>
+
+<script>
+  // Copy the install command; the result is announced to screen readers.
+  const button = document.getElementById('np-install-copy');
+  const command = document.getElementById('np-install-cmd');
+  const status = document.getElementById('np-install-status');
+  button?.addEventListener('click', async () => {
+    const label = button.getAttribute('aria-label') ?? '';
+    try {
+      await navigator.clipboard.writeText(command?.textContent?.trim() ?? '');
+      const copied = button.dataset.copied ?? '';
+      button.setAttribute('title', copied);
+      if (status) status.textContent = copied;
+      window.setTimeout(() => {
+        button.setAttribute('title', label);
+        if (status) status.textContent = '';
+      }, 2000);
+    } catch {
+      // No clipboard access (an insecure page or a denied permission): the command stays selectable.
+      const range = document.createRange();
+      if (command) {
+        range.selectNodeContents(command);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+    }
+  });
+</script>

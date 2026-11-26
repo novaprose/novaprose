@@ -1,55 +1,53 @@
 ---
 /**
- * Шаблон продуктовых страниц (главная, цены, облако, политика): своя шапка и подвал,
- * два языка, тема общая с документацией (тот же ключ starlight-theme).
+ * Layout of the product pages (home, pricing, cloud, privacy): own header and footer, the dot
+ * background, and the same theme setting as the documentation (the starlight-theme key).
  */
 import '@fontsource-variable/plus-jakarta-sans';
 import '../styles/marketing.css';
+import DotField from '../components/site/DotField.astro';
 import Icon from '../components/site/Icon.astro';
 import logo from '../assets/logo.svg?url';
-import { dict, localePath, type Lang } from '../i18n/site';
+import logoDark from '../assets/logo-dark.svg?url';
+import { t } from '../i18n/site';
 
 interface Props {
-  lang: Lang;
-  /** Путь страницы без языка: '/', '/pricing/'. */
+  /** Page path: '/', '/pricing/'. */
   path: string;
   title?: string;
   description?: string;
 }
-const { lang, path, title, description } = Astro.props;
-const t = dict[lang];
+const { path, title, description } = Astro.props;
 const site = 'https://novaprose.com';
 const pageTitle = title ? `${title} — NovaProse` : t.meta.title;
 const pageDescription = description ?? t.meta.description;
-const other: Lang = lang === 'en' ? 'ru' : 'en';
 const nav = [
-  { href: `${localePath(lang, '/')}#features`, label: t.nav.features },
+  { href: '/#features', label: t.nav.features },
   { href: '/demo/collaboration/', label: t.nav.demo },
-  { href: localePath(lang, '/pricing/'), label: t.nav.pricing, current: path === '/pricing/' },
+  { href: '/pricing/', label: t.nav.pricing, current: path === '/pricing/' },
   { href: '/getting-started/', label: t.nav.docs },
 ];
 ---
 
 <!doctype html>
-<html lang={lang} data-theme="light">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={pageDescription} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="canonical" href={`${site}${localePath(lang, path)}`} />
-    <link rel="alternate" hreflang="en" href={`${site}${localePath('en', path)}`} />
-    <link rel="alternate" hreflang="ru" href={`${site}${localePath('ru', path)}`} />
-    <link rel="alternate" hreflang="x-default" href={`${site}${path}`} />
+    <link rel="canonical" href={`${site}${path}`} />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="NovaProse" />
     <meta property="og:title" content={pageTitle} />
     <meta property="og:description" content={pageDescription} />
-    <meta property="og:url" content={`${site}${localePath(lang, path)}`} />
-    <meta property="og:locale" content={lang === 'en' ? 'en_US' : 'ru_RU'} />
-    <meta name="theme-color" content="#4f46e5" />
+    <meta property="og:url" content={`${site}${path}`} />
+    <meta property="og:locale" content="en_US" />
+    <meta name="theme-color" content="#fbfaff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0e0c18" media="(prefers-color-scheme: dark)" />
     <script is:inline>
-      // Тема до отрисовки (без мигания): тот же ключ, что у документации.
+      // The theme before the first paint (no flash); the same key as the documentation.
       (() => {
         const stored = localStorage.getItem('starlight-theme');
         const theme =
@@ -59,18 +57,21 @@ const nav = [
               ? 'light'
               : 'dark';
         document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themeMode = theme;
       })();
     </script>
   </head>
   <body class="np-site">
+    <DotField />
     <a class="np-skip" href="#main">{t.nav.skip}</a>
     <header class="np-header">
       <div class="np-container np-header-row">
-        <a class="np-brand" href={localePath(lang, '/')} aria-label="NovaProse">
-          <img src={logo} alt="" width="32" height="32" />
+        <a class="np-brand" href="/" aria-label="NovaProse home">
+          <img class="np-logo-light" src={logo} alt="" width="34" height="34" />
+          <img class="np-logo-dark" src={logoDark} alt="" width="34" height="34" />
           <span>NovaProse</span>
         </a>
-        <nav class="np-nav" id="np-nav" aria-label={t.nav.menu}>
+        <nav class="np-nav" id="np-nav" aria-label="Main">
           <ul>
             {
               nav.map((item) => (
@@ -86,30 +87,16 @@ const nav = [
             <a
               class="np-icon-btn"
               href="https://github.com/novaprose/novaprose"
-              aria-label="GitHub"
+              aria-label="NovaProse on GitHub"
               title="GitHub"
             >
               <Icon name="github" size={20} />
-            </a>
-            <a
-              class="np-lang"
-              href={localePath(other, path)}
-              hreflang={other}
-              lang={other}
-              aria-label={`${t.nav.language}: ${other === 'en' ? 'English' : 'Русский'}`}
-            >
-              <Icon name="language" size={18} />
-              {other.toUpperCase()}
             </a>
             <button
               type="button"
               class="np-icon-btn"
               id="np-theme"
-              data-labels={JSON.stringify({
-                light: t.nav.themeLight,
-                dark: t.nav.themeDark,
-                auto: t.nav.themeAuto,
-              })}
+              data-labels={JSON.stringify({ light: t.nav.themeLight, dark: t.nav.themeDark })}
               aria-label={t.nav.theme}
               title={t.nav.theme}
             >
@@ -126,7 +113,8 @@ const nav = [
           aria-expanded="false"
           aria-label={t.nav.menu}
         >
-          <Icon name="menu" size={22} />
+          <span class="np-menu-icon" data-for="closed"><Icon name="menu" size={22} /></span>
+          <span class="np-menu-icon" data-for="open"><Icon name="close" size={22} /></span>
         </button>
       </div>
     </header>
@@ -138,67 +126,80 @@ const nav = [
     <footer class="np-footer">
       <div class="np-container np-footer-grid">
         <div>
-          <a class="np-brand" href={localePath(lang, '/')}>
-            <img src={logo} alt="" width="28" height="28" />
+          <a class="np-brand" href="/" aria-label="NovaProse home">
+            <img class="np-logo-light" src={logo} alt="" width="30" height="30" />
+            <img class="np-logo-dark" src={logoDark} alt="" width="30" height="30" />
             <span>NovaProse</span>
           </a>
           <p class="np-muted">{t.footer.tagline}</p>
         </div>
-        <nav aria-label={t.footer.product}>
-          <h2>{t.footer.product}</h2>
+        <nav aria-labelledby="footer-product">
+          <h2 id="footer-product">{t.footer.product}</h2>
           <ul>
-            <li><a href={`${localePath(lang, '/')}#features`}>{t.nav.features}</a></li>
+            <li><a href="/#features">{t.nav.features}</a></li>
             <li><a href="/demo/collaboration/">{t.nav.demo}</a></li>
-            <li><a href={localePath(lang, '/pricing/')}>{t.nav.pricing}</a></li>
-            <li><a href={localePath(lang, '/cloud/')}>NovaProse Cloud</a></li>
+            <li><a href="/pricing/">{t.nav.pricing}</a></li>
+            <li><a href="/cloud/">NovaProse Cloud</a></li>
           </ul>
         </nav>
-        <nav aria-label={t.footer.resources}>
-          <h2>{t.footer.resources}</h2>
+        <nav aria-labelledby="footer-resources">
+          <h2 id="footer-resources">{t.footer.resources}</h2>
           <ul>
             <li><a href="/getting-started/">{t.nav.docs}</a></li>
             <li><a href="/migrate/">{t.footer.migrate}</a></li>
+            <li><a href="/project/testing/">{t.footer.testing}</a></li>
             <li><a href="/changelog/">{t.footer.changelog}</a></li>
           </ul>
         </nav>
-        <nav aria-label={t.footer.project}>
-          <h2>{t.footer.project}</h2>
+        <nav aria-labelledby="footer-project">
+          <h2 id="footer-project">{t.footer.project}</h2>
           <ul>
             <li><a href="https://github.com/novaprose/novaprose">GitHub</a></li>
             <li>
-              <a href="https://github.com/novaprose/novaprose/blob/main/SECURITY.md"
-                >{t.footer.security}</a
-              >
+              <a href="https://github.com/novaprose/novaprose/blob/main/SECURITY.md">
+                {t.footer.security}
+              </a>
             </li>
-            <li><a href={localePath(lang, '/privacy/')}>{t.footer.privacy}</a></li>
+            <li><a href="/privacy/">{t.footer.privacy}</a></li>
             <li><a href="mailto:hello@novaprose.com">{t.footer.contact}</a></li>
           </ul>
         </nav>
       </div>
       <div class="np-container np-footer-bottom">
-        <p>© 2026 NovaProse · MIT · {t.footer.rights}</p>
+        <p>© 2026 NovaProse · MIT license · {t.footer.rights}</p>
       </div>
     </footer>
 
     <script>
-      // Мобильное меню.
+      // The header gets a border once the page scrolls under it.
+      const header = document.querySelector<HTMLElement>('.np-header');
+      const onScroll = () => header?.classList.toggle('is-scrolled', window.scrollY > 4);
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      // The mobile menu: a popup that closes with Esc, a click outside or a chosen link.
       const menuBtn = document.querySelector<HTMLButtonElement>('.np-menu-btn');
       const nav = document.getElementById('np-nav');
-      menuBtn?.addEventListener('click', () => {
-        const open = menuBtn.getAttribute('aria-expanded') !== 'true';
-        menuBtn.setAttribute('aria-expanded', String(open));
+      const setMenu = (open: boolean, restoreFocus = false) => {
+        menuBtn?.setAttribute('aria-expanded', String(open));
         nav?.classList.toggle('is-open', open);
+        if (!open && restoreFocus) menuBtn?.focus();
+      };
+      menuBtn?.addEventListener('click', () => {
+        setMenu(menuBtn.getAttribute('aria-expanded') !== 'true');
       });
       document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && nav?.classList.contains('is-open')) {
-          nav.classList.remove('is-open');
-          menuBtn?.setAttribute('aria-expanded', 'false');
-          menuBtn?.focus();
-        }
+        if (event.key === 'Escape' && nav?.classList.contains('is-open')) setMenu(false, true);
+      });
+      document.addEventListener('click', (event) => {
+        if (!nav?.classList.contains('is-open')) return;
+        const target = event.target as Node;
+        if (menuBtn?.contains(target)) return;
+        if (!nav.contains(target) || (target as Element).closest?.('a')) setMenu(false);
       });
 
-      // Тема: по умолчанию как в системе; клик всегда даёт видимую смену (светлая ↔ тёмная).
-      // Ключ общий с документацией (starlight-theme).
+      // Theme: follows the system until chosen; a click always switches light ↔ dark.
+      // The key is shared with the documentation (starlight-theme).
       const themeBtn = document.getElementById('np-theme');
       const labels = JSON.parse(themeBtn?.dataset.labels ?? '{}') as Record<string, string>;
       const baseLabel = themeBtn?.getAttribute('aria-label') ?? '';
