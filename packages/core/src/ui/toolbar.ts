@@ -342,7 +342,16 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
       el.classList.toggle('is-active', active);
       if (spec.type === 'button') el.setAttribute('aria-pressed', String(active));
     }
-    if (label && spec.type === 'menu') label.textContent = spec.label?.(editor) ?? spec.text ?? '';
+    if (label && spec.type === 'menu') {
+      const text = spec.label?.(editor) ?? spec.text ?? '';
+      label.textContent = text;
+      // WCAG 2.5.3: доступное имя начинается с видимого текста («Абзац, Блоки»),
+      // иначе голосовое управление («нажми Абзац») не найдёт кнопку.
+      el.setAttribute(
+        'aria-label',
+        text && text !== spec.tooltip ? `${text}, ${spec.tooltip}` : (spec.tooltip ?? text),
+      );
+    }
     if (colorBar && spec.type === 'panel' && spec.indicator) {
       const color = spec.indicator(editor);
       colorBar.style.background = color ?? '';

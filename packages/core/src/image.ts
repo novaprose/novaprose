@@ -228,6 +228,9 @@ export function openImageDialog(editor: Editor): void {
     accept: 'image/png,image/jpeg,image/gif,image/webp,image/avif',
     className: 'nova-visually-hidden',
     tabindex: '-1',
+    // Выбор файла — через видимую зону ниже; само поле скрыто, но подпись у него обязана быть.
+    'aria-label': t('image.drop'),
+    'aria-hidden': 'true',
   });
   const dropzone = h(
     'button',

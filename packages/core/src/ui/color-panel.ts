@@ -53,6 +53,9 @@ export function createColorPanel(options: ColorPanelOptions): HTMLElement {
   const current = options.current?.toLowerCase() ?? null;
 
   const grid = h('div', { className: 'nova-swatches', role: 'grid', 'aria-label': options.label });
+  // role=grid требует строк (role=row): иначе скринридер не может назвать строку и столбец.
+  // Строка — display: contents, раскладку по-прежнему задаёт CSS-сетка .nova-swatches.
+  let row: HTMLElement | null = null;
   for (const color of options.colors) {
     const selected = current === color.toLowerCase();
     const swatch = h(
@@ -71,7 +74,11 @@ export function createColorPanel(options: ColorPanelOptions): HTMLElement {
     swatch.style.setProperty('--swatch', color);
     swatch.addEventListener('click', () => options.onPick(color));
     swatches.push(swatch);
-    grid.append(swatch);
+    if (!row || row.childElementCount === COLUMNS) {
+      row = h('div', { className: 'nova-swatch-row', role: 'row' });
+      grid.append(row);
+    }
+    row.append(swatch);
   }
   (swatches.find((s) => s.getAttribute('aria-selected') === 'true') ?? swatches[0])?.setAttribute(
     'tabindex',

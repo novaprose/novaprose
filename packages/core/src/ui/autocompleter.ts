@@ -93,7 +93,9 @@ export function autocompleterPlugin(editor: Editor): Plugin {
     items = [];
     view.dom.removeAttribute('aria-activedescendant');
     view.dom.removeAttribute('aria-controls');
-    view.dom.setAttribute('aria-expanded', 'false');
+    // aria-expanded у role=textbox не разрешён (axe: aria-allowed-attr) — список связан через
+    // aria-controls и aria-activedescendant, этого достаточно скринридерам.
+    view.dom.removeAttribute('aria-expanded');
   };
 
   const select = (view: EditorView, index: number) => {
@@ -142,7 +144,6 @@ export function autocompleterPlugin(editor: Editor): Plugin {
     });
     list.hidden = false;
     view.dom.setAttribute('aria-controls', listId);
-    view.dom.setAttribute('aria-expanded', 'true');
     setActive(view, Math.min(active, Math.max(0, items.length - 1)));
     const coords = view.coordsAtPos(match.from);
     positionFloating(

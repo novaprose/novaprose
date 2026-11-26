@@ -72,7 +72,9 @@ describe('слэш-команды в редакторе', () => {
     type(e, '/hea');
     await flush();
     expect(list(e).hidden).toBe(false);
-    expect(e.view.dom.getAttribute('aria-expanded')).toBe('true');
+    // Список связан с полем через aria-controls (aria-expanded у role=textbox не разрешён).
+    expect(e.view.dom.getAttribute('aria-controls')).toBe(list(e).id);
+    expect(e.view.dom.hasAttribute('aria-expanded')).toBe(false);
     const options = [...list(e).querySelectorAll('[role="option"]')].map((o) => o.textContent);
     expect(options[0]).toContain('Heading 1');
     key(e, 'ArrowDown');

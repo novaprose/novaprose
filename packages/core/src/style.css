@@ -9,7 +9,7 @@
 .nova-editor {
   --nova-bg: #ffffff;
   --nova-fg: #1f2328;
-  --nova-muted: #656d76;
+  --nova-muted: #59636e; /* ≥4.5:1 на всех поверхностях, включая hover/pressed */
   --nova-subtle: #8c959f;
   --nova-border: #d0d7de;
   --nova-border-strong: #afb8c1;
@@ -22,6 +22,9 @@
   --nova-accent: #0969da;
   --nova-accent-hover: #0858b9;
   --nova-accent-fg: #ffffff;
+  /* Заливка кнопок с белым текстом: контраст не ниже 4.5:1 (WCAG AA). */
+  --nova-accent-strong: #0969da;
+  --nova-accent-strong-hover: #0858b9;
   --nova-focus: #0969da;
   --nova-danger: #cf222e;
   --nova-danger-bg: #ffebe9;
@@ -58,7 +61,7 @@
 [data-theme='dark'] .nova-editor {
   --nova-bg: #0d1117;
   --nova-fg: #e6edf3;
-  --nova-muted: #8d96a0;
+  --nova-muted: #9198a1; /* ≥4.5:1 на всех поверхностях, включая hover/pressed */
   --nova-subtle: #6e7681;
   --nova-border: #30363d;
   --nova-border-strong: #484f58;
@@ -71,6 +74,9 @@
   --nova-accent: #2f81f7;
   --nova-accent-hover: #4493f8;
   --nova-accent-fg: #ffffff;
+  /* #2f81f7 с белым — 3.7:1, ниже AA; для заливки — темнее (4.6:1). */
+  --nova-accent-strong: #1f6feb;
+  --nova-accent-strong-hover: #1a63d6;
   --nova-focus: #58a6ff;
   --nova-danger: #f85149;
   --nova-danger-bg: #2d1214;
@@ -97,7 +103,7 @@
   .nova-editor:not([data-theme='light'] *) {
     --nova-bg: #0d1117;
     --nova-fg: #e6edf3;
-    --nova-muted: #8d96a0;
+    --nova-muted: #9198a1; /* ≥4.5:1 на всех поверхностях, включая hover/pressed */
     --nova-subtle: #6e7681;
     --nova-border: #30363d;
     --nova-border-strong: #484f58;
@@ -110,6 +116,9 @@
     --nova-accent: #2f81f7;
     --nova-accent-hover: #4493f8;
     --nova-accent-fg: #ffffff;
+    /* #2f81f7 с белым — 3.7:1, ниже AA; для заливки — темнее (4.6:1). */
+    --nova-accent-strong: #1f6feb;
+    --nova-accent-strong-hover: #1a63d6;
     --nova-focus: #58a6ff;
     --nova-danger: #f85149;
     --nova-danger-bg: #2d1214;
@@ -439,7 +448,8 @@
 .nova-prosemirror.nova-empty::before {
   content: attr(data-placeholder);
   position: absolute;
-  color: var(--nova-subtle);
+  /* Текст — контраст AA (4.5:1), поэтому muted, а не subtle. */
+  color: var(--nova-muted);
   pointer-events: none;
 }
 
@@ -1046,7 +1056,8 @@ html.nova-fullscreen-lock body {
 
 .nova-menu-shortcut {
   margin-left: 16px;
-  color: var(--nova-subtle);
+  /* Текст — контраст AA (4.5:1), поэтому muted, а не subtle. */
+  color: var(--nova-muted);
   font-family: var(--nova-font);
   font-size: 12px;
 }
@@ -1108,6 +1119,11 @@ html.nova-fullscreen-lock body {
   display: grid;
   grid-template-columns: repeat(8, 24px);
   gap: 4px;
+}
+
+/* Строка палитры нужна только для ARIA (role=row) — в раскладке её нет. */
+.nova-swatch-row {
+  display: contents;
 }
 
 .nova-swatch {
@@ -1475,14 +1491,14 @@ html.nova-fullscreen-lock body {
 }
 
 .nova-button-primary {
-  border-color: var(--nova-accent);
-  background: var(--nova-accent);
+  border-color: var(--nova-accent-strong);
+  background: var(--nova-accent-strong);
   color: var(--nova-accent-fg);
 }
 
 .nova-button-primary:hover:not(:disabled) {
-  border-color: var(--nova-accent-hover);
-  background: var(--nova-accent-hover);
+  border-color: var(--nova-accent-strong-hover);
+  background: var(--nova-accent-strong-hover);
 }
 
 .nova-button:disabled {
@@ -1521,7 +1537,8 @@ html.nova-fullscreen-lock body {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--nova-subtle);
+  /* Текст («или»), а не декор: нужен контраст AA — muted, не subtle. */
+  color: var(--nova-muted);
   font-size: 12px;
   text-transform: uppercase;
 }
