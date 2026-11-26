@@ -1,15 +1,19 @@
 import '@novaprose/core/style.css';
 import '../playground.css';
 import {
+  NodeViewContent,
   NovaProseEditor,
+  reactNodeView,
   useCommand,
   useEditor,
   useEditorState,
   type CommandName,
   type Editor,
+  type NodeViewProps,
 } from '@novaprose/react';
-import { StrictMode, useState } from 'react';
+import { createContext, StrictMode, useContext, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { CALLOUT_CONTENT, calloutPlugin, TONES } from '../callout';
 
 /**
  * React-песочница: компонент в форме (controlled + FormData) и headless-редактор со своим тулбаром
@@ -118,6 +122,59 @@ function HeadlessDemo() {
   );
 }
 
+const Theme = createContext('светлая');
+
+/** Вид узла на React: свои поля (не попадают в текст документа) и содержимое на своём месте. */
+function Callout({ node, updateAttributes }: NodeViewProps) {
+  const theme = useContext(Theme);
+  return (
+    <div className="pg-callout" data-tone={String(node.attrs.tone)}>
+      <div className="pg-callout-bar" contentEditable={false}>
+        <select
+          aria-label="Тон выноски"
+          value={String(node.attrs.tone)}
+          onChange={(event) => updateAttributes({ tone: event.target.value })}
+        >
+          {TONES.map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <input
+          aria-label="Заголовок выноски"
+          placeholder="Заголовок"
+          value={String(node.attrs.title)}
+          onChange={(event) => updateAttributes({ title: event.target.value })}
+        />
+        <span data-testid="nv-theme">{theme}</span>
+      </div>
+      <NodeViewContent className="pg-callout-body" />
+    </div>
+  );
+}
+
+const callout = calloutPlugin(reactNodeView(Callout));
+
+function NodeViewsDemo() {
+  const [html, setHtml] = useState(CALLOUT_CONTENT);
+  return (
+    <section className="pg-react-block" aria-labelledby="nv-title">
+      <h2 id="nv-title">Вид узла — компонент React</h2>
+      <Theme.Provider value="тёмная">
+        <NovaProseEditor
+          plugins={[callout]}
+          defaultValue={CALLOUT_CONTENT}
+          onChange={setHtml}
+          init={{ toolbar: 'undo redo | bold italic', statusbar: false }}
+          className="pg-node-views"
+        />
+      </Theme.Provider>
+      <pre data-testid="nv-html">{html}</pre>
+    </section>
+  );
+}
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <main className="pg-react">
@@ -126,6 +183,7 @@ createRoot(document.getElementById('root')!).render(
       </h1>
       <FormDemo />
       <HeadlessDemo />
+      <NodeViewsDemo />
     </main>
   </StrictMode>,
 );

@@ -185,14 +185,15 @@ const wordLimit = definePlugin({
 createEditor({ element, plugins: [wordLimit] });
 ```
 
-| Field                | Description                                                                              |
-| -------------------- | ---------------------------------------------------------------------------------------- |
-| `name`               | unique name, also used in `requires` of other plugins                                    |
-| `requires`           | plugins that must be set up first                                                        |
-| `setup`              | register controls and listeners; may return a cleanup function                           |
-| `toolbar`            | controls appended to the default toolbar                                                 |
-| `prosemirrorPlugins` | `(editor) => Plugin[]` for low-level input handling and decorations                      |
-| `load`               | `() => import(...)`: the rest of a plugin with nodes, loaded after the editor is created |
+| Field                | Description                                                                                  |
+| -------------------- | -------------------------------------------------------------------------------------------- |
+| `name`               | unique name, also used in `requires` of other plugins                                        |
+| `requires`           | plugins that must be set up first                                                            |
+| `setup`              | register controls and listeners; may return a cleanup function                               |
+| `toolbar`            | controls appended to the default toolbar                                                     |
+| `prosemirrorPlugins` | `(editor) => Plugin[]` for low-level input handling and decorations                          |
+| `nodeViews`          | `{ name: view }`: draw nodes with your own component — see [Node views](/guides/node-views/) |
+| `load`               | `() => import(...)`: the rest of a plugin with nodes, loaded after the editor is created     |
 
 ### New content types
 
@@ -223,8 +224,9 @@ CSS, and elements like `<script>` or `<style>` never reach `getHTML()`.
 
 Plugins that add nodes or marks must be passed as objects, not lazy loaders, because the schema is
 created together with the editor. To keep the page light, put only the nodes in that object and
-move the rest (buttons, commands, node views, key bindings) into a separate module named in
-`load`; it is downloaded right after the editor is created and is part of `editor.ready`:
+move the rest (buttons, commands, key bindings) into a separate module named in `load`; it is
+downloaded right after the editor is created and is part of `editor.ready`. Keep
+[node views](/guides/node-views/) in the plugin object itself: they draw the document.
 
 ```ts
 const callout = definePlugin({

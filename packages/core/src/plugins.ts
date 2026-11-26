@@ -2,6 +2,7 @@ import type { MarkSpec, NodeSpec } from 'prosemirror-model';
 import type { Command, EditorState, Plugin as PMPlugin, Transaction } from 'prosemirror-state';
 import type { CommandName } from './commands';
 import type { Editor } from './editor';
+import type { NodeViewFactory } from './node-view';
 
 /**
  * Плагин NovaProse. Встроенные и сторонние плагины используют один и тот же API.
@@ -39,6 +40,12 @@ export interface NovaPlugin {
   /** Новые марки (инлайн-форматирование) с parseDOM и toDOM. */
   marks?: Record<string, MarkSpec>;
   /**
+   * Свой вид узлов в редакторе: `{ callout: reactNodeView(Callout) }`, `vueNodeView(…)` или
+   * `defineNodeView(…)`. На HTML не влияет (он из toDOM). Виды — в самом плагине, а не в ленивой
+   * части: их появление позже перерисовало бы весь документ.
+   */
+  nodeViews?: Record<string, NodeViewFactory>;
+  /**
    * Переопределение именованных команд (кнопки, меню, горячие клавиши и editor.exec берут их отсюда).
    * Например, совместное редактирование заменяет undo/redo своими — «отменить только свои правки».
    */
@@ -51,9 +58,10 @@ export interface NovaPlugin {
    */
   transformTransaction?: (tr: Transaction, state: EditorState, editor: Editor) => Transaction;
   /**
-   * Ленивая часть плагина с узлами: интерфейс, команды, представления узлов, клавиши. Схема
-   * создаётся сразу, поэтому узлы — в самом плагине (первая загрузка), а остальное — отдельным
-   * чанком после создания редактора (входит в `editor.ready`). Часть — обычный плагин без узлов.
+   * Ленивая часть плагина с узлами: кнопки, диалоги, команды, клавиши. Схема создаётся сразу,
+   * поэтому узлы и всё, что их рисует (nodeViews), — в самом плагине (первая загрузка), а остальное —
+   * отдельным чанком после создания редактора (входит в `editor.ready`). Часть — обычный плагин
+   * без узлов.
    */
   load?: Loader;
 }

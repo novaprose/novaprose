@@ -15,7 +15,7 @@ import { gapCursor } from 'prosemirror-gapcursor';
 import { history } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
 import { Node as PMNode, Slice } from 'prosemirror-model';
-import { EditorState, type Command, type Plugin, type Transaction } from 'prosemirror-state';
+import { EditorState, Plugin, type Command, type Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { commands, isCommandActive, type CommandName } from './commands';
 import { createTranslator, type LanguagePack } from './i18n';
@@ -609,7 +609,14 @@ export class Editor {
 
   private collectPmPlugins(plugin: NovaPlugin): Plugin[] {
     try {
-      return plugin.prosemirrorPlugins?.(this) ?? [];
+      const pm = plugin.prosemirrorPlugins?.(this) ?? [];
+      if (plugin.nodeViews) {
+        const nodeViews = Object.fromEntries(
+          Object.entries(plugin.nodeViews).map(([name, factory]) => [name, factory(this)]),
+        );
+        pm.push(new Plugin({ props: { nodeViews } }));
+      }
+      return pm;
     } catch (error) {
       reportPluginError(`Plugin "${plugin.name}" failed to create ProseMirror plugins`, error);
       return [];

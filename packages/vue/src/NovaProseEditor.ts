@@ -77,7 +77,7 @@ export const NovaProseEditor = defineComponent({
         emit('ready', editor);
       },
     };
-    const { el, editor } = useEditor(options);
+    const { el, editor, nodeViews } = useEditor(options);
 
     watch(
       () => props.modelValue,
@@ -111,9 +111,10 @@ export const NovaProseEditor = defineComponent({
 
     return () => {
       const container = h('div', { ...attrs, ref: el });
-      if (props.name === undefined) return container;
+      if (props.name === undefined) return [container, h(nodeViews)];
       return [
         container,
+        h(nodeViews),
         h('input', {
           ref: input,
           type: 'hidden',

@@ -79,6 +79,16 @@ All packages in this repository are versioned together. The format follows
 
 ### Plugins API
 
+- Node views: `nodeViews` in a plugin draws its nodes with your own component —
+  `reactNodeView(Component)` from `@novaprose/react`, `vueNodeView(Component)` from
+  `@novaprose/vue`, or `defineNodeView({ mount, update, destroy })` for plain DOM. The component
+  gets the node, `updateAttributes()` (one undo step), `deleteNode()` and `selected`, and places
+  the editable content with `<NodeViewContent>`. React and Vue components render inside your app
+  (a portal, `Teleport`), so context, `provide`/`inject`, stores and translations work. Fields,
+  lists and buttons in a view keep their events. The HTML still comes from `toDOM`.
+- **React:** `react-dom` is now a peer dependency (it renders node views). `useEditor()` in React
+  and Vue also returns `nodeViews`: render it next to the editor container when you use node views
+  (`<NovaProseEditor>` does it by itself).
 - The plugins `anchor`, `media`, `pagebreak`, `mentions`, `mergetags` and `suggestions` keep only
   their nodes, marks and rendering in the first load; their buttons, dialogs and lists are a lazy part
   that registers right after creation. **Changed:** like other lazy plugins, their buttons exist after

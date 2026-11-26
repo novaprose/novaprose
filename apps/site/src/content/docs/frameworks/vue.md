@@ -79,8 +79,50 @@ const words = useEditorState(editor, (e) => e.getText().split(/\s+/).filter(Bool
 </template>
 ```
 
-- `useEditor(options)` returns `{ el, editor }`. The editor is created when `el` is mounted and
+- `useEditor(options)` returns `{ el, editor, nodeViews }`. The editor is created when `el` is mounted and
   destroyed on unmount.
 - `useEditorState(editor, selector, isEqual?)` returns a `ShallowRef` that updates only when the
   selector result changes (shallow comparison by default).
 - `useCommand(editor, name)` returns `{ active, enabled, run }`; `editor` can be a ref or a getter.
+
+## Node views: draw a node with a component
+
+```vue
+<!-- Callout.vue -->
+<script setup lang="ts">
+import { NodeViewContent, nodeViewProps } from '@novaprose/vue';
+const props = defineProps(nodeViewProps);
+</script>
+
+<template>
+  <div class="callout" :data-tone="props.node.attrs.tone">
+    <div contenteditable="false">
+      <select
+        :value="props.node.attrs.tone"
+        @change="props.updateAttributes({ tone: ($event.target as HTMLSelectElement).value })"
+      >
+        <option value="info">Info</option>
+        <option value="warning">Warning</option>
+      </select>
+    </div>
+    <NodeViewContent />
+  </div>
+</template>
+```
+
+```ts
+import { definePlugin } from '@novaprose/core';
+import { vueNodeView } from '@novaprose/vue';
+import Callout from './Callout.vue';
+
+const callout = definePlugin({
+  name: 'callout',
+  nodes: { callout: calloutSpec }, // parseDOM / toDOM as usual
+  nodeViews: { callout: vueNodeView(Callout) },
+});
+```
+
+- The component renders inside your app (`Teleport`), so `provide`/`inject`, the router and stores
+  work. With `useEditor`, render the returned component: `<component :is="nodeViews" />`.
+- `updateAttributes()` is one undo step; `useNodeView()` gives nested components the same props.
+- The saved HTML still comes from `toDOM`. Details: [Node views](https://novaprose.com/guides/node-views/).

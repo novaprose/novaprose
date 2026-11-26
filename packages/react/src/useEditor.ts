@@ -1,16 +1,17 @@
 import { createEditor, type Editor, type EditorOptions } from '@novaprose/core';
 import {
+  createElement,
   useCallback,
-  useEffect,
-  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type DependencyList,
+  type ReactNode,
 } from 'react';
+import { createWithPortals, NodeViewHost, NodeViewPortals } from './nodeViews';
+import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
 
-// На сервере useLayoutEffect выдаёт предупреждение — там он всё равно не нужен.
-export const useIsomorphicLayoutEffect =
-  typeof window !== 'undefined' ? useLayoutEffect : useEffect;
+export { useIsomorphicLayoutEffect };
 
 /** Опции хука: всё из `EditorOptions`, кроме `element` — его даёт `ref`. */
 export type UseEditorOptions = Omit<EditorOptions, 'element'> & {
@@ -25,6 +26,11 @@ export interface UseEditorResult {
   ref: (element: HTMLElement | null) => void;
   /** Экземпляр редактора; `null` до монтирования и на сервере. */
   editor: Editor | null;
+  /**
+   * Виды узлов на React (reactNodeView): отрисуйте рядом с контейнером — `<div ref={ref} />
+   * {nodeViews}`. Компоненты видов получают контекст того места, где стоит этот элемент.
+   */
+  nodeViews: ReactNode;
 }
 
 /**
@@ -40,6 +46,7 @@ export function useEditor(
 ): UseEditorResult {
   const [element, setElement] = useState<HTMLElement | null>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
+  const [portals] = useState(() => new NodeViewPortals());
   const optionsRef = useRef(options);
   optionsRef.current = options;
 
@@ -48,11 +55,13 @@ export function useEditor(
     // onDestroy в ядро не передаём: его вызываем сами в очистке, всегда свежий из optionsRef.
     const { onCreate, onDestroy, onChange, ...rest } = optionsRef.current;
     void onDestroy;
-    const instance = createEditor({
-      ...rest,
-      element,
-      ...(onChange ? { onChange: (e: Editor) => optionsRef.current.onChange?.(e) } : {}),
-    });
+    const instance = createWithPortals(portals, () =>
+      createEditor({
+        ...rest,
+        element,
+        ...(onChange ? { onChange: (e: Editor) => optionsRef.current.onChange?.(e) } : {}),
+      }),
+    );
     setEditor(instance);
     onCreate?.(instance);
     return () => {
@@ -63,5 +72,6 @@ export function useEditor(
   }, [element, ...deps]);
 
   const ref = useCallback((node: HTMLElement | null) => setElement(node), []);
-  return { ref, editor };
+  const nodeViews = useMemo(() => createElement(NodeViewHost, { portals }), [portals]);
+  return { ref, editor, nodeViews };
 }

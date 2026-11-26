@@ -14,6 +14,13 @@ export {
 } from './editor';
 export type { CommandChain, ChainCommandName } from './chain';
 export {
+  defineNodeView,
+  type NodeViewFactory,
+  type NodeViewOptions,
+  type NodeViewProps,
+  type NodeViewRenderer,
+} from './node-view';
+export {
   createRenderer,
   renderHTML,
   type DocumentOptions,

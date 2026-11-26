@@ -172,3 +172,25 @@ body {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 16px;
 }
+
+/* Вид узла «выноска» (песочницы React и Vue, e2e/node-views.spec.ts). */
+.pg-callout {
+  margin: 8px 0;
+  border-left: 4px solid #0969da;
+  border-radius: 6px;
+  background: color-mix(in srgb, #0969da 8%, transparent);
+  padding: 8px 12px;
+}
+.pg-callout[data-tone='warning'] {
+  border-left-color: #9a6700;
+  background: color-mix(in srgb, #9a6700 10%, transparent);
+}
+.pg-callout-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 14px;
+}
+.pg-callout-body > div > p:first-child {
+  margin-top: 6px;
+}

@@ -17,8 +17,8 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('[data-testid="headless"] .ProseMirror')).toBeVisible();
 });
 
-test('на странице ровно два редактора', async ({ page }) => {
-  await expect(page.locator('.nova-editor')).toHaveCount(2);
+test('на странице ровно три редактора', async ({ page }) => {
+  await expect(page.locator('.nova-editor')).toHaveCount(3);
 });
 
 test('форма: ввод доходит до v-model и FormData', async ({ page }) => {

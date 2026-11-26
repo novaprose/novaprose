@@ -7,6 +7,9 @@ import {
 } from '@novaprose/core';
 import {
   computed,
+  defineComponent,
+  h,
+  markRaw,
   onBeforeUnmount,
   onScopeDispose,
   shallowRef,
@@ -15,8 +18,10 @@ import {
   type ComputedRef,
   type MaybeRefOrGetter,
   type Ref,
+  type Component,
   type ShallowRef,
 } from 'vue';
+import { createWithTeleports, NodeViewHost, NodeViewTeleports } from './nodeViews';
 
 /** Опции композабла: всё из `EditorOptions`, кроме `element` — его даёт `el`. */
 export type UseEditorOptions = Omit<EditorOptions, 'element'> & {
@@ -31,6 +36,11 @@ export interface UseEditorResult {
   el: Ref<HTMLElement | null>;
   /** Экземпляр редактора; `null` до монтирования и на сервере. */
   editor: ShallowRef<Editor | null>;
+  /**
+   * Виды узлов на Vue (vueNodeView): отрисуйте рядом с контейнером — `<component :is="nodeViews" />`.
+   * Компоненты видов получают provide/inject того места, где он стоит.
+   */
+  nodeViews: Component;
 }
 
 /**
@@ -41,6 +51,7 @@ export interface UseEditorResult {
 export function useEditor(options: UseEditorOptions = {}): UseEditorResult {
   const el = shallowRef<HTMLElement | null>(null);
   const editor = shallowRef<Editor | null>(null);
+  const teleports = new NodeViewTeleports();
 
   const destroy = () => {
     const instance = editor.value;
@@ -57,7 +68,7 @@ export function useEditor(options: UseEditorOptions = {}): UseEditorResult {
       if (!element) return;
       const { onCreate, onDestroy, ...rest } = options;
       void onDestroy;
-      const instance = createEditor({ ...rest, element });
+      const instance = createWithTeleports(teleports, () => createEditor({ ...rest, element }));
       editor.value = instance;
       onCreate?.(instance);
     },
@@ -65,7 +76,13 @@ export function useEditor(options: UseEditorOptions = {}): UseEditorResult {
   );
 
   onBeforeUnmount(destroy);
-  return { el, editor };
+  const nodeViews = markRaw(
+    defineComponent({
+      name: 'NovaNodeViewsHost',
+      setup: () => () => h(NodeViewHost, { teleports }),
+    }),
+  );
+  return { el, editor, nodeViews };
 }
 
 const STATE_EVENTS: EditorEvent[] = [

@@ -113,8 +113,45 @@ function MyEditor() {
 }
 ```
 
-- `useEditor(options, deps?)` returns `{ ref, editor }`. Callbacks in `options` are always the
+- `useEditor(options, deps?)` returns `{ ref, editor, nodeViews }`. Callbacks in `options` are always the
   latest ones; changing `deps` recreates the editor.
 - `useEditorState(editor, selector, isEqual?)` re-renders only when the selector result changes
   (shallow comparison by default).
 - `useCommand(editor, name)` returns `{ active, enabled, run }` for a named command.
+
+## Node views: draw a node with a component
+
+```tsx
+import { definePlugin } from '@novaprose/core';
+import { NodeViewContent, reactNodeView, type NodeViewProps } from '@novaprose/react';
+
+function Callout({ node, updateAttributes }: NodeViewProps) {
+  return (
+    <div className="callout" data-tone={String(node.attrs.tone)}>
+      <div contentEditable={false}>
+        <select
+          value={String(node.attrs.tone)}
+          onChange={(e) => updateAttributes({ tone: e.target.value })}
+        >
+          <option value="info">Info</option>
+          <option value="warning">Warning</option>
+        </select>
+      </div>
+      <NodeViewContent />
+    </div>
+  );
+}
+
+const callout = definePlugin({
+  name: 'callout',
+  nodes: { callout: calloutSpec }, // parseDOM / toDOM as usual
+  nodeViews: { callout: reactNodeView(Callout) },
+});
+
+<NovaProseEditor plugins={[callout]} />;
+```
+
+- The component renders inside your React tree (a portal), so your context — theme, translations,
+  stores — works. With `useEditor`, render the `nodeViews` it returns next to the container.
+- `updateAttributes()` is one undo step; `useNodeView()` gives nested components the same props.
+- The saved HTML still comes from `toDOM`. Details: [Node views](https://novaprose.com/guides/node-views/).

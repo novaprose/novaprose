@@ -1,14 +1,18 @@
 import '@novaprose/core/style.css';
 import '../playground.css';
 import {
+  NodeViewContent,
   NovaProseEditor,
+  nodeViewProps,
+  vueNodeView,
   useCommand,
   useEditor,
   useEditorState,
   type CommandName,
   type Editor,
 } from '@novaprose/vue';
-import { createApp, defineComponent, h, ref, type PropType } from 'vue';
+import { createApp, defineComponent, h, inject, provide, ref, type PropType } from 'vue';
+import { CALLOUT_CONTENT, calloutPlugin, TONES } from '../callout';
 
 /**
  * Vue-песочница: компонент с v-model в форме и headless-редактор со своим тулбаром на композаблах.
@@ -121,10 +125,64 @@ const HeadlessDemo = defineComponent(() => {
     ]);
 });
 
+const THEME = Symbol('theme');
+
+/** Вид узла на Vue: свои поля (не попадают в текст документа) и содержимое на своём месте. */
+const Callout = defineComponent({
+  props: nodeViewProps,
+  setup(props) {
+    const theme = inject(THEME, 'светлая');
+    return () =>
+      h('div', { class: 'pg-callout', 'data-tone': String(props.node.attrs.tone) }, [
+        h('div', { class: 'pg-callout-bar', contenteditable: 'false' }, [
+          h(
+            'select',
+            {
+              'aria-label': 'Тон выноски',
+              value: String(props.node.attrs.tone),
+              onChange: (event: Event) =>
+                props.updateAttributes({ tone: (event.target as HTMLSelectElement).value }),
+            },
+            TONES.map(([value, label]) => h('option', { value }, label)),
+          ),
+          h('input', {
+            'aria-label': 'Заголовок выноски',
+            placeholder: 'Заголовок',
+            value: String(props.node.attrs.title),
+            onInput: (event: Event) =>
+              props.updateAttributes({ title: (event.target as HTMLInputElement).value }),
+          }),
+          h('span', { 'data-testid': 'nv-theme' }, theme),
+        ]),
+        h(NodeViewContent, { class: 'pg-callout-body' }),
+      ]);
+  },
+});
+
+const callout = calloutPlugin(vueNodeView(Callout));
+
+const NodeViewsDemo = defineComponent(() => {
+  provide(THEME, 'тёмная');
+  const html = ref(CALLOUT_CONTENT);
+  return () =>
+    h('section', { class: 'pg-react-block', 'aria-labelledby': 'nv-title' }, [
+      h('h2', { id: 'nv-title' }, 'Вид узла — компонент Vue'),
+      h(NovaProseEditor, {
+        plugins: [callout],
+        defaultValue: CALLOUT_CONTENT,
+        'onUpdate:modelValue': (value: string) => (html.value = value),
+        init: { toolbar: 'undo redo | bold italic', statusbar: false },
+        class: 'pg-node-views',
+      }),
+      h('pre', { 'data-testid': 'nv-html' }, html.value),
+    ]);
+});
+
 createApp(() =>
   h('main', { class: 'pg-react' }, [
     h('h1', ['NovaProse ', h('span', { class: 'pg-badge' }, 'Vue')]),
     h(FormDemo),
     h(HeadlessDemo),
+    h(NodeViewsDemo),
   ]),
 ).mount('#app');

@@ -74,7 +74,7 @@ export const NovaProseEditor = forwardRef<Editor | null, NovaProseEditorProps>(
         propsRef.current.onReady?.(editor);
       },
     };
-    const { ref: containerRef, editor } = useEditor(options);
+    const { ref: containerRef, editor, nodeViews } = useEditor(options);
 
     useImperativeHandle(ref, () => editor as Editor, [editor]);
 
@@ -114,10 +114,17 @@ export const NovaProseEditor = forwardRef<Editor | null, NovaProseEditorProps>(
     const container = (
       <div ref={containerRef} id={props.id} className={props.className} style={props.style} />
     );
-    if (props.name === undefined) return container;
+    if (props.name === undefined)
+      return (
+        <>
+          {container}
+          {nodeViews}
+        </>
+      );
     return (
       <>
         {container}
+        {nodeViews}
         <input
           ref={inputRef}
           type="hidden"

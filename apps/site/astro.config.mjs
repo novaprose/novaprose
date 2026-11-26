@@ -49,6 +49,7 @@ export default defineConfig({
             { slug: 'guides/version-history' },
             { slug: 'guides/suggested-edits' },
             { slug: 'guides/custom-buttons-and-plugins' },
+            { slug: 'guides/node-views' },
             { slug: 'guides/shadow-dom' },
             { slug: 'guides/localization' },
             { slug: 'guides/security' },

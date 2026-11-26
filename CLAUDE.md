@@ -27,7 +27,10 @@ packages/core/src
   editor.ts         класс Editor — единственный публичный API
   schema.ts         схема документа + валидация CSS-значений (cssValue)
   serializer.ts     строковый HTML-сериализатор (getHTML): детерминированный, без DOM
-  commands.ts       именованные команды (CommandName)
+  document.ts       общая сборка схемы (schemaFromOptions) для редактора и сервера; createRenderer/renderHTML —
+                    HTML из JSON без DOM (тот же, что getHTML; равенство проверяет property-тест)
+  commands.ts       именованные команды (CommandName); chain.ts — editor.chain(): шаги одной правкой
+  node-view.ts      defineNodeView: виды узлов из своего отрисовщика (React/Vue-адаптеры в их пакетах)
   styles.ts, link.ts, image.ts — команды стилей, ссылок, картинок (+ их диалоги)
   html-rules.ts     отдельный вход @novaprose/core/html-rules: атрибуты в validElements,
                     extendedValidElements, customElements; в ядре — только html-rules-api.ts
@@ -36,8 +39,9 @@ packages/core/src
   ui/               UI-слой: manager (editor.ui), registry, toolbar, menu, popover, dialog, tooltip,
                     notification, statusbar, link-bubble, color-panel, builtins (встроенные кнопки)
   style.css         скин и дизайн-токены --nova-*
-packages/react      @novaprose/react — компонент <NovaProseEditor> + хуки useEditor/useEditorState/useCommand
-packages/vue        @novaprose/vue — компонент с v-model + композаблы (те же имена)
+packages/react      @novaprose/react — компонент <NovaProseEditor> + хуки useEditor/useEditorState/useCommand;
+                    reactNodeView — виды узлов порталами (контекст приложения доступен)
+packages/vue        @novaprose/vue — компонент с v-model + композаблы (те же имена); vueNodeView — через Teleport
 packages/web-component  <novaprose-editor>: form-associated элемент + CDN-сборка (dist/novaprose.global.js)
 packages/angular    @novaprose/angular — standalone-компонент + ControlValueAccessor; сборка ng-packagr,
                     свой TypeScript 6 (Angular 22 его требует), тесты — JIT в vitest
@@ -99,7 +103,7 @@ Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-pus
   не должны падать (приводить типы, а не доверять). Новый узел/марку добавлять в генераторы
   `security.property.test.ts` и `json-robustness.test.ts`.
 - **Именованные команды** (`CommandName` в `commands.ts`) — часть публичного API: переименование = breaking change.
-- **Бюджет размера:** ядро ≤ 145 КБ gzip при первой загрузке, вместе с ProseMirror (ноябрь 2026: 136.3 КБ;
+- **Бюджет размера:** ядро ≤ 145 КБ gzip при первой загрузке, вместе с ProseMirror (ноябрь 2026: 136.6 КБ;
   style.css 10.4 из 12 КБ; ленивые чанки отдельно). Проверяет `pnpm size` в CI. Первая загрузка считается
   ОДНИМ сжатым файлом — так её отдаёт сборка приложения (проверено Vite: 135.2 КБ); сумма отдельно сжатых
   чанков esbuild (142.5) печатается для сведения: она растёт от дробления на чанки, а не от кода. Новая тяжёлая
@@ -134,7 +138,7 @@ Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-pus
   Новая строка → добавить её во ВСЕ пакеты `src/i18n/packs/*.ts` (иначе `node scripts/i18n.mjs check` в `pnpm check`
   упадёт). Русский (`packs/ru.ts`) — полный, в CDN-сборках встроен; de/es/fr/it/pt-BR — черновые (перевод Claude), до вычитки
   носителем статус «draft». CDN-сборки — основной файл + ленивые части рядом
-  (scripts/build-cdn.mjs): веб-компонент 146.0 КБ из 150, совместимость 157.6 КБ из 160 (ноябрь 2026; запас
+  (scripts/build-cdn.mjs): веб-компонент 147.3 КБ из 150, совместимость 158.1 КБ из 160 (ноябрь 2026; запас
   у совместимости мал — новое в её основной файл только с выносом чего-то другого).
 - **Необязательная функциональность — плагином** в `src/plugins/` (`definePlugin`, ленивая регистрация
   в `src/plugins/index.ts`). В ядро — только то, без чего редактор не редактор.

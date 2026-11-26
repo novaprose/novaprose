@@ -18,7 +18,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('StrictMode не создаёт лишних редакторов', async ({ page }) => {
-  await expect(page.locator('.nova-editor')).toHaveCount(2);
+  await expect(page.locator('.nova-editor')).toHaveCount(3);
 });
 
 test('форма: ввод доходит до controlled value и FormData', async ({ page }) => {
