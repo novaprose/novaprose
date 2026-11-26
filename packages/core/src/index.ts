@@ -168,6 +168,7 @@ export type { AutosaveOptions } from './plugins/autosave';
 export type { QuickbarsOptions } from './plugins/quickbars';
 export type { CodeSampleOptions } from './plugins/codesample';
 export type { AccordionOptions, AccordionState } from './plugins/accordion';
+export type { TableOfContentsOptions } from './plugins/tableofcontents';
 export type { CodeLanguage, CodeGrammarLoader } from './plugins/code-languages';
 export {
   listSuggestions,

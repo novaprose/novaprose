@@ -13,6 +13,15 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Table of contents (`plugins: ['tableofcontents']`, button `tableofcontents`, as in TinyMCE): a
+  block with links to the headings that updates in the same edit when a heading is added, renamed
+  or removed (undo reverts both). While a table of contents exists, headings get stable ids
+  (`toc-…`); existing ids are kept and duplicates replaced. Clicking an entry in the editor goes
+  to the heading without changing the page address. Options: `depth`, `className`, `titleTag`,
+  `title`, `orderedList`; TinyMCE's `div.mce-toc` and `tableofcontents_*` options work.
+- Headings keep their `id` attribute (it used to be dropped unless allowed by
+  `extendedValidElements`), and changing the heading level keeps it, so `#section` links work.
+
 - Collapsible sections (`plugins: ['accordion']`, button `accordion`, as in TinyMCE):
   `<details><summary>` with an arrow to collapse and expand, Ctrl/Cmd+Enter in the title, Enter
   in the title to start the content, Backspace at the start of the title to remove the frame. The

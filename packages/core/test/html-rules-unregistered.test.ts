@@ -12,8 +12,8 @@ it('без registerHtmlRules — прежнее поведение и подск
   document.body.append(element);
   const editor = createEditor({
     element,
-    extendedValidElements: 'h2[id],div[class]',
-    content: '<h2 id="a">T</h2><div class="x">y</div>',
+    extendedValidElements: 'h2[title],div[class]',
+    content: '<h2 title="a">T</h2><div class="x">y</div>',
   });
   expect(editor.getHTML()).toBe('<h2>T</h2><p>y</p>');
   expect(warn).toHaveBeenCalledWith(expect.stringContaining("'@novaprose/core/html-rules'"));

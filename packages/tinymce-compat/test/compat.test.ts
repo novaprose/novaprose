@@ -411,6 +411,30 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/accordion|details_/);
   });
 
+  it('tableofcontents: div.mce-toc с h2, tableofcontents_*, mceInsertToc / mceUpdateToc', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const toc =
+      '<div class="mce-toc"><h2>Table of Contents</h2><ul><li><a href="#mcetoc_a">Alpha</a></li></ul></div>';
+    page(`<textarea id="t">${toc}<h2 id="mcetoc_a">Alpha</h2><h3>Beta</h3></textarea>`);
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'tableofcontents',
+      toolbar: 'tableofcontents tableofcontentsupdate',
+      tableofcontents_depth: 2,
+    });
+    // Класс и заголовок — как у TinyMCE (стили сайта для .mce-toc работают); h3 глубже depth.
+    expect(editor!.getContent()).toBe(
+      '<nav class="mce-toc" data-toc=""><h2>Table of Contents</h2><ul><li><a href="#mcetoc_a">Alpha</a></li></ul></nav>' +
+        '<h2 id="mcetoc_a">Alpha</h2><h3>Beta</h3>',
+    );
+    expect(editor!.execCommand('mceUpdateToc')).toBe(true);
+    const { core } = editor!;
+    core.view.dispatch(core.view.state.tr.setSelection(TextSelection.atEnd(core.view.state.doc)));
+    expect(editor!.execCommand('mceInsertToc')).toBe(true);
+    expect(editor!.getContent().match(/data-toc/g)).toHaveLength(2);
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/tableofcontents/);
+  });
+
   it('незнакомые опции и плагины — предупреждение, а не ошибка', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

@@ -114,6 +114,7 @@ const editor = {
   codeSample: 'file-code',
   dragHandle: 'grip-vertical',
   accordion: 'list-collapse',
+  tableOfContents: 'table-of-contents',
   duplicate: 'copy-plus',
   nonBreaking: 'space',
   pageBreak: 'scissors-line-dashed',

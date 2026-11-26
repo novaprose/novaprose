@@ -181,6 +181,8 @@ function setBlockKeepAlign(type: NodeType, attrs: Record<string, unknown> = {}):
             : {}),
           ...('dir' in type.spec.attrs! && old.attrs.dir ? { dir: old.attrs.dir } : {}),
           ...('indent' in type.spec.attrs! && old.attrs.indent ? { indent: old.attrs.indent } : {}),
+          // Смена уровня заголовка не ломает ссылки на раздел.
+          ...('id' in type.spec.attrs! && old.attrs.id ? { id: old.attrs.id } : {}),
         }));
       }
       dispatch(tr.scrollIntoView());

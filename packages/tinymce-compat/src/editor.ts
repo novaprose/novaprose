@@ -315,6 +315,15 @@ export class CompatEditor {
     } else if (name === 'mcesetcontent') {
       this.setContent(String(value ?? ''));
       done = true;
+    } else if (name === 'mceinserttoc' || name === 'mceupdatetoc') {
+      // Оглавление (плагин tableofcontents) — как его кнопки.
+      const control = this.core.ui.registry.get(
+        name === 'mceinserttoc' ? 'tableofcontents' : 'tableofcontentsupdate',
+      );
+      if (control?.type === 'button') {
+        control.onAction(this.core);
+        done = true;
+      }
     } else if (ACCORDION_COMMANDS.has(name)) {
       done = this.accordionCommand(name, value);
     } else if (name === 'codesample') {

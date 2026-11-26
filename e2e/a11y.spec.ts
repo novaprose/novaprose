@@ -216,6 +216,22 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'раскрывающиеся блоки');
     });
 
+    test('оглавление со ссылками и пустое', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          '<nav data-toc><p>Содержание</p><ul><li><a href="#a">A</a></li></ul></nav>' +
+            '<h2 id="a">Раздел</h2><h3>Подраздел</h3><nav data-toc></nav>',
+        );
+      });
+      await expect(page.locator('nav[data-toc] a').first()).toBeVisible();
+      await audit(page, 'оглавление');
+    });
+
     test('ручка блока и её меню', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.locator('.nova-prosemirror h2').hover();

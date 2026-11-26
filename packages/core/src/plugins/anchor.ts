@@ -1,5 +1,6 @@
 import { icons } from '../ui/icons';
 import { NodeSelection } from 'prosemirror-state';
+import { ELEMENT_ID_RE } from '../element-id';
 import { definePlugin } from '../plugins';
 import { textField } from '../ui/dialog';
 import { h } from '../ui/dom';
@@ -22,8 +23,8 @@ export const LABELS = {
   },
 };
 
-/** Безопасный идентификатор: без пробелов и кавычек, не похожий на код (защита от DOM clobbering тоже). */
-const ID_RE = /^[A-Za-z][\w.-]{0,63}$/;
+/** Безопасный идентификатор: без пробелов и кавычек (общая проверка с id заголовков). */
+const ID_RE = ELEMENT_ID_RE;
 
 export default definePlugin({
   name: 'anchor',

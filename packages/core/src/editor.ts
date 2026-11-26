@@ -1,4 +1,5 @@
 import type { AccordionOptions } from './plugins/accordion';
+import type { TableOfContentsOptions } from './plugins/tableofcontents';
 import type { AutosaveOptions } from './plugins/autosave';
 import type { CodeSampleOptions } from './plugins/codesample';
 import { Formatter, formatClasses, type FormatSpec, type StyleFormat } from './formats';
@@ -120,6 +121,7 @@ export interface PluginOptions {
   quickbars?: QuickbarsOptions;
   codesample?: CodeSampleOptions;
   accordion?: AccordionOptions;
+  tableofcontents?: TableOfContentsOptions;
   [plugin: string]: unknown;
 }
 

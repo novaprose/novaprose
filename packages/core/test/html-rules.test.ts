@@ -44,7 +44,8 @@ describe('extendedValidElements: атрибуты встроенных элем�
   });
 
   it('без правила атрибут, как и раньше, не сохраняется', () => {
-    expect(roundTrip({}, '<h2 id="intro">Intro</h2>')).toBe('<h2>Intro</h2>');
+    // id у заголовка встроенный (оглавление, ссылки #раздел), title — нет.
+    expect(roundTrip({}, '<h2 title="intro">Intro</h2>')).toBe('<h2>Intro</h2>');
   });
 
   it('список атрибутов ссылки заменяет встроенный: data-* и rel остаются, title снят', () => {

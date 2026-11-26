@@ -1,0 +1,56 @@
+/*
+ * Оглавление (плагин tableofcontents) в редакторе. Подключается вместе с ленивой частью плагина.
+ * Селекторы — по data-toc: класс блока задаётся настройкой (nova-toc, mce-toc…).
+ */
+.nova-prosemirror nav[data-toc] {
+  margin: 0 0 0.75em;
+  padding: 10px 14px;
+  border-inline-start: 3px solid var(--nova-accent);
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-code-bg);
+}
+
+.nova-prosemirror nav[data-toc] > :is(p, h1, h2, h3, h4, h5, h6):first-child {
+  margin: 0 0 6px;
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.nova-prosemirror nav[data-toc] :is(ul, ol) {
+  margin: 0;
+  padding-inline-start: 1.2em;
+}
+
+.nova-prosemirror nav[data-toc] > :is(ul, ol) {
+  padding-inline-start: 0;
+}
+
+/* Маркеры не нужны — уровень виден по отступу; у нумерованного оглавления номера остаются. */
+.nova-prosemirror nav[data-toc] ul {
+  list-style: none;
+}
+
+.nova-prosemirror nav[data-toc] li {
+  margin: 2px 0;
+}
+
+.nova-prosemirror nav[data-toc] a {
+  color: var(--nova-accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nova-prosemirror nav[data-toc] a:hover {
+  text-decoration: underline;
+}
+
+/* Заголовков ещё нет — подсказка на языке интерфейса (текст в --nova-toc-empty). */
+.nova-prosemirror nav[data-toc]:not(:has(a))::after {
+  content: var(--nova-toc-empty, '');
+  color: var(--nova-muted);
+}
+
+.nova-prosemirror nav[data-toc].ProseMirror-selectednode {
+  outline: 2px solid var(--nova-accent);
+  outline-offset: 2px;
+}

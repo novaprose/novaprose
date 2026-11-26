@@ -23,6 +23,7 @@ const RUNS = Number(process.env.FC_RUNS) || 300;
 // Все плагины со своими узлами схемы — максимальная поверхность разбора.
 const SCHEMA_PLUGINS = [
   'accordion',
+  'tableofcontents',
   'anchor',
   'pagebreak',
   'media',
@@ -51,6 +52,9 @@ beforeAll(() => {
   console.warn = () => {};
   ruled = createEditor({ element: second, plugins: SCHEMA_PLUGINS, ...PERMISSIVE } as never);
   console.warn = warn;
+  // Ленивые части плагинов (оглавление обновляет HTML) — до первой проверки, а не посреди неё:
+  // иначе один и тот же документ выводился бы по-разному до и после их загрузки.
+  return Promise.all([editor.ready, ruled.ready]);
 });
 afterAll(() => {
   editor.destroy();
@@ -397,6 +401,11 @@ describe('безопасность и стабильность HTML (property-ba
       checked: anyValue,
       checklist: anyValue,
       open: anyValue,
+      // Пункты оглавления: уровень, id и текст — тоже чем угодно (id идёт в href).
+      entries: fc.oneof(
+        anyValue,
+        fc.array(fc.record({ level: anyValue, id: attrValue, text: attrValue }), { maxLength: 3 }),
+      ),
       rowspan: anyValue,
       colwidth: fc.oneof(anyValue, fc.array(fc.integer({ min: -5, max: 900 }), { maxLength: 2 })),
     });
@@ -431,7 +440,7 @@ describe('безопасность и стабильность HTML (property-ba
       content: fc.array(fc.oneof(text, atom), { maxLength: 4 }),
     });
     const blockAtom = fc.record({
-      type: fc.constantFrom('media', 'pagebreak', 'horizontal_rule'),
+      type: fc.constantFrom('media', 'pagebreak', 'horizontal_rule', 'toc'),
       attrs,
     });
     const cell = fc.record({

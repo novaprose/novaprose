@@ -1,0 +1,159 @@
+import type { DOMOutputSpec, NodeSpec } from 'prosemirror-model';
+import type { Editor } from '../editor';
+import { elementId } from '../element-id';
+import { definePlugin } from '../plugins';
+
+/**
+ * Плагин tableofcontents: оглавление документа — блок со ссылками на заголовки (как у TinyMCE).
+ * Обновляется само при правке заголовков; заголовкам выдаются устойчивые id (`toc-…`), пока
+ * в документе есть оглавление. `plugins: ['tableofcontents']`.
+ *
+ * Здесь — узел (схема создаётся вместе с редактором) и его HTML; кнопки, обновление и переход
+ * по ссылкам — ленивой частью tableofcontents-ui.ts.
+ */
+
+export const LABELS = {
+  en: {
+    title: 'Contents',
+    insert: 'Table of contents',
+    update: 'Update table of contents',
+    empty: 'Add headings — they will appear here',
+  },
+};
+
+export interface TableOfContentsOptions {
+  /** Заголовки каких уровней попадают в оглавление: 1…depth (по умолчанию 3). */
+  depth?: number;
+  /** Класс блока в HTML (по умолчанию `nova-toc`; у TinyMCE — `mce-toc`). */
+  className?: string;
+  /** Тег заголовка оглавления: `p` (по умолчанию) или `h1`–`h6`. */
+  titleTag?: string;
+  /** Подпись оглавления; по умолчанию — «Contents» на языке интерфейса. Пустая строка — без неё. */
+  title?: string;
+  /** Нумерованный список вместо маркированного. */
+  orderedList?: boolean;
+}
+
+export interface TocEntry {
+  level: number;
+  id: string;
+  text: string;
+}
+
+const CLASS_RE = /^[A-Za-z_][\w-]{0,63}$/;
+
+/** Настройки с проверкой: из конфига может прийти что угодно. */
+export function tocSettings(editor: Editor) {
+  const options = (editor.options.pluginOptions?.tableofcontents ?? {}) as TableOfContentsOptions;
+  const depth = Number(options.depth);
+  return {
+    depth: Number.isInteger(depth) && depth >= 1 && depth <= 6 ? depth : 3,
+    className:
+      typeof options.className === 'string' && CLASS_RE.test(options.className)
+        ? options.className
+        : 'nova-toc',
+    titleTag:
+      typeof options.titleTag === 'string' && /^(p|h[1-6])$/i.test(options.titleTag)
+        ? options.titleTag.toLowerCase()
+        : 'p',
+    title: typeof options.title === 'string' ? options.title.slice(0, 200) : null,
+    list: options.orderedList ? 'ol' : 'ul',
+  };
+}
+
+/** Пункты оглавления из атрибута (из JSON может прийти что угодно). */
+export function tocEntries(value: unknown): TocEntry[] {
+  if (!Array.isArray(value)) return [];
+  const out: TocEntry[] = [];
+  for (const item of value.slice(0, 1000)) {
+    if (!item || typeof item !== 'object') continue;
+    const { level, id, text } = item as Record<string, unknown>;
+    const lvl = Number(level);
+    const safeId = elementId(id);
+    if (!Number.isInteger(lvl) || lvl < 1 || lvl > 6 || !safeId || typeof text !== 'string')
+      continue;
+    out.push({ level: lvl, id: safeId, text: text.slice(0, 300) });
+  }
+  return out;
+}
+
+/** Вложенные списки по уровням заголовков. */
+function nestedList(entries: TocEntry[], tag: string): DOMOutputSpec | null {
+  if (!entries.length) return null;
+  const root: unknown[] = [tag];
+  const stack: { level: number; list: unknown[]; last: unknown[] | null }[] = [
+    { level: entries[0]!.level, list: root, last: null },
+  ];
+  for (const entry of entries) {
+    let top = stack[stack.length - 1]!;
+    if (entry.level > top.level && top.last) {
+      const sub: unknown[] = [tag];
+      top.last.push(sub);
+      stack.push({ level: entry.level, list: sub, last: null });
+    } else {
+      while (stack.length > 1 && entry.level < stack[stack.length - 1]!.level) stack.pop();
+    }
+    top = stack[stack.length - 1]!;
+    const item: unknown[] = ['li', ['a', { href: `#${entry.id}` }, entry.text]];
+    top.list.push(item);
+    top.last = item;
+  }
+  return root as unknown as DOMOutputSpec;
+}
+
+/** Пункты из готового HTML (ссылки #id и глубина вложенности списков) — до первого обновления. */
+function readEntries(nav: HTMLElement): TocEntry[] {
+  const out: TocEntry[] = [];
+  for (const link of nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')) {
+    let level = 0;
+    for (let el: Element | null = link; el && el !== nav; el = el.parentElement) {
+      if (el.tagName === 'UL' || el.tagName === 'OL') level++;
+    }
+    out.push({
+      level: Math.min(Math.max(level, 1), 6),
+      id: link.getAttribute('href')!.slice(1),
+      text: (link.textContent ?? '').trim(),
+    });
+  }
+  return tocEntries(out);
+}
+
+function tocNodes(editor: Editor): Record<string, NodeSpec> {
+  const settings = tocSettings(editor);
+  return {
+    toc: {
+      group: 'block',
+      atom: true,
+      selectable: true,
+      attrs: { entries: { default: [] }, title: { default: null } },
+      parseDOM: [
+        // Свой формат, TinyMCE (div.mce-toc) и свой класс из настроек.
+        ...['nav[data-toc]', 'div.mce-toc', `.${settings.className}`].map((tag) => ({
+          tag,
+          getAttrs: (dom: HTMLElement) => {
+            const head = dom.querySelector(
+              ':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6, :scope > p',
+            );
+            return { entries: readEntries(dom), title: head?.textContent?.trim() || null };
+          },
+        })),
+      ],
+      toDOM: (node): DOMOutputSpec => {
+        const title = typeof node.attrs.title === 'string' ? node.attrs.title.slice(0, 200) : '';
+        const list = nestedList(tocEntries(node.attrs.entries), settings.list);
+        return [
+          'nav',
+          { class: settings.className, 'data-toc': '' },
+          ...(title ? [[settings.titleTag, title]] : []),
+          ...(list ? [list] : []),
+        ] as unknown as DOMOutputSpec;
+      },
+    },
+  };
+}
+
+export default definePlugin({
+  name: 'tableofcontents',
+  nodes: tocNodes,
+  load: () => import('./tableofcontents-ui'),
+});

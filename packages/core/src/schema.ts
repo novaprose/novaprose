@@ -3,6 +3,7 @@ import type { HtmlRulesInstance } from './html-rules-api';
 import { tableNodes } from './table-nodes';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
 import { codeLanguage } from './code-language';
+import { elementId } from './element-id';
 
 /**
  * Базовая схема документа NovaProse (P0 из PRD §4.1–4.2).
@@ -438,11 +439,13 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       group: 'block',
       content: 'inline*',
       defining: true,
-      attrs: { level: { default: 1 }, ...blockStyleSpec, ...classSpec },
+      // id — для ссылок на раздел (оглавление, #якорь); проверяется и при разборе, и при выводе.
+      attrs: { level: { default: 1 }, id: { default: null }, ...blockStyleSpec, ...classSpec },
       parseDOM: [1, 2, 3, 4, 5, 6].map((level) => ({
         tag: `h${level}`,
         getAttrs: (dom: HTMLElement) => ({
           level,
+          id: elementId(dom.getAttribute('id')),
           ...readBlockStyle(dom, rtl),
           class: readClass(dom, allow),
         }),
@@ -450,7 +453,11 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       toDOM: (node): DOMOutputSpec => [
         // Уровень мог прийти из JSON чем угодно — в имя тега попадает только 1–6.
         `h${headingLevel(node.attrs.level)}`,
-        { ...classAttr(node.attrs.class), ...blockStyleAttrs(node.attrs, rtl) },
+        {
+          ...(elementId(node.attrs.id) ? { id: node.attrs.id } : {}),
+          ...classAttr(node.attrs.class),
+          ...blockStyleAttrs(node.attrs, rtl),
+        },
         0,
       ],
     },

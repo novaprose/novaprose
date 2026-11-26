@@ -274,6 +274,8 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
     pagebreak(state, node) {
       state.closeBlock(node);
     },
+    // Оглавление собирается из заголовков — в Markdown его строят сами читатели (и сайты).
+    toc() {},
     // Раскрывающегося блока в Markdown нет: заголовок — абзацем, содержимое — как есть.
     details(state, node) {
       state.renderContent(node);

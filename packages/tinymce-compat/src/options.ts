@@ -132,6 +132,11 @@ const IGNORED = new Set([
   'codesample_languages',
   'details_initial_state',
   'details_serialized_state',
+  'tableofcontents_class',
+  'tableofcontents_depth',
+  'tableofcontents_header',
+  'tableofcontents_orderedlist',
+  'tableofcontents_includeheader',
   // Подсветка — своя (highlight.js, лениво); Prism на странице сайта для неё не нужен.
   'codesample_global_prismjs',
 ]);
@@ -457,6 +462,21 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       ...(detailsState(config.details_serialized_state)
         ? { serializedState: detailsState(config.details_serialized_state) }
         : {}),
+    };
+  }
+  // Оглавление: по умолчанию как у TinyMCE (div → nav с классом mce-toc, подпись в h2) —
+  // стили сайта для .mce-toc продолжают работать.
+  if (list(config.plugins).includes('tableofcontents')) {
+    pluginOptions.tableofcontents = {
+      className:
+        typeof config.tableofcontents_class === 'string' ? config.tableofcontents_class : 'mce-toc',
+      titleTag:
+        typeof config.tableofcontents_header === 'string' ? config.tableofcontents_header : 'h2',
+      ...(config.tableofcontents_depth !== undefined
+        ? { depth: Number(config.tableofcontents_depth) }
+        : {}),
+      ...(config.tableofcontents_orderedlist ? { orderedList: true } : {}),
+      ...(config.tableofcontents_includeheader === false ? { title: '' } : {}),
     };
   }
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
