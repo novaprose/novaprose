@@ -51,6 +51,15 @@ docs/               RELEASING.md — как выпускать релизы (п�
 test/setup.ts       заглушки jsdom для юнит-тестов
 ```
 
+## Граф знаний (graphify)
+
+Локальный граф проекта: `graphify-out/` (в .gitignore). `GRAPH_REPORT.md` — центральные узлы, 157 сообществ
+с русскими именами, мосты; `graph.html` — интерактивная карта. Прежде чем читать много файлов, спрашивать граф:
+`python -m graphify query "<вопрос>"`, `python -m graphify explain "<узел>"`, `python -m graphify path "A" "B"`.
+После крупных изменений — `/graphify . --update` (код — бесплатно по AST; документы — через подагентов).
+Связи «calls»/«indirect_call» из AST бывают ложными (`import type` считается вызовом) — проверять по коду.
+Имена сообществ — `graphify-out/labels.py`.
+
 ## Команды
 
 ```bash

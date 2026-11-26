@@ -16,3 +16,6 @@ test-results/
 
 # Данные локального сервера синхронизации
 apps/sync-server/data/
+
+# Граф знаний graphify — локальный инструмент, пересобирается командой /graphify
+graphify-out/
