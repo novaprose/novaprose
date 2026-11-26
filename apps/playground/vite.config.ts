@@ -53,6 +53,7 @@ export default defineConfig({
         angular: fileURLToPath(new URL('./angular.html', import.meta.url)),
         collab: fileURLToPath(new URL('./collab.html', import.meta.url)),
         tinymce: fileURLToPath(new URL('./tinymce.html', import.meta.url)),
+        shadow: fileURLToPath(new URL('./shadow.html', import.meta.url)),
       },
     },
   },

@@ -1,5 +1,5 @@
 import type { Editor } from '../editor';
-import { h, icon } from './dom';
+import { activeElement, h, icon } from './dom';
 import { icons } from './icons';
 import { createMenu, focusMenu } from './menu';
 import { Popover } from './popover';
@@ -190,7 +190,7 @@ export function createToolbar(
     'keydown',
     (event) => {
       const list = focusables();
-      const index = list.indexOf(document.activeElement as HTMLButtonElement);
+      const index = list.indexOf(activeElement(host) as HTMLButtonElement);
       if (index < 0) return;
       let next: number | null = null;
       if (event.key === 'ArrowRight') next = index + 1;
@@ -220,7 +220,7 @@ export function createToolbar(
     const list = [...overflowBox.querySelectorAll<HTMLButtonElement>('button')].filter(
       (b) => !b.disabled,
     );
-    const index = list.indexOf(document.activeElement as HTMLButtonElement);
+    const index = list.indexOf(activeElement(overflowBox) as HTMLButtonElement);
     if (index < 0) return;
     if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
       event.preventDefault();

@@ -1,4 +1,4 @@
-import { h, icon } from './dom';
+import { activeElement, h, icon } from './dom';
 import { icons } from './icons';
 
 /** Палитра по умолчанию: 8 оттенков × (тёмный, основной, светлый) + шкала серого. */
@@ -86,7 +86,7 @@ export function createColorPanel(options: ColorPanelOptions): HTMLElement {
   );
 
   grid.addEventListener('keydown', (event) => {
-    const index = swatches.indexOf(document.activeElement as HTMLButtonElement);
+    const index = swatches.indexOf(activeElement(grid) as HTMLButtonElement);
     if (index < 0) return;
     const delta: Record<string, number> = {
       ArrowRight: 1,

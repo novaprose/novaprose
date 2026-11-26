@@ -4,7 +4,7 @@ import type { Editor } from '../editor';
 import { openLinkDialog, removeLink } from '../link';
 import { marksOf } from '../commands';
 import { isSafeLinkUrl } from '../url';
-import { h, icon } from './dom';
+import { activeElement, h, icon } from './dom';
 import { icons } from './icons';
 import { positionFloating } from './popover';
 
@@ -60,7 +60,7 @@ export function linkBubblePlugin(editor: Editor): Plugin {
       const update = () => {
         const state = view.state;
         const link = getLinkAt(state);
-        const focused = view.hasFocus() || el.contains(document.activeElement);
+        const focused = view.hasFocus() || el.contains(activeElement(el));
         if (
           !link ||
           !focused ||

@@ -1,5 +1,5 @@
 import type { Editor } from '../editor';
-import { h } from '../ui/dom';
+import { activeElement, h } from '../ui/dom';
 import { registerPluginMessages, type PluginLabels } from '../i18n';
 
 /**
@@ -107,7 +107,7 @@ export function symbolPanel(options: {
   });
   list.addEventListener('keydown', (event) => {
     const cells = [...list.querySelectorAll<HTMLButtonElement>('.nova-symbols-cell')];
-    const index = cells.indexOf(document.activeElement as HTMLButtonElement);
+    const index = cells.indexOf(activeElement(list) as HTMLButtonElement);
     if (index < 0) return;
     // Ширина строки сетки — по фактическому положению кнопок.
     const perRow = Math.max(1, cells.filter((c) => c.offsetTop === cells[0]!.offsetTop).length);

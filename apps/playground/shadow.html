@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NovaProse — Shadow DOM playground</title>
+    <script type="module" src="/src/shadow/main.ts"></script>
+  </head>
+  <body>
+    <main class="pg-react">
+      <h1>NovaProse <span class="pg-badge">Shadow DOM</span></h1>
+      <p>
+        The editor below lives inside a shadow root (<code>?mode=closed</code> for a closed one).
+      </p>
+      <my-app></my-app>
+      <p><button id="outside" type="button">Outside the shadow root</button></p>
+    </main>
+  </body>
+</html>

@@ -109,6 +109,9 @@ Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-pus
   Синхронный хук нельзя сделать ленивым напрямую — образец: paste.ts (фоновая загрузка + `editor.ready` +
   перехват события, если чанк ещё не готов).
 - **SSR:** никакого обращения к `window`/`document` на уровне модуля.
+- **Shadow DOM:** фокус — только `activeElement(node)`, события документа — `listenDocument(node, …)` из
+  `ui/dom.ts` (в теневом корне document.activeElement — хост, цель события подменена). Следит ESLint;
+  проверяет e2e/shadow.spec.ts (песочница shadow.html, `?mode=closed`).
 - **UI-строки только через `editor.ui.t(key)`.** Новый ключ — в `i18n/en.ts` (встроен только английский), переводы — в `i18n/packs/*.ts`.
   В плагине: `export const LABELS = { en: {...} }` (только en!) + `pickLabels(editor, '<имя плагина>', LABELS)` —
   строки идут через ту же систему (ключи `<плагин>.<ключ>`); полноту языков проверяет `test/i18n.test.ts`.

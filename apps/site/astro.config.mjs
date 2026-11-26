@@ -46,6 +46,7 @@ export default defineConfig({
             { slug: 'guides/version-history' },
             { slug: 'guides/suggested-edits' },
             { slug: 'guides/custom-buttons-and-plugins' },
+            { slug: 'guides/shadow-dom' },
             { slug: 'guides/localization' },
             { slug: 'guides/security' },
             { slug: 'guides/migrating-from-tinymce' },

@@ -1,6 +1,6 @@
 import type { Comment, CommentAuthor, CommentThread } from '../comments';
 import { COMMENT_MAX_LENGTH } from '../comments';
-import { formatShortcut, h, uniqueId } from '../ui/dom';
+import { activeElement, formatShortcut, h, uniqueId } from '../ui/dom';
 import type { CommentsController } from './comments';
 import type { MentionUser } from './mentions';
 
@@ -479,8 +479,9 @@ export function createCommentsPanel(controller: CommentsController) {
 
   function render() {
     // Фокус в поле ввода сохраняется при перерисовке (пришёл чужой комментарий, пока вы пишете).
-    const focused = list.contains(document.activeElement)
-      ? (document.activeElement as HTMLElement).getAttribute('data-draft')
+    const active = activeElement(list);
+    const focused = list.contains(active)
+      ? (active as HTMLElement).getAttribute('data-draft')
       : null;
     const threads = [...store.threads()].sort(
       (a, b) =>

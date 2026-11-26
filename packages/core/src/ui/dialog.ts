@@ -1,4 +1,4 @@
-import { FOCUSABLE, h, icon, uniqueId } from './dom';
+import { activeElement, FOCUSABLE, h, icon, listenDocument, uniqueId } from './dom';
 import { icons } from './icons';
 
 export interface DialogOptions {
@@ -72,7 +72,7 @@ export function openDialog(options: DialogOptions): DialogHandle {
     if (closed) return;
     closed = true;
     backdrop.remove();
-    document.removeEventListener('focusin', keepFocusInside, true);
+    stopKeepFocus();
     options.onClose?.();
     options.returnFocus?.();
   };
@@ -117,10 +117,10 @@ export function openDialog(options: DialogOptions): DialogHandle {
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
       if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
+      if (event.shiftKey && activeElement(form) === first) {
         event.preventDefault();
         last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
+      } else if (!event.shiftKey && activeElement(form) === last) {
         event.preventDefault();
         first.focus();
       }
@@ -128,12 +128,12 @@ export function openDialog(options: DialogOptions): DialogHandle {
   });
 
   // Если фокус всё же ушёл наружу (клик мимо, программный фокус) — возвращаем в диалог.
-  const keepFocusInside = (event: FocusEvent) => {
-    if (!form.contains(event.target as Node)) {
+  // Цель — настоящая и в теневом корне (у слушателя на document она подменена хостом).
+  const stopKeepFocus = listenDocument(form, 'focusin', (_event, target) => {
+    if (!form.contains(target)) {
       (form.querySelector<HTMLElement>(FOCUSABLE) ?? form).focus();
     }
-  };
-  document.addEventListener('focusin', keepFocusInside, true);
+  });
 
   const first =
     options.initialFocus ??

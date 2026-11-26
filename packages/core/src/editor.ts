@@ -22,6 +22,7 @@ import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
 import { loadPasteCleaner, pastePlugin, type PasteOptions } from './paste';
 import { loadTables } from './tables';
+import { activeElement } from './ui/dom';
 import { keepPluginViews, reconfigurePlugins } from './plugin-views';
 import { parserFor } from './parser';
 import {
@@ -299,7 +300,8 @@ export class Editor {
       this.root.addEventListener('focusin', () => this.root.classList.add('is-focused'));
       this.root.addEventListener('focusout', () => {
         setTimeout(() => {
-          if (!this.root.contains(document.activeElement)) this.root.classList.remove('is-focused');
+          if (!this.root.contains(activeElement(this.root)))
+            this.root.classList.remove('is-focused');
         }, 0);
       });
     }

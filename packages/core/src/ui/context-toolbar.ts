@@ -1,7 +1,7 @@
 import { NodeSelection, Plugin, PluginKey } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { Editor } from '../editor';
-import { h } from './dom';
+import { activeElement, h, listenDocument } from './dom';
 import { positionFloating } from './popover';
 import type { ContextToolbarSpec } from './registry';
 import { parseToolbar, renderControl, type RenderedControl } from './toolbar';
@@ -82,12 +82,12 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
         setTimeout(() => update(view), 0);
       };
       view.dom.addEventListener('pointerdown', onPointerDown);
-      document.addEventListener('pointerup', onPointerUp);
+      const stopPointerUp = listenDocument(container, 'pointerup', onPointerUp);
 
       const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 
       const update = (v: EditorView) => {
-        const focused = v.hasFocus() || container.contains(document.activeElement);
+        const focused = v.hasFocus() || container.contains(activeElement(container));
         if (!focused || !editor.isEditable() || editor.ui.activeDialog || dragging) return hide();
         const match = editor.ui.registry
           .getContextToolbars()
@@ -117,7 +117,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
       });
       container.addEventListener('keydown', (event) => {
         const buttons = [...container.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')];
-        const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+        const index = buttons.indexOf(activeElement(container) as HTMLButtonElement);
         if (event.key === 'Escape') {
           event.preventDefault();
           editor.focus();
@@ -150,7 +150,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
         destroy() {
           view.dom.removeEventListener('blur', onBlur);
           view.dom.removeEventListener('pointerdown', onPointerDown);
-          document.removeEventListener('pointerup', onPointerUp);
+          stopPointerUp();
           window.removeEventListener('scroll', reposition, true);
           window.removeEventListener('resize', reposition);
           container.remove();

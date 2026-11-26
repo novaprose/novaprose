@@ -1,4 +1,4 @@
-import { formatShortcut, h, icon } from './dom';
+import { activeElement, formatShortcut, h, icon } from './dom';
 import { icons } from './icons';
 
 export interface MenuItem {
@@ -93,7 +93,7 @@ export function createMenu(entries: MenuEntry[], onDone: () => void, label: stri
 
   menu.addEventListener('keydown', (event) => {
     const list = enabled();
-    const current = list.indexOf(document.activeElement as HTMLButtonElement);
+    const current = list.indexOf(activeElement(menu) as HTMLButtonElement);
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();

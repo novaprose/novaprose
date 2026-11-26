@@ -1,6 +1,6 @@
 import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
-import { h } from './dom';
+import { activeElement, h } from './dom';
 import { createMenu, focusMenu, type MenuEntry } from './menu';
 import type { Popover } from './popover';
 
@@ -157,7 +157,7 @@ export function createMenubar(
   host.addEventListener(
     'keydown',
     (event) => {
-      const index = buttons.indexOf(document.activeElement as HTMLButtonElement);
+      const index = buttons.indexOf(activeElement(host) as HTMLButtonElement);
       if (index < 0) return;
       const move = (to: number) => {
         event.preventDefault();

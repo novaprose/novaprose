@@ -34,6 +34,13 @@ All packages in this repository are versioned together. The format follows
   from pasted or loaded HTML is recognized; Markdown export writes the image and the caption text.
 - Notifications can carry action buttons (`actions`, `onClose` in `editor.ui.notify()`).
 
+### Shadow DOM
+
+- The editor works inside your own web component with an open or closed shadow root: menus no
+  longer close when you click their own items, Tab stays inside dialogs, arrow keys move between
+  toolbar buttons, and focus that leaves a dialog comes back. Tested in Chromium, Firefox and
+  WebKit. See [Shadow DOM and web components](https://novaprose.com/guides/shadow-dom/).
+
 ### Content rules
 
 - Keep markup the editor doesn't create itself, or restrict attributes further:

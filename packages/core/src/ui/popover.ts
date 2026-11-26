@@ -1,3 +1,5 @@
+import { activeElement, listenDocument } from './dom';
+
 export type Placement = 'bottom-start' | 'bottom-end' | 'top-start' | 'bottom';
 
 export type Anchor = HTMLElement | (() => DOMRect);
@@ -61,6 +63,7 @@ export class Popover {
   readonly el: HTMLDivElement;
   private readonly options: PopoverOptions;
   private closed = false;
+  private unlisten: (() => void)[] = [];
 
   constructor(options: PopoverOptions) {
     this.options = options;
@@ -72,8 +75,10 @@ export class Popover {
     this.reposition();
     // Escape ловим на документе: панель, открытая мышью, не забирает фокус у текста,
     // но закрываться по Escape всё равно должна.
-    document.addEventListener('keydown', this.onKeyDown, true);
-    document.addEventListener('pointerdown', this.onPointerDown, true);
+    this.unlisten = [
+      listenDocument(this.el, 'keydown', this.onKeyDown),
+      listenDocument(this.el, 'pointerdown', this.onPointerDown),
+    ];
     openStack.push(this);
     window.addEventListener('resize', this.reposition);
     window.addEventListener('scroll', this.reposition, true);
@@ -94,8 +99,7 @@ export class Popover {
     if (this.closed) return;
     this.closed = true;
     openStack.splice(openStack.indexOf(this), 1);
-    document.removeEventListener('keydown', this.onKeyDown, true);
-    document.removeEventListener('pointerdown', this.onPointerDown, true);
+    this.unlisten.forEach((stop) => stop());
     window.removeEventListener('resize', this.reposition);
     window.removeEventListener('scroll', this.reposition, true);
     this.el.remove();
@@ -105,21 +109,20 @@ export class Popover {
   /** Был ли фокус внутри панели в момент закрытия (тогда его надо вернуть на кнопку). */
   focusWasInside = false;
 
-  private onKeyDown = (event: KeyboardEvent): void => {
+  private onKeyDown = (event: KeyboardEvent, target: Node | null): void => {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
     // Вложенные панели («⋯» → меню): Escape закрывает только верхнюю.
     if (openStack[openStack.length - 1] !== this) return;
     // Если поверх открыт диалог — Escape принадлежит ему.
-    if ((event.target as Element | null)?.closest?.('.nova-dialog')) return;
+    if ((target as Element | null)?.closest?.('.nova-dialog')) return;
     event.preventDefault();
     event.stopPropagation();
-    this.focusWasInside = this.el.contains(document.activeElement);
+    this.focusWasInside = this.el.contains(activeElement(this.el));
     this.close('escape');
   };
 
-  private onPointerDown = (event: PointerEvent): void => {
+  private onPointerDown = (_event: PointerEvent, target: Node | null): void => {
     if (this.options.dismissOnOutside === false) return;
-    const target = event.target as Node;
     if (this.el.contains(target)) return;
     if (this.options.ignore?.some((el) => el.contains(target))) return;
     this.close('outside');

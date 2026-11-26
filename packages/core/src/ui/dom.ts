@@ -60,3 +60,46 @@ export function formatShortcut(shortcut: string): string {
 
 export const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+// ---------- Shadow DOM ----------
+// Редактор может жить внутри теневого корня (веб-компонент клиента). Там document.activeElement —
+// это хост, а у слушателей на document цель события подменена хостом.
+
+/** Элемент в фокусе с учётом теневых корней (context — любой узел редактора). */
+export function activeElement(context: Node): Element | null {
+  const root = context.getRootNode() as Document | ShadowRoot;
+  let active = ('activeElement' in root ? root.activeElement : null) ?? document.activeElement;
+  // Фокус во вложенном теневом корне (например, в веб-компоненте внутри содержимого).
+  while (active?.shadowRoot?.activeElement) active = active.shadowRoot.activeElement;
+  return active;
+}
+
+/** Настоящая цель события — и сквозь открытый теневой корень. */
+export function eventTarget(event: Event): Node | null {
+  return ((event.composedPath?.()[0] as Node | undefined) ?? event.target) as Node | null;
+}
+
+/**
+ * Слушать событие на всём документе (клик мимо панели, уход фокуса из диалога) с настоящей целью.
+ * Если редактор в теневом корне, слушаем и сам корень: снаружи закрытого корня composedPath не
+ * видит внутренних узлов — такие события обрабатывает слушатель корня.
+ */
+export function listenDocument<K extends keyof DocumentEventMap>(
+  context: Node,
+  type: K,
+  handler: (event: DocumentEventMap[K], target: Node | null) => void,
+): () => void {
+  const root = context.getRootNode();
+  const shadow = typeof ShadowRoot !== 'undefined' && root instanceof ShadowRoot ? root : null;
+  const onDocument = (event: DocumentEventMap[K]) => {
+    if (shadow && event.composedPath().includes(shadow.host)) return;
+    handler(event, eventTarget(event));
+  };
+  const onRoot = (event: Event) => handler(event as DocumentEventMap[K], eventTarget(event));
+  document.addEventListener(type, onDocument, true);
+  shadow?.addEventListener(type, onRoot, true);
+  return () => {
+    document.removeEventListener(type, onDocument, true);
+    shadow?.removeEventListener(type, onRoot, true);
+  };
+}
