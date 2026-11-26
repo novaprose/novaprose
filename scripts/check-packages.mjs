@@ -71,7 +71,7 @@ let failed = 0;
       readFileSync(f, 'utf8')
         .split('\n')
         .map((line, i) => ({ f, i, line }))
-        .filter(({ line }) => /[Ѐ-ӿ]/.test(line)),
+        .filter(({ line }) => /\p{Script=Cyrillic}/u.test(line)),
     );
   if (russian.length) {
     failed++;

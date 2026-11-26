@@ -30,6 +30,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
       - run: pnpm lint
+      # Every language pack has every string; the repository text is English only.
+      - run: node scripts/i18n.mjs check
+      - run: node scripts/check-english.mjs
       - run: pnpm typecheck
       # Coverage thresholds live in vitest.config.ts: this fails if coverage went down.
       - run: pnpm test:coverage
