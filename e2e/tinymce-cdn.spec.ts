@@ -2,14 +2,14 @@ import { existsSync, readFileSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * CDN-сборки на странице «как у клиента», без сборщика:
- *  - замена tinymce.min.js (init в <head>, стили подключаются сами);
- *  - глобальный NovaProse из скрипта, вставленного кодом (так подключает CRM).
- * Ленивые части (механика таблиц, плагины, диалоги) подгружаются с того же CDN-адреса,
- * что и основной файл, — проверяем, что они действительно пришли оттуда и работают.
+ * CDN builds on a page "as a customer has it", without a bundler:
+ *  - the tinymce.min.js drop-in (init in <head>, the styles attach by themselves);
+ *  - the global NovaProse from a script inserted by code (the way the CRM attaches it).
+ * Lazy parts (table mechanics, plugins, dialogs) load from the same CDN address
+ * as the main file: this checks that they really came from there and work.
  */
 
-/** Раздать файлы сборки с https://cdn.example.com/… (с подпапками частей); список запросов. */
+/** Serves the build files from https://cdn.example.com/… (with the parts subfolders); the list of requests. */
 async function serveCdn(page: Page, dist: string): Promise<string[]> {
   const requested: string[] = [];
   await page.route('https://cdn.example.com/**', (route) => {
@@ -31,10 +31,10 @@ function site(page: Page, html: string) {
   );
 }
 
-test('CDN: замена tinymce.min.js без других правок страницы', async ({ page }) => {
+test('CDN: the tinymce.min.js drop-in without other changes to the page', async ({ page }) => {
   test.skip(
     !existsSync('packages/tinymce-compat/dist/tinymce.global.js'),
-    'нужна сборка: pnpm --filter "@novaprose/tinymce-compat..." build',
+    'needs a build: pnpm --filter "@novaprose/tinymce-compat..." build',
   );
   const requested = await serveCdn(page, 'packages/tinymce-compat/dist/');
   await site(
@@ -58,7 +58,7 @@ test('CDN: замена tinymce.min.js без других правок стра
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('https://site.example.com/');
   await expect(page.locator('body')).toHaveAttribute('data-ready', '1');
-  // Стили подключились сами.
+  // The styles attached by themselves.
   await expect(page.locator('link[data-novaprose-css]')).toHaveAttribute(
     'href',
     'https://cdn.example.com/novaprose.css',
@@ -80,27 +80,27 @@ test('CDN: замена tinymce.min.js без других правок стра
       () => getComputedStyle(document.querySelector('.nova-editor')!).borderTopStyle,
     ),
   ).toBe('solid');
-  // Ленивые части пришли с CDN: механика таблиц (в фоне) и плагин charmap (по имени).
+  // Lazy parts came from the CDN: table mechanics (in the background) and the charmap plugin (by name).
   await expect
     .poll(() => requested.some((f) => /^tinymce-chunks\/table-\w+\.js$/.test(f)))
     .toBe(true);
   expect(requested.some((f) => /^tinymce-chunks\/charmap-\w+\.js$/.test(f))).toBe(true);
   await expect(page.locator('[data-control="charmap"]').first()).toBeAttached();
-  // Язык — отдельная часть: init дождался её, интерфейс сразу на немецком.
+  // The language is a separate part: init waited for it, the interface is in German right away.
   expect(requested.some((f) => /^tinymce-chunks\/de-\w+\.js$/.test(f))).toBe(true);
   await expect(page.locator('[data-control="bold"]').first()).toHaveAttribute('aria-label', /Fett/);
   expect(errors).toEqual([]);
 });
 
-test('CDN: глобальный NovaProse из вставленного скрипта; таблицы и плагины из частей', async ({
+test('CDN: the global NovaProse from an inserted script; tables and plugins from parts', async ({
   page,
 }) => {
   test.skip(
     !existsSync('packages/web-component/dist/novaprose.global.js'),
-    'нужна сборка: pnpm --filter "@novaprose/web-component..." build',
+    'needs a build: pnpm --filter "@novaprose/web-component..." build',
   );
   const requested = await serveCdn(page, 'packages/web-component/dist/');
-  // Как в CRM: скрипт добавляется кодом, редактор создаётся в onload — после загрузки языка.
+  // As in the CRM: the script is added by code, the editor is created in onload, after the language loads.
   await site(
     page,
     `<!doctype html><html><head>
@@ -109,10 +109,10 @@ test('CDN: глобальный NovaProse из вставленного скри
   const script = document.createElement('script');
   script.src = 'https://cdn.example.com/novaprose.global.js';
   script.onload = async () => {
-    await NovaProse.loadLanguage('ru');
+    await NovaProse.loadLanguage('fr');
     window.editor = NovaProse.createEditor({
       element: document.getElementById('editor'),
-      language: 'ru',
+      language: 'fr',
       plugins: ['insertdatetime'],
       content: '<table><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>',
     });
@@ -128,8 +128,8 @@ test('CDN: глобальный NovaProse из вставленного скри
   await page.evaluate(
     () => (window as unknown as { editor: { ready: Promise<void> } }).editor.ready,
   );
-  // Механика таблиц из части: Tab переходит в следующую ячейку и выделяет её текст
-  // (без механики Tab ушёл бы из редактора, а «X» никуда бы не попал).
+  // Table mechanics from a part: Tab moves to the next cell and selects its text
+  // (without the mechanics Tab would leave the editor and "X" would land nowhere).
   await page.locator('.nova-prosemirror td').first().click();
   await page.keyboard.press('Tab');
   await page.keyboard.type('X');
@@ -140,13 +140,10 @@ test('CDN: глобальный NovaProse из вставленного скри
   ).toBe('<table><tbody><tr><td><p>a</p></td><td><p>X</p></td></tr></tbody></table>');
   expect(requested.some((f) => /^novaprose-chunks\/table-\w+\.js$/.test(f))).toBe(true);
   expect(requested.some((f) => /^novaprose-chunks\/insertdatetime-\w+\.js$/.test(f))).toBe(true);
-  // Русский — отдельная часть с того же адреса (loadLanguage), не в основном файле.
-  expect(requested.some((f) => /^novaprose-chunks\/ru-\w+\.js$/.test(f))).toBe(true);
-  await expect(page.locator('[data-control="bold"]').first()).toHaveAttribute(
-    'aria-label',
-    /Жирный/,
-  );
-  // Диалог по описанию полей — тоже из части.
+  // French is a separate part from the same address (loadLanguage), not in the main file.
+  expect(requested.some((f) => /^novaprose-chunks\/fr-\w+\.js$/.test(f))).toBe(true);
+  await expect(page.locator('[data-control="bold"]').first()).toHaveAttribute('aria-label', /Gras/);
+  // The field description dialog comes from a part too.
   const result = page.evaluate(() =>
     (
       window as unknown as { editor: { ui: { dialog(spec: object): Promise<unknown> } } }

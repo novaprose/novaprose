@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Режим правок в настоящих браузерах: настоящий ввод с клавиатуры, принятие и отклонение. */
+/** Suggesting mode in real browsers: real keyboard input, accepting and rejecting. */
 
 type Win = {
   editor: { ready: Promise<void>; setContent(h: string, o?: object): void; getHTML(): string };
 };
-/** HTML без случайных id/времени/автора. */
+/** HTML without random ids/times/authors. */
 const html = (page: Page) =>
   page.evaluate(() =>
     (window as unknown as Win).editor
@@ -32,7 +32,7 @@ async function open(page: Page, initial: string) {
   await page.keyboard.press('ControlOrMeta+End');
 }
 
-test('ввод, Backspace и Delete в режиме правок; Ctrl+Alt+Shift+E переключает режим', async ({
+test('typing, Backspace and Delete in suggesting mode; Ctrl+Alt+Shift+E toggles the mode', async ({
   page,
 }) => {
   await open(page, '<p>Ship in May</p>');
@@ -56,14 +56,16 @@ test('ввод, Backspace и Delete в режиме правок; Ctrl+Alt+Shift
     .toBe('<p><del>S</del>hip in <del>May</del><ins>June</ins>!</p>');
 });
 
-test('принять и отклонить: кнопки у правки и «принять все» в меню', async ({ page }) => {
+test('accept and reject: the buttons at a suggestion and "accept all" in the menu', async ({
+  page,
+}) => {
   await open(page, '<p>The quick fox</p>');
   await clickControl(page, 'suggestions');
   await page.keyboard.press('Escape');
   await content(page).click();
   await page.keyboard.press('ControlOrMeta+End');
   await page.keyboard.type(' jumps');
-  // Курсор в правке — панель «Принять / Отклонить».
+  // The cursor in a suggestion shows the "Accept / Reject" toolbar.
   await page.keyboard.press('ArrowLeft');
   const bar = page.getByRole('toolbar', { name: 'Suggestion' });
   await expect(bar).toBeVisible();

@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Справа налево (иврит, арабский): интерфейс зеркальный, фокус по стрелкам идёт по видимому
- * порядку, выпадающие панели выровнены по правому краю кнопки, отступ абзаца — справа.
+ * Right to left (Hebrew, Arabic): the interface is mirrored, arrow focus follows the visual
+ * order, drop-down panels align with the right edge of their button, the paragraph indent is on the right.
  */
 
 type W = {
@@ -33,7 +33,7 @@ async function clickControl(page: Page, name: string) {
   await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-test('интерфейс зеркальный: первая кнопка тулбара справа, текст прижат вправо', async ({
+test('the interface is mirrored: the first toolbar button on the right, the text aligned right', async ({
   page,
 }) => {
   await open(page);
@@ -44,15 +44,15 @@ test('интерфейс зеркальный: первая кнопка тул�
   expect(first!.x).toBeGreaterThan(last!.x);
   const p = await page.locator('.nova-prosemirror p').boundingBox();
   const content = await page.locator('.nova-prosemirror').boundingBox();
-  // Текст начинается у правого края области ввода.
+  // The text starts at the right edge of the input area.
   expect(content!.x + content!.width - (p!.x + p!.width)).toBeLessThan(40);
 });
 
-test('стрелки: ← ведёт к следующей кнопке (видимый порядок справа налево)', async ({ page }) => {
+test('arrows: ← goes to the next button (the visual order right to left)', async ({ page }) => {
   await open(page);
   const buttons = page.locator('.nova-toolbar button:not(:disabled):visible');
   await buttons.first().focus();
-  // Положение кнопки в фокусе (у «⋯» нет data-control — берём сам элемент).
+  // The position of the focused button ("⋯" has no data-control, so the element itself is taken).
   const focusedX = () => page.evaluate(() => document.activeElement!.getBoundingClientRect().x);
   const start = await focusedX();
   await page.keyboard.press('ArrowLeft');
@@ -61,25 +61,27 @@ test('стрелки: ← ведёт к следующей кнопке (вид�
   expect(await focusedX()).toBe(start);
 });
 
-test('выпадающее меню выровнено по правому краю своей кнопки', async ({ page }) => {
+test('a drop-down menu aligns with the right edge of its button', async ({ page }) => {
   await open(page);
   await page.locator('.nova-prosemirror').click();
   const button = page.locator('.nova-toolbar [data-control="blocks"]').first();
-  test.skip(!(await button.isVisible()), 'на узком экране список форматов в «⋯»');
+  test.skip(!(await button.isVisible()), 'on a narrow screen the formats list is in "⋯"');
   await button.click();
   const menu = page
     .locator('.nova-popover')
     .filter({ has: page.locator('.nova-menu') })
     .first();
   await expect(menu).toBeVisible();
-  // Замер после анимации появления (масштаб 0.98 → 1 сдвигает края на пару пикселей).
+  // Measured after the appearing animation (scale 0.98 → 1 shifts the edges by a couple of pixels).
   await menu.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
   const b = await button.boundingBox();
   const m = await menu.boundingBox();
   expect(Math.abs(b!.x + b!.width - (m!.x + m!.width))).toBeLessThan(1);
 });
 
-test('отступ абзаца — справа (margin-right), цитата — с полосой справа', async ({ page }) => {
+test('the paragraph indent is on the right (margin-right), a quote has its bar on the right', async ({
+  page,
+}) => {
   await open(page);
   await page.locator('.nova-prosemirror p').click();
   await clickControl(page, 'indent');
@@ -93,7 +95,7 @@ test('отступ абзаца — справа (margin-right), цитата �
   expect(border).toBe('3px');
 });
 
-test('язык с письмом справа налево включает направление сам; можно переопределить', async ({
+test('a right-to-left language turns the direction on by itself; it can be overridden', async ({
   page,
 }) => {
   await page.goto('/?lang=he');

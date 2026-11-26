@@ -1,18 +1,18 @@
-// История версий документов: снимки состояния Yjs.
+// Document version history: snapshots of the Yjs state.
 //
-// Снимок делается при сохранении документа, но не чаще раза в `interval` (по умолчанию 10 минут),
-// и всегда — когда из документа ушёл последний участник или кто-то нажал «Сохранить версию».
-// Клиент (@novaprose/collab) получает список и содержимое версий stateless-сообщениями по уже
-// открытому соединению — с теми же правами, что и на документ.
+// A snapshot is taken when the document is saved, but no more often than every `interval` (10 minutes by default),
+// and always when the last participant leaves the document or someone presses "Save version".
+// The client (@novaprose/collab) gets the list and the content of versions through stateless messages over the
+// already open connection, with the same rights as for the document.
 
 import * as Y from 'yjs';
 
-/** Сколько версий хранить на документ (старые удаляются). */
+/** How many versions to keep per document (old ones are deleted). */
 export const MAX_VERSIONS = 500;
 
 const sameBytes = (a, b) => a.length === b.length && a.every((value, index) => value === b[index]);
 
-/** Версии в SQLite (та же база, что и документы). */
+/** Versions in SQLite (the same database as the documents). */
 export function sqliteVersions(db) {
   db.exec(`CREATE TABLE IF NOT EXISTS versions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,7 +74,7 @@ export function sqliteVersions(db) {
   };
 }
 
-/** Версии в памяти — для публичных (демо) документов: исчезают вместе с документом. */
+/** Versions in memory, for public (demo) documents: they disappear together with the document. */
 export function memoryVersions() {
   const byName = new Map();
   let nextId = 1;
@@ -101,19 +101,19 @@ export function memoryVersions() {
 }
 
 /**
- * Снимки и протокол версий для сервера.
+ * Snapshots and the versions protocol for the server.
  * @param {{ storeFor: (name: string) => ReturnType<typeof memoryVersions>, interval: number }} options
  */
 export function versionHistory({ storeFor, interval }) {
-  // Кто правил документ с прошлого снимка — авторы следующей версии.
+  // Who edited the document since the last snapshot: the authors of the next version.
   const editors = new Map();
 
-  /** Сделать снимок, если есть что сохранять. Возвращает id новой (или последней) версии. */
+  /** Takes a snapshot if there is something to save. Returns the id of the new (or the latest) version. */
   function snapshot(name, document, { force = false, label = null } = {}) {
     const store = storeFor(name);
     const last = store.last(name);
     const sv = Y.encodeStateVector(document);
-    // Пустой документ, в который ещё ничего не писали, — не версия.
+    // An empty document nothing has been written to yet is not a version.
     if (!last && sv.length <= 1) return null;
     const changed = !last || !sameBytes(last.sv, sv);
     if (!changed && !label) return last.id;
@@ -141,7 +141,7 @@ export function versionHistory({ storeFor, interval }) {
       storeFor(name).drop(name);
     },
 
-    /** Ответ на stateless-сообщение клиента. null — сообщение не про версии. */
+    /** The answer to a client's stateless message. null means the message isn't about versions. */
     handle(name, document, connection, payload) {
       let message;
       try {

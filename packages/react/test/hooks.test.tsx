@@ -14,7 +14,7 @@ function selectAllText(editor: Editor): void {
 }
 
 describe('useEditor', () => {
-  it('создаёт редактор в контейнере и уничтожает при размонтировании', () => {
+  it('creates an editor in the container and destroys it on unmount', () => {
     let editor: Editor | null = null;
     const onDestroy = vi.fn();
     function App() {
@@ -29,7 +29,7 @@ describe('useEditor', () => {
     expect(onDestroy).toHaveBeenCalledOnce();
   });
 
-  it('onChange всегда вызывает свежий колбэк', () => {
+  it('onChange always calls the fresh callback', () => {
     let editor: Editor | null = null;
     const calls: string[] = [];
     function App({ tag }: { tag: string }) {
@@ -43,7 +43,7 @@ describe('useEditor', () => {
     expect(calls).toEqual(['second']);
   });
 
-  it('deps пересоздают редактор', () => {
+  it('deps recreate the editor', () => {
     const created = vi.fn();
     function App({ lang }: { lang: string }) {
       const { ref } = useEditor({ language: lang, onCreate: created }, [lang]);
@@ -58,7 +58,7 @@ describe('useEditor', () => {
 });
 
 describe('useEditorState / useCommand', () => {
-  it('своя кнопка: active/enabled обновляются, run выполняет команду', () => {
+  it('a custom button: active/enabled update, run runs the command', () => {
     let editor: Editor | null = null;
     let renders = 0;
     function BoldButton({ editor }: { editor: Editor | null }) {
@@ -93,13 +93,13 @@ describe('useEditorState / useCommand', () => {
     act(() => editor!.setEditable(false));
     expect(button.disabled).toBe(true);
 
-    // События, не меняющие результат селектора, не перерисовывают компонент.
+    // Events that don't change the selector's result don't re-render the component.
     const before = renders;
     act(() => selectAllText(editor!));
     expect(renders).toBe(before);
   });
 
-  it('useEditorState с селектором-объектом', () => {
+  it('useEditorState with an object selector', () => {
     let editor: Editor | null = null;
     let state: { words: number } | undefined;
     function App() {

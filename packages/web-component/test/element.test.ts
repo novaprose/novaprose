@@ -16,44 +16,44 @@ function create(html: string): NovaProseEditorElement {
 const flush = () => new Promise<void>((resolve) => queueMicrotask(resolve));
 
 describe('<novaprose-editor>', () => {
-  it('разметка внутри тега становится начальным содержимым', () => {
-    const el = create('<novaprose-editor><p>Привет, <strong>мир</strong></p></novaprose-editor>');
+  it('the markup inside the tag becomes the initial content', () => {
+    const el = create('<novaprose-editor><p>Hello, <strong>world</strong></p></novaprose-editor>');
     expect(el.editor).not.toBeNull();
-    expect(el.value).toBe('<p>Привет, <strong>мир</strong></p>');
+    expect(el.value).toBe('<p>Hello, <strong>world</strong></p>');
     expect(el.querySelector('.nova-editor')).not.toBeNull();
   });
 
-  it('атрибут value важнее разметки; опасное содержимое вычищается', () => {
+  it('the value attribute beats the markup; dangerous content is cleaned out', () => {
     const el = create(
-      '<novaprose-editor value="<p>из атрибута</p>"><p>из разметки</p></novaprose-editor>',
+      '<novaprose-editor value="<p>from the attribute</p>"><p>from the markup</p></novaprose-editor>',
     );
-    expect(el.value).toBe('<p>из атрибута</p>');
+    expect(el.value).toBe('<p>from the attribute</p>');
     el.value = '<p><a href="javascript:alert(1)">x</a><img src=x onerror=alert(1)></p>';
     expect(el.value).not.toContain('javascript:');
     expect(el.value).not.toContain('onerror');
   });
 
-  it('атрибуты настраивают редактор, init — любые опции', () => {
+  it('attributes configure the editor, init takes any option', () => {
     const el = document.createElement('novaprose-editor');
     el.init = { statusbar: false };
     el.setAttribute('toolbar', 'bold italic');
     el.setAttribute('menubar', '');
-    el.setAttribute('placeholder', 'Пишите…');
+    el.setAttribute('placeholder', 'Write…');
     document.body.append(el);
     expect(el.querySelector('.nova-menubar')).not.toBeNull();
     expect(el.querySelector('.nova-statusbar')).toBeNull();
-    expect(el.innerHTML).toContain('Пишите…');
+    expect(el.innerHTML).toContain('Write…');
   });
 
-  it('value, выставленный до подключения, применяется при подключении', () => {
+  it('a value set before connecting is applied on connect', () => {
     const el = document.createElement('novaprose-editor');
-    el.value = '<p>заранее</p>';
-    expect(el.value).toBe('<p>заранее</p>');
+    el.value = '<p>in advance</p>';
+    expect(el.value).toBe('<p>in advance</p>');
     document.body.append(el);
-    expect(el.editor!.getHTML()).toBe('<p>заранее</p>');
+    expect(el.editor!.getHTML()).toBe('<p>in advance</p>');
   });
 
-  it('ввод даёт событие input; установка value — нет и без истории', () => {
+  it("typing fires the input event; setting value doesn't, and adds no history", () => {
     const el = create('<novaprose-editor><p>a</p></novaprose-editor>');
     const onInput = vi.fn();
     el.addEventListener('input', onInput);
@@ -64,7 +64,7 @@ describe('<novaprose-editor>', () => {
     expect(onInput).toHaveBeenCalledOnce();
   });
 
-  it('запись того же value не трогает документ и выделение (двусторонняя привязка)', () => {
+  it("writing the same value doesn't touch the document or the selection (two-way binding)", () => {
     const el = create('<novaprose-editor><p>abc</p></novaprose-editor>');
     const editor = el.editor!;
     editor.view.dispatch(
@@ -76,7 +76,7 @@ describe('<novaprose-editor>', () => {
     expect(editor.view.state).toBe(before);
   });
 
-  it('readonly и disabled выключают редактирование на лету', () => {
+  it('readonly and disabled turn editing off on the fly', () => {
     const el = create('<novaprose-editor><p>a</p></novaprose-editor>');
     el.setAttribute('readonly', '');
     expect(el.editor!.isEditable()).toBe(false);
@@ -87,7 +87,7 @@ describe('<novaprose-editor>', () => {
     expect(el.editor!.isEditable()).toBe(true);
   });
 
-  it('язык с загрузчиком: редактор — после загрузки пакета, сразу с переводом', async () => {
+  it('a language with a loader: the editor comes after the pack loads, translated right away', async () => {
     let release!: () => void;
     registerLanguage(
       'qw',
@@ -96,7 +96,7 @@ describe('<novaprose-editor>', () => {
     const ready = vi.fn();
     document.addEventListener('novaprose-ready', ready);
     const el = create('<novaprose-editor language="qw" toolbar="bold"><p>x</p></novaprose-editor>');
-    // Пока язык грузится, видна исходная разметка; редактора ещё нет.
+    // While the language loads the original markup shows; there is no editor yet.
     expect(el.editor).toBeNull();
     expect(el.innerHTML).toBe('<p>x</p>');
     release();
@@ -107,7 +107,7 @@ describe('<novaprose-editor>', () => {
     document.removeEventListener('novaprose-ready', ready);
   });
 
-  it('язык не загрузился — редактор всё равно создаётся, на английском', async () => {
+  it('the language failed to load: the editor is still created, in English', async () => {
     registerLanguage('qx', async () => {
       throw new Error('offline');
     });
@@ -118,7 +118,7 @@ describe('<novaprose-editor>', () => {
     warn.mockRestore();
   });
 
-  it('событие novaprose-ready несёт экземпляр', () => {
+  it('the novaprose-ready event carries the instance', () => {
     const onReady = vi.fn();
     document.addEventListener('novaprose-ready', onReady, { once: true });
     const el = create('<novaprose-editor></novaprose-editor>');
@@ -126,7 +126,7 @@ describe('<novaprose-editor>', () => {
     expect((onReady.mock.calls[0]![0] as CustomEvent).detail.editor).toBe(el.editor);
   });
 
-  it('перенос в DOM сохраняет экземпляр, удаление — уничтожает', async () => {
+  it('moving in the DOM keeps the instance, removing destroys it', async () => {
     const el = create(
       '<div id="a"><novaprose-editor><p>a</p></novaprose-editor></div><div id="b"></div>',
     );
@@ -137,35 +137,35 @@ describe('<novaprose-editor>', () => {
     el.remove();
     await flush();
     expect(el.editor).toBeNull();
-    // Содержимое не теряется: при повторном подключении редактор создаётся заново с ним.
+    // The content isn't lost: on reconnect the editor is created again with it.
     document.body.append(el);
     expect(el.value).toBe('<p>a</p>');
   });
 
-  it('свой тег через defineNovaProseEditor(name)', () => {
+  it('a custom tag through defineNovaProseEditor(name)', () => {
     defineNovaProseEditor('my-editor');
-    defineNovaProseEditor('my-editor'); // повторно — без ошибки
-    const el = create('<my-editor><p>свой</p></my-editor>');
-    expect(el.editor!.getHTML()).toBe('<p>свой</p>');
+    defineNovaProseEditor('my-editor'); // again, without an error
+    const el = create('<my-editor><p>custom</p></my-editor>');
+    expect(el.editor!.getHTML()).toBe('<p>custom</p>');
   });
 
-  it('focus() ставит фокус в текст', () => {
+  it('focus() puts the focus into the text', () => {
     const el = create('<novaprose-editor><p>a</p></novaprose-editor>');
     el.focus();
     expect(document.activeElement).toBe(el.editor!.view.dom);
   });
 
-  it('скрипт в <head>: ждёт конца разбора документа, чтобы не потерять вложенную разметку', () => {
-    // Регрессия: при document.readyState === 'loading' элемент подключается до своих детей.
+  it("a script in <head>: it waits for the document to parse so the markup inside isn't lost", () => {
+    // A regression: with document.readyState === 'loading' the element connects before its children.
     Object.defineProperty(document, 'readyState', { value: 'loading', configurable: true });
     try {
       const el = document.createElement('novaprose-editor');
       document.body.append(el);
       expect(el.editor).toBeNull();
-      el.innerHTML = '<p>дочитали</p>';
+      el.innerHTML = '<p>parsed</p>';
       Object.defineProperty(document, 'readyState', { value: 'interactive', configurable: true });
       document.dispatchEvent(new Event('DOMContentLoaded'));
-      expect(el.value).toBe('<p>дочитали</p>');
+      expect(el.value).toBe('<p>parsed</p>');
     } finally {
       delete (document as unknown as Record<string, unknown>).readyState;
     }

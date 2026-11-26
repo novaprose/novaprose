@@ -4,9 +4,9 @@ import { bigDocument, wordClipboard } from './document';
 import { RESULTS_FILE, type PerfResult } from './report';
 
 /**
- * Замеры скорости на CDN-сборке — том же минифицированном коде, что у пользователей. Пороги — около
- * пятикратного запаса к машине разработчика (ноябрь 2026: нажатие в 100 страницах — 4–5 мс, создание —
- * 90 мс): они ловят поломки вроде «каждое нажатие перебирает весь документ», а не шум раннера CI. Таблицу результатов печатает report.ts после всех замеров.
+ * Speed measurements on the CDN build, the same minified code users get. The limits are about
+ * five times a developer machine (November 2026: a keystroke in 100 pages takes 4–5 ms, creation
+ * 90 ms): they catch breakage like "every keystroke walks the whole document", not CI runner noise. report.ts prints the results table after all measurements.
  */
 
 const DIST = 'packages/web-component/dist/';
@@ -29,7 +29,7 @@ declare global {
   }
 }
 
-/** Записать замер и сравнить с порогом (мягко: остальные замеры всё равно идут). */
+/** Records a measurement and compares it with the limit (softly: the other measurements still run). */
 function record(name: string, value: number, limit: number, unit = 'ms'): void {
   const result: PerfResult = { name, value: Math.round(value * 10) / 10, limit, unit };
   appendFileSync(RESULTS_FILE, `${JSON.stringify(result)}\n`);
@@ -44,7 +44,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8">
 </head><body><div id="editor"></div></body></html>`;
 
 async function open(page: Page): Promise<void> {
-  test.skip(!existsSync(`${DIST}novaprose.global.js`), 'нужна сборка: pnpm build');
+  test.skip(!existsSync(`${DIST}novaprose.global.js`), 'needs a build: pnpm build');
   await page.route('https://perf.local/**', (route) => {
     const file = new URL(route.request().url()).pathname.slice(1);
     if (!file) return route.fulfill({ contentType: 'text/html', body: PAGE });
@@ -57,7 +57,7 @@ async function open(page: Page): Promise<void> {
   await page.goto('https://perf.local/');
 }
 
-/** Создать редактор; время создания и до первого кадра после готовности. */
+/** Creates an editor; the creation time and the time to the first frame after ready. */
 async function create(page: Page, content: string, options: Record<string, unknown> = {}) {
   return page.evaluate(
     async ({ content, options }) => {
@@ -73,7 +73,7 @@ async function create(page: Page, content: string, options: Record<string, unkno
   );
 }
 
-/** Курсор в конец абзаца посередине документа (щелчок прокручивает к нему). */
+/** The cursor to the end of a paragraph in the middle of the document (a click scrolls to it). */
 async function caretInMiddle(page: Page): Promise<void> {
   const paragraphs = page.locator('.nova-prosemirror > p');
   await paragraphs.nth(Math.floor((await paragraphs.count()) / 2)).click();
@@ -81,10 +81,10 @@ async function caretInMiddle(page: Page): Promise<void> {
 }
 
 /**
- * Настоящие нажатия (через CDP): время каждого — от keydown до keyup, то есть пока страница не готова
- * принять следующую клавишу (обработка ввода, правка документа, обновление интерфейса). Таймеры
- * для замера не годятся: пока идёт ввод, Chrome откладывает их до конца потока клавиш. Плюс длинные
- * задачи (> 50 мс) за время ввода — их пользователь видит как подвисание.
+ * Real keystrokes (through CDP): each one is timed from keydown to keyup, that is, until the page is ready
+ * to take the next key (input handling, the document edit, the interface update). Timers
+ * don't work for this: while typing goes on, Chrome defers them until the stream of keys ends. Plus long
+ * tasks (> 50 ms) during typing, which a user sees as a freeze.
  */
 async function measureKeys(page: Page, press: () => Promise<void>) {
   await page.evaluate(() => {
@@ -105,7 +105,7 @@ async function measureKeys(page: Page, press: () => Promise<void>) {
     );
   });
   await press();
-  // Отложенная работа после ввода (раскладка страниц, счётчик слов) тоже попадает в длинные задачи.
+  // Deferred work after typing (page layout, the word counter) also lands in long tasks.
   await page.waitForTimeout(500);
   const { latency, longTasks } = await page.evaluate(() => ({
     latency: window.perfLatency,
@@ -118,14 +118,14 @@ async function measureKeys(page: Page, press: () => Promise<void>) {
 
 const SENTENCE = 'The quick brown fox jumps over the lazy dog. ';
 
-test('создание редактора: 100 страниц', async ({ page }) => {
+test('creating an editor: 100 pages', async ({ page }) => {
   await open(page);
   const { created, shown } = await create(page, DOC);
   record('Create, 100 pages', created, 500);
   record('Create → first frame, 100 pages', shown, 800);
 });
 
-test('ввод в середине 100 страниц', async ({ page }) => {
+test('typing in the middle of 100 pages', async ({ page }) => {
   await open(page);
   await create(page, DOC);
   await caretInMiddle(page);
@@ -136,7 +136,7 @@ test('ввод в середине 100 страниц', async ({ page }) => {
   record('Typing, 100 pages: long tasks', keys.longTasks, 2, 'tasks');
 });
 
-test('Enter и Backspace в середине 100 страниц', async ({ page }) => {
+test('Enter and Backspace in the middle of 100 pages', async ({ page }) => {
   await open(page);
   await create(page, DOC);
   await caretInMiddle(page);
@@ -148,7 +148,7 @@ test('Enter и Backspace в середине 100 страниц', async ({ page 
   record('Enter/Backspace, 100 pages: long tasks', keys.longTasks, 2, 'tasks');
 });
 
-test('getHTML и setContent: 100 страниц', async ({ page }) => {
+test('getHTML and setContent: 100 pages', async ({ page }) => {
   await open(page);
   await create(page, DOC);
   const times = await page.evaluate((html) => {
@@ -167,7 +167,7 @@ test('getHTML и setContent: 100 страниц', async ({ page }) => {
   record('setContent, 100 pages', times.setContent, 150);
 });
 
-test('вставка из Word: 300 абзацев', async ({ page }) => {
+test('paste from Word: 300 paragraphs', async ({ page }) => {
   await open(page);
   await create(page, '<p>Start</p>');
   const time = await page.evaluate((html) => {
@@ -181,14 +181,14 @@ test('вставка из Word: 300 абзацев', async ({ page }) => {
     document.body.getBoundingClientRect();
     return performance.now() - start;
   }, wordClipboard(300));
-  // Первый вставленный абзац сливается с «Start» — абзацев столько же, сколько вставлено.
+  // The first pasted paragraph merges with "Start": as many paragraphs as were pasted.
   expect(await page.locator('.nova-prosemirror p').count()).toBeGreaterThanOrEqual(300);
-  // Вставка очищена от разметки Word.
+  // The paste is cleaned of Word markup.
   expect(await page.evaluate(() => window.editor.getHTML())).not.toContain('Mso');
   record('Paste from Word, 300 paragraphs', time, 200);
 });
 
-test('выделить всё и подчеркнуть: 100 страниц', async ({ page }) => {
+test('select all and underline: 100 pages', async ({ page }) => {
   await open(page);
   await create(page, DOC);
   await page.locator('.nova-prosemirror p').first().click();
@@ -203,7 +203,7 @@ test('выделить всё и подчеркнуть: 100 страниц', as
   record('Select all + underline, 100 pages', time, 600);
 });
 
-test('ввод в режиме страниц: 100 страниц', async ({ page }) => {
+test('typing in page mode: 100 pages', async ({ page }) => {
   await open(page);
   await create(page, DOC, { plugins: ['pagelayout'] });
   await caretInMiddle(page);
@@ -212,7 +212,7 @@ test('ввод в режиме страниц: 100 страниц', async ({ pag
   record('Typing with page layout, 100 pages: long tasks', keys.longTasks, 2, 'tasks');
 });
 
-test('ввод в режиме правок: 100 страниц', async ({ page }) => {
+test('typing in suggesting mode: 100 pages', async ({ page }) => {
   await open(page);
   await create(page, DOC, {
     plugins: ['suggestions'],
@@ -224,7 +224,7 @@ test('ввод в режиме правок: 100 страниц', async ({ page 
   record('Typing as suggestions, 100 pages: long tasks', keys.longTasks, 2, 'tasks');
 });
 
-test('ввод в таблице 60×6', async ({ page }) => {
+test('typing in a 60×6 table', async ({ page }) => {
   await open(page);
   const row = (i: number) =>
     `<tr>${Array.from({ length: 6 }, (_, j) => `<td><p>cell ${i}.${j}</p></td>`).join('')}</tr>`;
@@ -238,7 +238,7 @@ test('ввод в таблице 60×6', async ({ page }) => {
   record('Typing in a 60×6 table: p95', keys.p95, 20);
 });
 
-test('утечка памяти: 30 раз создать и удалить редактор', async ({ page }) => {
+test('memory leak: create and destroy an editor 30 times', async ({ page }) => {
   await open(page);
   const cdp = await page.context().newCDPSession(page);
   const heap = async () => {
@@ -261,7 +261,7 @@ test('утечка памяти: 30 раз создать и удалить ре
         element.remove();
       }
     }, times);
-  await cycle(3); // прогрев: ленивые части загружены, кэши заполнены
+  await cycle(3); // warm-up: lazy parts loaded, caches filled
   const before = await heap();
   await cycle(30);
   const after = await heap();

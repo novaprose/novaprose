@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Плагины паритета в настоящих браузерах: ввод с клавиатуры, панели, автодополнение. */
+/** Parity plugins in real browsers: keyboard input, panels, autocomplete. */
 
 const html = (page: Page) =>
   page.evaluate(() => (window as unknown as { editor: { getHTML(): string } }).editor.getHTML());
@@ -19,7 +19,7 @@ async function open(page: Page) {
   await page.locator('.nova-prosemirror').click();
 }
 
-/** Кнопка тулбара — на панели или в «⋯». */
+/** The toolbar button: on the panel or in "⋯". */
 async function clickControl(page: Page, name: string) {
   const control = page.locator(`.nova-toolbar [data-control="${name}"]`).first();
   if (await control.isVisible()) return control.click();
@@ -27,7 +27,7 @@ async function clickControl(page: Page, name: string) {
   await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-test('autolink: адрес становится ссылкой при наборе, точка — нет', async ({ page }) => {
+test("autolink: an address becomes a link while typing, the period doesn't", async ({ page }) => {
   await open(page);
   await page.keyboard.type('See https://novaprose.com. Thanks');
   expect(await html(page)).toBe(
@@ -35,7 +35,7 @@ test('autolink: адрес становится ссылкой при набор
   );
 });
 
-test('charmap: поиск, стрелки и Enter вставляют символ', async ({ page }) => {
+test('charmap: search, arrows and Enter insert a character', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Price 5');
   await clickControl(page, 'charmap');
@@ -45,7 +45,7 @@ test('charmap: поиск, стрелки и Enter вставляют симво
   expect(await html(page)).toBe('<p>Price 5€</p>');
 });
 
-test('emoticons: «:smi» и Enter вставляют эмодзи', async ({ page }) => {
+test('emoticons: ":smi" and Enter insert an emoji', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Hi :smi');
   await expect(page.getByRole('listbox')).toBeVisible();
@@ -61,7 +61,9 @@ test('nonbreaking: Ctrl/Cmd+Shift+Space', async ({ page }) => {
   expect(await html(page)).toBe('<p>100&nbsp;kg</p>');
 });
 
-test('media: видео по ссылке YouTube, клик по плееру выделяет блок', async ({ page }) => {
+test('media: a video from a YouTube link, a click on the player selects the block', async ({
+  page,
+}) => {
   await open(page);
   await clickControl(page, 'media');
   const dialog = page.getByRole('dialog');
@@ -73,12 +75,12 @@ test('media: видео по ссылке YouTube, клик по плееру в
   );
   await page.locator('.nova-media-overlay').click();
   await expect(page.locator('.nova-media.ProseMirror-selectednode')).toBeVisible();
-  // Delete удаляет выделенное видео.
+  // Delete removes the selected video.
   await page.keyboard.press('Delete');
   expect(await html(page)).not.toContain('<iframe');
 });
 
-test('anchor и pagebreak вставляются из тулбара', async ({ page }) => {
+test('anchor and pagebreak are inserted from the toolbar', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Intro');
   await page.keyboard.press('Home');
@@ -92,7 +94,7 @@ test('anchor и pagebreak вставляются из тулбара', async ({ 
   );
 });
 
-test('узкий экран: диалог, открытый из «⋯», закрывает панель «⋯»', async ({ page }) => {
+test('a narrow screen: a dialog opened from "⋯" closes the "⋯" panel', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await open(page);
   await page.locator('.nova-tb-more').click();
@@ -101,9 +103,7 @@ test('узкий экран: диалог, открытый из «⋯», зак
   await expect(page.locator('.nova-tb-overflow-popover')).toHaveCount(0);
 });
 
-test('advlist: стрелка у списка открывает стили, основная часть — переключает', async ({
-  page,
-}) => {
+test('advlist: the arrow by the list opens the styles, the main part toggles', async ({ page }) => {
   await open(page);
   await page.keyboard.type('step');
   await clickControl(page, 'numlist-options');
@@ -115,7 +115,7 @@ test('advlist: стрелка у списка открывает стили, о�
   expect(await html(page)).toBe('<p>step</p>');
 });
 
-test('directionality: RTL для абзаца', async ({ page }) => {
+test('directionality: RTL for a paragraph', async ({ page }) => {
   await open(page);
   await page.keyboard.type('שלום');
   await clickControl(page, 'rtl');

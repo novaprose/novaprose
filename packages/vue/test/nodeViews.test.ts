@@ -11,7 +11,7 @@ import {
   vueNodeView,
 } from '../src';
 
-/** Виды узлов на Vue: Teleport внутри приложения (provide/inject работают), правка атрибутов. */
+/** Node views in Vue: Teleport inside the app (provide/inject work), editing attributes. */
 
 const mounted: Array<{ unmount(): void }> = [];
 afterEach(() => {
@@ -71,7 +71,7 @@ const callout = definePlugin({
 
 const CONTENT = '<div data-callout="" data-tone="info"><p>Hello</p></div>';
 
-/** Обёртка с provide — проверить, что вид видит контекст приложения. */
+/** A wrapper with provide, to check that the view sees the app context. */
 function themed(theme: string, child: () => ReturnType<typeof h>) {
   return defineComponent({
     setup() {
@@ -87,7 +87,7 @@ async function settle(): Promise<void> {
 }
 
 describe('vueNodeView', () => {
-  it('в <NovaProseEditor>: provide/inject приложения, содержимое на своём месте, правка с отменой', async () => {
+  it("in <NovaProseEditor>: the app's provide/inject, the content in its place, an undoable edit", async () => {
     let editor: Editor | null = null;
     const App = themed('dark', () =>
       h(NovaProseEditor, {
@@ -105,7 +105,7 @@ describe('vueNodeView', () => {
     expect(view.querySelector('.callout-body[data-node-view-content] p')!.textContent).toBe(
       'Hello',
     );
-    // Необъявленные свойства не уходят атрибутами в корень компонента.
+    // Undeclared props don't land as attributes on the component's root.
     expect(view.hasAttribute('node')).toBe(false);
 
     const select = view.querySelector('select')!;
@@ -119,7 +119,7 @@ describe('vueNodeView', () => {
     expect(document.querySelector('.tone')!.textContent).toBe('info');
   });
 
-  it('useEditor: <component :is="nodeViews" />; без него — предупреждение', async () => {
+  it('useEditor: <component :is="nodeViews" />; without it, a warning', async () => {
     const Host = (withViews: boolean) =>
       defineComponent({
         setup() {
@@ -143,7 +143,7 @@ describe('vueNodeView', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('nodeViews'));
   });
 
-  it('createEditor без обёртки — свой корень Vue', () => {
+  it('createEditor without a wrapper gets its own Vue root', () => {
     const element = document.createElement('div');
     document.body.append(element);
     const editor = createEditor({ element, content: CONTENT, plugins: [callout] });

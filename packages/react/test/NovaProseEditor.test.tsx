@@ -7,18 +7,18 @@ import { NovaProseEditor } from '../src';
 afterEach(cleanup);
 
 describe('<NovaProseEditor>', () => {
-  it('монтирует редактор с defaultValue и отдаёт экземпляр через ref', () => {
+  it('mounts the editor with defaultValue and returns the instance through ref', () => {
     const ref = createRef<Editor | null>();
     const onReady = vi.fn();
     const { container } = render(
-      <NovaProseEditor ref={ref} defaultValue="<p>привет</p>" onReady={onReady} />,
+      <NovaProseEditor ref={ref} defaultValue="<p>hello</p>" onReady={onReady} />,
     );
     expect(container.querySelector('.nova-editor')).not.toBeNull();
-    expect(ref.current?.getHTML()).toBe('<p>привет</p>');
+    expect(ref.current?.getHTML()).toBe('<p>hello</p>');
     expect(onReady).toHaveBeenCalledOnce();
   });
 
-  it('controlled value обновляет содержимое без записи в историю', () => {
+  it('a controlled value updates the content without a history entry', () => {
     const ref = createRef<Editor | null>();
     const { rerender } = render(<NovaProseEditor ref={ref} value="<p>a</p>" />);
     rerender(<NovaProseEditor ref={ref} value="<p>b</p>" />);
@@ -26,7 +26,7 @@ describe('<NovaProseEditor>', () => {
     expect(ref.current?.can('undo')).toBe(false);
   });
 
-  it('onChange получает HTML', () => {
+  it('onChange gets the HTML', () => {
     const ref = createRef<Editor | null>();
     const onChange = vi.fn();
     render(<NovaProseEditor ref={ref} defaultValue="<p>a</p>" onChange={onChange} />);
@@ -34,7 +34,7 @@ describe('<NovaProseEditor>', () => {
     expect(onChange).toHaveBeenCalledWith('<p>b</p>', ref.current);
   });
 
-  it('уничтожает редактор при размонтировании', () => {
+  it('destroys the editor on unmount', () => {
     const { container, unmount } = render(<NovaProseEditor defaultValue="<p>a</p>" />);
     const root = container.querySelector('.nova-editor');
     unmount();

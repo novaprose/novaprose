@@ -9,7 +9,7 @@ import * as Y from 'yjs';
 import { freePort } from './port';
 import { createSyncServer, documentAllowed, sqliteStorage } from '../src/server.mjs';
 
-/** Сервер синхронизации через настоящий WebSocket: синхронизация, хранение, права. */
+/** The sync server over a real WebSocket: syncing, storage, rights. */
 
 const SECRET = 'test-secret-that-is-long-enough-for-hs256';
 const cleanups: (() => unknown)[] = [];
@@ -64,8 +64,8 @@ const until = async (check: () => boolean, ms = 3000) => {
   }
 };
 
-describe('сервер синхронизации', () => {
-  it('два клиента видят правки друг друга', async () => {
+describe('the sync server', () => {
+  it("two clients see each other's edits", async () => {
     const url = await start();
     const t = await token({ sub: 'u1', doc: 'post-1' });
     const a = client(url, 'post-1', t);
@@ -77,7 +77,7 @@ describe('сервер синхронизации', () => {
     await until(() => a.text() === 'hello world');
   });
 
-  it('документ сохраняется в SQLite и загружается после перезапуска сервера', async () => {
+  it('a document is saved to SQLite and loaded after a server restart', async () => {
     const database = join(mkdtempSync(join(tmpdir(), 'nova-sync-')), 'sync.db');
     const t = await token({ sub: 'u1', doc: 'notes/*' });
     {
@@ -86,7 +86,7 @@ describe('сервер синхронизации', () => {
       const a = client(`ws://127.0.0.1:${server.address.port}`, 'notes/1', t);
       await a.synced;
       a.document.getText('t').insert(0, 'persisted');
-      // Даём серверу записать (debounce 2 с) — destroy сбрасывает изменения на диск.
+      // Let the server write (debounce 2 s): destroy flushes the changes to disk.
       await new Promise((r) => setTimeout(r, 100));
       for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
       await server.destroy();
@@ -97,7 +97,7 @@ describe('сервер синхронизации', () => {
     await until(() => b.text() === 'persisted');
   });
 
-  it('без токена, с чужой подписью, истёкшим или чужим документом — отказ', async () => {
+  it("without a token, with someone else's signature, an expired one or another document: refused", async () => {
     const url = await start();
     const forged = await new SignJWT({ sub: 'x', doc: '*' })
       .setProtectedHeader({ alg: 'HS256' })
@@ -112,7 +112,7 @@ describe('сервер синхронизации', () => {
     }
   });
 
-  it('viewer читает, но не может менять документ', async () => {
+  it("a viewer reads but can't change the document", async () => {
     const url = await start();
     const editor = client(url, 'post-1', await token({ sub: 'e', doc: 'post-1' }));
     const viewer = client(url, 'post-1', await token({ sub: 'v', doc: 'post-1', role: 'viewer' }));
@@ -124,7 +124,7 @@ describe('сервер синхронизации', () => {
     expect(editor.text()).toBe('from editor');
   });
 
-  it('публичные (демо) комнаты: без токена, без сохранения; остальные — по-прежнему с токеном', async () => {
+  it('public (demo) rooms: no token, no saving; the others still need a token', async () => {
     const database = join(mkdtempSync(join(tmpdir(), 'nova-sync-')), 'sync.db');
     const server = createSyncServer({ secret: SECRET, database, publicPrefix: 'demo/' });
     await server.listen(await freePort());
@@ -141,19 +141,19 @@ describe('сервер синхронизации', () => {
     const privateDoc = client(url, 'post-1', '');
     await privateDoc.synced;
     expect(privateDoc.authFailed()).not.toBe('');
-    // Похожее имя без префикса — тоже не публичное.
+    // A similar name without the prefix isn't public either.
     const lookalike = client(url, 'demo', '');
     await lookalike.synced;
     expect(lookalike.authFailed()).not.toBe('');
 
-    // Все ушли, сервер сохранил бы документ — но демо в базу не пишется.
+    // Everyone left, the server would save the document, but a demo isn't written to the database.
     for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
     const storage = sqliteStorage(database);
     expect(await storage.fetch({ documentName: 'demo/room' })).toBeNull();
     storage.close();
   });
 
-  it('шаблоны документов в токене', () => {
+  it('document patterns in the token', () => {
     expect(documentAllowed('post-1', 'post-1')).toBe(true);
     expect(documentAllowed(['a', 'b'], 'b')).toBe(true);
     expect(documentAllowed('team-7/*', 'team-7/doc')).toBe(true);

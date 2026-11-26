@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTinymce, type CompatEditor } from '../src';
 import type { DialogApi } from '../src/dialog';
 
-/** windowManager.open, addContextToolbar, editor.dom и editor.formatter — сценарии своих плагинов. */
+/** windowManager.open, addContextToolbar, editor.dom and editor.formatter: scenarios of custom plugins. */
 
 let tinymce = createTinymce();
 afterEach(() => {
@@ -20,12 +20,12 @@ async function editor(content = '<p>text</p>'): Promise<CompatEditor> {
 
 const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]')!;
 const tick = () => new Promise((r) => setTimeout(r, 0));
-/** Диалог по описанию — отдельный модуль (в CDN ленивый): ждём, пока он нарисуется. */
+/** A dialog from a description is a separate module (lazy in the CDN): wait until it is drawn. */
 const opened = () =>
   vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).not.toBeNull());
 
 describe('windowManager.open', () => {
-  it('до загрузки модуля диалогов: API сразу, setData — в открывшийся диалог', async () => {
+  it('before the dialogs module loads: the API right away, setData goes into the opened dialog', async () => {
     vi.resetModules();
     const fresh = await import('../src');
     const tm = fresh.createTinymce();
@@ -49,7 +49,7 @@ describe('windowManager.open', () => {
     tm.remove();
   });
 
-  it('поля, initialData, getData и onSubmit с api.close() — типичный диалог плагина', async () => {
+  it("fields, initialData, getData and onSubmit with api.close(): a typical plugin's dialog", async () => {
     const ed = await editor();
     const onSubmit = vi.fn((api: DialogApi) => {
       const data = api.getData();
@@ -96,7 +96,7 @@ describe('windowManager.open', () => {
     expect(ed.getContent()).toContain('World (public)');
   });
 
-  it('onChange, кнопка custom → onAction, disable/enable, setData; отмена — onCancel и onClose', async () => {
+  it('onChange, a custom button → onAction, disable/enable, setData; cancel gives onCancel and onClose', async () => {
     const ed = await editor();
     const onChange = vi.fn();
     const onCancel = vi.fn();
@@ -132,7 +132,7 @@ describe('windowManager.open', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('вкладки: showTab и onTabChange; htmlpanel без скриптов и обработчиков', async () => {
+  it('tabs: showTab and onTabChange; htmlpanel without scripts and handlers', async () => {
     const ed = await editor();
     const onTabChange = vi.fn();
     const api = ed.windowManager.open({
@@ -176,7 +176,7 @@ describe('windowManager.open', () => {
 });
 
 describe('addContextToolbar, dom, formatter', () => {
-  it('контекстная панель показывается по predicate(node)', async () => {
+  it('the context toolbar shows by predicate(node)', async () => {
     document.body.innerHTML =
       '<textarea id="t"><p>Plain</p><blockquote><p>Quote</p></blockquote></textarea>';
     const [ed] = await tinymce.init({
@@ -198,7 +198,7 @@ describe('addContextToolbar, dom, formatter', () => {
     expect(entry.predicate(ed!.core)).toBe(true);
   });
 
-  it('dom: select, getParent, getAttrib, encode, create; изменения DOM — предупреждение', async () => {
+  it('dom: select, getParent, getAttrib, encode, create; DOM changes give a warning', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const ed = await editor('<p>One <a href="https://example.com">link</a></p><p>Two</p>');
     expect(ed.dom.select('p')).toHaveLength(2);
@@ -212,7 +212,7 @@ describe('addContextToolbar, dom, formatter', () => {
     expect(warn).toHaveBeenCalled();
   });
 
-  it('formatter: apply/remove/toggle/match для встроенных форматов и цвета', async () => {
+  it('formatter: apply/remove/toggle/match for built-in formats and color', async () => {
     const ed = await editor('<p>text</p>');
     ed.execCommand('SelectAll');
     ed.formatter.apply('bold');

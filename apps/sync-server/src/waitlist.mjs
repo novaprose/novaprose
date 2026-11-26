@@ -1,9 +1,9 @@
-// Лист ожидания NovaProse Cloud: форма на novaprose.com → POST /waitlist.
+// The NovaProse Cloud waitlist: the form on novaprose.com → POST /waitlist.
 //
-// Храним минимум: почту, роль, размер команды, язык, время и версию согласия. IP не сохраняем
-// (только держим в памяти для ограничения частоты). Повторная заявка с той же почтой обновляет запись.
+// Only the minimum is stored: email, role, team size, language, time and the consent version. The IP isn't stored
+// (it is only kept in memory for rate limiting). Signing up again with the same email updates the entry.
 
-/** Сайты, с которых принимаем заявки (CORS). */
+/** Sites entries are accepted from (CORS). */
 export const WAITLIST_ORIGINS = [
   'https://novaprose.com',
   'http://localhost:4321',
@@ -14,7 +14,7 @@ const ROLES = new Set(['developer', 'product', 'founder', 'other']);
 const TEAMS = new Set(['1', '2-10', '11-50', '51-200', '200+']);
 const LOCALES = new Set(['en', 'ru']);
 const EMAIL_RE = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[^\s@<>"]{2,24}$/;
-/** Версия текста согласия: при изменении политики увеличиваем — видно, на что соглашался человек. */
+/** The version of the consent text: raised when the policy changes, so it is clear what a person agreed to. */
 export const CONSENT_VERSION = '2026-11-25';
 
 export function waitlistStorage(db) {
@@ -43,10 +43,10 @@ export function waitlistStorage(db) {
   };
 }
 
-/** Проверка заявки: { ok: true, entry } или { ok: false, error }. */
+/** Validates an entry: { ok: true, entry } or { ok: false, error }. */
 export function validateWaitlist(body) {
   if (!body || typeof body !== 'object') return { ok: false, error: 'invalid' };
-  // Ловушка для ботов: скрытое поле, которое человек не заполняет.
+  // A trap for bots: a hidden field that a person doesn't fill in.
   if (body.website) return { ok: false, error: 'spam' };
   const email = String(body.email ?? '')
     .trim()
@@ -59,7 +59,7 @@ export function validateWaitlist(body) {
   return { ok: true, entry: { email, role, team, locale } };
 }
 
-/** Не больше `limit` заявок с одного адреса за окно. */
+/** No more than `limit` entries from one address per window. */
 export function rateLimiter(limit = 10, windowMs = 60 * 60_000) {
   const hits = new Map();
   return (key) => {
@@ -88,7 +88,7 @@ function readBody(request, max = 4096) {
   });
 }
 
-/** Обработчик HTTP-запроса к /waitlist. Возвращает true, если запрос обработан. */
+/** The HTTP request handler for /waitlist. Returns true if the request was handled. */
 export async function handleWaitlist(request, response, store, allow) {
   const origin = request.headers.origin ?? '';
   const cors = WAITLIST_ORIGINS.includes(origin)
@@ -112,7 +112,7 @@ export async function handleWaitlist(request, response, store, allow) {
     send(405, { ok: false, error: 'method' });
     return true;
   }
-  // За Caddy реальный адрес клиента — первый в X-Forwarded-For.
+  // Behind Caddy the client's real address is the first one in X-Forwarded-For.
   const ip =
     String(request.headers['x-forwarded-for'] ?? '')
       .split(',')[0]
@@ -132,7 +132,7 @@ export async function handleWaitlist(request, response, store, allow) {
   }
   const result = validateWaitlist(body);
   if (!result.ok) {
-    // Боту отвечаем «успехом», чтобы он не подбирал обход.
+    // A bot gets a "success" answer, so it doesn't look for a workaround.
     if (result.error === 'spam') send(200, { ok: true });
     else send(400, { ok: false, error: result.error });
     return true;

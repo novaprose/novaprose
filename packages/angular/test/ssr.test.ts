@@ -13,9 +13,9 @@ import { NovaProseEditorComponent } from '../src/public-api';
 })
 class App {}
 
-// Angular Universal / SSR: на сервере редактор не создаётся, рендер не падает.
+// Angular Universal / SSR: on the server no editor is created, and rendering doesn't crash.
 describe('SSR', () => {
-  it('renderApplication рендерит пустой хост без ошибок', async () => {
+  it('renderApplication renders an empty host without errors', async () => {
     const html = await renderApplication(
       (context: BootstrapContext) =>
         bootstrapApplication(

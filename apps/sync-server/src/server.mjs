@@ -1,24 +1,24 @@
-// Сервер совместного редактирования NovaProse.
+// The NovaProse collaboration server.
 //
-// Протокол — Hocuspocus (Yjs поверх WebSocket); клиент — @novaprose/collab.
-// Хранение — встроенная в Node SQLite (node:sqlite), без нативных модулей.
-// Авторизация — JWT вашего бэкенда (HS256): сервер не знает ваших пользователей, он доверяет подписи.
+// Protocol: Hocuspocus (Yjs over WebSocket); the client is @novaprose/collab.
+// Storage: the SQLite built into Node (node:sqlite), no native modules.
+// Authorization: a JWT from your backend (HS256): the server doesn't know your users, it trusts the signature.
 //
-// Переменные окружения:
-//   PORT                 порт (по умолчанию 1234)
-//   NOVA_SYNC_SECRET     секрет HS256 для проверки JWT (обязателен, кроме режима разработки)
-//   NOVA_SYNC_DB         путь к файлу SQLite (по умолчанию ./data/novaprose-sync.db)
-//   NOVA_SYNC_DEV=1      режим разработки (или флаг --dev): без токенов, все — редакторы.
-//                        Никогда в продакшене.
-//   NOVA_SYNC_VERSION_INTERVAL  минимум минут между автоматическими версиями (по умолчанию 10)
-//   NOVA_SYNC_PUBLIC_PREFIX  документы с этим префиксом (например "demo/") открыты всем без токена
-//                        и не сохраняются: живут в памяти, пока в комнате есть участники. Для демо.
+// Environment variables:
+//   PORT                 the port (1234 by default)
+//   NOVA_SYNC_SECRET     the HS256 secret for checking JWTs (required, except in development mode)
+//   NOVA_SYNC_DB         the path to the SQLite file (./data/novaprose-sync.db by default)
+//   NOVA_SYNC_DEV=1      development mode (or the --dev flag): no tokens, everyone is an editor.
+//                        Never in production.
+//   NOVA_SYNC_VERSION_INTERVAL  the minimum minutes between automatic versions (10 by default)
+//   NOVA_SYNC_PUBLIC_PREFIX  documents with this prefix (for example "demo/") are open to everyone without a token
+//                        and aren't saved: they live in memory while the room has participants. For demos.
 //
-// Формат токена (claims):
-//   sub   — id пользователя;   name — имя (для логов)
-//   doc   — имя документа, список имён или префикс с «*» в конце: "post-42", ["a", "b"], "team-7/*"
-//   role  — "editor" (по умолчанию) или "viewer" (только чтение)
-//   exp   — срок действия (обязателен)
+// The token format (claims):
+//   sub   the user id;   name: the name (for logs)
+//   doc   a document name, a list of names or a prefix ending with "*": "post-42", ["a", "b"], "team-7/*"
+//   role  "editor" (the default) or "viewer" (read only)
+//   exp   the expiry (required)
 
 import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -29,10 +29,10 @@ import { jwtVerify } from 'jose';
 import { memoryVersions, sqliteVersions, versionHistory } from './versions.mjs';
 import { handleWaitlist, rateLimiter, waitlistStorage } from './waitlist.mjs';
 
-// Через getBuiltinModule: сборщики (vite/vitest) не знают node:sqlite как встроенный модуль.
+// Through getBuiltinModule: bundlers (vite/vitest) don't know node:sqlite as a built-in module.
 const { DatabaseSync } = process.getBuiltinModule('node:sqlite');
 
-/** Подходит ли имя документа под claim doc из токена. */
+/** Whether a document name matches the doc claim of the token. */
 export function documentAllowed(claim, documentName) {
   const patterns = Array.isArray(claim) ? claim : [claim];
   return patterns.some((pattern) => {
@@ -42,7 +42,7 @@ export function documentAllowed(claim, documentName) {
   });
 }
 
-/** Хранилище документов: одна таблица, состояние Yjs целиком (бинарное). */
+/** Document storage: one table, the whole Yjs state (binary). */
 export function sqliteStorage(path) {
   if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
   const db = new DatabaseSync(path);
@@ -71,10 +71,10 @@ export function sqliteStorage(path) {
 }
 
 /**
- * Создать сервер (не запуская). Для тестов и встраивания: createSyncServer({...}).listen(port).
+ * Creates a server (without starting it). For tests and embedding: createSyncServer({...}).listen(port).
  * @param {{ secret?: string, dev?: boolean, database?: string, quiet?: boolean,
  *   publicPrefix?: string, versionInterval?: number }} options
- *   versionInterval — минимум минут между автоматическими версиями.
+ *   versionInterval: the minimum minutes between automatic versions.
  */
 export function createSyncServer(options = {}) {
   const secret = options.secret ? new TextEncoder().encode(options.secret) : null;
@@ -94,12 +94,12 @@ export function createSyncServer(options = {}) {
   const server = new Server({
     name: 'novaprose-sync',
     quiet: options.quiet ?? true,
-    // Запись в базу не чаще раза в 2 с, но не позже чем через 10 с после первого изменения.
+    // Writes to the database at most once every 2 s, but no later than 10 s after the first change.
     debounce: 2000,
     maxDebounce: 10000,
     extensions: [
       new Database({
-        // Публичные (демо) документы не читаются и не пишутся в базу.
+        // Public (demo) documents are neither read from nor written to the database.
         fetch: async (data) => (isPublic(data.documentName) ? null : storage.fetch(data)),
         store: async (data) => {
           if (!isPublic(data.documentName)) await storage.store(data);
@@ -126,12 +126,12 @@ export function createSyncServer(options = {}) {
       return { user: { id: String(payload.sub ?? ''), name: String(payload.name ?? '') } };
     },
 
-    // ----- История версий -----
+    // ----- Version history -----
     async onChange({ documentName, context }) {
       history.noteEditor(documentName, context?.user);
     },
     async onStoreDocument({ documentName, document, clientsCount }) {
-      // Последний участник ушёл — версия сразу, иначе не чаще интервала.
+      // The last participant left: a version right away, otherwise no more often than the interval.
       history.snapshot(documentName, document, { force: clientsCount === 0 });
     },
     async afterUnloadDocument({ documentName }) {
@@ -144,16 +144,16 @@ export function createSyncServer(options = {}) {
     },
 
     async onRequest({ request, response }) {
-      // Лист ожидания облака (форма на novaprose.com).
+      // The Cloud waitlist (the form on novaprose.com).
       if (request.url === '/waitlist') {
         await handleWaitlist(request, response, storage.waitlist, allowWaitlist);
         throw null;
       }
-      // Проверка живости для мониторинга и балансировщика.
+      // A liveness check for monitoring and the load balancer.
       if (request.url === '/health') {
         response.writeHead(200, { 'Content-Type': 'application/json' });
         response.end(JSON.stringify({ ok: true }));
-        // null — «запрос обработан», Hocuspocus не отвечает сам.
+        // null means "request handled": Hocuspocus doesn't answer by itself.
         throw null;
       }
     },
@@ -165,7 +165,7 @@ export function createSyncServer(options = {}) {
   return server;
 }
 
-// Запуск как программы: node src/server.mjs
+// Run as a program: node src/server.mjs
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const dev = process.env.NOVA_SYNC_DEV === '1' || process.argv.includes('--dev');
   const port = Number(process.env.PORT ?? 1234);

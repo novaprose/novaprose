@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, getComments, type Editor } from '@novaprose/core';
 import { collab, Y, yCommentStore } from '../src';
 
-/** Комментарии поверх общего Y.Doc: обсуждения и якоря видны всем участникам сразу. */
+/** Comments on top of a shared Y.Doc: threads and anchors show to every participant at once. */
 
 const editors: Editor[] = [];
 afterEach(() => {
@@ -40,8 +40,8 @@ function mount(ydoc: Y.Doc, name: string) {
   return editor;
 }
 
-describe('комментарии при совместном редактировании', () => {
-  it('комментарий и ответ одного участника видны другому вместе с подсветкой', async () => {
+describe('comments in real-time collaboration', () => {
+  it("one participant's comment and reply show to the other together with the highlight", async () => {
     const [docA, docB] = linkedDocs();
     const anna = mount(docA, 'Anna');
     const boris = mount(docB, 'Boris');
@@ -77,7 +77,7 @@ describe('комментарии при совместном редактиро�
     expect(anna.view.dom.querySelector('.nova-comment')).toBeNull();
   });
 
-  it('одновременные ответы в одну ветку не теряются', () => {
+  it("simultaneous replies to one thread aren't lost", () => {
     const [docA, docB] = linkedDocs();
     const storeA = yCommentStore(docA);
     const storeB = yCommentStore(docB);
@@ -87,7 +87,7 @@ describe('комментарии при совместном редактиро�
       createdAt: 1,
       comments: [{ id: 'c0', author, text: 'Q', createdAt: 1 }],
     });
-    // Отключаем связь, оба отвечают, затем обмениваются состоянием.
+    // Cut the link, both reply, then they exchange state.
     const offlineA = new Y.Doc();
     const offlineB = new Y.Doc();
     Y.applyUpdate(offlineA, Y.encodeStateAsUpdate(docA));

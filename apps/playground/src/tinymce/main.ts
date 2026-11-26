@@ -3,7 +3,7 @@ import '../playground.css';
 import { tinymce } from '@novaprose/tinymce-compat';
 
 /**
- * Конфигурация в стиле TinyMCE — как её пишут в существующих проектах. Меняется только импорт.
+ * A TinyMCE-style configuration, as existing projects write it. Only the import changes.
  */
 const events: string[] = [];
 const log = (name: string) => {
@@ -20,7 +20,7 @@ tinymce.PluginManager.add('signature', (editor) => {
   });
 });
 
-// Плагин с диалогом по описанию (windowManager.open) — как пишут свои плагины для TinyMCE.
+// A plugin with a dialog from a description (windowManager.open), the way custom TinyMCE plugins are written.
 tinymce.PluginManager.add('callout', (editor) => {
   editor.ui.registry.addButton('callout', {
     text: 'Callout',

@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Замеры скорости (pnpm perf): по одному тесту за раз и только в Chromium — параллельные прогоны
- * и разные движки дали бы шум вместо цифр. Нужна сборка (pnpm build): замеряем CDN-файл.
+ * Speed measurements (pnpm perf): one test at a time and only in Chromium: parallel runs
+ * and different engines would give noise instead of numbers. Needs a build (pnpm build): the CDN file is measured.
  */
 export default defineConfig({
   testDir: '.',

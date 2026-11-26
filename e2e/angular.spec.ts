@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Angular-обёртка в настоящем браузере: Reactive Forms и ngModel (страница angular.html, zoneless). */
+/** The Angular wrapper in a real browser: Reactive Forms and ngModel (the angular.html page, zoneless). */
 
 const formEditor = (page: Page) => page.locator('form .ProseMirror');
 
@@ -15,46 +15,50 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.nova-editor')).toHaveCount(2);
 });
 
-test('Reactive Forms: ввод меняет значение, dirty; уход фокуса — touched', async ({ page }) => {
+test('Reactive Forms: typing changes the value, dirty; leaving the field, touched', async ({
+  page,
+}) => {
   await expect(page.getByTestId('dirty')).toHaveText('false');
-  await typeAtEnd(page, 'form', ' Ещё текст');
-  await expect(page.getByTestId('value')).toContainText('Ещё текст');
+  await typeAtEnd(page, 'form', ' More text');
+  await expect(page.getByTestId('value')).toContainText('More text');
   await expect(page.getByTestId('dirty')).toHaveText('true');
   await expect(page.getByTestId('touched')).toHaveText('false');
-  await page.getByRole('button', { name: 'Отправить' }).focus();
+  await page.getByRole('button', { name: 'Submit' }).focus();
   await expect(page.getByTestId('touched')).toHaveText('true');
-  await page.getByRole('button', { name: 'Отправить' }).click();
-  await expect(page.getByTestId('submitted')).toContainText('Ещё текст');
+  await page.getByRole('button', { name: 'Submit' }).click();
+  await expect(page.getByTestId('submitted')).toContainText('More text');
 });
 
-test('Reactive Forms: валидатор блокирует отправку пустого текста', async ({ page }) => {
+test('Reactive Forms: the validator blocks submitting empty text', async ({ page }) => {
   await formEditor(page).click();
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.press('Delete');
   await expect(page.getByTestId('valid')).toHaveText('false');
-  await expect(page.getByRole('button', { name: 'Отправить' })).toBeDisabled();
-  await page.keyboard.type('Текст');
+  await expect(page.getByRole('button', { name: 'Submit' })).toBeDisabled();
+  await page.keyboard.type('Text');
   await expect(page.getByTestId('valid')).toHaveText('true');
 });
 
-test('Reactive Forms: reset() возвращает текст без dirty и без undo', async ({ page }) => {
-  await typeAtEnd(page, 'form', ' маркер');
-  await page.getByRole('button', { name: 'Сбросить' }).click();
-  await expect(formEditor(page)).not.toContainText('маркер');
+test('Reactive Forms: reset() brings back the text without dirty and without undo', async ({
+  page,
+}) => {
+  await typeAtEnd(page, 'form', ' marker');
+  await page.getByRole('button', { name: 'Reset' }).click();
+  await expect(formEditor(page)).not.toContainText('marker');
   await expect(page.getByTestId('dirty')).toHaveText('false');
   await formEditor(page).click();
   await page.keyboard.press('ControlOrMeta+z');
-  await expect(formEditor(page)).not.toContainText('маркер');
+  await expect(formEditor(page)).not.toContainText('marker');
 });
 
-test('Reactive Forms: disable() выключает редактор', async ({ page }) => {
-  await page.getByRole('button', { name: 'Выключить' }).click();
+test('Reactive Forms: disable() turns the editor off', async ({ page }) => {
+  await page.getByRole('button', { name: 'Disable' }).click();
   await expect(formEditor(page)).toHaveAttribute('contenteditable', 'false');
-  await page.getByRole('button', { name: 'Включить' }).click();
+  await page.getByRole('button', { name: 'Enable' }).click();
   await expect(formEditor(page)).toHaveAttribute('contenteditable', 'true');
 });
 
-test('ngModel: ввод обновляет модель', async ({ page }) => {
-  await typeAtEnd(page, '[data-testid="ngmodel"]', ' и ввод');
-  await expect(page.getByTestId('ngmodel-value')).toContainText('и ввод');
+test('ngModel: typing updates the model', async ({ page }) => {
+  await typeAtEnd(page, '[data-testid="ngmodel"]', ' and typing');
+  await expect(page.getByTestId('ngmodel-value')).toContainText('and typing');
 });

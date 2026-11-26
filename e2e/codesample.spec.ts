@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Блоки кода с подсветкой (плагин codesample) в настоящих браузерах: подсветка при наборе,
- * забор «```ts» + Enter, выбор языка в контекстной панели, диалог «Пример кода».
+ * Code blocks with highlighting (the codesample plugin) in real browsers: highlighting while typing,
+ * the "```ts" fence + Enter, choosing the language in the context toolbar, the "Code sample" dialog.
  */
 
 type W = {
@@ -19,7 +19,7 @@ async function open(page: Page, content: string) {
   }, content);
 }
 
-/** Курсор в конец документа программно (щелчок по пустой строке в WebKit ненадёжен). */
+/** The cursor to the end of the document programmatically (a click on an empty line is unreliable in WebKit). */
 async function cursorAtEnd(page: Page) {
   await page.evaluate(() => {
     type Sel = { constructor: { atEnd(doc: unknown): unknown } };
@@ -50,7 +50,7 @@ async function clickControl(page: Page, name: string) {
 const keyword = (page: Page, text: string) =>
   page.locator('.nova-prosemirror pre .hljs-keyword', { hasText: new RegExp(`^${text}$`) });
 
-test('подсветка при наборе; HTML на выходе — без оформления', async ({ page }) => {
+test('highlighting while typing; the output HTML has no decorations', async ({ page }) => {
   await open(page, '<pre><code class="language-javascript">let a = 1;</code></pre><p>after</p>');
   await expect(keyword(page, 'let')).toBeVisible();
   await expect(page.locator('.nova-prosemirror pre')).toHaveAttribute(
@@ -68,9 +68,9 @@ test('подсветка при наборе; HTML на выходе — без 
     .toBe('<pre><code class="language-javascript">let a = 1; return</code></pre><p>after</p>');
 });
 
-test('«```ts» и Enter — блок кода на TypeScript', async ({ page, isMobile }) => {
-  // Enter на экранной клавиатуре Android в эмуляции идёт другим путём — проверяем на настольных.
-  test.skip(isMobile, 'Enter из эмуляции Android');
+test('"```ts" and Enter make a TypeScript code block', async ({ page, isMobile }) => {
+  // Enter on the Android on-screen keyboard takes another path in emulation: checked on desktops.
+  test.skip(isMobile, 'Enter from Android emulation');
   await open(page, '<p>Intro</p><p></p>');
   await cursorAtEnd(page);
   await page.keyboard.type('```ts');
@@ -82,7 +82,7 @@ test('«```ts» и Enter — блок кода на TypeScript', async ({ page, 
     .toBe('<p>Intro</p><pre><code class="language-ts">const x: number = 1</code></pre>');
 });
 
-test('язык — в контекстной панели блока кода', async ({ page }) => {
+test("the language in the code block's context toolbar", async ({ page }) => {
   await open(page, '<pre><code>def f(): pass</code></pre>');
   await page.locator('.nova-prosemirror pre').click();
   const language = page.locator('.nova-context-toolbar [data-control="codelanguage"]');
@@ -96,7 +96,7 @@ test('язык — в контекстной панели блока кода', 
     .toBe('<pre><code class="language-python">def f(): pass</code></pre>');
 });
 
-test('диалог «Пример кода» вставляет блок с языком', async ({ page }) => {
+test('the "Code sample" dialog inserts a block with a language', async ({ page }) => {
   await open(page, '<p>Intro</p><p></p>');
   await cursorAtEnd(page);
   await clickControl(page, 'codesample');

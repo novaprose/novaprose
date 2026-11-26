@@ -4,7 +4,7 @@ import { createSyncServer } from '../src/server.mjs';
 import { validateWaitlist } from '../src/waitlist.mjs';
 import { freePort } from './port';
 
-/** Лист ожидания: приём заявок с сайта, проверка, CORS, защита от спама. */
+/** The waitlist: accepting entries from the site, validation, CORS, spam protection. */
 
 const SECRET = 'test-secret-that-is-long-enough-for-hs256';
 const cleanups: (() => unknown)[] = [];
@@ -27,8 +27,8 @@ const post = (url: string, body: unknown, origin = 'https://novaprose.com') =>
     body: JSON.stringify(body),
   });
 
-describe('лист ожидания', () => {
-  it('принимает заявку с сайта и разрешает CORS только своему сайту', async () => {
+describe('the waitlist', () => {
+  it('accepts an entry from the site and allows CORS only for its own site', async () => {
     const url = await start();
     const ok = await post(url, {
       email: 'Anna@Example.com',
@@ -53,7 +53,7 @@ describe('лист ожидания', () => {
     expect(preflight.status).toBe(204);
   });
 
-  it('без согласия или с неверной почтой — понятная ошибка; GET — 405', async () => {
+  it('without consent or with a wrong email: a clear error; GET gives 405', async () => {
     const url = await start();
     expect(await (await post(url, { email: 'a@example.com' })).json()).toEqual({
       ok: false,
@@ -66,7 +66,7 @@ describe('лист ожидания', () => {
     expect((await fetch(url)).status).toBe(405);
   });
 
-  it('ограничение частоты: не больше 10 заявок в час с одного адреса', async () => {
+  it('rate limiting: no more than 10 entries an hour from one address', async () => {
     const url = await start();
     const statuses: number[] = [];
     for (let i = 0; i < 11; i += 1) {
@@ -76,7 +76,7 @@ describe('лист ожидания', () => {
     expect(statuses[10]).toBe(429);
   });
 
-  it('проверка данных: ловушка для ботов, нормализация почты, неизвестные значения', () => {
+  it('data checks: the bot trap, email normalization, unknown values', () => {
     expect(validateWaitlist({ email: 'a@example.com', consent: true, website: 'x' })).toEqual({
       ok: false,
       error: 'spam',

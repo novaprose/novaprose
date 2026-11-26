@@ -25,18 +25,18 @@ function selectAllText(editor: Editor): void {
 type Exposed = { editor: Editor | null };
 
 describe('<NovaProseEditor>', () => {
-  it('монтирует редактор, отдаёт экземпляр через ref и событие ready', async () => {
+  it('mounts the editor, returns the instance through ref and the ready event', async () => {
     const wrapper = track(
-      mount(NovaProseEditor, { props: { defaultValue: '<p>привет</p>' }, attachTo: document.body }),
+      mount(NovaProseEditor, { props: { defaultValue: '<p>hello</p>' }, attachTo: document.body }),
     );
     await nextTick();
     expect(wrapper.find('.nova-editor').exists()).toBe(true);
     const editor = (wrapper.vm as unknown as Exposed).editor!;
-    expect(editor.getHTML()).toBe('<p>привет</p>');
+    expect(editor.getHTML()).toBe('<p>hello</p>');
     expect(wrapper.emitted('ready')).toHaveLength(1);
   });
 
-  it('v-model: ввод эмитит update:modelValue, внешнее значение — без эха и без истории', async () => {
+  it('v-model: typing emits update:modelValue, an external value comes without an echo and without history', async () => {
     const wrapper = track(
       mount(NovaProseEditor, { props: { modelValue: '<p>a</p>' }, attachTo: document.body }),
     );
@@ -50,12 +50,12 @@ describe('<NovaProseEditor>', () => {
     expect(wrapper.emitted('update:modelValue')).toHaveLength(1);
   });
 
-  it('init пробрасывает опции ядра, явные пропсы важнее, атрибуты уходят на контейнер', async () => {
+  it('init passes core options through, explicit props win, attributes go to the container', async () => {
     const wrapper = track(
       mount(NovaProseEditor, {
         props: {
-          init: { menubar: true, statusbar: false, placeholder: 'из init' },
-          placeholder: 'из пропса',
+          init: { menubar: true, statusbar: false, placeholder: 'from init' },
+          placeholder: 'from the prop',
         },
         attrs: { id: 'body', class: 'field' },
         attachTo: document.body,
@@ -64,12 +64,12 @@ describe('<NovaProseEditor>', () => {
     await nextTick();
     expect(wrapper.find('.nova-menubar').exists()).toBe(true);
     expect(wrapper.find('.nova-statusbar').exists()).toBe(false);
-    expect(wrapper.html()).toContain('из пропса');
-    expect(wrapper.html()).not.toContain('из init');
+    expect(wrapper.html()).toContain('from the prop');
+    expect(wrapper.html()).not.toContain('from init');
     expect(wrapper.find('#body.field .nova-editor').exists()).toBe(true);
   });
 
-  it('name рендерит скрытое поле с актуальным HTML для FormData', async () => {
+  it('name renders a hidden field with the current HTML for FormData', async () => {
     const editorRef = ref<Exposed | null>(null);
     const Form = defineComponent(
       () => () =>
@@ -83,7 +83,7 @@ describe('<NovaProseEditor>', () => {
     expect(new FormData(form).get('body')).toBe('<p>b</p>');
   });
 
-  it('editable переключается пропсом', async () => {
+  it('editable toggles through a prop', async () => {
     const wrapper = track(
       mount(NovaProseEditor, { props: { defaultValue: '<p>a</p>' }, attachTo: document.body }),
     );
@@ -92,7 +92,7 @@ describe('<NovaProseEditor>', () => {
     expect((wrapper.vm as unknown as Exposed).editor!.isEditable()).toBe(false);
   });
 
-  it('уничтожает редактор при размонтировании', async () => {
+  it('destroys the editor on unmount', async () => {
     const wrapper = mount(NovaProseEditor, { attachTo: document.body });
     await nextTick();
     const editor = (wrapper.vm as unknown as Exposed).editor!;
@@ -103,8 +103,8 @@ describe('<NovaProseEditor>', () => {
   });
 });
 
-describe('композаблы', () => {
-  it('useEditor + useCommand: своя кнопка отражает и меняет формат', async () => {
+describe('composables', () => {
+  it('useEditor + useCommand: a custom button reflects and changes the format', async () => {
     let editorRef: Ref<Editor | null> | null = null;
     let renders = 0;
     const App = defineComponent(() => {
@@ -142,14 +142,14 @@ describe('композаблы', () => {
     await nextTick();
     expect(button.attributes('disabled')).toBeDefined();
 
-    // События, не меняющие результат селектора, не перерисовывают компонент.
+    // Events that don't change the selector's result don't re-render the component.
     const before = renders;
     selectAllText(editor);
     await nextTick();
     expect(renders).toBe(before);
   });
 
-  it('useEditorState с селектором-объектом', async () => {
+  it('useEditorState with an object selector', async () => {
     let editorRef: Ref<Editor | null> | null = null;
     let words: Readonly<Ref<{ words: number } | undefined>> | null = null;
     const App = defineComponent(() => {

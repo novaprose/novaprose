@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Формулы (плагин math) в настоящих браузерах: MathML в строке и отдельной строкой, ввод «$…$»,
- * нажатие на формулу открывает правку.
+ * Formulas (the math plugin) in real browsers: MathML inline and on its own line, typing "$…$",
+ * a click on a formula opens editing.
  */
 
 type W = {
@@ -19,7 +19,7 @@ async function open(page: Page, content: string) {
   }, content);
 }
 
-test('формула в строке и отдельной строкой — MathML браузера', async ({ page }) => {
+test("an inline formula and one on its own line: the browser's MathML", async ({ page }) => {
   await open(
     page,
     '<p>Energy <span data-type="inline-math" data-latex="E=mc^2"></span></p>' +
@@ -27,13 +27,13 @@ test('формула в строке и отдельной строкой — Ma
   );
   await expect(page.locator('.nova-math-inline math')).toBeVisible();
   await expect(page.locator('.nova-math-block math[display="block"]')).toBeVisible();
-  // Формула отдельной строкой выше строчной: дробь и интеграл.
+  // The formula on its own line is taller than the inline one: a fraction and an integral.
   const inline = (await page.locator('.nova-math-inline').boundingBox())!;
   const block = (await page.locator('.nova-math-block math').boundingBox())!;
   expect(block.height).toBeGreaterThan(inline.height);
 });
 
-test('ввод «$a^2$» — формула; нажатие — правка', async ({ page, isMobile }) => {
+test('typing "$a^2$" makes a formula; a click edits it', async ({ page, isMobile }) => {
   await open(page, '<p>Area</p>');
   await page.locator('.nova-prosemirror p').click();
   await page.keyboard.press('End');
@@ -42,7 +42,7 @@ test('ввод «$a^2$» — формула; нажатие — правка', a
   await expect
     .poll(() => html(page))
     .toBe('<p>Area <span data-type="inline-math" data-latex="a^2">\\(a^2\\)</span> ok</p>');
-  test.skip(isMobile, 'диалог на узком экране проверяют другие тесты');
+  test.skip(isMobile, 'other tests check the dialog on a narrow screen');
   await page.locator('.nova-math-inline').click();
   const dialog = page.locator('.nova-dialog');
   await expect(dialog.locator('textarea[name="latex"]')).toHaveValue('a^2');

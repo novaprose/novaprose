@@ -38,10 +38,10 @@ class ReactiveHost {
 
 @Component({
   imports: [NovaProseEditorComponent, FormsModule],
-  template: `<novaprose-editor [(ngModel)]="html" placeholder="Пишите…" />`,
+  template: `<novaprose-editor [(ngModel)]="html" placeholder="Write…" />`,
 })
 class NgModelHost {
-  html = '<p>начало</p>';
+  html = '<p>start</p>';
   @ViewChild(NovaProseEditorComponent) cmp!: NovaProseEditorComponent;
 }
 
@@ -71,8 +71,8 @@ class ZonelessViewHost {
 }
 
 describe('NovaProseEditorComponent', () => {
-  it('zoneless: каждое изменение в редакторе перерисовывает шаблон', async () => {
-    // Регрессия: без markForCheck экран обновлялся только после первого изменения.
+  it('zoneless: every change in the editor re-renders the template', async () => {
+    // A regression: without markForCheck the screen updated only after the first change.
     const fixture = await render(ZonelessViewHost);
     const output = () => fixture.nativeElement.querySelector('output').textContent;
     const editor = fixture.componentInstance.cmp.editor!;
@@ -83,7 +83,7 @@ describe('NovaProseEditorComponent', () => {
     }
   });
 
-  it('Reactive Forms: значение контрола попадает в редактор, ввод — в контрол', async () => {
+  it("Reactive Forms: the control's value reaches the editor, typing reaches the control", async () => {
     const fixture = await render(ReactiveHost);
     const { control, cmp } = fixture.componentInstance;
     const editor = cmp.editor!;
@@ -95,18 +95,18 @@ describe('NovaProseEditorComponent', () => {
     expect(control.dirty).toBe(true);
   });
 
-  it('Reactive Forms: setValue/reset без эха, без истории и без dirty', async () => {
+  it('Reactive Forms: setValue/reset without an echo, without history and without dirty', async () => {
     const fixture = await render(ReactiveHost);
     const { control, cmp } = fixture.componentInstance;
-    control.setValue('<p>снаружи</p>');
-    expect(cmp.editor!.getHTML()).toBe('<p>снаружи</p>');
+    control.setValue('<p>from outside</p>');
+    expect(cmp.editor!.getHTML()).toBe('<p>from outside</p>');
     expect(cmp.editor!.can('undo')).toBe(false);
     control.reset();
     expect(cmp.editor!.getHTML()).toBe('<p></p>');
     expect(control.dirty).toBe(false);
   });
 
-  it('Reactive Forms: disable()/enable() переключают редактирование, blur помечает touched', async () => {
+  it('Reactive Forms: disable()/enable() toggle editing, blur marks touched', async () => {
     const fixture = await render(ReactiveHost);
     const { control, cmp } = fixture.componentInstance;
     control.disable();
@@ -118,23 +118,23 @@ describe('NovaProseEditorComponent', () => {
     expect(control.touched).toBe(true);
   });
 
-  it('ngModel: двусторонняя привязка', async () => {
+  it('ngModel: two-way binding', async () => {
     const fixture = await render(NgModelHost);
     await fixture.whenStable();
     const host = fixture.componentInstance;
-    expect(host.cmp.editor!.getHTML()).toBe('<p>начало</p>');
-    expect(fixture.nativeElement.innerHTML).toContain('Пишите…');
+    expect(host.cmp.editor!.getHTML()).toBe('<p>start</p>');
+    expect(fixture.nativeElement.innerHTML).toContain('Write…');
 
-    host.cmp.editor!.setContent('<p>из редактора</p>');
-    expect(host.html).toBe('<p>из редактора</p>');
+    host.cmp.editor!.setContent('<p>from the editor</p>');
+    expect(host.html).toBe('<p>from the editor</p>');
 
-    host.html = '<p>из модели</p>';
+    host.html = '<p>from the model</p>';
     fixture.changeDetectorRef.markForCheck();
     await fixture.whenStable();
-    expect(host.cmp.editor!.getHTML()).toBe('<p>из модели</p>');
+    expect(host.cmp.editor!.getHTML()).toBe('<p>from the model</p>');
   });
 
-  it('без форм: initialValue, ready, editorChange, readonly', async () => {
+  it('without forms: initialValue, ready, editorChange, readonly', async () => {
     const fixture = await render(PlainHost);
     const host = fixture.componentInstance;
     expect(host.cmp.editor!.getHTML()).toBe('<p>x</p>');
@@ -148,7 +148,7 @@ describe('NovaProseEditorComponent', () => {
     expect(host.cmp.editor!.isEditable()).toBe(false);
   });
 
-  it('уничтожает редактор вместе с компонентом', async () => {
+  it('destroys the editor together with the component', async () => {
     const fixture = await render(PlainHost);
     const editor = fixture.componentInstance.cmp.editor!;
     let destroyed = false;

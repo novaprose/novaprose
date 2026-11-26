@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Комментарии в настоящих браузерах: выделение мышью, панель, горячая клавиша, узкий экран. */
+/** Comments in real browsers: selecting with the mouse, the panel, the keyboard shortcut, a narrow screen. */
 
 type Win = {
   editor: { ready: Promise<void>; setContent(h: string, o: object): void; getHTML(): string };
@@ -18,14 +18,14 @@ async function open(page: Page, initial: string) {
   }, initial);
 }
 
-/** Двойной клик по первому слову абзаца (getByText нашёл бы весь абзац и кликнул в середину). */
+/** A double click on the first word of a paragraph (getByText would find the whole paragraph and click its middle). */
 const selectFirstWord = (page: Page) =>
   content(page)
     .locator('p')
     .first()
     .dblclick({ position: { x: 6, y: 8 } });
 
-/** Кнопка тулбара — на панели или в «⋯». */
+/** The toolbar button: on the panel or in "⋯". */
 async function clickControl(page: Page, name: string) {
   const control = page.locator(`.nova-toolbar [data-control="${name}"]`).first();
   if (await control.isVisible()) return control.click();
@@ -33,7 +33,7 @@ async function clickControl(page: Page, name: string) {
   await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-test('выделить слово → «Добавить комментарий» → ответ → решено', async ({ page }) => {
+test('select a word → "Add comment" → reply → resolved', async ({ page }) => {
   await open(page, '<p>Budget for the next quarter</p>');
   await selectFirstWord(page);
   await clickControl(page, 'addcomment');
@@ -57,7 +57,7 @@ test('выделить слово → «Добавить комментарий�
   await expect(panel(page).locator('.nova-thread')).toHaveCount(0);
 });
 
-test('Ctrl/Cmd+Alt+M комментирует выделение, Esc отменяет и возвращает в текст', async ({
+test('Ctrl/Cmd+Alt+M comments the selection, Esc cancels and returns to the text', async ({
   page,
 }) => {
   await open(page, '<p>Shortcut test</p>');
@@ -71,14 +71,14 @@ test('Ctrl/Cmd+Alt+M комментирует выделение, Esc отмен
   await expect(content(page)).toBeFocused();
 });
 
-test('клик по прокомментированному тексту показывает его обсуждение', async ({ page }) => {
+test('a click on commented text shows its thread', async ({ page }) => {
   await open(page, '<p>One two three</p>');
   await selectFirstWord(page);
   await clickControl(page, 'addcomment');
   await panel(page).getByPlaceholder('Add a comment…').fill('About this');
   await panel(page).getByPlaceholder('Add a comment…').press('ControlOrMeta+Enter');
   await clickControl(page, 'showcomments');
-  // На узком экране кнопка в «⋯»: закрываем меню, чтобы оно не перекрывало текст.
+  // On a narrow screen the button is in "⋯": close the menu so it doesn't cover the text.
   if (await page.locator('.nova-tb-overflow-popover').isVisible())
     await page.keyboard.press('Escape');
   await expect(panel(page)).toBeHidden();
@@ -88,8 +88,11 @@ test('клик по прокомментированному тексту пок
   await expect(panel(page).locator('.nova-thread.is-active')).toContainText('About this');
 });
 
-test('на узком экране панель под текстом во всю ширину', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'раскладка для телефона');
+test('on a narrow screen the panel goes under the text at full width', async ({
+  page,
+  isMobile,
+}) => {
+  test.skip(!isMobile, 'the phone layout');
   await open(page, '<p>Mobile comment</p>');
   await selectFirstWord(page);
   await clickControl(page, 'addcomment');

@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Диалоги плагинов (editor.ui.dialog) в настоящих браузерах: вкладки с клавиатуры, выбор файла
- * через системный input и перетаскивание файлов в зону. jsdom не умеет ни то, ни другое.
+ * Plugin dialogs (editor.ui.dialog) in real browsers: tabs from the keyboard, choosing a file
+ * through the system input and dropping files into the zone. jsdom can do neither.
  */
 
 type W = {
@@ -41,15 +41,15 @@ async function openDialog(page: Page) {
   await expect(page.locator('[role="dialog"]')).toBeVisible();
 }
 
-test('вкладки с клавиатуры, файл через input и перетаскиванием', async ({ page }) => {
+test('tabs from the keyboard, a file through the input and by dropping', async ({ page }) => {
   await openDialog(page);
-  // Файл через системный выбор (скрытый input, подписанный зоной).
+  // A file through the system picker (a hidden input labeled by the zone).
   await page.locator('[role="dialog"] input[type="file"]').setInputFiles({
     name: 'notes.txt',
     mimeType: 'text/plain',
     buffer: Buffer.from('hello'),
   });
-  // Файл перетаскиванием: настоящее событие drop с DataTransfer.
+  // A file by dropping: a real drop event with a DataTransfer.
   const transfer = await page.evaluateHandle(() => {
     const dt = new DataTransfer();
     dt.items.add(new File(['png'], 'photo.png', { type: 'image/png' }));
@@ -57,7 +57,7 @@ test('вкладки с клавиатуры, файл через input и пе�
   });
   await page.locator('.nova-dropzone').dispatchEvent('drop', { dataTransfer: transfer });
   await expect(page.locator('.nova-file-name')).toHaveText(['notes.txt', 'photo.png']);
-  // Вкладки: стрелка вправо — следующая, панель видна, поле в ней доступно.
+  // Tabs: the right arrow goes to the next one, its panel shows, the field in it is available.
   await page.locator('[role="tab"]').first().focus();
   await page.keyboard.press('ArrowRight');
   await expect(page.locator('[role="tab"]').nth(1)).toBeFocused();
@@ -72,7 +72,7 @@ test('вкладки с клавиатуры, файл через input и пе�
   expect(result).toEqual({ files: ['notes.txt', 'photo.png'], note: 'two files' });
 });
 
-test('обязательный файл: ошибка, переход на вкладку и фокус на поле', async ({ page }) => {
+test('a required file: an error, switching to the tab and focus on the field', async ({ page }) => {
   await openDialog(page);
   await page.locator('[role="tab"]').nth(1).click();
   await page.locator('[role="dialog"] button[type="submit"]').click();

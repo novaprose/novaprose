@@ -1,7 +1,7 @@
 /**
- * Большой документ для замеров: детерминированный (одинаковый в каждом прогоне), похожий на
- * настоящий — заголовки, абзацы с жирным, курсивом и ссылками, списки, таблицы. «Страница» —
- * около 500 слов, как лист A4 обычным шрифтом.
+ * A large document for the measurements: deterministic (the same in every run) and close to a
+ * real one: headings, paragraphs with bold, italic and links, lists, tables. A "page" is
+ * about 500 words, like an A4 sheet in a regular font.
  */
 
 const WORDS = (
@@ -40,7 +40,7 @@ export function bigDocument(pages: number): string {
   return out.join('');
 }
 
-/** HTML, как его кладёт в буфер Word: стили mso, условные комментарии, классы MsoNormal. */
+/** HTML the way Word puts it on the clipboard: mso styles, conditional comments, MsoNormal classes. */
 export function wordClipboard(paragraphs: number): string {
   const body = Array.from(
     { length: paragraphs },

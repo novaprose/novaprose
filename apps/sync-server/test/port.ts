@@ -1,6 +1,6 @@
 import { createServer } from 'node:net';
 
-/** Свободный порт. listen(0) у Hocuspocus не годится: 0 считается «не задан» и берётся порт 80. */
+/** A free port. listen(0) doesn't work with Hocuspocus: 0 counts as "not set" and port 80 is taken. */
 export function freePort(): Promise<number> {
   return new Promise((resolve, reject) => {
     const probe = createServer();

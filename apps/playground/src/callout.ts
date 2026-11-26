@@ -1,8 +1,8 @@
 import { definePlugin, type NodeViewFactory, type NovaPlugin } from '@novaprose/core';
 
 /**
- * Узел «выноска» для песочниц React и Vue: свой вид узла (reactNodeView / vueNodeView) со списком
- * «тон», полем «заголовок» и редактируемым содержимым. Его гоняет e2e/node-views.spec.ts.
+ * The "callout" node for the React and Vue playgrounds: a custom node view (reactNodeView / vueNodeView) with a
+ * "tone" list, a "title" field and editable content. e2e/node-views.spec.ts drives it.
  */
 export function calloutPlugin(view: NodeViewFactory): NovaPlugin {
   return definePlugin({
@@ -37,10 +37,10 @@ export function calloutPlugin(view: NodeViewFactory): NovaPlugin {
 }
 
 export const CALLOUT_CONTENT =
-  '<p>Выноска нарисована компонентом:</p>' +
-  '<div data-callout="" data-tone="info" data-title=""><p>Текст внутри выноски</p></div>';
+  '<p>A component draws this callout:</p>' +
+  '<div data-callout="" data-tone="info" data-title=""><p>Text inside the callout</p></div>';
 
 export const TONES = [
-  ['info', 'Инфо'],
-  ['warning', 'Внимание'],
+  ['info', 'Info'],
+  ['warning', 'Warning'],
 ] as const;

@@ -1,54 +1,56 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Виды узлов на React и Vue в настоящих браузерах (песочницы react.html, vue.html; узел —
- * apps/playground/src/callout.ts). Проверяем то, чего не видит jsdom: ввод с клавиатуры в
- * содержимое, свои поля вида (их ввод не попадает в документ), отмену правки атрибута.
+ * Node views in React and Vue in real browsers (the react.html, vue.html playgrounds; the node is
+ * apps/playground/src/callout.ts). Checks what jsdom can't see: keyboard input into
+ * the content, the view's own fields (their input doesn't reach the document), undoing an attribute edit.
  */
 
 const html = (page: Page) => page.getByTestId('nv-html');
 const editor = (page: Page) => page.locator('.pg-node-views .ProseMirror');
 
 for (const sandbox of ['react', 'vue']) {
-  test.describe(`виды узлов: ${sandbox}`, () => {
+  test.describe(`node views: ${sandbox}`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto(`/${sandbox}.html`);
       await expect(editor(page).locator('.pg-callout')).toBeVisible();
     });
 
-    test('компонент рисует узел и видит контекст приложения', async ({ page }) => {
+    test('the component draws the node and sees the app context', async ({ page }) => {
       const callout = editor(page).locator('[data-node-view="callout"]');
-      await expect(callout.getByTestId('nv-theme')).toHaveText('тёмная');
+      await expect(callout.getByTestId('nv-theme')).toHaveText('dark');
       await expect(callout.locator('[data-node-view-content] p')).toHaveText(
-        'Текст внутри выноски',
+        'Text inside the callout',
       );
     });
 
-    test('ввод с клавиатуры в содержимое узла попадает в документ', async ({ page }) => {
-      await editor(page).getByText('Текст внутри выноски').click();
+    test("keyboard input into the node's content reaches the document", async ({ page }) => {
+      await editor(page).getByText('Text inside the callout').click();
       await page.keyboard.press('End');
-      await page.keyboard.type(' и ещё');
-      await expect(html(page)).toContainText('<p>Текст внутри выноски и ещё</p></div>');
+      await page.keyboard.type(' and more');
+      await expect(html(page)).toContainText('<p>Text inside the callout and more</p></div>');
       await expect(editor(page).locator('.pg-callout')).toHaveCount(1);
     });
 
-    test('свои поля вида меняют атрибуты узла, а не текст; Ctrl+Z отменяет', async ({ page }) => {
+    test("the view's own fields change the node's attributes, not the text; Ctrl+Z undoes", async ({
+      page,
+    }) => {
       const callout = editor(page).locator('[data-node-view="callout"]');
-      await callout.getByLabel('Тон выноски').selectOption('warning');
+      await callout.getByLabel('Callout tone').selectOption('warning');
       await expect(html(page)).toContainText('data-tone="warning"');
       await expect(callout.locator('.pg-callout')).toHaveAttribute('data-tone', 'warning');
 
-      const title = callout.getByLabel('Заголовок выноски');
+      const title = callout.getByLabel('Callout title');
       await title.click();
-      await page.keyboard.type('Важно');
-      await expect(title).toHaveValue('Важно');
-      await expect(html(page)).toContainText('data-title="Важно"');
-      // Буквы из поля не попали в текст документа.
+      await page.keyboard.type('Important');
+      await expect(title).toHaveValue('Important');
+      await expect(html(page)).toContainText('data-title="Important"');
+      // Letters from the field didn't get into the document text.
       await expect(editor(page).locator('[data-node-view-content]')).toHaveText(
-        'Текст внутри выноски',
+        'Text inside the callout',
       );
 
-      await editor(page).getByText('Текст внутри выноски').click();
+      await editor(page).getByText('Text inside the callout').click();
       for (let i = 0; i < 10 && (await html(page).textContent())?.includes('warning'); i++)
         await page.keyboard.press('ControlOrMeta+z');
       await expect(html(page)).toContainText('data-tone="info"');

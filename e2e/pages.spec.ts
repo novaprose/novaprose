@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Режим страниц (плагин pagelayout) в настоящих браузерах, песочница pages.html (A5, поля 15 мм):
- * лист точного размера, границы страниц там, где их сделает печать (в Chromium сверяем с PDF),
- * пересчёт при смене листа, телефон — без границ.
+ * Page mode (the pagelayout plugin) in real browsers, the pages.html playground (A5, 15 mm margins):
+ * a sheet of exact size, page borders where printing will put them (Chromium compares with a PDF),
+ * recounting when the sheet changes, a phone has no borders.
  */
 
 const PX_PER_MM = 96 / 25.4;
@@ -39,10 +39,10 @@ test.beforeEach(async ({ page }) => {
   await expect(page.locator('.nova-pages .ProseMirror')).toBeVisible();
 });
 
-test.describe('на компьютере', () => {
-  test.skip(({ isMobile }) => isMobile, 'на телефоне лист — обычное поле ввода');
+test.describe('on a computer', () => {
+  test.skip(({ isMobile }) => isMobile, 'on a phone the sheet is a regular input area');
 
-  test('лист A5 точного размера; границы страниц с номерами', async ({ page }) => {
+  test('an A5 sheet of exact size; page borders with numbers', async ({ page }) => {
     await expect.poll(async () => (await state(page)).pages).toBeGreaterThanOrEqual(3);
     const s = await state(page);
     expect(Math.abs(s.width - 148 * PX_PER_MM)).toBeLessThan(1);
@@ -51,45 +51,45 @@ test.describe('на компьютере', () => {
     await expect(page.locator('#count')).toHaveText(`Pages: ${s.pages}`);
   });
 
-  test('разрыв страницы начинает новую страницу', async ({ page }) => {
+  test('a page break starts a new page', async ({ page }) => {
     await expect.poll(async () => (await state(page)).pages).toBeGreaterThanOrEqual(3);
     const s = await state(page);
-    // Граница — у заголовка после разрыва (его верхнее поле после разрыва сохраняется).
+    // The border is at the heading after the break (its top margin is kept after the break).
     const expected = s.pagebreakNext - s.marginTop;
     expect(s.breaks.some((b) => Math.abs(b.top - expected) < 2)).toBe(true);
   });
 
-  test('смена листа и полей пересчитывает страницы', async ({ page }) => {
+  test('changing the sheet and margins recounts the pages', async ({ page }) => {
     await expect.poll(async () => (await state(page)).pages).toBeGreaterThanOrEqual(3);
     const a5 = (await state(page)).pages!;
     const portrait = (await state(page)).breaks.map((b) => Math.round(b.top)).join();
     await page.locator('#size').selectOption('A4');
     await expect.poll(async () => (await state(page)).width).toBeCloseTo(210 * PX_PER_MM, 0);
     await expect.poll(async () => (await state(page)).pages).toBeLessThan(a5);
-    // A5 альбомный (210 мм) помещается в колонку песочницы — лист точный, страницы считаются.
+    // A5 landscape (210 mm) fits in the playground column: the sheet is exact, the pages are counted.
     await page.locator('#size').selectOption('A5');
     await page.locator('#orientation').selectOption('landscape');
     await expect.poll(async () => (await state(page)).width).toBeCloseTo(210 * PX_PER_MM, 0);
-    // Другая ширина строк — другие границы (сколько страниц — зависит от шрифтов системы).
+    // A different line width gives different borders (the number of pages depends on the system fonts).
     await expect
       .poll(async () => {
         const s = await state(page);
         return s.pages !== null && s.breaks.map((b) => Math.round(b.top)).join() !== portrait;
       })
       .toBe(true);
-    // A4 альбомный (297 мм) шире колонки: лист сужается, строки переносятся не как при печати —
-    // границ не рисуем, число страниц неизвестно.
+    // A4 landscape (297 mm) is wider than the column: the sheet narrows, lines wrap differently from print,
+    // so no borders are drawn and the number of pages is unknown.
     await page.locator('#size').selectOption('A4');
     await expect.poll(async () => (await state(page)).pages).toBeNull();
     expect((await state(page)).breaks).toHaveLength(0);
   });
 
-  test('печать делит страницы там же, где редактор (PDF)', async ({
+  test('printing breaks pages where the editor does (PDF)', async ({
     page,
     browserName,
     context,
   }) => {
-    test.skip(browserName !== 'chromium', 'PDF умеет делать только Chromium');
+    test.skip(browserName !== 'chromium', 'only Chromium can make a PDF');
     await expect.poll(async () => (await state(page)).pages).toBeGreaterThanOrEqual(3);
     const expected = (await state(page)).pages;
     await page.locator('#print').click();
@@ -109,8 +109,8 @@ test.describe('на компьютере', () => {
   });
 });
 
-test('телефон: лист — обычное поле, границ страниц нет', async ({ page, isMobile }) => {
-  test.skip(!isMobile, 'только на телефоне');
+test('a phone: the sheet is a regular input area, no page borders', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phones only');
   await page.waitForTimeout(300);
   const s = await state(page);
   expect(s.breaks).toHaveLength(0);

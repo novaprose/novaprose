@@ -3,7 +3,7 @@ import { registerLanguage } from '@novaprose/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTinymce, type CompatEditor } from '../src';
 
-/** tinymce.init() и API редактора — сценарии типичных интеграций (по публичной документации). */
+/** tinymce.init() and the editor API: scenarios of typical integrations (from the public documentation). */
 
 let tinymce = createTinymce();
 afterEach(() => {
@@ -18,7 +18,7 @@ function page(html: string) {
 }
 
 describe('tinymce.init', () => {
-  it('заменяет <textarea>: начальное содержимое, скрытый textarea, getContent/setContent', async () => {
+  it('replaces <textarea>: initial content, a hidden textarea, getContent/setContent', async () => {
     page(
       '<form id="f"><textarea id="post" name="body"><p>Hello <b>world</b></p></textarea></form>',
     );
@@ -36,7 +36,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContent({ format: 'text' })).toBe('New');
   });
 
-  it('language с загрузчиком (как в CDN-сборке): init ждёт пакет, интерфейс сразу переведён', async () => {
+  it('language with a loader (as in the CDN build): init waits for the pack, the interface is translated at once', async () => {
     registerLanguage('qy-QY', async () => ({ bold: 'B (qy)' }));
     page('<textarea id="t"></textarea>');
     const [editor] = await tinymce.init({ selector: '#t', toolbar: 'bold', language: 'qy_QY' });
@@ -46,7 +46,7 @@ describe('tinymce.init', () => {
     );
   });
 
-  it('порядок: setup → события init → init_instance_callback; промис отдаёт редакторы', async () => {
+  it('order: setup → init events → init_instance_callback; the promise gives the editors', async () => {
     page('<textarea class="rich"></textarea><textarea class="rich"></textarea>');
     const calls: string[] = [];
     const editors = await tinymce.init({
@@ -62,7 +62,7 @@ describe('tinymce.init', () => {
     expect(editors[1]!.id).toMatch(/^mce_/);
   });
 
-  it('отправка формы записывает HTML в textarea; triggerSave и isDirty', async () => {
+  it('submitting the form writes the HTML into the textarea; triggerSave and isDirty', async () => {
     page('<form><textarea id="t"><p>a</p></textarea></form>');
     const [editor] = await tinymce.init({ selector: '#t' });
     editor!.setContent('<p>b</p>');
@@ -76,7 +76,7 @@ describe('tinymce.init', () => {
     expect(textarea.value).toBe('<p>c</p>');
   });
 
-  it('execCommand и queryCommandState по именам команд TinyMCE', async () => {
+  it('execCommand and queryCommandState by TinyMCE command names', async () => {
     page('<textarea id="t"><p>text</p></textarea>');
     const [editor] = await tinymce.init({ selector: '#t' });
     const onExec = vi.fn();
@@ -92,7 +92,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toBe('<p><strong>text</strong></p>');
   });
 
-  it('insertContent вставляет HTML с той же очисткой, что и вставка', async () => {
+  it('insertContent inserts HTML with the same cleanup as paste', async () => {
     page('<textarea id="t"><p>a</p></textarea>');
     const [editor] = await tinymce.init({ selector: '#t' });
     editor!.execCommand('SelectAll');
@@ -101,7 +101,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toBe('<p>a<em>b</em></p>');
   });
 
-  it('insertContent с блоком (<p>) посреди абзаца вставляет новый абзац', async () => {
+  it('insertContent with a block (<p>) in the middle of a paragraph inserts a new paragraph', async () => {
     page('<textarea id="t"><p>Hello world</p></textarea>');
     const [editor] = await tinymce.init({ selector: '#t' });
     editor!.execCommand('SelectAll');
@@ -110,7 +110,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toBe('<p>Hello world</p><p>Signature</p>');
   });
 
-  it('PluginManager.add: плагин регистрирует кнопку и команду, как в TinyMCE', async () => {
+  it('PluginManager.add: a plugin registers a button and a command, as in TinyMCE', async () => {
     tinymce.PluginManager.add('signature', (editor) => {
       editor.addCommand('insertSignature', () => editor.insertContent('<p>— Anna</p>'));
       editor.ui.registry.addButton('signature', {
@@ -133,7 +133,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toContain('— Anna');
   });
 
-  it('addToggleButton с onSetup и api.setActive; иконки по именам TinyMCE', async () => {
+  it('addToggleButton with onSetup and api.setActive; icons by TinyMCE names', async () => {
     page('<textarea id="t"></textarea>');
     let teardown = false;
     const [editor] = await tinymce.init({
@@ -162,7 +162,7 @@ describe('tinymce.init', () => {
     expect(teardown).toBe(true);
   });
 
-  it('события: input на каждое изменение, change при уходе фокуса, keydown — событие браузера', async () => {
+  it("events: input on every change, change when focus leaves, keydown is the browser's event", async () => {
     page('<textarea id="t"><p>a</p></textarea>');
     const [editor] = await tinymce.init({ selector: '#t' });
     const input = vi.fn();
@@ -178,7 +178,7 @@ describe('tinymce.init', () => {
     expect(keydown.mock.calls[0]![0]).toBeInstanceOf(KeyboardEvent);
   });
 
-  it('опции: readonly, placeholder, height, content_style, images_upload_handler', async () => {
+  it('options: readonly, placeholder, height, content_style, images_upload_handler', async () => {
     page('<textarea id="t"></textarea>');
     const handler = vi.fn(async (info: { filename(): string; base64(): string }) => {
       expect(info.filename()).toBe('a.png');
@@ -207,7 +207,7 @@ describe('tinymce.init', () => {
     );
   });
 
-  it('formats, style_formats, valid_classes и formatter.register — как в документации TinyMCE', async () => {
+  it('formats, style_formats, valid_classes and formatter.register, as in the TinyMCE documentation', async () => {
     page(
       '<textarea id="a"><p class="lead">a</p><p class="other">b</p></textarea>' +
         '<textarea id="b"><p class="lead other">x</p></textarea>',
@@ -230,7 +230,7 @@ describe('tinymce.init', () => {
         editor.formatter.register('note', { block: 'p', classes: 'note' });
       },
     });
-    // Без valid_classes TinyMCE сохраняет все классы — и мы тоже.
+    // Without valid_classes TinyMCE keeps every class, and so do we.
     expect(a!.getContent()).toBe('<p class="lead">a</p><p class="other">b</p>');
     expect(a!.core.options.styleFormats).toEqual([
       { title: 'Lead', format: 'lead' },
@@ -239,13 +239,13 @@ describe('tinymce.init', () => {
     expect(a!.formatter.get('wrapper')).toBeUndefined();
     a!.selection.setCursorLocation(a!.getBody().querySelector('p')!, 0);
     expect(a!.formatter.match('lead')).toBe(true);
-    // Формат добавляет свой класс и не трогает чужие; снятие убирает только его.
+    // A format adds its own class and leaves other ones alone; removing it removes only its class.
     a!.formatter.apply('note');
     expect(a!.getContent()).toContain('<p class="lead note">a</p>');
     a!.formatter.toggle('note');
     expect(a!.getContent()).toContain('<p class="lead">a</p>');
 
-    // valid_classes ограничивает классы, классы форматов разрешены всегда.
+    // valid_classes limits the classes; format classes are always allowed.
     const [b] = await tinymce.init({
       selector: '#b',
       valid_classes: { p: 'other' },
@@ -256,7 +256,7 @@ describe('tinymce.init', () => {
     expect(b!.getContent()).toBe('<p class="other">y</p>');
   });
 
-  it('extended_valid_elements и custom_elements: иконки, id заголовков, свои элементы', async () => {
+  it('extended_valid_elements and custom_elements: icons, heading ids, custom elements', async () => {
     const html =
       '<h2 id="faq">FAQ</h2><div class="note">Tip <i class="fa fa-info"></i></div>' +
       '<my-card data-id="3"><p>Card</p></my-card>';
@@ -269,7 +269,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toBe(html);
   });
 
-  it('addSidebar: onSetup рисует панель, кнопка и ToggleSidebar переключают её', async () => {
+  it('addSidebar: onSetup draws the panel, the button and ToggleSidebar toggle it', async () => {
     page('<textarea id="t"><p>x</p></textarea>');
     const shown: string[] = [];
     const [editor] = await tinymce.init({
@@ -299,7 +299,7 @@ describe('tinymce.init', () => {
     expect(shown).toEqual(['show', 'hide']);
   });
 
-  it('опции: block_formats, disabled (и options.set на лету), resize', async () => {
+  it('options: block_formats, disabled (and options.set on the fly), resize', async () => {
     page('<textarea id="a"></textarea><textarea id="b"></textarea>');
     const [a] = await tinymce.init({
       selector: '#a',
@@ -314,13 +314,13 @@ describe('tinymce.init', () => {
     a!.options.set('disabled', false);
     expect(a!.core.isDisabled()).toBe(false);
     expect(a!.core.isEditable()).toBe(true);
-    // resize: по умолчанию ручка по высоте, как в TinyMCE.
+    // resize: a vertical handle by default, as in TinyMCE.
     expect(a!.getContainer().querySelector('.nova-resize-handle')).not.toBeNull();
     const [b] = await tinymce.init({ selector: '#b', resize: false });
     expect(b!.getContainer().querySelector('.nova-resize-handle')).toBeNull();
   });
 
-  it('file_picker_callback и file_picker_types: свой менеджер файлов в диалогах', async () => {
+  it('file_picker_callback and file_picker_types: a custom file manager in dialogs', async () => {
     page('<textarea id="t"></textarea>');
     const calls: unknown[] = [];
     const [editor] = await tinymce.init({
@@ -344,7 +344,7 @@ describe('tinymce.init', () => {
     expect(calls).toEqual([['old.png', 'image']]);
   });
 
-  it('codesample: разметка TinyMCE, подсветка, codesample_languages, команда CodeSample', async () => {
+  it('codesample: TinyMCE markup, highlighting, codesample_languages, the CodeSample command', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page(
       '<textarea id="t"><pre class="language-javascript"><code>const a = 1;</code></pre></textarea>',
@@ -359,7 +359,7 @@ describe('tinymce.init', () => {
       ],
       codesample_global_prismjs: true,
     });
-    // Язык из класса <pre> сохраняется — на выходе у <code>, как его ждут Prism и highlight.js.
+    // The language from the <pre> class is kept: on output it is on <code>, where Prism and highlight.js expect it.
     expect(editor!.getContent()).toBe(
       '<pre><code class="language-javascript">const a = 1;</code></pre>',
     );
@@ -368,19 +368,19 @@ describe('tinymce.init', () => {
       expect(core.root.querySelector('.nova-prosemirror .hljs-keyword')?.textContent).toBe('const'),
     );
     expect(core.root.querySelector('[data-control="codesample"]')).not.toBeNull();
-    // Список языков — из codesample_languages (с «Простым текстом» первым).
+    // The language list comes from codesample_languages (with "Plain text" first).
     core.view.dispatch(
       core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, 2)),
     );
     const menu = core.ui.registry.get('codelanguage');
-    if (menu?.type !== 'menu') throw new Error('нет меню языка');
+    if (menu?.type !== 'menu') throw new Error('no language menu');
     const labels = menu
       .items(core)
       .flatMap((i) => ('label' in i && i.type !== 'heading' ? [i.label] : []));
     expect(labels).toEqual(['Plain text', 'HTML/XML', 'JavaScript']);
     expect(editor!.execCommand('CodeSample')).toBe(true);
     await vi.waitFor(() => expect(core.root.querySelector('.nova-dialog')).not.toBeNull());
-    // Опции codesample понятны — предупреждений о них нет.
+    // The codesample options are understood: no warnings about them.
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/codesample/);
   });
 
@@ -396,11 +396,11 @@ describe('tinymce.init', () => {
       details_initial_state: 'collapsed',
       details_serialized_state: 'inherited',
     });
-    // Загружено свёрнутым (details_initial_state), на выходе — как в редакторе.
+    // Loaded collapsed (details_initial_state), the output is as in the editor.
     expect(editor!.getContent()).toBe('<details><summary>Q</summary><p>A</p></details><p>text</p>');
     const { core } = editor!;
     expect(core.root.querySelector('[data-control="accordion"]')).not.toBeNull();
-    // Курсор в заголовок: «развернуть» по команде.
+    // The cursor into the title: "expand" by command.
     core.view.dispatch(
       core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, 3)),
     );
@@ -408,7 +408,7 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toContain('<details open="">');
     expect(editor!.execCommand('ToggleAllAccordions', false, false)).toBe(true);
     expect(editor!.getContent()).toContain('<details><summary>');
-    // Вставка вокруг абзаца «text» и снятие рамки.
+    // Inserting around the "text" paragraph and removing the frame.
     const end = core.view.state.doc.content.size - 1;
     core.view.dispatch(
       core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, end)),
@@ -422,7 +422,7 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/accordion|details_/);
   });
 
-  it('tableofcontents: div.mce-toc с h2, tableofcontents_*, mceInsertToc / mceUpdateToc', async () => {
+  it('tableofcontents: div.mce-toc with h2, tableofcontents_*, mceInsertToc / mceUpdateToc', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const toc =
       '<div class="mce-toc"><h2>Table of Contents</h2><ul><li><a href="#mcetoc_a">Alpha</a></li></ul></div>';
@@ -433,7 +433,7 @@ describe('tinymce.init', () => {
       toolbar: 'tableofcontents tableofcontentsupdate',
       tableofcontents_depth: 2,
     });
-    // Класс и заголовок — как у TinyMCE (стили сайта для .mce-toc работают); h3 глубже depth.
+    // The class and title as in TinyMCE (site styles for .mce-toc work); h3 is deeper than depth.
     expect(editor!.getContent()).toBe(
       '<nav class="mce-toc" data-toc=""><h2>Table of Contents</h2><ul><li><a href="#mcetoc_a">Alpha</a></li></ul></nav>' +
         '<h2 id="mcetoc_a">Alpha</h2><h3>Beta</h3>',
@@ -446,7 +446,7 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/tableofcontents/);
   });
 
-  it('незнакомые опции и плагины — предупреждение, а не ошибка', async () => {
+  it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');
     await tinymce.init({ selector: '#t', plugins: 'lists nosuchplugin', some_future_option: 1 });
@@ -454,7 +454,7 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).toMatch(/some_future_option/);
   });
 
-  it('inline: редактирование прямо в элементе; remove возвращает исходный textarea', async () => {
+  it('inline: editing right in the element; remove brings back the original textarea', async () => {
     page('<div id="inline"><p>Inline text</p></div><textarea id="t"><p>x</p></textarea>');
     const [inline] = await tinymce.init({ selector: '#inline', inline: true });
     expect(document.querySelector('#inline .nova-prosemirror')).not.toBeNull();
@@ -470,7 +470,7 @@ describe('tinymce.init', () => {
     expect(document.querySelector('.nova-compat')).toBeNull();
   });
 
-  it('notificationManager и windowManager.alert/confirm', async () => {
+  it('notificationManager and windowManager.alert/confirm', async () => {
     page('<textarea id="t"></textarea>');
     const [editor] = await tinymce.init({ selector: '#t' });
     editor!.notificationManager.open({ text: 'Saved', type: 'success' });

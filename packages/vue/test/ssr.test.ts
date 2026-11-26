@@ -4,9 +4,9 @@ import { createSSRApp, defineComponent, h } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { NovaProseEditor, useEditor } from '../src';
 
-// Nuxt и другой SSR: импорт пакета и рендер не должны трогать window/document.
+// Nuxt and other SSR: importing the package and rendering must not touch window/document.
 describe('SSR', () => {
-  it('renderToString работает без DOM', async () => {
+  it('renderToString works without a DOM', async () => {
     expect(typeof window).toBe('undefined');
     const app = createSSRApp({
       render: () => h(NovaProseEditor, { id: 'body', name: 'body', defaultValue: '<p>a</p>' }),
@@ -16,8 +16,8 @@ describe('SSR', () => {
     expect(html).toContain('name="body"');
   });
 
-  it('useEditor на сервере оставляет editor = null', async () => {
-    let seen: unknown = 'не вызван';
+  it('useEditor on the server leaves editor = null', async () => {
+    let seen: unknown = 'not called';
     const App = defineComponent(() => {
       const { el, editor } = useEditor({ content: '<p>a</p>' });
       seen = editor.value;

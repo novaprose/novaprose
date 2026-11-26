@@ -1,8 +1,8 @@
 ---
 /**
- * Живое демо совместного редактирования: настоящий сервер синхронизации (wss://sync.novaprose.cloud),
- * публичные комнаты demo/… — без входа и без сохранения. Комната — в адресе (#room=…), ссылку можно
- * отправить коллеге или открыть во втором окне.
+ * The live collaboration demo: the real sync server (wss://sync.novaprose.cloud),
+ * public demo/… rooms, no sign-in and nothing saved. The room is in the address (#room=…), so the link can
+ * be sent to a colleague or opened in a second window.
  */
 ---
 
@@ -45,7 +45,7 @@ see each other's cursors and changes instantly.</p>
 <li><p>Turn on <strong>Suggest edits</strong> (Ctrl+Alt+Shift+E): your changes become suggestions others can accept or reject.</p></li></ul>`;
   const ANIMALS = ['Fox', 'Owl', 'Lynx', 'Otter', 'Heron', 'Panda', 'Koala', 'Falcon', 'Badger', 'Seal'];
 
-  // Комната: из адреса или новая случайная (10 символов base36 из crypto).
+  // The room: from the address, or a new random one (10 base36 characters from crypto).
   const roomFromHash = new URLSearchParams(location.hash.slice(1)).get('room') ?? '';
   const room = /^[a-z0-9]{6,32}$/.test(roomFromHash)
     ? roomFromHash
@@ -73,7 +73,7 @@ see each other's cursors and changes instantly.</p>
       .join('') || '?';
 
   function renderUsers(users: CollabParticipant[]) {
-    // Имена приходят от других посетителей — только textContent.
+    // Names come from other visitors: textContent only.
     usersEl.replaceChildren(
       ...users.map((user) => {
         const li = document.createElement('li');
@@ -88,7 +88,7 @@ see each other's cursors and changes instantly.</p>
   }
 
   let editor: Editor | undefined;
-  // Кого можно упомянуть через «@» — тех, кто сейчас в комнате (кроме себя).
+  // Who can be mentioned with "@": the people in the room right now (except yourself).
   let people: CollabParticipant[] = [];
   let seeded = false;
   const plugin = collab({
@@ -100,7 +100,7 @@ see each other's cursors and changes instantly.</p>
       statusText.textContent = labels[status];
     },
     onSynced: () => {
-      // Новая комната пуста — кладём приветственный текст (один раз, только первый посетитель).
+      // A new room is empty: put in the welcome text (once, only by the first visitor).
       if (!seeded && editor && editor.getHTML() === '<p></p>') editor.setContent(SEED);
       seeded = true;
     },
@@ -112,10 +112,10 @@ see each other's cursors and changes instantly.</p>
   editor = createEditor({
     element: document.getElementById('np-collab-editor')!,
     plugins: [plugin, 'quickbars', 'comments', 'mentions', 'revisionhistory', 'suggestions'],
-    // Комментарии — в общем документе комнаты: видны всем участникам сразу.
+    // Comments live in the room's shared document: every participant sees them at once.
     pluginOptions: {
       comments: { author: { id: name, name }, store: plugin.commentStore() },
-      // История версий с сервера (в демо-комнатах — пока в комнате кто-то есть).
+      // Version history from the server (in demo rooms, while someone is in the room).
       revisionhistory: plugin.versions(),
       suggestions: { author: { id: `guest-${crypto.randomUUID().slice(0, 8)}`, name } },
       mentions: {

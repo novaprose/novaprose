@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Совместное редактирование через настоящий сервер синхронизации (apps/sync-server, режим --dev):
- * два редактора на странице и вторая вкладка — третий участник.
+ * Real-time collaboration through the real sync server (apps/sync-server, --dev mode):
+ * two editors on the page and a second tab as the third participant.
  */
 
 declare global {
@@ -15,17 +15,17 @@ const editorOf = (page: Page, id: 'anna' | 'boris') => page.locator(`#${id} .nov
 
 async function open(page: Page, room: string) {
   await page.goto(`/collab.html?lang=en&room=${room}`);
-  // Печатать только после первой синхронизации обоих редакторов с сервером.
+  // Type only after both editors have done their first sync with the server.
   await expect(page.locator('#synced')).toHaveText('2');
 }
 
-/** Документ редактора (без курсоров других участников, которые тоже лежат в DOM). */
+/** The editor's document (without the other participants' cursors, which are in the DOM too). */
 const doc = (page: Page, id: 'anna' | 'boris') =>
   page.evaluate((key) => window.editors[key].getHTML(), id);
 
 const newRoom = () => `e2e-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-test('текст одного участника появляется у другого', async ({ page }) => {
+test("one participant's text shows up for the other", async ({ page }) => {
   await open(page, newRoom());
   await editorOf(page, 'anna').click();
   await page.keyboard.type('Hello from Anna');
@@ -37,14 +37,14 @@ test('текст одного участника появляется у дру�
   await expect.poll(() => doc(page, 'anna')).toBe('<p>Hello from Anna and Boris</p>');
 });
 
-test('курсор другого участника виден с подписью', async ({ page }) => {
+test("another participant's cursor shows with a label", async ({ page }) => {
   await open(page, newRoom());
   await editorOf(page, 'boris').click();
   await page.keyboard.type('Boris is here');
   await expect(page.locator('#anna .nova-collab-label')).toHaveText('Boris');
 });
 
-test('вторая вкладка получает документ и правки', async ({ page, context }) => {
+test('a second tab gets the document and the edits', async ({ page, context }) => {
   const room = newRoom();
   await open(page, room);
   await editorOf(page, 'anna').click();
@@ -59,7 +59,7 @@ test('вторая вкладка получает документ и прав�
   await expect.poll(() => doc(page, 'anna')).toBe('<p>Shared draft!</p>');
 });
 
-test('Ctrl+Z отменяет только свои правки', async ({ page }) => {
+test('Ctrl+Z undoes only your own edits', async ({ page }) => {
   await open(page, newRoom());
   await editorOf(page, 'anna').click();
   await page.keyboard.type('Anna.');
@@ -74,7 +74,9 @@ test('Ctrl+Z отменяет только свои правки', async ({ page
   await expect.poll(() => doc(page, 'boris')).toBe('<p>&nbsp;Boris.</p>');
 });
 
-test('комментарий одного участника виден другому с подсветкой и обсуждением', async ({ page }) => {
+test("one participant's comment shows to the other with the highlight and the thread", async ({
+  page,
+}) => {
   await open(page, newRoom());
   await editorOf(page, 'anna').click();
   await page.keyboard.type('Launch date');
@@ -93,7 +95,7 @@ test('комментарий одного участника виден друг
   await expect(page.locator('#boris .nova-thread.is-active')).toContainText('Confirm with sales');
 });
 
-/** Кнопка тулбара редактора scope — на панели или в его «⋯». */
+/** The toolbar button of the scope editor: on the panel or in its "⋯". */
 async function clickIn(page: Page, scope: string, name: string) {
   const control = page.locator(`${scope} .nova-toolbar [data-control="${name}"]`).first();
   if (await control.isVisible()) return control.click();
@@ -101,7 +103,7 @@ async function clickIn(page: Page, scope: string, name: string) {
   await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-test('история версий: сохранить, сравнить, восстановить — у всех участников', async ({ page }) => {
+test('version history: save, compare, restore, for every participant', async ({ page }) => {
   await open(page, newRoom());
   await editorOf(page, 'anna').click();
   await page.keyboard.type('Launch in May');

@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Оглавление (плагин tableofcontents) в настоящих браузерах: вставка кнопкой, новый заголовок
- * «## » сразу появляется в оглавлении, переход по пункту — без смены адреса страницы.
+ * The table of contents (the tableofcontents plugin) in real browsers: inserting with the button, a new heading
+ * "## " shows up in the table of contents right away, following an item doesn't change the page address.
  */
 
 type W = {
@@ -28,12 +28,15 @@ async function clickControl(page: Page, name: string) {
 
 const toc = (page: Page) => page.locator('.nova-prosemirror nav[data-toc]');
 
-test('вставка оглавления; новый заголовок появляется в нём сразу', async ({ page, isMobile }) => {
+test('inserting a table of contents; a new heading shows up in it right away', async ({
+  page,
+  isMobile,
+}) => {
   await open(page, '<p>Start</p><h2>First</h2><p>text</p>');
   await page.locator('.nova-prosemirror p', { hasText: 'Start' }).click();
   await clickControl(page, 'tableofcontents');
   await expect(toc(page).getByRole('link', { name: 'First' })).toBeVisible();
-  test.skip(isMobile, 'Enter из эмуляции Android');
+  test.skip(isMobile, 'Enter from Android emulation');
   await page.locator('.nova-prosemirror p', { hasText: 'text' }).click();
   await page.keyboard.press('End');
   await page.keyboard.press('Enter');
@@ -42,12 +45,14 @@ test('вставка оглавления; новый заголовок поя�
   await expect.poll(() => html(page)).toMatch(/<h2 id="toc-[a-z0-9]+">Second<\/h2>/);
 });
 
-test('пункт оглавления ведёт к заголовку, адрес страницы прежний', async ({ page }) => {
+test('a table of contents item goes to the heading, the page address stays the same', async ({
+  page,
+}) => {
   const filler = '<p>filler</p>'.repeat(40);
   await open(page, `<p>top</p><h2>Far away</h2>${filler}`);
   await page.locator('.nova-prosemirror p', { hasText: 'top' }).click();
   await clickControl(page, 'tableofcontents');
-  // На узком экране панель «⋯» остаётся открытой, а липкий тулбар закрывает верх страницы.
+  // On a narrow screen the "⋯" panel stays open, and the sticky toolbar covers the top of the page.
   await page.keyboard.press('Escape');
   const link = toc(page).getByRole('link', { name: 'Far away' });
   await link.evaluate((el) => el.scrollIntoView({ block: 'center' }));

@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test';
 
-/** tinymce.init() поверх NovaProse в настоящих браузерах: ввод, кнопки, плагин, форма. */
+/** tinymce.init() on top of NovaProse in real browsers: typing, buttons, a plugin, a form. */
 
-test('конфиг TinyMCE работает: ввод, жирный, свой плагин, отправка формы', async ({ page }) => {
+test('a TinyMCE config works: typing, bold, a custom plugin, submitting the form', async ({
+  page,
+}) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/tinymce.html');
@@ -18,7 +20,7 @@ test('конфиг TinyMCE работает: ввод, жирный, свой п
   await page.keyboard.type('paste');
   await expect(page.locator('#events')).toContainText('input');
 
-  // Кнопка из PluginManager.add — на панели или в «⋯».
+  // The button from PluginManager.add: on the panel or in "⋯".
   const signature = page.locator('.nova-toolbar [data-control="signature"]').first();
   if (await signature.isVisible()) await signature.click();
   else {
@@ -30,12 +32,12 @@ test('конфиг TinyMCE работает: ввод, жирный, свой п
   const submitted = page.locator('#submitted');
   await expect(submitted).toContainText('<p>Faster <strong>paste</strong></p>');
   await expect(submitted).toContainText('— The NovaProse team');
-  // content_style применился (вложенный CSS в браузере).
+  // content_style was applied (nested CSS in the browser).
   expect(await content.evaluate((el) => getComputedStyle(el).fontSize)).toBe('16px');
   expect(errors).toEqual([]);
 });
 
-test('диалог своего плагина (windowManager.open): ввод, выбор, Enter вставляет', async ({
+test('the dialog of a custom plugin (windowManager.open): typing, a choice, Enter inserts', async ({
   page,
 }) => {
   await page.goto('/tinymce.html');

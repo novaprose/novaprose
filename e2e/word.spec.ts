@@ -3,8 +3,8 @@ import { expect, test, type Page } from '@playwright/test';
 import { unzip } from '../packages/core/src/docx/zip';
 
 /**
- * Word в настоящих браузерах (песочница pages.html, плагины exportword и importword): кнопка
- * скачивает .docx, кнопка импорта открывает выбор файла и возвращает документ — с листом A5.
+ * Word in real browsers (the pages.html playground, the exportword and importword plugins): the button
+ * downloads a .docx, the import button opens a file picker and brings the document back, with the A5 sheet.
  */
 
 async function clickControl(page: Page, name: string) {
@@ -14,10 +14,12 @@ async function clickControl(page: Page, name: string) {
   await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-test('экспорт в Word скачивает .docx; импорт возвращает документ и лист', async ({ page }) => {
+test('exporting to Word downloads a .docx; importing brings back the document and the sheet', async ({
+  page,
+}) => {
   await page.goto('/pages.html');
   await expect(page.locator('.nova-pages .ProseMirror')).toBeVisible();
-  // Кнопки ленивых плагинов появляются после загрузки их части (editor.ready).
+  // The buttons of lazy plugins appear after their part loads (editor.ready).
   await page.evaluate(() => window.pagesDemo.editor.ready);
 
   const downloading = page.waitForEvent('download');
@@ -28,7 +30,7 @@ test('экспорт в Word скачивает .docx; импорт возвра
   const parts = await unzip(new Uint8Array(readFileSync(file)));
   const xml = new TextDecoder().decode(parts.get('word/document.xml'));
   expect(xml).toContain('Pages and printing');
-  // Лист песочницы — A5 с полями 15 мм.
+  // The playground sheet is A5 with 15 mm margins.
   expect(xml).toContain('<w:pgSz w:w="8391" w:h="11906"/>');
 
   await page.evaluate(() => {

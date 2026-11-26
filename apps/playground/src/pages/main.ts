@@ -3,8 +3,8 @@ import { createEditor, pageLayout, printContent, type PageSizeName } from '@nova
 import '../playground.css';
 
 /**
- * Режим страниц (плагин pagelayout): лист A5 с полями 15 мм, границы страниц, печать тем же
- * листом. Её гоняет e2e/pages.spec.ts (window.pagesDemo — для проверок).
+ * Page mode (the pagelayout plugin): an A5 sheet with 15 mm margins, page borders, printing on the same
+ * sheet. e2e/pages.spec.ts drives it (window.pagesDemo is for the checks).
  */
 
 const words =

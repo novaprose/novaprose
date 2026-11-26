@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, listSuggestions, resolveSuggestions, type Editor } from '@novaprose/core';
 import { collab, Y } from '../src';
 
-/** Режим правок при совместном редактировании. */
+/** Suggesting mode in real-time collaboration. */
 
 const editors: Editor[] = [];
 afterEach(() => {
@@ -26,19 +26,19 @@ function mount(ydoc: Y.Doc, id: string, name: string) {
   const editor = createEditor({
     element,
     plugins: [collab({ ydoc, user: { name } }), 'suggestions'],
-    // Оба в режиме правок: чужие изменения не должны превращаться в «мои» правки.
+    // Both in suggesting mode: other people's changes must not turn into "my" suggestions.
     pluginOptions: { suggestions: { author: { id, name }, enabled: true } },
   });
   editors.push(editor);
   return editor;
 }
 
-describe('правки при совместном редактировании', () => {
-  it('правка Анны видна Борису с автором; Борис принимает — у Анны тоже принято', async () => {
+describe('suggestions in real-time collaboration', () => {
+  it("Anna's suggestion shows to Boris with the author; Boris accepts it and it is accepted for Anna too", async () => {
     const [docA, docB] = linkedDocs();
     const anna = mount(docA, 'anna', 'Anna');
     const boris = mount(docB, 'boris', 'Boris');
-    // Исходный текст — без отслеживания (как загрузка документа).
+    // The original text without tracking (like loading a document).
     anna.setContent('<p>Ship in May</p>', { addToHistory: false });
     await tick();
 

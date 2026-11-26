@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 describe('SSR', () => {
-  it('импорт пакета и define не падают без DOM', async () => {
+  it("importing the package and define don't crash without a DOM", async () => {
     expect(typeof window).toBe('undefined');
     const mod = await import('../src');
     expect(() => mod.defineNovaProseEditor()).not.toThrow();

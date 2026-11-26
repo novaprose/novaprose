@@ -17,18 +17,18 @@ const content = (page: Page) => page.locator('.nova-prosemirror');
 const control = (page: Page, name: string) =>
   page.locator(`.nova-toolbar [data-control="${name}"]`).first();
 
-/** Нажать контрол тулбара, где бы он ни был: на панели или в «⋯» (узкий экран). */
+/** Press a toolbar control wherever it is: on the panel or in "⋯" (a narrow screen). */
 async function clickControl(page: Page, name: string) {
   if (await control(page, name).isVisible()) return control(page, name).click();
   await page.locator('.nova-tb-more').click();
   await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-/** Открыть playground с заданным содержимым и курсором в конце документа. */
+/** Open the playground with the given content and the cursor at the end of the document. */
 async function open(page: Page, initial = '<p></p>', query = '?lang=en') {
   await page.goto(`/${query}`);
-  // Ленивые плагины (quickbars, insertdatetime) должны успеть подключиться — иначе под нагрузкой
-  // тест начинает нажимать клавиши раньше, чем появятся их панели.
+  // Lazy plugins (quickbars, insertdatetime) must have time to attach, otherwise under load
+  // the test starts pressing keys before their panels appear.
   await page.evaluate(async (value) => {
     await window.editor.ready;
     window.editor.setContent(value, { addToHistory: false });
@@ -37,7 +37,7 @@ async function open(page: Page, initial = '<p></p>', query = '?lang=en') {
   await page.keyboard.press('ControlOrMeta+End');
 }
 
-test('набор текста и Ctrl/Cmd+B', async ({ page, isMobile }) => {
+test('typing and Ctrl/Cmd+B', async ({ page, isMobile }) => {
   await open(page);
   await page.keyboard.type('Hello ');
   await page.keyboard.press('ControlOrMeta+b');
@@ -46,7 +46,7 @@ test('набор текста и Ctrl/Cmd+B', async ({ page, isMobile }) => {
   if (!isMobile) await expect(control(page, 'bold')).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('markdown-шорткаты: заголовок, список, цитата', async ({ page }) => {
+test('markdown shortcuts: heading, list, quote', async ({ page }) => {
   await open(page);
   await page.keyboard.type('## Title');
   await page.keyboard.press('Enter');
@@ -63,7 +63,7 @@ test('undo/redo', async ({ page }) => {
   expect(await html(page)).toBe('<p>text</p>');
 });
 
-test('меню стиля блока меняет абзац на заголовок', async ({ page }) => {
+test('the block style menu changes a paragraph into a heading', async ({ page }) => {
   await open(page, '<p>text</p>');
   await clickControl(page, 'blocks');
   await page.getByRole('menuitemradio', { name: 'Heading 2' }).click();
@@ -72,7 +72,7 @@ test('меню стиля блока меняет абзац на заголов
   await expect(page.locator('.nova-path')).toHaveText('h2');
 });
 
-test('цвет текста сохраняется в hex', async ({ page }) => {
+test('text color is saved in hex', async ({ page }) => {
   await open(page, '<p>text</p>');
   await page.keyboard.press('ControlOrMeta+a');
   await clickControl(page, 'forecolor');
@@ -80,7 +80,7 @@ test('цвет текста сохраняется в hex', async ({ page }) => 
   expect(await html(page)).toBe('<p><span style="color: #3b82f6;">text</span></p>');
 });
 
-test('ссылка: Ctrl/Cmd+K → диалог → панель ссылки → удаление', async ({ page }) => {
+test('a link: Ctrl/Cmd+K → the dialog → the link bubble → removal', async ({ page }) => {
   await open(page, '<p>site</p>');
   await page.keyboard.press('ControlOrMeta+a');
   await page.keyboard.press('ControlOrMeta+k');
@@ -92,7 +92,7 @@ test('ссылка: Ctrl/Cmd+K → диалог → панель ссылки �
   await expect(dialog).toBeHidden();
   expect(await html(page)).toBe('<p><a href="https://example.com">site</a></p>');
 
-  // Курсор внутри ссылки → появляется панель.
+  // The cursor inside a link → the bubble appears.
   await content(page).locator('a').click();
   const bubble = page.getByRole('toolbar', { name: 'Link', exact: true });
   await expect(bubble).toBeVisible();
@@ -102,7 +102,7 @@ test('ссылка: Ctrl/Cmd+K → диалог → панель ссылки �
   await expect(bubble).toBeHidden();
 });
 
-test('диалог: Escape закрывает и возвращает фокус в редактор', async ({ page }) => {
+test('a dialog: Escape closes it and returns focus to the editor', async ({ page }) => {
   await open(page, '<p>text</p>');
   await page.keyboard.press('ControlOrMeta+k');
   await expect(page.getByRole('dialog')).toBeVisible();
@@ -111,12 +111,12 @@ test('диалог: Escape закрывает и возвращает фокус
   await expect(content(page)).toBeFocused();
 });
 
-test('доступность тулбара: Alt+F10, стрелки, Escape', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'клавиатурная навигация по тулбару — сценарий десктопа');
+test('toolbar accessibility: Alt+F10, arrows, Escape', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'keyboard navigation of the toolbar is a desktop scenario');
   await open(page, '<p>text</p>');
   await page.keyboard.press('Alt+F10');
   const toolbarButtons = page.locator('.nova-toolbar > .nova-tb-group button');
-  // undo/redo неактивны (история пуста) — фокус на первом доступном контроле.
+  // undo/redo are inactive (the history is empty): focus goes to the first available control.
   const focusedName = await page.evaluate(() =>
     document.activeElement?.getAttribute('data-control'),
   );
@@ -130,12 +130,12 @@ test('доступность тулбара: Alt+F10, стрелки, Escape', a
   expect(await toolbarButtons.count()).toBeGreaterThan(5);
 });
 
-test('узкий экран: лишние группы уходят в «⋯»', async ({ page }) => {
+test('a narrow screen: extra groups move into "⋯"', async ({ page }) => {
   await page.setViewportSize({ width: 420, height: 800 });
   await open(page, '<p>text</p>');
   const more = page.locator('.nova-tb-more');
   await expect(more).toBeVisible();
-  // Тулбар не переполнен.
+  // The toolbar doesn't overflow.
   const overflow = await page
     .locator('.nova-toolbar')
     .first()
@@ -148,12 +148,12 @@ test('узкий экран: лишние группы уходят в «⋯»',
   expect(await html(page)).toBe('<ul><li><p>text</p></li></ul>');
 });
 
-test('вставка HTML из Google Docs: обёртка <b style="font-weight:normal"> не делает текст жирным', async ({
+test('HTML pasted from Google Docs: the <b style="font-weight:normal"> wrapper doesn\'t make the text bold', async ({
   page,
 }) => {
   await open(page);
-  // view.pasteHTML прогоняет тот же конвейер, что и настоящая вставка, и одинаково работает во всех браузерах
-  // (Firefox игнорирует clipboardData в синтетическом ClipboardEvent).
+  // view.pasteHTML runs the same pipeline as a real paste and works the same in every browser
+  // (Firefox ignores clipboardData in a synthetic ClipboardEvent).
   await page.evaluate(
     (h) => window.editor.view.pasteHTML(h),
     '<meta charset="utf-8"><b style="font-weight:normal;" id="docs-internal-guid-1"><p dir="ltr"><span style="font-weight:700;">Bold</span><span> plain</span></p></b>',
@@ -161,7 +161,7 @@ test('вставка HTML из Google Docs: обёртка <b style="font-weight
   expect(await html(page)).toBe('<p><strong>Bold</strong> plain</p>');
 });
 
-test('вставка небезопасной ссылки из буфера очищается', async ({ page }) => {
+test('pasting an unsafe link from the clipboard gets cleaned', async ({ page }) => {
   await open(page);
   await page.evaluate(
     (h) => window.editor.view.pasteHTML(h),
@@ -173,7 +173,7 @@ test('вставка небезопасной ссылки из буфера о�
   expect(result).not.toContain('onclick');
 });
 
-test('загрузка картинки через диалог', async ({ page }) => {
+test('uploading an image through the dialog', async ({ page }) => {
   await open(page, '<p>text</p>');
   await clickControl(page, 'image');
   const dialog = page.getByRole('dialog', { name: 'Insert image' });
@@ -189,7 +189,7 @@ test('загрузка картинки через диалог', async ({ page 
   await expect.poll(() => html(page)).toMatch(/<img src="data:image\/png;base64,/);
 });
 
-test('тёмная тема переключается', async ({ page }) => {
+test('the dark theme switches', async ({ page }) => {
   await open(page, '<p>text</p>');
   const bg = () =>
     page.locator('.nova-editor').evaluate((el) => getComputedStyle(el).backgroundColor);
@@ -199,7 +199,7 @@ test('тёмная тема переключается', async ({ page }) => {
   expect(await bg()).not.toBe(light);
 });
 
-/** PNG 200×100, нарисованный в браузере (настоящие размеры для ресайза). */
+/** A 200×100 PNG drawn in the browser (real sizes for resizing). */
 async function openWithImage(page: Page) {
   await page.goto('/?lang=en');
   await page.evaluate(() => {
@@ -219,7 +219,7 @@ async function openWithImage(page: Page) {
   await page.locator('.nova-image img').click();
 }
 
-test('картинка: контекстный тулбар и выравнивание', async ({ page }) => {
+test('an image: the context toolbar and alignment', async ({ page }) => {
   await openWithImage(page);
   const toolbar = page.getByRole('toolbar', { name: 'Image options' });
   await expect(toolbar).toBeVisible();
@@ -231,12 +231,12 @@ test('картинка: контекстный тулбар и выравнив�
     'aria-pressed',
     'true',
   );
-  // Клик в текст — тулбар прячется.
+  // A click into the text hides the toolbar.
   await content(page).getByText('after').click();
   await expect(toolbar).toBeHidden();
 });
 
-test('картинка: ресайз за угол сохраняет пропорции', async ({ page }) => {
+test('an image: resizing by the corner keeps the proportions', async ({ page }) => {
   await openWithImage(page);
   const handle = page.locator('.nova-image-handle-se');
   await expect(handle).toBeVisible();
@@ -252,7 +252,7 @@ test('картинка: ресайз за угол сохраняет пропо
   );
 });
 
-test('картинка: удаление из контекстного тулбара', async ({ page }) => {
+test('an image: deleting from the context toolbar', async ({ page }) => {
   await openWithImage(page);
   await page
     .getByRole('toolbar', { name: 'Image options' })
@@ -261,7 +261,7 @@ test('картинка: удаление из контекстного тулб�
   expect(await html(page)).toBe('<p>before</p><p></p><p>after</p>');
 });
 
-test('слэш-команды: набор, стрелки, Enter', async ({ page }) => {
+test('slash commands: typing, arrows, Enter', async ({ page }) => {
   await open(page);
   await page.keyboard.type('/hea');
   const listbox = page.getByRole('listbox', { name: 'Commands' });
@@ -274,7 +274,7 @@ test('слэш-команды: набор, стрелки, Enter', async ({ page
   expect(await html(page)).toBe('<h2>Title</h2>');
 });
 
-test('слэш-команды: выбор мышью и Escape', async ({ page }) => {
+test('slash commands: choosing with the mouse and Escape', async ({ page }) => {
   await open(page);
   await page.keyboard.type('/');
   const listbox = page.getByRole('listbox', { name: 'Commands' });
@@ -283,7 +283,7 @@ test('слэш-команды: выбор мышью и Escape', async ({ page }
   expect(await html(page)).toBe('<ul><li><p>item</p></li></ul>');
 
   await page.keyboard.press('Enter');
-  await page.keyboard.press('Enter'); // выход из списка
+  await page.keyboard.press('Enter'); // leaving the list
   await page.keyboard.type('/quo');
   await expect(listbox).toBeVisible();
   await page.keyboard.press('Escape');
@@ -291,7 +291,7 @@ test('слэш-команды: выбор мышью и Escape', async ({ page }
   expect(await html(page)).toBe('<ul><li><p>item</p></li></ul><p>/quo</p>');
 });
 
-test('буфер обмена: Ctrl+V с форматированием, Ctrl+Shift+V — без', async ({
+test('the clipboard: Ctrl+V with formatting, Ctrl+Shift+V without', async ({
   page,
   context,
   browserName,
@@ -299,7 +299,7 @@ test('буфер обмена: Ctrl+V с форматированием, Ctrl+Sh
 }) => {
   test.skip(
     browserName !== 'chromium' || isMobile,
-    'доступ к системному буферу из теста есть только в десктопном Chromium',
+    'a test can reach the system clipboard only in desktop Chromium',
   );
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await open(page);
@@ -322,7 +322,7 @@ test('буфер обмена: Ctrl+V с форматированием, Ctrl+Sh
   expect(await html(page)).toBe('<p><strong>bold</strong> text</p><p>bold text</p>');
 });
 
-test('режим «вставлять как текст» из меню «Ещё формат»', async ({ page }) => {
+test('the "paste as text" mode from the "More formatting" menu', async ({ page }) => {
   await open(page);
   await clickControl(page, 'moreformats');
   const item = page.getByRole('menuitemcheckbox', { name: 'Paste as text' });
@@ -332,7 +332,7 @@ test('режим «вставлять как текст» из меню «Ещё
   expect(await html(page)).toBe('<p>Big title</p>');
 });
 
-test('таблица: вставка сеткой, Tab по ячейкам и новая строка', async ({ page }) => {
+test('a table: inserting with the grid, Tab through cells and a new row', async ({ page }) => {
   await open(page);
   await clickControl(page, 'table');
   await page.locator('.nova-grid-cell[data-row="2"][data-col="2"]').click();
@@ -343,14 +343,14 @@ test('таблица: вставка сеткой, Tab по ячейкам и н
   await page.keyboard.type('C');
   await page.keyboard.press('Tab');
   await page.keyboard.type('D');
-  await page.keyboard.press('Tab'); // в последней ячейке — новая строка
+  await page.keyboard.press('Tab'); // in the last cell, a new row
   await page.keyboard.type('E');
   expect(await html(page)).toBe(
     '<table><tbody><tr><th><p>A</p></th><th><p>B</p></th></tr><tr><td><p>C</p></td><td><p>D</p></td></tr><tr><td><p>E</p></td><td><p></p></td></tr></tbody></table>',
   );
 });
 
-test('таблица: контекстный тулбар — строка ниже и удаление таблицы', async ({ page }) => {
+test('a table: the context toolbar adds a row below and deletes the table', async ({ page }) => {
   await open(
     page,
     '<table><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table><p>after</p>',
@@ -365,8 +365,8 @@ test('таблица: контекстный тулбар — строка ни�
   await expect(toolbar).toBeHidden();
 });
 
-test('таблица: ресайз колонки перетаскиванием границы', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'ресайз колонок — сценарий мыши');
+test('a table: resizing a column by dragging its border', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'column resizing is a mouse scenario');
   await open(page, '<table><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>');
   const cell = content(page).locator('td').first();
   const box = (await cell.boundingBox())!;
@@ -380,7 +380,7 @@ test('таблица: ресайз колонки перетаскиванием
   expect(await html(page)).toMatch(/<td data-colwidth="\d+" style="width: \d+px;"><p>a<\/p><\/td>/);
 });
 
-test('поиск и замена: Ctrl/Cmd+F, Enter по совпадениям, заменить все', async ({ page }) => {
+test('search and replace: Ctrl/Cmd+F, Enter through matches, replace all', async ({ page }) => {
   await open(page, '<p>red green red blue red</p>');
   await page.keyboard.press('ControlOrMeta+f');
   const find = page.getByRole('searchbox', { name: 'Find' });
@@ -401,8 +401,8 @@ test('поиск и замена: Ctrl/Cmd+F, Enter по совпадениям,
   await expect(content(page)).toBeFocused();
 });
 
-test('полноэкранный режим и справка', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'горячие клавиши — сценарий клавиатуры');
+test('fullscreen and help', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'keyboard shortcuts are a keyboard scenario');
   await open(page, '<p>text</p>');
   await page.keyboard.press('ControlOrMeta+Shift+f');
   const editorBox = await page.locator('.nova-editor').boundingBox();
@@ -423,18 +423,18 @@ test.describe('quickbars', () => {
   const selectionBar = (page: Page) => page.getByRole('toolbar', { name: 'Quick formatting' });
   const insertBar = (page: Page) => page.getByRole('toolbar', { name: 'Quick insert' });
 
-  test('выделение мышью: панель после отпускания кнопки, затем «Жирный»', async ({
+  test('selecting with the mouse: the toolbar after the button is released, then "Bold"', async ({
     page,
     isMobile,
   }) => {
-    test.skip(isMobile, 'выделение протягиванием — сценарий мыши');
+    test.skip(isMobile, 'drag selection is a mouse scenario');
     await open(page, '<p>hello brave world</p>');
     const box = (await content(page).locator('p').boundingBox())!;
     const y = box.y + box.height / 2;
     await page.mouse.move(box.x + 2, y);
     await page.mouse.down();
     await page.mouse.move(box.x + 60, y, { steps: 4 });
-    // Во время протягивания панели нет.
+    // While dragging there is no toolbar.
     await expect(selectionBar(page)).toBeHidden();
     await page.mouse.up();
     await expect(selectionBar(page)).toBeVisible();
@@ -442,7 +442,7 @@ test.describe('quickbars', () => {
     expect(await html(page)).toMatch(/^<p><strong>[^<]+<\/strong>/);
   });
 
-  test('выделение с клавиатуры и заголовок H2', async ({ page }) => {
+  test('selecting from the keyboard and the H2 heading', async ({ page }) => {
     await open(page, '<p>title</p>');
     await page.keyboard.press('Home');
     await page.keyboard.press('Shift+End');
@@ -451,8 +451,8 @@ test.describe('quickbars', () => {
     expect(await html(page)).toBe('<h2>title</h2>');
   });
 
-  test('пустая строка: панель вставки → таблица', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'на телефоне панели вставки нет — см. тест ниже');
+  test('an empty line: the insert toolbar → a table', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'a phone has no insert toolbar: see the test below');
     await open(page, '<p>text</p><p></p>');
     await expect(insertBar(page)).toBeVisible();
     await insertBar(page).getByRole('button', { name: 'Insert table' }).click();
@@ -460,13 +460,13 @@ test.describe('quickbars', () => {
     await expect(insertBar(page)).toBeHidden();
   });
 
-  test('телефон: панель форматирования — над клавиатурой во всю ширину, вставки на пустой строке нет', async ({
+  test('a phone: the formatting toolbar above the keyboard at full width, no insert toolbar on an empty line', async ({
     page,
     isMobile,
   }) => {
-    test.skip(!isMobile, 'сенсорный экран');
-    // Рядом с выделением на телефоне — «ручки» и системное меню: панель прижата к низу видимой
-    // части окна (над клавиатурой) и не закрывает текст.
+    test.skip(!isMobile, 'a touch screen');
+    // Next to a selection a phone shows its handles and the system menu: the toolbar is pinned to the bottom of the visible
+    // part of the window (above the keyboard) and doesn't cover the text.
     await open(page, '<p>title</p><p></p>');
     await expect(insertBar(page)).toBeHidden();
     await content(page).locator('p').first().click();
@@ -483,7 +483,9 @@ test.describe('quickbars', () => {
     expect(await html(page)).toBe('<p><strong>title</strong></p><p></p>');
   });
 
-  test('выделение текста в таблице — панель форматирования, а не таблицы', async ({ page }) => {
+  test('selecting text in a table shows the formatting toolbar, not the table one', async ({
+    page,
+  }) => {
     await open(page, '<table><tbody><tr><td><p>cell text</p></td></tr></tbody></table>');
     await content(page).getByText('cell text').dblclick();
     await expect(selectionBar(page)).toBeVisible();
@@ -491,7 +493,7 @@ test.describe('quickbars', () => {
   });
 });
 
-test('ограничения контента: запрещённое не появляется ни из тулбара, ни из шортката, ни из вставки', async ({
+test("content restrictions: what is forbidden doesn't appear from the toolbar, a shortcut or a paste", async ({
   page,
 }) => {
   await open(page, '<p></p>', '?lang=en&invalid=h1,table,strong');
@@ -513,9 +515,9 @@ test('ограничения контента: запрещённое не по�
   expect(result).toContain('cell');
 });
 
-test.describe('менюбар и режимы', () => {
-  test('менюбар: мышь и клавиатура (Alt+F9, стрелки, Enter)', async ({ page, isMobile }) => {
-    test.skip(isMobile, 'клавиатурная навигация — десктоп');
+test.describe('the menubar and modes', () => {
+  test('the menubar: mouse and keyboard (Alt+F9, arrows, Enter)', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'keyboard navigation is a desktop scenario');
     await open(page, '<p>text</p>', '?lang=en&menubar=1');
     await page.keyboard.press('ControlOrMeta+a');
     await page.getByRole('menuitem', { name: 'Format' }).click();
@@ -529,20 +531,20 @@ test.describe('менюбар и режимы', () => {
     await page.keyboard.press('ArrowDown');
     const menu = page.getByRole('menu', { name: 'Edit' });
     await expect(menu).toBeVisible();
-    // ← / → при открытом меню — соседние меню.
+    // ← / → with a menu open move to the neighboring menus.
     await page.keyboard.press('ArrowRight');
     await expect(page.getByRole('menu', { name: 'View' })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('menu', { name: 'View' })).toBeHidden();
   });
 
-  test('inline: панель появляется только при фокусе', async ({ page }) => {
+  test('inline: the toolbar appears only on focus', async ({ page }) => {
     await page.goto('/?lang=en&mode=inline');
     const header = page.locator('.nova-header');
     await expect(header).toBeHidden();
     await content(page).click();
     await expect(header).toBeVisible();
-    // Регрессия: шапка всплывает НАД текстом, а не накрывает его.
+    // A regression: the header floats ABOVE the text instead of covering it.
     const h = (await header.boundingBox())!;
     const c = (await page.locator('.nova-content').boundingBox())!;
     expect(h.y + h.height).toBeLessThanOrEqual(c.y);
@@ -550,7 +552,7 @@ test.describe('менюбар и режимы', () => {
     await expect(header).toBeHidden();
   });
 
-  test('distraction-free: без панелей, форматирование через quickbars', async ({ page }) => {
+  test('distraction-free: no panels, formatting through quickbars', async ({ page }) => {
     await open(page, '<p>focus</p>', '?lang=en&mode=distraction-free');
     await expect(page.locator('.nova-header')).toHaveCount(0);
     await page.keyboard.press('Home');
@@ -562,19 +564,16 @@ test.describe('менюбар и режимы', () => {
   });
 });
 
-test('пробелы, набранные пользователем, переживают сохранение и загрузку', async ({
-  page,
-  isMobile,
-}) => {
+test('spaces typed by the user survive saving and loading', async ({ page, isMobile }) => {
   await open(page);
-  // Отступ в начале, двойной пробел, пробел после Shift+Enter и в конце абзаца.
+  // An indent at the start, a double space, a space after Shift+Enter and at the end of a paragraph.
   await page.keyboard.type('  a  b');
-  // В эмуляции Android синтетический Shift+Enter не даёт событий, как настоящая клавиатура
-  // (ProseMirror на Android ждёт beforeinput) — проверить на реальном устройстве.
+  // In Android emulation a synthetic Shift+Enter gives no events, unlike a real keyboard
+  // (ProseMirror on Android waits for beforeinput): check on a real device.
   if (!isMobile) await page.keyboard.press('Shift+Enter');
   await page.keyboard.type(' c ');
-  // Текст документа (не DOM: там служебные узлы ProseMirror); перенос строки — «|»,
-  // неразрывный пробел считаем обычным — визуально они одинаковы.
+  // The document text (not the DOM: it has ProseMirror's service nodes); a line break is "|",
+  // a non-breaking space counts as a regular one: they look the same.
   const text = () =>
     page.evaluate(() => {
       type Doc = {
@@ -586,12 +585,12 @@ test('пробелы, набранные пользователем, переж�
     });
   const typed = await text();
   expect(typed).toBe(isMobile ? '  a  b c ' : '  a  b| c ');
-  // «Сохранить» и «открыть заново».
+  // "Save" and "open again".
   await page.evaluate(() => window.editor.setContent(window.editor.getHTML()));
   expect(await text()).toBe(typed);
 });
 
-test('отступ абзаца кнопкой; Tab в абзаце уводит фокус, а не отступает', async ({
+test('a paragraph indent with the button; Tab in a paragraph moves focus away instead of indenting', async ({
   page,
   isMobile,
 }) => {
@@ -600,7 +599,7 @@ test('отступ абзаца кнопкой; Tab в абзаце уводит
   expect(await html(page)).toBe('<p style="margin-left: 40px;">Text</p>');
   await clickControl(page, 'outdent');
   expect(await html(page)).toBe('<p>Text</p>');
-  test.skip(isMobile, 'Tab — сценарий клавиатуры');
+  test.skip(isMobile, 'Tab is a keyboard scenario');
   await content(page).click();
   await page.keyboard.press('Tab');
   expect(await html(page)).toBe('<p>Text</p>');
@@ -610,10 +609,10 @@ test('отступ абзаца кнопкой; Tab в абзаце уводит
   expect(focusedInEditor).toBe(false);
 });
 
-test('подпись к картинке: кнопка в панели картинки, набор подписи, Enter — дальше текст', async ({
+test('an image caption: the button in the image toolbar, typing the caption, Enter continues with text', async ({
   page,
 }) => {
-  // Картинка 1×1 PNG — без сети.
+  // A 1×1 PNG image: no network.
   const png =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
   await open(page, `<p><img src="${png}" width="120" height="80"></p>`);
@@ -626,7 +625,7 @@ test('подпись к картинке: кнопка в панели карт�
   expect(await html(page)).toBe(
     `<figure style="width: 120px;"><img src="${png}" width="120" height="80"><figcaption>Sunset</figcaption></figure><p>Next</p>`,
   );
-  // Убрать подпись: текст подписи не теряется.
+  // Removing the caption: its text isn't lost.
   await page.locator('.nova-prosemirror figcaption').click();
   await imageToolbar.locator('[data-control="imagecaption"]').click();
   expect(await html(page)).toBe(
@@ -634,13 +633,13 @@ test('подпись к картинке: кнопка в панели карт�
   );
 });
 
-test('первый щелчок в редактор без фокуса — туда, куда щёлкнули, а не в начало документа', async ({
+test('the first click into an unfocused editor lands where you clicked, not at the start of the document', async ({
   page,
   isMobile,
 }) => {
-  test.skip(isMobile, 'на телефоне — касание, не щелчок мышью справа от строки');
-  // Было в Chromium и WebKit: щелчок справа от ПОСЛЕДНЕЙ строки (не по тексту) при первом фокусе
-  // ставил курсор в начало документа — содержимое загружено через setContent, как у приложений.
+  test.skip(isMobile, 'a phone has taps, not mouse clicks to the right of a line');
+  // Happened in Chromium and WebKit: a click to the right of the LAST line (away from the text) on the first focus
+  // put the cursor at the start of the document; the content was loaded through setContent, as apps do.
   await page.goto('/?lang=en');
   await page.evaluate(async () => {
     await window.editor.ready;
@@ -652,7 +651,7 @@ test('первый щелчок в редактор без фокуса — ту
   await page.keyboard.type('!');
   expect(await html(page)).toBe('<p>First line</p><p>Second line</p><p>Third line!</p>');
 
-  // Ниже последней строки (поле области текста), снова без фокуса — в последнюю строку.
+  // Below the last line (the padding of the text area), unfocused again: into the last line.
   await page.evaluate(() => window.editor.setContent('<p>First line</p><p></p>'));
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   const last = (await lines.nth(1).boundingBox())!;

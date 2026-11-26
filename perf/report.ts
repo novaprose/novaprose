@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 
-/** Замеры пишутся сюда по одному сразу: упавший тест перезапускает процесс, память теряется. */
+/** Measurements are written here one at a time right away: a failed test restarts the process and memory is lost. */
 export const RESULTS_FILE = 'perf-results/results.jsonl';
 
 export interface PerfResult {
@@ -10,7 +10,7 @@ export interface PerfResult {
   unit: string;
 }
 
-/** После всех замеров: таблица в вывод, perf-results/perf.json и сводка прогона в CI. */
+/** After all measurements: the table to the output, perf-results/perf.json and the run summary in CI. */
 export default function report(): void {
   if (!existsSync(RESULTS_FILE)) return;
   const results = readFileSync(RESULTS_FILE, 'utf8')
@@ -26,7 +26,7 @@ export default function report(): void {
   writeFileSync('perf-results/perf.json', `${JSON.stringify(results, null, 2)}\n`);
   if (process.env.GITHUB_STEP_SUMMARY)
     appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Performance (Chromium)\n\n${table}\n`);
-  // Аннотация видна в API проверок без входа в GitHub: цифры каждого прогона и запас до порога.
+  // The annotation shows in the checks API without signing in to GitHub: each run's numbers and the margin to the limit.
   if (process.env.GITHUB_ACTIONS) {
     const lines = results.map((r) => `${r.name}: ${r.value} ${r.unit} (limit ${r.limit})`);
     console.log(`::notice title=Performance (Chromium)::${lines.join('%0A')}`);

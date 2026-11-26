@@ -1,4 +1,4 @@
-// JIT-компиляция в браузере: песочнице не нужен Angular CLI. Библиотека для npm собирается AOT (ng-packagr).
+// JIT compilation in the browser: the playground needs no Angular CLI. The npm library is built AOT (ng-packagr).
 import '@angular/compiler';
 import '@novaprose/core/style.css';
 import '../playground.css';
@@ -14,10 +14,10 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { NovaProseEditorComponent } from '@novaprose/angular';
 
 /**
- * Angular-песочница: Reactive Forms (валидация, reset, disable) и ngModel.
- * Её гоняет e2e/angular.spec.ts.
+ * The Angular playground: Reactive Forms (validation, reset, disable) and ngModel.
+ * e2e/angular.spec.ts drives it.
  */
-const INITIAL = '<p>Привет из <strong>Angular</strong>!</p>';
+const INITIAL = '<p>Hello from <strong>Angular</strong>!</p>';
 
 @Component({
   selector: 'app-root',
@@ -34,10 +34,10 @@ const INITIAL = '<p>Привет из <strong>Angular</strong>!</p>';
             [init]="{ toolbar: 'undo redo | bold italic | bullist numlist', statusbar: false }"
           />
           <div class="pg-react-actions">
-            <button type="submit" [disabled]="form.invalid">Отправить</button>
-            <button type="button" (click)="form.reset({ body: initial })">Сбросить</button>
+            <button type="submit" [disabled]="form.invalid">Submit</button>
+            <button type="button" (click)="form.reset({ body: initial })">Reset</button>
             <button type="button" (click)="toggle()">
-              {{ form.disabled ? 'Включить' : 'Выключить' }}
+              {{ form.disabled ? 'Enable' : 'Disable' }}
             </button>
           </div>
         </form>
@@ -63,13 +63,13 @@ const INITIAL = '<p>Привет из <strong>Angular</strong>!</p>';
 class App {
   readonly initial = INITIAL;
   readonly form = new FormGroup({
-    // Пустой редактор отдаёт <p></p> — считаем это незаполненным полем.
+    // An empty editor gives <p></p>: that counts as an empty field.
     body: new FormControl(INITIAL, [
       Validators.required,
       Validators.pattern(/^(?!<p><\/p>$)[\s\S]*$/),
     ]),
   });
-  html = '<p>Двусторонняя привязка через ngModel.</p>';
+  html = '<p>Two-way binding through ngModel.</p>';
   submitted: string | null = null;
 
   submit(): void {

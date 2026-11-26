@@ -11,7 +11,7 @@ import {
   type NodeViewProps,
 } from '../src';
 
-/** Виды узлов на React: портал внутри дерева приложения (контекст доступен), правка атрибутов. */
+/** Node views in React: a portal inside the app tree (the context is available), editing attributes. */
 
 afterEach(() => {
   cleanup();
@@ -64,7 +64,7 @@ const callout = definePlugin({
 const CONTENT = '<div data-callout="" data-tone="info"><p>Hello</p></div>';
 
 describe('reactNodeView', () => {
-  it('в <NovaProseEditor>: компонент с контекстом приложения, содержимое на своём месте', () => {
+  it('in <NovaProseEditor>: a component with the app context, the content in its place', () => {
     const ref = createRef<Editor | null>();
     const onChange = vi.fn();
     const { container } = render(
@@ -94,7 +94,7 @@ describe('reactNodeView', () => {
     expect(container.querySelector('.tone')!.textContent).toBe('info');
   });
 
-  it('useEditor: {nodeViews} рядом с контейнером; без него — предупреждение', async () => {
+  it('useEditor: {nodeViews} next to the container; without it, a warning', async () => {
     function App({ withViews }: { withViews: boolean }) {
       const { ref, nodeViews } = useEditor({ plugins: [callout], content: CONTENT });
       return (
@@ -115,7 +115,7 @@ describe('reactNodeView', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('render {nodeViews}'));
   });
 
-  it('createEditor без обёртки — свой корень React', async () => {
+  it('createEditor without a wrapper gets its own React root', async () => {
     const element = document.createElement('div');
     document.body.append(element);
     let editor!: Editor;
@@ -128,7 +128,7 @@ describe('reactNodeView', () => {
     element.remove();
   });
 
-  it('удалённый узел убирает свой портал', () => {
+  it('a deleted node removes its portal', () => {
     const ref = createRef<Editor | null>();
     const { container } = render(
       <NovaProseEditor ref={ref} plugins={[callout]} defaultValue={CONTENT} />,

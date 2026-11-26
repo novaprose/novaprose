@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-/** Чек-листы в настоящих браузерах: галочки мышью, Ctrl/Cmd+Enter, ввод «[ ]», кнопка, Enter. */
+/** Checklists in real browsers: checkboxes with the mouse, Ctrl/Cmd+Enter, typing "[ ]", the button, Enter. */
 
 type W = {
   editor: { getHTML(): string; setContent(h: string, o?: object): void; ready: Promise<void> };
@@ -23,13 +23,13 @@ async function open(page: Page, content: string) {
 }
 
 /**
- * Щелчок в текст и ожидание курсора. Если редактор не в фокусе, ProseMirror ставит выделение по месту
- * щелчка, но в браузер переносит его чуть позже — человек столько не печатает, а тест успевает.
+ * A click into the text and waiting for the cursor. If the editor isn't focused, ProseMirror puts the selection where
+ * the click was, but hands it to the browser a little later: a person never types that fast, a test does.
  */
 async function clickInto(page: Page, target: Locator) {
   await target.click();
   const handle = await target.elementHandle();
-  // Курсор редактора — внутри этого абзаца…
+  // The editor's cursor is inside this paragraph…
   await expect
     .poll(() =>
       page.evaluate((el) => {
@@ -40,7 +40,7 @@ async function clickInto(page: Page, target: Locator) {
       }, handle),
     )
     .toBe(true);
-  // …и браузер успел перенести его к себе (два кадра отрисовки).
+  // …and the browser has taken it over (two rendered frames).
   await page.evaluate(
     () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
   );
@@ -64,28 +64,31 @@ async function clickControl(page: Page, name: string) {
   await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-test('галочка мышью и Ctrl/Cmd+Enter отмечают пункт', async ({ page, isMobile }) => {
+test('the checkbox with the mouse and Ctrl/Cmd+Enter check the item', async ({
+  page,
+  isMobile,
+}) => {
   await open(page, TASKS);
   const boxes = page.locator('.nova-prosemirror .nova-check');
   await expect(boxes).toHaveCount(2);
   await boxes.nth(0).click();
   await expect(boxes.nth(0)).toHaveAttribute('aria-checked', 'false');
-  // На телефоне галочку нажимают пальцем (проверено выше); Ctrl+Enter там нет: Android-путь Enter
-  // в ProseMirror (экранная клавиатура) не передаёт модификаторы.
+  // On a phone the checkbox is tapped with a finger (checked above); there is no Ctrl+Enter there: the Android Enter path
+  // in ProseMirror (the on-screen keyboard) doesn't pass modifiers.
   if (isMobile) return;
   await clickInto(page, page.locator('.nova-prosemirror p', { hasText: 'Call Anna' }));
   await page.keyboard.press('End');
   await page.keyboard.press('ControlOrMeta+Enter');
   await expect.poll(() => html(page)).toContain('data-checked="true"><p>Call Anna</p>');
-  // Enter — новый неотмеченный пункт.
+  // Enter makes a new unchecked item.
   await page.keyboard.press('Enter');
   await page.keyboard.type('Bread');
   await expect.poll(() => html(page)).toContain('data-checked="false"><p>Bread</p>');
 });
 
-test('ввод «[ ] » в начале строки и кнопка тулбара', async ({ page }) => {
-  // Проверяем ввод, а не щелчки: курсор — в пустую последнюю строку программно, печатаем по-настоящему.
-  // (Щелчок по пустой последней строке в WebKit без фокуса ставит курсор в начало — отдельная задача.)
+test('typing "[ ] " at the start of a line and the toolbar button', async ({ page }) => {
+  // This checks typing, not clicks: the cursor goes into the empty last line programmatically, the typing is real.
+  // (A click on an empty last line in an unfocused WebKit editor puts the cursor at the start: a separate issue.)
   await open(page, '<p>Plan</p><p></p>');
   await page.evaluate(() => {
     const { view } = (

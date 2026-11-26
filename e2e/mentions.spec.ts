@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Упоминания «@» в настоящих браузерах: в тексте (список под курсором) и в поле комментария. */
+/** "@" mentions in real browsers: in the text (a list under the cursor) and in the comment field. */
 
 type Win = {
   editor: { ready: Promise<void>; setContent(h: string, o: object): void; getHTML(): string };
@@ -17,7 +17,9 @@ async function open(page: Page, initial: string) {
   }, initial);
 }
 
-test('«@» в тексте: список людей, стрелка и Enter вставляют упоминание', async ({ page }) => {
+test('"@" in the text: the list of people, an arrow and Enter insert a mention', async ({
+  page,
+}) => {
   await open(page, '<p></p>');
   await content(page).click();
   await page.keyboard.type('Ask @d');
@@ -28,14 +30,16 @@ test('«@» в тексте: список людей, стрелка и Enter в
   expect(await html(page)).toBe(
     '<p>Ask <span data-mention="u-dmitry">@Dmitry Orlov</span> today</p>',
   );
-  // Упоминание — единое целое: Backspace удаляет его целиком.
+  // A mention is one unit: Backspace deletes it whole.
   await page.keyboard.press('ControlOrMeta+End');
   for (let i = 0; i < 'today'.length + 1; i += 1) await page.keyboard.press('Backspace');
   await page.keyboard.press('Backspace');
   expect(await html(page)).toBe('<p>Ask&nbsp;</p>');
 });
 
-test('«@» в комментарии: выбор из списка, имя выделено в обсуждении', async ({ page }) => {
+test('"@" in a comment: picking from the list, the name highlighted in the thread', async ({
+  page,
+}) => {
   await open(page, '<p>Pricing page</p>');
   await content(page)
     .locator('p')

@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Помощник ИИ в настоящих браузерах (песочница /?ai=1, демо-модель без сети): выделение → окно →
- * быстрое действие → ответ потоком → правки предложениями от «AI» → принять все.
+ * The AI assistant in real browsers (the /?ai=1 playground, an offline demo model): selection → window →
+ * a quick action → the streamed answer → edits as suggestions from "AI" → accept all.
  */
 
 async function clickControl(page: Page, name: string) {
@@ -20,7 +20,7 @@ async function open(page: Page, html: string) {
   }, html);
 }
 
-test('«Короче»: удалённые слова — предложениями ИИ, «принять все» — готовый текст', async ({
+test('"Shorter": deleted words as AI suggestions, "accept all" gives the final text', async ({
   page,
 }) => {
   await open(page, '<p>This is a very good text.</p>');
@@ -42,7 +42,9 @@ test('«Короче»: удалённые слова — предложения
     .toBe('<p>This is a good text.</p>');
 });
 
-test('свой запрос без выделения — продолжение у курсора; Esc отменяет запрос', async ({ page }) => {
+test('a custom request without a selection continues at the cursor; Esc cancels the request', async ({
+  page,
+}) => {
   await open(page, '<p>Start.</p>');
   await page.locator('.nova-prosemirror p').click();
   await page.keyboard.press('End');
@@ -55,7 +57,7 @@ test('свой запрос без выделения — продолжение
     ' This sentence was written by the demo model.',
   );
 
-  // Отмена: Esc во время ответа — ничего не меняется.
+  // Cancelling: Esc during the answer changes nothing.
   await page.evaluate(() => window.editor.setContent('<p>Keep.</p>'));
   await page.locator('.nova-prosemirror p').click();
   await page.keyboard.press('End');

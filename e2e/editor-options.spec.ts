@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-/** Ручка размера и отключённый редактор в настоящих браузерах (jsdom не считает вёрстку). */
+/** The resize handle and the disabled editor in real browsers (jsdom doesn't compute layout). */
 
-test('ручка размера: перетаскивание меняет высоту, стрелка с клавиатуры — тоже', async ({
+test('the resize handle: dragging changes the height, and so does an arrow key', async ({
   page,
 }) => {
   await page.goto('/?lang=en&resize=1');
@@ -20,11 +20,11 @@ test('ручка размера: перетаскивание меняет вы�
   await handle.focus();
   await page.keyboard.press('ArrowDown');
   expect((await root.boundingBox())!.height).toBeCloseTo(dragged + 20, 0);
-  // Текст статусбара при перетаскивании не выделяется.
+  // The statusbar text isn't selected while dragging.
   expect(await page.evaluate(() => String(window.getSelection()).includes('words'))).toBe(false);
 });
 
-test('отключённый редактор: не принимает ввод и пропускается по Tab', async ({ page }) => {
+test("a disabled editor doesn't take input and is skipped by Tab", async ({ page }) => {
   await page.goto('/?lang=en&disabled=1');
   const text = page.locator('.nova-prosemirror');
   const before = await text.textContent();
@@ -35,7 +35,7 @@ test('отключённый редактор: не принимает ввод 
   await expect(text).toHaveAttribute('tabindex', '-1');
 });
 
-test('стили содержимого: файл с @import и строка действуют только на текст редактора', async ({
+test('content styles: a file with @import and a string apply only to the editor text', async ({
   page,
 }) => {
   await page.goto('/?lang=en&contentcss=1');
@@ -53,7 +53,7 @@ test('стили содержимого: файл с @import и строка д�
   await expect(text.locator('h1')).toHaveCSS('color', 'rgb(0, 0, 128)');
   await expect(text.locator('h2')).toHaveCSS('color', 'rgb(0, 128, 0)');
   await expect(text.locator('p')).toHaveCSS('color', 'rgb(200, 0, 0)');
-  // Страница вокруг редактора не задета.
+  // The page around the editor isn't affected.
   const outside = await page.evaluate(() => {
     const p = document.createElement('p');
     p.textContent = 'outside';
@@ -65,7 +65,7 @@ test('стили содержимого: файл с @import и строка д�
   expect(outside.font).not.toMatch(/Georgia/);
 });
 
-test('меню «Стили»: свой формат применяется, класс в HTML, стиль содержимого виден', async ({
+test('the "Styles" menu: a custom format applies, the class is in the HTML, the content style shows', async ({
   page,
 }) => {
   await page.goto('/?lang=en&styles=1');
@@ -78,16 +78,16 @@ test('меню «Стили»: свой формат применяется, к�
     await editor.ready;
     editor.setContent('<p>first</p><p>second</p>', { addToHistory: false });
   });
-  // Клик по самому слову (как человек), а не в центр широкого абзаца.
+  // A click on the word itself (as a person would), not into the middle of a wide paragraph.
   await page
     .locator('.nova-prosemirror p', { hasText: 'second' })
     .click({ position: { x: 8, y: 8 } });
   const styles = page.locator('[data-control="styles"]');
   await styles.click();
-  // Картинка не выделена — формат для картинок недоступен.
-  await expect(page.locator('.nova-menu-item', { hasText: 'Картинка слева' })).toBeDisabled();
-  await page.locator('.nova-menu-item', { hasText: 'Примечание' }).click();
-  await expect(styles).toContainText('Примечание');
+  // No image selected: the format for images is unavailable.
+  await expect(page.locator('.nova-menu-item', { hasText: 'Image left' })).toBeDisabled();
+  await page.locator('.nova-menu-item', { hasText: 'Note' }).click();
+  await expect(styles).toContainText('Note');
   const html = await page.evaluate(() =>
     (window as unknown as { editor: { getHTML(): string } }).editor.getHTML(),
   );
@@ -95,7 +95,9 @@ test('меню «Стили»: свой формат применяется, к�
   await expect(page.locator('.nova-prosemirror p.note')).toHaveCSS('border-left-style', 'solid');
 });
 
-test('переменные: вставка из меню, «фишка» удаляется целиком одной клавишей', async ({ page }) => {
+test('variables: inserting from the menu, a "chip" is deleted whole with one key', async ({
+  page,
+}) => {
   await page.goto('/?lang=en&mergetags=1');
   const html = () =>
     page.evaluate(() => (window as unknown as { editor: { getHTML(): string } }).editor.getHTML());
@@ -112,16 +114,16 @@ test('переменные: вставка из меню, «фишка» уда�
   await page.keyboard.press('End');
   await page.keyboard.type(' ');
   await page.locator('[data-control="mergetags"]').click();
-  await page.locator('.nova-menu-item', { hasText: 'Номер заказа' }).click();
+  await page.locator('.nova-menu-item', { hasText: 'Order number' }).click();
   expect(await html()).toBe(
-    '<p>Order <span data-mergetag="orderId" contenteditable="false">Номер заказа</span></p>',
+    '<p>Order <span data-mergetag="orderId" contenteditable="false">Order number</span></p>',
   );
-  await expect(page.locator('.nova-mergetag')).toHaveText('Номер заказа');
+  await expect(page.locator('.nova-mergetag')).toHaveText('Order number');
   await page.keyboard.press('Backspace');
   expect(await html()).toBe('<p>Order&nbsp;</p>');
 });
 
-test('переменная в конце абзаца не добавляет пустую строку, даже при img { display: block } на сайте', async ({
+test("a variable at the end of a paragraph doesn't add an empty line, even with img { display: block } on the site", async ({
   page,
 }) => {
   await page.goto('/?lang=en&mergetags=1');

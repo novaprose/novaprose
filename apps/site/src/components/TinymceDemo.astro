@@ -1,8 +1,8 @@
 ---
 /**
- * Живой пример перехода: конфигурация в стиле tinymce.init() работает на NovaProse через
- * @novaprose/tinymce-compat. Посетитель меняет toolbar и plugins — редактор пересоздаётся;
- * неподдержанные опции и плагины показываются списком (а не ломают страницу).
+ * A live migration example: a tinymce.init()-style configuration runs on NovaProse through
+ * @novaprose/tinymce-compat. The visitor changes toolbar and plugins, and the editor is recreated;
+ * unsupported options and plugins are shown as a list (instead of breaking the page).
  */
 const defaultPlugins = 'lists link image table code charmap anchor callout';
 const defaultToolbar =
@@ -43,7 +43,7 @@ const defaultToolbar =
   const DEFAULT_PLUGINS = 'lists link image table code charmap anchor callout';
   const DEFAULT_TOOLBAR =
     'undo redo | blocks | bold italic underline | bullist numlist | link image table | callout code';
-  // Только имена кнопок и плагинов: буквы, цифры, «|», пробелы, запятые, дефис и подчёркивание.
+  // Only button and plugin names: letters, digits, "|", spaces, commas, hyphens and underscores.
   const SAFE = /^[a-z0-9_|, -]{0,400}$/i;
 
   const pluginsInput = document.getElementById('np-tiny-plugins') as HTMLInputElement;
@@ -58,7 +58,7 @@ const defaultToolbar =
     eventsOut.textContent = events.slice(-8).join(' → ');
   };
 
-  // Свой плагин с диалогом — как его пишут для TinyMCE (PluginManager + windowManager.open).
+  // A custom plugin with a dialog, the way people write them for TinyMCE (PluginManager + windowManager.open).
   tinymce.PluginManager.add('callout', (editor) => {
     editor.ui.registry.addButton('callout', {
       text: 'Callout',
@@ -99,7 +99,7 @@ const defaultToolbar =
   });
 
   const render = (plugins: string, toolbar: string) => {
-    // Показываем ровно то, что запущено (текстом).
+    // Show exactly what is running (as text).
     code.textContent = `tinymce.init({
   selector: '#editor',
   plugins: '${plugins}',
@@ -124,7 +124,7 @@ const defaultToolbar =
       tinymce.remove('#np-tiny-editor');
     }
     render(plugins, toolbar);
-    // Предупреждения слоя совместимости — на страницу, а не только в консоль.
+    // Warnings of the compatibility layer go on the page, not only to the console.
     const notes: string[] = [];
     const original = console.warn;
     console.warn = (...args: unknown[]) => {

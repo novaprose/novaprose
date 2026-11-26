@@ -1,8 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Ручка перетаскивания блоков (плагин draghandle) и Alt+Shift+↑/↓ в настоящих браузерах.
- * Ручка — только для мыши: на сенсорных экранах её нет (перетаскивания HTML там нет).
+ * The block drag handle (the draghandle plugin) and Alt+Shift+↑/↓ in real browsers.
+ * The handle is for the mouse only: touch screens don't have it (they have no HTML drag and drop).
  */
 
 type W = {
@@ -23,7 +23,7 @@ const handle = (page: Page) => page.locator('.nova-drag-handle');
 const block = (page: Page, selector: string, text: string) =>
   page.locator(`.nova-prosemirror ${selector}`, { hasText: new RegExp(`^${text}$`) });
 
-/** Навести мышь на блок — ручка встаёт слева от него, на уровне первой строки. */
+/** Hover over a block: the handle appears to its left, level with the first line. */
 async function hover(page: Page, selector: string, text: string) {
   const target = block(page, selector, text).first();
   await target.hover();
@@ -34,7 +34,7 @@ async function hover(page: Page, selector: string, text: string) {
   expect(Math.abs(h.y + h.height / 2 - (b.y + Math.min(b.height, 26) / 2))).toBeLessThan(14);
 }
 
-/** Перетащить ручку мышью и отпустить у верхнего (или нижнего) края блока `to`. */
+/** Drag the handle with the mouse and drop it at the top (or bottom) edge of block `to`. */
 async function dragHandleTo(page: Page, to: string, edge: 'top' | 'bottom') {
   const from = (await handle(page).boundingBox())!;
   const target = (await block(page, 'p', to).boundingBox())!;
@@ -45,10 +45,10 @@ async function dragHandleTo(page: Page, to: string, edge: 'top' | 'bottom') {
   await page.mouse.up();
 }
 
-test.describe('ручка перетаскивания', () => {
-  test.skip(({ isMobile }) => isMobile, 'ручка — только для мыши');
+test.describe('the drag handle', () => {
+  test.skip(({ isMobile }) => isMobile, 'the handle is for the mouse only');
 
-  test('перетаскивание абзаца вниз и вверх', async ({ page }) => {
+  test('dragging a paragraph down and up', async ({ page }) => {
     await open(page, '<p>one</p><p>two</p><p>three</p>');
     await hover(page, 'p', 'one');
     await dragHandleTo(page, 'three', 'bottom');
@@ -58,7 +58,7 @@ test.describe('ручка перетаскивания', () => {
     await expect.poll(() => html(page)).toBe('<p>three</p><p>two</p><p>one</p>');
   });
 
-  test('пункт списка: ручка левее маркера, перенос внутри списка', async ({ page }) => {
+  test('a list item: the handle left of the marker, a move inside the list', async ({ page }) => {
     await open(page, '<ul><li><p>apple</p></li><li><p>pear</p></li></ul><p>after</p>');
     await hover(page, 'li p', 'pear');
     const h = (await handle(page).boundingBox())!;
@@ -75,7 +75,9 @@ test.describe('ручка перетаскивания', () => {
       .toBe('<ul><li><p>pear</p></li><li><p>apple</p></li></ul><p>after</p>');
   });
 
-  test('нажатие на ручку: блок выделен, меню — выше, ниже, копия, удалить', async ({ page }) => {
+  test('a click on the handle: the block is selected, the menu offers up, down, duplicate, delete', async ({
+    page,
+  }) => {
     await open(page, '<p>one</p><p>two</p>');
     await hover(page, 'p', 'one');
     await handle(page).click();
@@ -95,7 +97,7 @@ test.describe('ручка перетаскивания', () => {
     await expect.poll(() => html(page)).toBe('<p>one</p><p>one</p>');
   });
 
-  test('набор текста прячет ручку', async ({ page }) => {
+  test('typing hides the handle', async ({ page }) => {
     await open(page, '<p>one</p><p>two</p>');
     await hover(page, 'p', 'two');
     await block(page, 'p', 'two').click();
@@ -104,8 +106,8 @@ test.describe('ручка перетаскивания', () => {
   });
 });
 
-test('Alt+Shift+↑/↓ двигает абзац', async ({ page, isMobile }) => {
-  test.skip(isMobile, 'клавиатурное сочетание — для настольных');
+test('Alt+Shift+↑/↓ moves a paragraph', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'the keyboard shortcut is for desktops');
   await open(page, '<p>one</p><p>two</p><p>three</p>');
   await block(page, 'p', 'two').click();
   await page.keyboard.press('Alt+Shift+ArrowUp');

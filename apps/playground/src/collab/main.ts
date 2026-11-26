@@ -5,9 +5,9 @@ import { createEditor, type Editor } from '@novaprose/core';
 import { collab } from '@novaprose/collab';
 
 /**
- * Песочница совместного редактирования: два редактора в одной комнате.
- * ?room=имя — своя комната (e2e берут случайную, чтобы тесты не мешали друг другу).
- * ?sync=ws://… — другой сервер синхронизации.
+ * The collaboration playground: two editors in one room.
+ * ?room=name picks your own room (e2e tests take a random one so they don't get in each other's way).
+ * ?sync=ws://… points to another sync server.
  */
 const params = new URLSearchParams(location.search);
 const room = params.get('room') ?? 'playground';
@@ -30,10 +30,10 @@ function mount(id: string, name: string): Editor {
     toolbar:
       'undo redo | blocks | bold italic | bullist numlist | link | addcomment showcomments | revisionhistory | suggestions reviewsuggestions',
     plugins: [sync, 'comments', 'revisionhistory', 'suggestions'],
-    // Комментарии — в общем документе: видны обоим редакторам и всем вкладкам.
+    // Comments live in the shared document: both editors and every tab see them.
     pluginOptions: {
       comments: { author: { id: name, name }, store: sync.commentStore() },
-      // История версий — снимки на сервере синхронизации.
+      // Version history: snapshots on the sync server.
       revisionhistory: sync.versions(),
       suggestions: { author: { id: name, name } },
     },

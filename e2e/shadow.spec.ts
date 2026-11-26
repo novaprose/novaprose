@@ -1,10 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /**
- * Редактор внутри теневого корня (свой веб-компонент клиента): фокус, выделение, меню, диалоги.
- * Внутри корня document.activeElement — это хост, а цель событий на document подменена: без учёта
- * этого меню закрывались от клика по своим же пунктам, а Tab в диалоге выкидывал фокус в начало.
- * Локаторы Playwright проходят в открытый корень; закрытый проверяем мышью и клавиатурой.
+ * An editor inside a shadow root (a customer's own web component): focus, selection, menus, dialogs.
+ * Inside the root document.activeElement is the host, and the target of events on document is retargeted: without
+ * handling this, menus closed on clicks on their own items, and Tab in a dialog threw focus to the start.
+ * Playwright locators pierce an open root; the closed one is checked with the mouse and the keyboard.
  */
 
 type W = { editor: { getHTML(): string; ready: Promise<void> }; shadow: ShadowRoot };
@@ -16,7 +16,7 @@ async function open(page: Page, mode: 'open' | 'closed' = 'open') {
   await page.evaluate(() => (window as unknown as W).editor.ready);
 }
 
-/** Центр элемента внутри корня (для закрытого корня локаторы не работают). */
+/** The center of an element inside the root (locators don't work for a closed root). */
 async function center(page: Page, selector: string) {
   const box = await page.evaluate((sel) => {
     const el = (window as unknown as W).shadow.querySelector(sel);
@@ -26,7 +26,7 @@ async function center(page: Page, selector: string) {
   return box;
 }
 
-/** Кнопка тулбара — на панели или в «⋯» (раскладка зависит от ширины экрана). */
+/** The toolbar button: on the panel or in "⋯" (the layout depends on the screen width). */
 async function clickControl(page: Page, name: string) {
   const control = page.locator(`my-app .nova-toolbar [data-control="${name}"]`).first();
   if (await control.isVisible()) return control.click();
@@ -34,14 +34,14 @@ async function clickControl(page: Page, name: string) {
   await page.locator(`my-app .nova-tb-overflow-popover [data-control="${name}"]`).click();
 }
 
-/** Элемент в фокусе внутри корня (селектор data-control или класс). */
+/** The focused element inside the root (a data-control selector or a class). */
 const focused = (page: Page) =>
   page.evaluate(() => {
     const el = (window as unknown as W).shadow.activeElement as HTMLElement | null;
     return el?.getAttribute('data-control') ?? el?.className ?? null;
   });
 
-test('ввод, выделение с клавиатуры и формат кнопкой', async ({ page }) => {
+test('typing, selecting from the keyboard and formatting with a button', async ({ page }) => {
   await open(page);
   const text = page.locator('my-app .nova-prosemirror');
   await text.click();
@@ -52,7 +52,7 @@ test('ввод, выделение с клавиатуры и формат кн�
   await expect.poll(() => html(page)).toBe('<p>Hello shadow world <strong>again</strong></p>');
 });
 
-test('меню: клик по пункту применяет его, а не закрывает меню как «клик снаружи»', async ({
+test('a menu: a click on an item applies it instead of closing the menu as a "click outside"', async ({
   page,
 }) => {
   await open(page);
@@ -64,16 +64,16 @@ test('меню: клик по пункту применяет его, а не з
   await menu.locator('button', { hasText: 'Bold' }).first().click();
   await expect(menu).toBeHidden();
   await expect.poll(() => html(page)).toBe('<p><strong>Hello shadow world</strong></p>');
-  // Клик за пределами корня закрывает открытое меню.
+  // A click outside the root closes the open menu.
   await page.locator('my-app .nova-menubar button', { hasText: 'Format' }).click();
   await expect(menu).toBeVisible();
   await page.locator('#outside').click();
   await expect(menu).toBeHidden();
 });
 
-test('тулбар: стрелки двигают фокус по кнопкам', async ({ page }) => {
+test('the toolbar: arrows move focus across buttons', async ({ page }) => {
   await open(page);
-  // Первая видимая доступная кнопка: на узком экране часть кнопок уходит в «⋯».
+  // The first visible available button: on a narrow screen some buttons move into "⋯".
   const first = page.locator('my-app .nova-toolbar button:not(:disabled):visible').first();
   await first.focus();
   const start = await focused(page);
@@ -85,7 +85,7 @@ test('тулбар: стрелки двигают фокус по кнопкам
   expect(await focused(page)).toBe(start);
 });
 
-test('диалог ссылки: Tab остаётся внутри, Enter вставляет ссылку', async ({ page }) => {
+test('the link dialog: Tab stays inside, Enter inserts the link', async ({ page }) => {
   await open(page);
   await page.locator('my-app .nova-prosemirror').click();
   await page.keyboard.press('ControlOrMeta+a');
@@ -93,7 +93,7 @@ test('диалог ссылки: Tab остаётся внутри, Enter вст
   const dialog = page.locator('my-app .nova-dialog');
   await expect(dialog).toBeVisible();
   await page.keyboard.type('https://example.com');
-  // Обходим все поля по кругу: фокус не должен покидать диалог и не должен прыгать в начало.
+  // Go around all the fields: focus must not leave the dialog or jump to the start.
   const names: string[] = [];
   for (let i = 0; i < 6; i++) {
     await page.keyboard.press('Tab');
@@ -107,7 +107,7 @@ test('диалог ссылки: Tab остаётся внутри, Enter вст
   }
   expect(names).not.toContain('OUTSIDE');
   expect(new Set(names).size).toBeGreaterThan(2);
-  // Shift+Tab с первого элемента диалога (кнопка «×») — на последний (по кругу), а не наружу.
+  // Shift+Tab from the first element of the dialog (the "×" button) goes to the last one (around), not outside.
   const index = () =>
     page.evaluate(() => {
       const el = (window as unknown as W).shadow.activeElement!;
@@ -117,7 +117,7 @@ test('диалог ссылки: Tab остаётся внутри, Enter вст
   expect(await index()).toBe(0);
   await page.keyboard.press('Shift+Tab');
   expect(await index()).toBeGreaterThan(0);
-  // Фокус, ушедший из диалога в другой элемент того же корня, возвращается в диалог.
+  // Focus that left the dialog for another element of the same root comes back to the dialog.
   await page.evaluate(() =>
     (window as unknown as W).shadow.querySelector<HTMLElement>('.nova-prosemirror')!.focus(),
   );
@@ -132,7 +132,7 @@ test('диалог ссылки: Tab остаётся внутри, Enter вст
   await expect.poll(() => html(page)).toContain('href="https://example.com"');
 });
 
-test('закрытый корень: меню работает мышью', async ({ page }) => {
+test('a closed root: the menu works with the mouse', async ({ page }) => {
   await open(page, 'closed');
   const text = await center(page, '.nova-prosemirror');
   await page.mouse.click(text.x, text.y);

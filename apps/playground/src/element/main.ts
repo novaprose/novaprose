@@ -3,8 +3,8 @@ import '../playground.css';
 import '@novaprose/web-component/define';
 
 /**
- * Песочница веб-компонента: <novaprose-editor> в обычной форме (FormData, reset, required,
- * fieldset disabled). Её гоняет e2e/element.spec.ts.
+ * The web component playground: <novaprose-editor> in a regular form (FormData, reset, required,
+ * fieldset disabled). e2e/element.spec.ts drives it.
  */
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 const form = $<HTMLFormElement>('#form');

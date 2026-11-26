@@ -6,7 +6,7 @@ import * as Y from 'yjs';
 import { freePort } from './port';
 import { createSyncServer } from '../src/server.mjs';
 
-/** История версий: снимки, именованные версии, права, протокол stateless. */
+/** Version history: snapshots, named versions, rights, the stateless protocol. */
 
 const SECRET = 'test-secret-that-is-long-enough-for-hs256';
 const cleanups: (() => unknown)[] = [];
@@ -27,7 +27,7 @@ const token = (claims: Record<string, unknown>) =>
     .setExpirationTime('1h')
     .sign(new TextEncoder().encode(SECRET));
 
-/** Клиент с запросами «вопрос — ответ» поверх stateless-сообщений. */
+/** A client with "question and answer" requests over stateless messages. */
 async function client(url: string, name: string, tokenValue: string) {
   const document = new Y.Doc();
   const waiting = new Map<number, (reply: Record<string, unknown>) => void>();
@@ -68,8 +68,8 @@ const until = async (check: () => Promise<boolean> | boolean, ms = 5000) => {
   }
 };
 
-describe('история версий', () => {
-  it('«сохранить версию», список (новые первыми, с авторами) и содержимое версии', async () => {
+describe('version history', () => {
+  it('"save version", the list (newest first, with authors) and the content of a version', async () => {
     const url = await start();
     const anna = await client(url, 'plan', await token({ sub: 'a', name: 'Anna', doc: 'plan' }));
     anna.document.getText('t').insert(0, 'Draft one');
@@ -90,7 +90,7 @@ describe('история версий', () => {
     expect((await anna.request({ nova: 'version', id: 999 })).error).toBe('not-found');
   });
 
-  it('без изменений новая версия не создаётся; читатель не может сохранять', async () => {
+  it("without changes no new version is created; a reader can't save", async () => {
     const url = await start();
     const anna = await client(url, 'doc', await token({ sub: 'a', name: 'Anna', doc: 'doc' }));
     anna.document.getText('t').insert(0, 'x');
@@ -100,11 +100,11 @@ describe('история версий', () => {
 
     const viewer = await client(url, 'doc', await token({ sub: 'v', doc: 'doc', role: 'viewer' }));
     expect((await viewer.request({ nova: 'save-version' })).error).toBe('read-only');
-    // Читать историю читателю можно.
+    // A reader can read the history.
     expect(((await viewer.request({ nova: 'versions' })).versions as unknown[]).length).toBe(1);
   });
 
-  it('когда последний участник уходит, версия сохраняется сама', async () => {
+  it('when the last participant leaves, a version is saved by itself', async () => {
     const url = await start();
     const t = await token({ sub: 'b', name: 'Boris', doc: 'auto' });
     const boris = await client(url, 'auto', t);
@@ -119,7 +119,7 @@ describe('история версий', () => {
     });
   });
 
-  it('демо-комнаты: версии в памяти, пока в комнате кто-то есть', async () => {
+  it('demo rooms: versions in memory while someone is in the room', async () => {
     const url = await start({ publicPrefix: 'demo/' });
     const guest = await client(url, 'demo/room', '');
     guest.document.getText('t').insert(0, 'demo');
@@ -130,13 +130,13 @@ describe('история версий', () => {
   });
 });
 
-describe('клиент @novaprose/collab: serverVersions', () => {
-  it('список, сохранение и содержимое версии в схеме редактора', async () => {
+describe('the @novaprose/collab client: serverVersions', () => {
+  it("the list, saving and a version's content in the editor schema", async () => {
     const { serverVersions } = await import('../../../packages/collab/src/versions');
     const { createSchema } = await import('@novaprose/core');
     const url = await start();
     const anna = await client(url, 'post', await token({ sub: 'a', name: 'Anna', doc: 'post' }));
-    // Документ в формате y-prosemirror: <paragraph>Hello history</paragraph>.
+    // A document in the y-prosemirror format: <paragraph>Hello history</paragraph>.
     const paragraph = new Y.XmlElement('paragraph');
     paragraph.insert(0, [new Y.XmlText('Hello history')]);
     anna.document.getXmlFragment('prosemirror').insert(0, [paragraph]);

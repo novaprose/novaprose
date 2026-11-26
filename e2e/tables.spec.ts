@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-/** Таблицы в настоящих браузерах: сортировка, свойства таблицы и ячейки, узкий экран. */
+/** Tables in real browsers: sorting, table and cell properties, a narrow screen. */
 
 const html = (page: Page) =>
   page.evaluate(() => (window as unknown as { editor: { getHTML(): string } }).editor.getHTML());
@@ -18,14 +18,14 @@ async function open(page: Page, content: string) {
   }, content);
 }
 
-/** Кнопка контекстного тулбара таблицы. */
+/** A button of the table context toolbar. */
 const contextButton = (page: Page, name: string) =>
   page.getByRole('toolbar', { name: 'Table options' }).locator(`[data-control="${name}"]`);
 
 const TABLE =
   '<table><tbody><tr><th><p>Item</p></th><th><p>Cost</p></th></tr><tr><td><p>Hosting</p></td><td><p>$1,200</p></td></tr><tr><td><p>Domains</p></td><td><p>$45</p></td></tr></tbody></table>';
 
-test('сортировка по столбцу через меню', async ({ page }) => {
+test('sorting by a column through the menu', async ({ page }) => {
   await open(page, TABLE);
   await page.locator('.nova-prosemirror').getByText('$45', { exact: true }).click();
   await contextButton(page, 'advtablesort').click();
@@ -34,7 +34,7 @@ test('сортировка по столбцу через меню', async ({ pa
   expect(costs).toEqual(['$45', '$1,200']);
 });
 
-test('свойства таблицы: ширина 100% и по центру', async ({ page }) => {
+test('table properties: 100% wide and centered', async ({ page }) => {
   await open(page, TABLE);
   await page.locator('.nova-prosemirror').getByText('Domains', { exact: true }).click();
   await contextButton(page, 'tableprops').click();
@@ -47,7 +47,7 @@ test('свойства таблицы: ширина 100% и по центру', 
   );
 });
 
-test('свойства ячейки: заголовок и вертикальное выравнивание', async ({ page }) => {
+test('cell properties: header and vertical alignment', async ({ page }) => {
   await open(page, TABLE);
   await page.locator('.nova-prosemirror').getByText('Hosting', { exact: true }).click();
   await contextButton(page, 'tablecellprops').click();
@@ -58,7 +58,7 @@ test('свойства ячейки: заголовок и вертикальн�
   expect(await html(page)).toContain('<th style="vertical-align: middle;"><p>Hosting</p></th>');
 });
 
-test('узкий экран: широкая таблица прокручивается внутри редактора, страница — нет', async ({
+test('a narrow screen: a wide table scrolls inside the editor, the page does not', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 700 });

@@ -15,11 +15,11 @@ import { createApp, defineComponent, h, inject, provide, ref, type PropType } fr
 import { CALLOUT_CONTENT, calloutPlugin, TONES } from '../callout';
 
 /**
- * Vue-песочница: компонент с v-model в форме и headless-редактор со своим тулбаром на композаблах.
- * Без SFC-компилятора — на render-функциях. Её же гоняет e2e (e2e/vue.spec.ts).
+ * The Vue playground: the component with v-model in a form and a headless editor with its own toolbar on composables.
+ * No SFC compiler: render functions. e2e drives it too (e2e/vue.spec.ts).
  */
 
-const INITIAL = '<p>Привет из <strong>Vue</strong>!</p>';
+const INITIAL = '<p>Hello from <strong>Vue</strong>!</p>';
 
 const FormDemo = defineComponent(() => {
   const value = ref(INITIAL);
@@ -27,7 +27,7 @@ const FormDemo = defineComponent(() => {
   const changes = ref(0);
   return () =>
     h('section', { class: 'pg-react-block', 'aria-labelledby': 'form-title' }, [
-      h('h2', { id: 'form-title' }, 'Компонент с v-model в форме'),
+      h('h2', { id: 'form-title' }, 'The component with v-model in a form'),
       h(
         'form',
         {
@@ -50,8 +50,8 @@ const FormDemo = defineComponent(() => {
             init: { toolbar: 'undo redo | bold italic | bullist numlist', statusbar: false },
           }),
           h('div', { class: 'pg-react-actions' }, [
-            h('button', { type: 'submit' }, 'Отправить'),
-            h('button', { type: 'button', onClick: () => (value.value = INITIAL) }, 'Сбросить'),
+            h('button', { type: 'submit' }, 'Submit'),
+            h('button', { type: 'button', onClick: () => (value.value = INITIAL) }, 'Reset'),
           ]),
         ],
       ),
@@ -62,10 +62,10 @@ const FormDemo = defineComponent(() => {
 });
 
 const BUTTONS: Array<[CommandName, string]> = [
-  ['bold', 'Ж'],
-  ['italic', 'К'],
+  ['bold', 'B'],
+  ['italic', 'I'],
   ['h2', 'H2'],
-  ['bulletList', '• Список'],
+  ['bulletList', '• List'],
 ];
 
 const CommandButton = defineComponent({
@@ -84,7 +84,7 @@ const CommandButton = defineComponent({
           'data-command': props.command,
           'aria-pressed': String(active.value),
           disabled: !enabled.value && !active.value,
-          // mousedown не уводит фокус из редактора — выделение сохраняется.
+          // mousedown doesn't take focus from the editor: the selection is kept.
           onMousedown: (event: MouseEvent) => event.preventDefault(),
           onClick: () => run(),
         },
@@ -95,7 +95,7 @@ const CommandButton = defineComponent({
 
 const HeadlessDemo = defineComponent(() => {
   const { el, editor } = useEditor({
-    content: '<p>Свой тулбар на композаблах useEditor и useCommand.</p>',
+    content: '<p>A custom toolbar on the useEditor and useCommand composables.</p>',
     toolbar: false,
     statusbar: false,
   });
@@ -105,8 +105,8 @@ const HeadlessDemo = defineComponent(() => {
   }));
   return () =>
     h('section', { class: 'pg-react-block', 'aria-labelledby': 'headless-title' }, [
-      h('h2', { id: 'headless-title' }, 'Headless: свой тулбар'),
-      h('div', { role: 'toolbar', 'aria-label': 'Свой тулбар', class: 'pg-react-toolbar' }, [
+      h('h2', { id: 'headless-title' }, 'Headless: a custom toolbar'),
+      h('div', { role: 'toolbar', 'aria-label': 'Custom toolbar', class: 'pg-react-toolbar' }, [
         ...BUTTONS.map(([command, label]) =>
           h(CommandButton, { key: command, editor: editor.value, command, label }),
         ),
@@ -117,28 +117,28 @@ const HeadlessDemo = defineComponent(() => {
             disabled: !stats.value?.canUndo,
             onClick: () => editor.value?.exec('undo'),
           },
-          'Отменить',
+          'Undo',
         ),
       ]),
       h('div', { ref: el, 'data-testid': 'headless' }),
-      h('p', ['Слов: ', h('output', { 'data-testid': 'words' }, stats.value?.words ?? 0)]),
+      h('p', ['Words: ', h('output', { 'data-testid': 'words' }, stats.value?.words ?? 0)]),
     ]);
 });
 
 const THEME = Symbol('theme');
 
-/** Вид узла на Vue: свои поля (не попадают в текст документа) и содержимое на своём месте. */
+/** A node view in Vue: its own fields (they don't reach the document text) and the content in its place. */
 const Callout = defineComponent({
   props: nodeViewProps,
   setup(props) {
-    const theme = inject(THEME, 'светлая');
+    const theme = inject(THEME, 'light');
     return () =>
       h('div', { class: 'pg-callout', 'data-tone': String(props.node.attrs.tone) }, [
         h('div', { class: 'pg-callout-bar', contenteditable: 'false' }, [
           h(
             'select',
             {
-              'aria-label': 'Тон выноски',
+              'aria-label': 'Callout tone',
               value: String(props.node.attrs.tone),
               onChange: (event: Event) =>
                 props.updateAttributes({ tone: (event.target as HTMLSelectElement).value }),
@@ -146,8 +146,8 @@ const Callout = defineComponent({
             TONES.map(([value, label]) => h('option', { value }, label)),
           ),
           h('input', {
-            'aria-label': 'Заголовок выноски',
-            placeholder: 'Заголовок',
+            'aria-label': 'Callout title',
+            placeholder: 'Title',
             value: String(props.node.attrs.title),
             onInput: (event: Event) =>
               props.updateAttributes({ title: (event.target as HTMLInputElement).value }),
@@ -162,11 +162,11 @@ const Callout = defineComponent({
 const callout = calloutPlugin(vueNodeView(Callout));
 
 const NodeViewsDemo = defineComponent(() => {
-  provide(THEME, 'тёмная');
+  provide(THEME, 'dark');
   const html = ref(CALLOUT_CONTENT);
   return () =>
     h('section', { class: 'pg-react-block', 'aria-labelledby': 'nv-title' }, [
-      h('h2', { id: 'nv-title' }, 'Вид узла — компонент Vue'),
+      h('h2', { id: 'nv-title' }, 'A node view as a Vue component'),
       h(NovaProseEditor, {
         plugins: [callout],
         defaultValue: CALLOUT_CONTENT,
