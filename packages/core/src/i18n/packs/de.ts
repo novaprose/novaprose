@@ -80,6 +80,8 @@ const de: LanguagePack = {
   'image.drop': 'Bild hierher ziehen oder klicken, um eines auszuwählen',
   'image.uploading': 'Bild wird hochgeladen…',
   'image.uploadFailed': 'Bild konnte nicht hochgeladen werden',
+  'image.retry': 'Erneut versuchen',
+  'image.retrying': 'Verbindungsproblem — Upload wird wiederholt…',
   'image.invalid': 'Diese Bild-URL ist nicht erlaubt',
   'image.or': 'oder',
   'image.toolbar': 'Bildoptionen',

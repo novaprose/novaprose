@@ -67,22 +67,43 @@ export function uploadImages(editor: Editor, files: File[], pos?: number): void 
     else tr.replaceSelectionWith(node);
     // Загружаемая картинка подсвечивается CSS-правилом img[src^="blob:"].
     view.dispatch(tr.scrollIntoView());
+    startUpload(editor, file, blobUrl, 0);
+  }
+}
 
-    const handler = editor.options.uploadImage;
-    const notice = handler
-      ? editor.ui.notify({ text: editor.ui.t('image.uploading'), timeout: 0 })
-      : null;
-    const upload = handler
-      ? handler(file, (percent) =>
-          notice?.setText(`${editor.ui.t('image.uploading')} ${Math.round(percent)}%`),
-        )
-      : readAsDataUrl(file);
+/** Паузы перед автоматическими повторами: большинство сбоев сети временные. */
+export const UPLOAD_RETRY_DELAYS = [1000, 3000];
 
-    upload
-      .then((url) => {
-        if (!isSafeImageUrl(url)) throw new Error(`Unsafe image URL returned: ${url}`);
-        const at = findImage(view, blobUrl);
-        if (at === null) return;
+/** Сервер вернул небезопасный адрес — повтор не поможет. */
+class UnsafeUploadUrl extends Error {}
+
+/**
+ * Загрузка одной картинки с повторами. Картинка (локальная blob:-копия) остаётся в документе, пока
+ * её судьба не решена: успех — подмена src; сбой — два автоповтора, затем уведомление с кнопками
+ * «Повторить» и «Убрать картинку». Закрыли уведомление — картинка убирается: blob:-адрес не должен
+ * попасть в сохранённый документ.
+ */
+function startUpload(editor: Editor, file: File, blobUrl: string, attempt: number): void {
+  const view = editor.view;
+  const { t } = editor.ui;
+  const handler = editor.options.uploadImage;
+  const notice = handler ? editor.ui.notify({ text: t('image.uploading'), timeout: 0 }) : null;
+  const upload = handler
+    ? handler(file, (percent) => notice?.setText(`${t('image.uploading')} ${Math.round(percent)}%`))
+    : readAsDataUrl(file);
+
+  const release = () => URL.revokeObjectURL(blobUrl);
+  const remove = () => {
+    const at = view.isDestroyed ? null : findImage(view, blobUrl);
+    if (at !== null) view.dispatch(view.state.tr.delete(at, at + 1).setMeta('addToHistory', false));
+    release();
+  };
+
+  upload
+    .then((url) => {
+      if (!isSafeImageUrl(url)) throw new UnsafeUploadUrl(`Unsafe image URL returned: ${url}`);
+      const at = view.isDestroyed ? null : findImage(view, blobUrl);
+      if (at !== null) {
         const current = view.state.doc.nodeAt(at)!;
         // Подмена src не должна быть отдельным шагом undo.
         view.dispatch(
@@ -90,19 +111,34 @@ export function uploadImages(editor: Editor, files: File[], pos?: number): void 
             .setNodeMarkup(at, undefined, { ...current.attrs, src: url })
             .setMeta('addToHistory', false),
         );
-      })
-      .catch((error: unknown) => {
-        console.error('[nova] image upload failed', error);
-        const at = findImage(view, blobUrl);
-        if (at !== null)
-          view.dispatch(view.state.tr.delete(at, at + 1).setMeta('addToHistory', false));
-        editor.ui.notify({ text: editor.ui.t('image.uploadFailed'), type: 'error' });
-      })
-      .finally(() => {
-        notice?.close();
-        URL.revokeObjectURL(blobUrl);
+      }
+      release();
+    })
+    .catch((error: unknown) => {
+      // Редактор закрыт или картинку уже удалили — повторять нечего.
+      if (view.isDestroyed || findImage(view, blobUrl) === null) return release();
+      const delay = UPLOAD_RETRY_DELAYS[attempt];
+      if (handler && delay !== undefined && !(error instanceof UnsafeUploadUrl)) {
+        const waiting = editor.ui.notify({ text: t('image.retrying'), timeout: 0 });
+        setTimeout(() => {
+          waiting.close();
+          if (view.isDestroyed) return release();
+          startUpload(editor, file, blobUrl, attempt + 1);
+        }, delay);
+        return;
+      }
+      console.error('[nova] image upload failed', error);
+      editor.ui.notify({
+        text: t('image.uploadFailed'),
+        type: 'error',
+        actions: [
+          { label: t('image.retry'), onAction: () => startUpload(editor, file, blobUrl, 0) },
+          { label: t('image.delete'), onAction: remove },
+        ],
+        onClose: remove,
       });
-  }
+    })
+    .finally(() => notice?.close());
 }
 
 // ---------- автозагрузка встроенных (data:) картинок ----------
@@ -153,7 +189,17 @@ export async function uploadEmbeddedImage(editor: Editor, src: string): Promise<
     replaceImageSrc(editor.view, src, url);
   } catch (error) {
     console.error('[nova] embedded image upload failed', error);
-    editor.ui.notify({ text: editor.ui.t('image.uploadFailed'), type: 'error' });
+    // Картинка остаётся встроенной (ничего не потеряно) — можно догрузить на сервер позже.
+    editor.ui.notify({
+      text: editor.ui.t('image.uploadFailed'),
+      type: 'error',
+      actions: [
+        {
+          label: editor.ui.t('image.retry'),
+          onAction: () => void uploadEmbeddedImage(editor, src),
+        },
+      ],
+    });
   } finally {
     notice.close();
   }

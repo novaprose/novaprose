@@ -80,6 +80,8 @@ const es: LanguagePack = {
   'image.drop': 'Arrastra una imagen aquí o haz clic para elegirla',
   'image.uploading': 'Subiendo imagen…',
   'image.uploadFailed': 'No se pudo subir la imagen',
+  'image.retry': 'Reintentar',
+  'image.retrying': 'Problema de conexión: reintentando la subida…',
   'image.invalid': 'Esta URL de imagen no está permitida',
   'image.or': 'o',
   'image.toolbar': 'Opciones de imagen',

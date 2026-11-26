@@ -566,3 +566,22 @@ test('пробелы, набранные пользователем, переж�
   await page.evaluate(() => window.editor.setContent(window.editor.getHTML()));
   expect(await text()).toBe(typed);
 });
+
+test('отступ абзаца кнопкой; Tab в абзаце уводит фокус, а не отступает', async ({
+  page,
+  isMobile,
+}) => {
+  await open(page, '<p>Text</p>');
+  await clickControl(page, 'indent');
+  expect(await html(page)).toBe('<p style="margin-left: 40px;">Text</p>');
+  await clickControl(page, 'outdent');
+  expect(await html(page)).toBe('<p>Text</p>');
+  test.skip(isMobile, 'Tab — сценарий клавиатуры');
+  await content(page).click();
+  await page.keyboard.press('Tab');
+  expect(await html(page)).toBe('<p>Text</p>');
+  const focusedInEditor = await page.evaluate(() =>
+    document.activeElement?.classList.contains('nova-prosemirror'),
+  );
+  expect(focusedInEditor).toBe(false);
+});

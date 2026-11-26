@@ -69,6 +69,8 @@ const SHORTCUTS: Partial<Record<CommandName, string>> = {
   alignCenter: 'Mod-Shift-e',
   alignRight: 'Mod-Shift-r',
   alignJustify: 'Mod-Shift-j',
+  indent: 'Mod-]',
+  outdent: 'Mod-[',
   clearFormatting: 'Mod-\\',
   paragraph: 'Mod-Alt-0',
   h1: 'Mod-Alt-1',

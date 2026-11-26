@@ -80,6 +80,8 @@ const fr: LanguagePack = {
   'image.drop': 'Déposez une image ici ou cliquez pour en choisir une',
   'image.uploading': "Téléversement de l'image…",
   'image.uploadFailed': "Échec du téléversement de l'image",
+  'image.retry': 'Réessayer',
+  'image.retrying': 'Problème de connexion — nouvelle tentative de téléversement…',
   'image.invalid': "Cette URL d'image n'est pas autorisée",
   'image.or': 'ou',
   'image.toolbar': "Options de l'image",

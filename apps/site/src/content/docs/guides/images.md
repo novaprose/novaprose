@@ -23,8 +23,12 @@ createEditor({
 `uploadImage` handles images that are **pasted**, **dropped** onto the editor or **picked** in the
 image dialog. The image appears immediately as a local preview while the file uploads, and a
 notification shows the progress you report with `progress(percent)`. When the promise resolves,
-the preview is replaced with your URL (without an extra undo step). If it rejects, the preview is
-removed and the user sees an error notification.
+the preview is replaced with your URL (without an extra undo step).
+
+If it rejects, the editor retries twice on its own (after 1 and 3 seconds) — most network errors
+are temporary. If the upload still fails, the image stays where it was and the notification offers
+**Retry** and **Remove image**; dismissing the notification removes the image, so a local preview
+address never ends up in the saved document.
 
 The returned URL must pass the image allowlist: `https:`, `http:` and relative URLs, plus
 base64 `data:` URLs of raster formats (PNG, JPEG, GIF, WebP, AVIF, BMP). Anything else, including

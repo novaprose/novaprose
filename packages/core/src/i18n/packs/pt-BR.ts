@@ -80,6 +80,8 @@ const ptBR: LanguagePack = {
   'image.drop': 'Arraste uma imagem para cá ou clique para escolher',
   'image.uploading': 'Enviando imagem…',
   'image.uploadFailed': 'Falha ao enviar a imagem',
+  'image.retry': 'Tentar novamente',
+  'image.retrying': 'Problema de conexão — tentando enviar novamente…',
   'image.invalid': 'Esta URL de imagem não é permitida',
   'image.or': 'ou',
   'image.toolbar': 'Opções de imagem',

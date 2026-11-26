@@ -81,6 +81,8 @@ export const en = {
   'image.drop': 'Drop an image here or click to choose',
   'image.uploading': 'Uploading image…',
   'image.uploadFailed': 'Image upload failed',
+  'image.retry': 'Retry',
+  'image.retrying': 'Connection problem — retrying the upload…',
   'image.invalid': 'This image URL is not allowed',
   'image.or': 'or',
   'image.toolbar': 'Image options',

@@ -3,7 +3,13 @@ import { redo, undo } from 'prosemirror-history';
 import type { MarkType, NodeType } from 'prosemirror-model';
 import { liftListItem, sinkListItem, wrapInList } from 'prosemirror-schema-list';
 import type { Command, EditorState } from 'prosemirror-state';
-import type { MarkName, NodeName, NovaSchema, TextAlign } from './schema';
+import {
+  indentLevel,
+  type MarkName,
+  type NodeName,
+  type NovaSchema,
+  type TextAlign,
+} from './schema';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
 
 /** Именованные команды редактора. Имена — часть публичного API (см. Editor.exec). */
@@ -114,6 +120,49 @@ const clearFormatting: Command = (state, dispatch) => {
  * Как setBlockType из prosemirror-commands, но сохраняет выравнивание блока
  * (абзац по центру → заголовок по центру), как в Word и Google Docs.
  */
+/**
+ * Отступ абзацев и заголовков в выделении (не в списках — там уровень списка). delta: +1 / -1.
+ * Возвращает false, если менять нечего (так кнопка «уменьшить отступ» гаснет на нулевом уровне).
+ */
+function changeIndent(delta: number): Command {
+  return (state, dispatch) => {
+    const nodes = nodesOf(state);
+    const changes: { pos: number; attrs: Record<string, unknown> }[] = [];
+    const { from, to } = state.selection;
+    state.doc.nodesBetween(from, to, (node, pos, parent) => {
+      if (node.type !== nodes.paragraph && node.type !== nodes.heading) return true;
+      if (parent?.type !== nodes.list_item) {
+        const current = indentLevel(node.attrs.indent);
+        const next = indentLevel(current + delta);
+        if (next !== current) changes.push({ pos, attrs: { ...node.attrs, indent: next } });
+      }
+      return false;
+    });
+    if (!changes.length) return false;
+    if (dispatch) {
+      const tr = state.tr;
+      for (const { pos, attrs } of changes) tr.setNodeMarkup(pos, undefined, attrs);
+      dispatch(tr.scrollIntoView());
+    }
+    return true;
+  };
+}
+
+/** Отступ: в списке — вложенность пункта, иначе — отступ абзаца. */
+const indentCommand: Command = (state, dispatch, view) =>
+  sinkListItem(nodesOf(state).list_item)(state, dispatch, view) ||
+  changeIndent(1)(state, dispatch, view);
+
+const outdentCommand: Command = (state, dispatch, view) =>
+  liftListItem(nodesOf(state).list_item)(state, dispatch, view) ||
+  changeIndent(-1)(state, dispatch, view);
+
+/** Tab / Shift+Tab: только списки — в абзаце Tab остаётся переходом фокуса (без ловушки, WCAG 2.1.2). */
+export const listIndent: Command = (state, dispatch, view) =>
+  sinkListItem(nodesOf(state).list_item)(state, dispatch, view);
+export const listOutdent: Command = (state, dispatch, view) =>
+  liftListItem(nodesOf(state).list_item)(state, dispatch, view);
+
 function setBlockKeepAlign(type: NodeType, attrs: Record<string, unknown> = {}): Command {
   const base = setBlockType(type, attrs);
   return (state, dispatch) => {
@@ -128,6 +177,7 @@ function setBlockKeepAlign(type: NodeType, attrs: Record<string, unknown> = {}):
             ? { lineHeight: old.attrs.lineHeight }
             : {}),
           ...('dir' in type.spec.attrs! && old.attrs.dir ? { dir: old.attrs.dir } : {}),
+          ...('indent' in type.spec.attrs! && old.attrs.indent ? { indent: old.attrs.indent } : {}),
         }));
       }
       dispatch(tr.scrollIntoView());
@@ -162,8 +212,8 @@ export const commands: Record<CommandName, Command> = {
   codeBlock: withNode('code_block', (type) => setBlockType(type)),
   bulletList: withNode('bullet_list', toggleList),
   orderedList: withNode('ordered_list', toggleList),
-  indent: withNode('list_item', sinkListItem),
-  outdent: withNode('list_item', liftListItem),
+  indent: indentCommand,
+  outdent: outdentCommand,
   alignLeft: setAlign(null),
   alignCenter: setAlign('center'),
   alignRight: setAlign('right'),

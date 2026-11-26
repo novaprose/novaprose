@@ -69,6 +69,31 @@ interface BlockStyle {
   align: TextAlign | null;
   lineHeight: string | null;
   dir: TextDirection | null;
+  indent: number;
+}
+
+/** Шаг отступа абзаца, px (как в привычных редакторах), и предел уровней. */
+export const INDENT_STEP = 40;
+export const MAX_INDENT = 10;
+
+/** Уровень отступа 0…MAX_INDENT из любого значения (JSON может прийти чем угодно). */
+export function indentLevel(value: unknown): number {
+  const level = Math.trunc(Number(value));
+  return Number.isFinite(level) ? Math.min(MAX_INDENT, Math.max(0, level)) : 0;
+}
+
+const CSS_LENGTH = /^(\d+(?:\.\d+)?)(px|pt|em|rem)$/;
+const PX_PER: Record<string, number> = { px: 1, pt: 4 / 3, em: 16, rem: 16 };
+
+/** Отступ блока из margin/padding со стороны начала строки (для RTL — справа). */
+function readIndent(dom: HTMLElement, dir: TextDirection | null): number {
+  // Отступ абзаца внутри пункта списка — это уровень списка, а не отступ абзаца.
+  if (dom.parentElement?.tagName === 'LI') return 0;
+  const style = dom.style;
+  const raw =
+    dir === 'rtl' ? style.marginRight || style.paddingRight : style.marginLeft || style.paddingLeft;
+  const m = CSS_LENGTH.exec(raw?.trim() ?? '');
+  return m ? indentLevel(Math.round((Number(m[1]) * PX_PER[m[2]!]!) / INDENT_STEP)) : 0;
 }
 
 function readDir(dom: HTMLElement): TextDirection | null {
@@ -78,10 +103,12 @@ function readDir(dom: HTMLElement): TextDirection | null {
 
 function readBlockStyle(dom: HTMLElement): BlockStyle {
   const align = dom.style.textAlign;
+  const dir = readDir(dom);
   return {
     align: (ALIGNMENTS as readonly string[]).includes(align) ? (align as TextAlign) : null,
     lineHeight: cssValue.lineHeight(dom.style.lineHeight),
-    dir: readDir(dom),
+    dir,
+    indent: readIndent(dom, dir),
   };
 }
 
@@ -95,6 +122,11 @@ function blockStyleAttrs(attrs: Record<string, unknown>): Record<string, string>
     parts.push(`text-align: ${align};`);
   const lineHeight = cssValue.lineHeight(attrs.lineHeight);
   if (lineHeight) parts.push(`line-height: ${lineHeight};`);
+  const indent = indentLevel(attrs.indent);
+  // Отступ — со стороны начала строки: для текста справа налево это правый край.
+  if (indent) {
+    parts.push(`margin-${attrs.dir === 'rtl' ? 'right' : 'left'}: ${indent * INDENT_STEP}px;`);
+  }
   if (parts.length) out.style = parts.join(' ');
   return out;
 }
@@ -103,6 +135,7 @@ const blockStyleSpec = {
   align: { default: null },
   lineHeight: { default: null },
   dir: { default: null },
+  indent: { default: 0 },
 };
 
 // ---------- стиль маркеров и нумерации списков (advlist) ----------

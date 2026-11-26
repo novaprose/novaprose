@@ -8,6 +8,15 @@ export interface NotificationOptions {
   type?: NotificationType;
   /** мс до автозакрытия; 0 — не закрывать автоматически. По умолчанию 4000 (ошибки — 0). */
   timeout?: number;
+  /** Кнопки действий («Повторить»): нажатие выполняет действие и закрывает уведомление. */
+  actions?: NotificationAction[];
+  /** Уведомление закрыли крестиком или по таймеру (не через действие). */
+  onClose?: () => void;
+}
+
+export interface NotificationAction {
+  label: string;
+  onAction: () => void;
 }
 
 export interface NotificationHandle {
@@ -36,6 +45,9 @@ export class Notifications {
       { type: 'button', className: 'nova-btn', 'aria-label': this.closeLabel },
       icon(icons.close),
     );
+    const actions = (options.actions ?? []).map((action) =>
+      h('button', { type: 'button', className: 'nova-btn nova-notification-action' }, action.label),
+    );
     const el = h(
       'div',
       {
@@ -43,17 +55,34 @@ export class Notifications {
         role: type === 'error' ? 'alert' : 'status',
       },
       text,
+      ...actions,
       closeBtn,
     );
     this.region.append(el);
 
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let closed = false;
     const close = () => {
+      if (closed) return;
+      closed = true;
       if (timer) clearTimeout(timer);
       el.remove();
     };
-    closeBtn.addEventListener('click', close);
-    if (timeout > 0) timer = setTimeout(close, timeout);
+    const dismiss = () => {
+      if (closed) return;
+      close();
+      options.onClose?.();
+    };
+    actions.forEach((button, i) =>
+      button.addEventListener('click', () => {
+        close();
+        options.actions![i]!.onAction();
+      }),
+    );
+    closeBtn.addEventListener('click', dismiss);
+    if (timeout > 0) timer = setTimeout(dismiss, timeout);
+    // Есть действие — фокус на нём: с клавиатуры можно сразу нажать «Повторить».
+    actions[0]?.focus({ preventScroll: true });
 
     return { close, setText: (value) => (text.textContent = value) };
   }

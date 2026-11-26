@@ -1,5 +1,5 @@
 import { TextSelection } from 'prosemirror-state';
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   applyLink,
   countWords,
@@ -358,15 +358,85 @@ describe('загрузка изображений', () => {
     expect(e.getHTML()).toBe('<p>a</p>');
   });
 
-  it('ошибка загрузки убирает картинку и показывает уведомление', async () => {
-    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const e = mount('<p>a</p>', { uploadImage: () => Promise.reject(new Error('500')) });
-    uploadImages(e, [png()]);
-    await flush();
-    await flush();
-    expect(e.getHTML()).toBe('<p>a</p>');
-    expect(e.root.querySelector('.nova-notification-error')).not.toBeNull();
-    err.mockRestore();
+  describe('сбой загрузки', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterEach(() => vi.useRealTimers());
+
+    /** Обработчик, который падает `fails` раз, потом отдаёт адрес. */
+    const flaky = (fails: number) => {
+      let calls = 0;
+      return vi.fn(() =>
+        ++calls <= fails
+          ? Promise.reject(new Error('503'))
+          : Promise.resolve(`https://cdn.example.com/${calls}.png`),
+      );
+    };
+    const errorBox = (e: Editor) => e.root.querySelector('.nova-notification-error');
+    const action = (e: Editor, label: string) =>
+      [...e.root.querySelectorAll<HTMLButtonElement>('.nova-notification-action')].find(
+        (b) => b.textContent === label,
+      )!;
+
+    it('временный сбой: автоповтор, картинка загружается без участия пользователя', async () => {
+      const uploadImage = flaky(2);
+      const e = mount('<p>a</p>', { uploadImage });
+      select(e, 2, 2);
+      uploadImages(e, [png()]);
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(uploadImage).toHaveBeenCalledTimes(3);
+      expect(e.getHTML()).toBe('<p>a<img src="https://cdn.example.com/3.png"></p>');
+      expect(errorBox(e)).toBeNull();
+    });
+
+    it('стойкий сбой: картинка остаётся, «Повторить» загружает её', async () => {
+      const uploadImage = flaky(3);
+      const e = mount('<p>a</p>', { uploadImage });
+      select(e, 2, 2);
+      uploadImages(e, [png()]);
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(uploadImage).toHaveBeenCalledTimes(3);
+      expect(e.getHTML()).toMatch(/<img src="blob:/);
+      expect(errorBox(e)).not.toBeNull();
+      action(e, 'Retry').click();
+      await vi.advanceTimersByTimeAsync(0);
+      expect(e.getHTML()).toBe('<p>a<img src="https://cdn.example.com/4.png"></p>');
+      expect(errorBox(e)).toBeNull();
+    });
+
+    it('«Убрать картинку» и закрытие уведомления убирают её (blob: не попадёт в документ)', async () => {
+      for (const how of ['remove', 'close'] as const) {
+        const e = mount('<p>a</p>', { uploadImage: flaky(99) });
+        select(e, 2, 2);
+        uploadImages(e, [png()]);
+        await vi.advanceTimersByTimeAsync(5000);
+        if (how === 'remove') action(e, 'Remove image').click();
+        else errorBox(e)!.querySelector<HTMLButtonElement>('[aria-label="Close"]')!.click();
+        expect(e.getHTML()).toBe('<p>a</p>');
+      }
+    });
+
+    it('небезопасный адрес от сервера не повторяется', async () => {
+      const uploadImage = vi.fn(() => Promise.resolve('javascript:alert(1)'));
+      const e = mount('<p>a</p>', { uploadImage });
+      uploadImages(e, [png()]);
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(uploadImage).toHaveBeenCalledTimes(1);
+      expect(errorBox(e)).not.toBeNull();
+    });
+
+    it('картинку удалили во время загрузки — без ошибок и повторов', async () => {
+      const uploadImage = flaky(99);
+      const e = mount('<p>a</p>', { uploadImage });
+      select(e, 2, 2);
+      uploadImages(e, [png()]);
+      e.setContent('<p>other</p>');
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(uploadImage).toHaveBeenCalledTimes(1);
+      expect(errorBox(e)).toBeNull();
+    });
   });
 
   it('игнорирует не-изображения', () => {

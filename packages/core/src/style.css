@@ -1328,6 +1328,14 @@ html.nova-fullscreen-lock body {
   padding: 0;
 }
 
+.nova-notification .nova-notification-action {
+  padding: 0 10px;
+  border: 1px solid var(--nova-border-strong);
+  background: var(--nova-surface);
+  color: var(--nova-fg);
+  font-weight: 500;
+}
+
 .nova-notification .nova-btn svg {
   width: 14px;
   height: 14px;

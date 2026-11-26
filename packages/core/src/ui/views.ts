@@ -112,6 +112,8 @@ const SHORTCUTS: { group: MessageKey; rows: ShortcutRow[] }[] = [
       { label: 'bulletList', keys: 'Mod-Shift-8' },
       { label: 'orderedList', keys: 'Mod-Shift-7' },
       { label: 'alignCenter', keys: 'Mod-Shift-e' },
+      { label: 'indent', keys: 'Mod-]' },
+      { label: 'outdent', keys: 'Mod-[' },
     ],
   },
   {

@@ -2,7 +2,7 @@ import { baseKeymap, chainCommands, exitCode } from 'prosemirror-commands';
 import { keymap } from 'prosemirror-keymap';
 import { splitListItem } from 'prosemirror-schema-list';
 import type { Command, Plugin } from 'prosemirror-state';
-import { commands, nodesOf, type CommandName } from './commands';
+import { commands, listIndent, listOutdent, nodesOf, type CommandName } from './commands';
 
 const mac = typeof navigator !== 'undefined' && /Mac|iP(hone|[oa]d)/.test(navigator.platform);
 
@@ -46,8 +46,11 @@ export function buildKeymap(resolve: Resolve = (name) => commands[name]): Plugin
     'Mod-\\': commands.clearFormatting,
     'Shift-Enter': insertHardBreak,
     Enter: (state, dispatch) => splitListItem(nodesOf(state).list_item)(state, dispatch),
-    Tab: commands.indent,
-    'Shift-Tab': commands.outdent,
+    // Tab — только для списков (в абзаце остаётся переходом фокуса). Отступ абзаца — Mod-] / Mod-[.
+    Tab: listIndent,
+    'Shift-Tab': listOutdent,
+    'Mod-]': commands.indent,
+    'Mod-[': commands.outdent,
   };
   if (!mac) keys['Mod-y'] = byName(resolve, 'redo');
   return [keymap(keys), keymap(baseKeymap)];
