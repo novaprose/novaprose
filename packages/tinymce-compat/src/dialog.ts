@@ -1,4 +1,5 @@
 import type { Editor } from '@novaprose/core';
+import css from './dialog.css?raw';
 
 /**
  * editor.windowManager.open(spec) — диалог по описанию (как в документации TinyMCE): панель или
@@ -107,6 +108,7 @@ export function openSpecDialog(
   spec: DialogSpec,
   reopen: (spec: DialogSpec) => DialogApi,
 ): DialogApi {
+  editor.ui.addStyles('nova-compat-dialog', css);
   const controls = new Map<string, Control>();
   const tabs = new Map<string, { button: HTMLButtonElement; panel: HTMLElement }>();
   let currentTab = '';

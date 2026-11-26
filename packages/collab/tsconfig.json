@@ -7,5 +7,5 @@
       "@novaprose/core": ["../core/src/index.ts"]
     }
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "../core/src/raw-css.d.ts"]
 }

@@ -9,5 +9,5 @@
       "@novaprose/core/i18n/*": ["../core/src/i18n/packs/*"]
     }
   },
-  "include": ["src", "test"]
+  "include": ["src", "test", "../core/src/raw-css.d.ts"]
 }

@@ -1,0 +1,175 @@
+/*
+ * История версий (плагин revisionhistory).
+ * Подключается при подключении плагина через editor.ui.addStyles — не входит в style.css первой загрузки.
+ */
+
+/* ---------- История версий (плагин revisionhistory) ---------- */
+
+.nova-editor.nova-history-open {
+  min-height: 460px;
+}
+.nova-history {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  border-radius: inherit;
+  background: var(--nova-bg);
+  container-type: inline-size;
+}
+.nova-history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--nova-border);
+  background: var(--nova-toolbar-bg);
+}
+.nova-history-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.nova-history-spacer {
+  flex: 1;
+}
+.nova-history-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+.nova-history-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.nova-history-toggle input {
+  accent-color: var(--nova-accent);
+}
+.nova-history-swatch::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-inline-end: 5px;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+.nova-history-swatch.is-added::before {
+  background: var(--nova-diff-added-bg);
+}
+.nova-history-swatch.is-removed::before {
+  background: var(--nova-diff-removed-bg);
+}
+.nova-history-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+.nova-history-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+.nova-history-side {
+  width: 260px;
+  flex: none;
+  overflow: auto;
+  padding: 8px;
+  border-inline-start: 1px solid var(--nova-border);
+  background: var(--nova-toolbar-bg);
+}
+.nova-history-status:empty {
+  display: none;
+}
+.nova-history-status {
+  margin: 4px 4px 8px;
+  color: var(--nova-muted);
+  font-size: 13px;
+}
+.nova-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nova-history-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: var(--nova-radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: start;
+  cursor: pointer;
+}
+.nova-history-item:hover {
+  background: var(--nova-hover);
+}
+.nova-history-item[aria-current='true'] {
+  border-color: var(--nova-accent);
+  background: var(--nova-active);
+}
+.nova-history-item:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 1px;
+}
+.nova-history-time {
+  font-weight: 600;
+}
+.nova-history-label {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--nova-hover);
+  font-size: 12px;
+}
+.nova-history-authors {
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+.nova-diff-added {
+  background: var(--nova-diff-added-bg);
+  text-decoration: underline 2px var(--nova-success);
+  text-underline-offset: 3px;
+}
+.nova-diff-removed {
+  background: var(--nova-diff-removed-bg);
+  color: var(--nova-danger);
+  text-decoration: line-through;
+}
+div.nova-diff-removed {
+  margin: 0.5em 0;
+  padding: 2px 6px;
+  border-radius: var(--nova-radius-sm);
+}
+
+/* Узко: список версий над текстом, полосой. */
+@container (max-width: 600px) {
+  .nova-history-body {
+    flex-direction: column-reverse;
+  }
+  .nova-history-side {
+    width: auto;
+    max-height: 150px;
+    border-inline-start: 0;
+    border-bottom: 1px solid var(--nova-border);
+  }
+}
+/* Кнопки истории — одной группой в первой строке, легенда — второй строкой. */
+.nova-history-legend {
+  order: 1;
+  flex-basis: 100%;
+}

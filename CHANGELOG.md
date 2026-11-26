@@ -11,6 +11,14 @@ All packages in this repository are versioned together. The format follows
 - `editor.ui.dialog`: tabs (`tabs: [{ title, fields }]`, WAI-ARIA keyboard, switches to the tab with
   an invalid field) and a `file` field with a drop zone, a Browse button, a removable list of chosen
   files, `accept`, `multiple` and `maxSize`. The value is an array of `File` objects.
+- `editor.ui.addStyles(id, css)`: a plugin adds its own styles once per page (or shadow root),
+  without `'unsafe-inline'` in your CSP.
+
+### Performance
+
+- `style.css` shrinks from 11.9 to 10.3 KB gzip: styles of the comments panel, version history, plugin
+  dialogs and the TinyMCE-compatible dialogs now come with their lazily loaded code. If you override
+  these styles in your own CSS, use a selector at least as specific as ours.
 
 ## 0.7.0 — 2026-11-26
 

@@ -1,6 +1,7 @@
 import type { Translator } from '../i18n';
 import type { DialogHandle, DialogOptions } from './dialog';
 import { h, logicalKey, uniqueId } from './dom';
+import css from './form-dialog.css?raw';
 import type {
   DialogApi,
   DialogData,
@@ -14,6 +15,9 @@ import type {
  * (label, aria-invalid, aria-describedby, фокус на первом неверном поле), вкладки (WAI-ARIA tabs)
  * и поле файлов с зоной перетаскивания. Ленивый чанк ядра.
  */
+
+/** Стили диалога (ошибки полей, вкладки, файлы) — подключаются вместе с его кодом. */
+export const formDialogCss = css;
 
 type NamedField = Extract<DialogField, { name: string }>;
 

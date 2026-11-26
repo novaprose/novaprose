@@ -9,6 +9,7 @@ import { HTMLSerializer } from '../serializer';
 import { h, uniqueId } from '../ui/dom';
 import { diffDocs } from './history-diff';
 import { pickLabels } from './shared';
+import css from './revisionhistory.css?raw';
 
 /**
  * Плагин revisionhistory (имя как у TinyMCE): история версий документа.
@@ -315,6 +316,7 @@ export default definePlugin({
   name: 'revisionhistory',
   toolbar: 'revisionhistory',
   setup(editor) {
+    editor.ui.addStyles('nova-revisionhistory', css);
     const options = editor.options.pluginOptions?.revisionhistory as
       RevisionHistoryOptions | undefined;
     if (!options?.list || !options.load) {

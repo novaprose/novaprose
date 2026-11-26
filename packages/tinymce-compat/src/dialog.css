@@ -1,0 +1,78 @@
+/*
+ * Диалоги по описанию (windowManager.open) слоя совместимости.
+ * Подключается при первом открытии такого диалога через editor.ui.addStyles — не входит в style.css первой загрузки.
+ */
+
+/* ---------- Диалоги по описанию (windowManager.open в @novaprose/tinymce-compat) ---------- */
+
+.nova-compat-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.nova-compat-tabs {
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid var(--nova-border);
+}
+.nova-compat-tab {
+  padding: 6px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--nova-muted);
+  font: inherit;
+  cursor: pointer;
+}
+.nova-compat-tab[aria-selected='true'] {
+  border-bottom-color: var(--nova-accent);
+  color: var(--nova-fg);
+  font-weight: 600;
+}
+.nova-compat-tab:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: -2px;
+}
+.nova-compat-tabpanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.nova-compat-tabpanel[hidden] {
+  display: none;
+}
+.nova-compat-grid {
+  display: grid;
+  gap: 10px;
+}
+.nova-compat-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nova-compat-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.nova-compat-alert {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-active);
+  color: var(--nova-fg);
+}
+.nova-compat-alert.is-warn {
+  background: var(--nova-warning-bg);
+}
+.nova-compat-alert.is-error {
+  background: var(--nova-danger-bg);
+  color: var(--nova-danger);
+}
+.nova-compat-alert.is-success {
+  background: var(--nova-success-bg);
+}
+.nova-compat-html {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

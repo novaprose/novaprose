@@ -1,5 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { defineConfig } from 'tsup';
+// @ts-expect-error — скрипт репозитория на JS без типов
+import { rawCss } from '../../scripts/esbuild-raw-css.mjs';
 
 /**
  * Ядро + языковые пакеты отдельными точками входа: `@novaprose/core/i18n/de`.
@@ -24,4 +26,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: true,
+  esbuildPlugins: [rawCss],
 });

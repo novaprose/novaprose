@@ -22,6 +22,7 @@ import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
+import { rawCss } from './esbuild-raw-css.mjs';
 
 const args = {};
 for (let i = 2; i < process.argv.length; i += 2) {
@@ -110,7 +111,7 @@ const first = await build({
   outfile: outFile,
   format: 'iife',
   globalName,
-  plugins: [splitDynamic],
+  plugins: [rawCss, splitDynamic],
 });
 const mainModules = new Set(Object.keys(first.metafile.inputs));
 
@@ -155,7 +156,7 @@ while (queue.length) {
     entryPoints: { [id]: abs },
     outdir: path.join(outDir, chunkDir),
     format: 'esm',
-    plugins: [splitDynamic, fromRegistry],
+    plugins: [rawCss, splitDynamic, fromRegistry],
   });
   const text = js(result).text;
   const deps = [...text.matchAll(PLACEHOLDER_RE)].map((m) => m[2]);
@@ -208,7 +209,7 @@ const main = await build({
   outfile: outFile,
   format: 'iife',
   globalName,
-  plugins: [splitDynamic],
+  plugins: [rawCss, splitDynamic],
   // Адрес частей — от адреса самого скрипта (document.currentScript), а не страницы.
   banner: {
     js:

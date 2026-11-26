@@ -1,0 +1,110 @@
+/*
+ * Диалоги по описанию полей (editor.ui.dialog): ошибки полей, сообщения, вкладки, файлы.
+ * Подключается при первом открытии такого диалога (вместе с его кодом) через editor.ui.addStyles — не входит в style.css первой загрузки.
+ */
+
+/* Диалоги по описанию полей (editor.ui.dialog) */
+.nova-required {
+  color: var(--nova-danger);
+}
+.nova-field-error {
+  margin: 0;
+  color: var(--nova-danger);
+  font-size: 12px;
+}
+.nova-input[aria-invalid='true'] {
+  border-color: var(--nova-danger);
+}
+.nova-form-message {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-hover);
+}
+/* Вкладки диалога (WAI-ARIA tabs) */
+.nova-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--nova-border);
+}
+.nova-tab {
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--nova-muted);
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.nova-tab:hover {
+  color: var(--nova-fg);
+}
+.nova-tab[aria-selected='true'] {
+  border-bottom-color: var(--nova-accent);
+  color: var(--nova-fg);
+  font-weight: 600;
+}
+.nova-tab:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: -2px;
+}
+.nova-tabpanel[hidden] {
+  display: none;
+}
+
+/* Поле файлов: зона перетаскивания (сам input скрыт, фокус — на ней через :focus-within) */
+/* Зона — та же, что в диалоге картинки (.nova-dropzone в style.css); здесь только отличия поля файлов:
+   компактнее, текст и кнопка в строку, фокус скрытого input виден на зоне. */
+.nova-file-field .nova-dropzone {
+  flex-direction: row;
+  flex-wrap: wrap;
+  min-height: 0;
+}
+.nova-file-field .nova-dropzone:focus-within {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 2px;
+}
+.nova-file-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nova-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.nova-file-list:empty {
+  display: none;
+}
+.nova-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.nova-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nova-file-remove {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.nova-file-size {
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+.nova-form-message.is-warning,
+.nova-form-message.is-error {
+  background: var(--nova-danger-bg);
+  color: var(--nova-danger);
+}

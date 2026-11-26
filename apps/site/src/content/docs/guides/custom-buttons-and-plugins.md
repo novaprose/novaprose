@@ -147,6 +147,17 @@ unless you pass `button: false`. From code: `editor.ui.sidebar.show('outline', {
 `hide()`, `toggle(name)`, `active`. The panel has a heading and a close button, Escape closes it
 and returns focus to the text.
 
+## Plugin styles
+
+Ship a plugin's CSS with its code: `editor.ui.addStyles(id, css)` adds it once per page (or shadow
+root), no matter how many editors there are. It uses constructable stylesheets, so your Content
+Security Policy doesn't need `'unsafe-inline'`. Use the `--nova-*` variables to follow the light and
+dark themes.
+
+```ts
+editor.ui.addStyles('outline-plugin', '.outline-item { color: var(--nova-muted); }');
+```
+
 ## A plugin
 
 Package buttons and behavior into a plugin to reuse them across editors:

@@ -1,4 +1,6 @@
 import { defineConfig } from 'tsup';
+// @ts-expect-error — скрипт репозитория на JS без типов
+import { rawCss } from '../../scripts/esbuild-raw-css.mjs';
 
 /**
  * npm: ESM/CJS, ядро — внешняя зависимость. CDN-замена tinymce.min.js (dist/tinymce.global.js +
@@ -10,5 +12,6 @@ export default defineConfig({
   dts: true,
   clean: false,
   sourcemap: true,
+  esbuildPlugins: [rawCss],
   external: ['@novaprose/core', 'prosemirror-state', 'prosemirror-model'],
 });

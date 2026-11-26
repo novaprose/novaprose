@@ -54,6 +54,7 @@ Named commands — part of the public API, stable across minor versions:
 | `root: HTMLElement`                        | the editor's root element                                                                                   |
 | `ui.registry`                              | register controls ([Custom buttons](/guides/custom-buttons-and-plugins/))                                   |
 | `ui.t(key)`                                | translate a UI string                                                                                       |
+| `ui.addStyles(id, css)`                    | add a plugin's styles once per page (or shadow root), CSP-friendly                                          |
 | `ui.dialog(spec)`                          | a dialog from a list of fields ([Plugins](/guides/custom-buttons-and-plugins/#a-dialog))                    |
 | `ui.sidebar`                               | `show(name)`, `hide()`, `toggle(name)`, `active` ([Plugins](/guides/custom-buttons-and-plugins/#a-sidebar)) |
 | `ui.notify(text \| options)`               | a notification, optionally with action buttons                                                              |

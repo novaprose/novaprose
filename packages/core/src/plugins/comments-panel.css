@@ -1,0 +1,184 @@
+/*
+ * Панель обсуждений (плагин comments).
+ * Подключается при первом открытии панели через editor.ui.addStyles — не входит в style.css первой загрузки.
+ */
+
+.nova-comments {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
+  font-size: 13px;
+}
+.nova-comments[hidden] {
+  display: none;
+}
+.nova-comments-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nova-comments-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.nova-comments-count:not(:empty) {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--nova-hover);
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+.nova-comments-close {
+  margin-inline-start: auto;
+  font-size: 18px;
+  line-height: 1;
+}
+.nova-comments-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nova-muted);
+}
+.nova-comments-filter input {
+  accent-color: var(--nova-accent);
+}
+.nova-comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.nova-comments-empty {
+  margin: 8px 2px;
+  color: var(--nova-muted);
+  line-height: 1.5;
+}
+
+.nova-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius);
+  background: var(--nova-surface);
+  cursor: pointer;
+}
+.nova-thread.is-active {
+  border-color: var(--nova-comment-line);
+  box-shadow: var(--nova-shadow);
+  cursor: default;
+}
+.nova-thread.is-resolved {
+  opacity: 0.75;
+}
+.nova-thread:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 1px;
+}
+.nova-thread-quote {
+  margin: 0;
+  padding-inline-start: 8px;
+  border-inline-start: 3px solid var(--nova-comment-line);
+  color: var(--nova-muted);
+  overflow-wrap: anywhere;
+}
+.nova-thread-orphan,
+.nova-thread-resolved {
+  margin: 0;
+  color: var(--nova-muted);
+  font-style: italic;
+}
+.nova-thread-tools,
+.nova-comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.nova-thread .nova-button {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.nova-thread:not(.is-active):not(:hover):not(:focus-within) .nova-thread-tools {
+  display: none;
+}
+.nova-button-danger {
+  color: var(--nova-danger);
+}
+
+.nova-comment-item + .nova-comment-item {
+  padding-top: 8px;
+  border-top: 1px solid var(--nova-border);
+}
+.nova-comment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+.nova-comment-avatar {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+.nova-comment-author {
+  color: var(--nova-fg);
+  font-weight: 600;
+}
+.nova-comment-you {
+  color: var(--nova-muted);
+  font-weight: 400;
+}
+.nova-comment-text {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.nova-comment-tools {
+  display: flex;
+  gap: 10px;
+  margin-top: 2px;
+}
+.nova-link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--nova-accent);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.nova-link-btn:hover {
+  text-decoration: underline;
+}
+.nova-link-btn:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.nova-comment-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nova-comment-input {
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  font: inherit;
+}

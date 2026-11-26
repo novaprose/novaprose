@@ -3,6 +3,7 @@ import { COMMENT_MAX_LENGTH } from '../comments';
 import { activeElement, formatShortcut, h, uniqueId } from '../ui/dom';
 import type { CommentsController } from './comments';
 import type { MentionUser } from './mentions';
+import css from './comments-panel.css?raw';
 
 /**
  * Панель обсуждений (грузится лениво при первом открытии). Все данные пользователей — только через
@@ -33,6 +34,7 @@ function initials(name: string): string {
 
 export function createCommentsPanel(controller: CommentsController) {
   const { editor, store, labels } = controller;
+  editor.ui.addStyles('nova-comments-panel', css);
   const lang = editor.options.language ?? 'en';
   const relative = new Intl.RelativeTimeFormat(lang, { numeric: 'auto' });
   const absolute = new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' });
