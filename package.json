@@ -18,7 +18,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && node apps/site/scripts/sync-docs.mjs --check",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && node scripts/i18n.mjs check && node apps/site/scripts/sync-docs.mjs --check",
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "release:pack": "pnpm build && node scripts/release-pack.mjs",

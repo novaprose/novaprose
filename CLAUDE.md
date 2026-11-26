@@ -106,6 +106,8 @@ Git-хуки (simple-git-hooks, ставятся при `pnpm install`): pre-pus
 - **UI-строки только через `editor.ui.t(key)`.** Новый ключ — сначала в `i18n/en.ts`, затем перевод в `ru.ts`.
   В плагине: `export const LABELS = { en: {...}, ru: {...} }` + `pickLabels(editor, '<имя плагина>', LABELS)` —
   строки идут через ту же систему (ключи `<плагин>.<ключ>`); полноту языков проверяет `test/i18n.test.ts`.
+  Новая строка → добавить её во ВСЕ пакеты `src/i18n/packs/*.ts` (иначе `node scripts/i18n.mjs check` в `pnpm check`
+  упадёт). Пакеты de/es/fr/it/pt-BR — черновые (перевод Claude), до вычитки носителем статус «draft».
 - **Необязательная функциональность — плагином** в `src/plugins/` (`definePlugin`, ленивая регистрация
   в `src/plugins/index.ts`). В ядро — только то, без чего редактор не редактор.
 - **Новые кнопки — через `editor.ui.registry`** (как плагин); имена — как в публичной документации TinyMCE.

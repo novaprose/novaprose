@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { createEditor, en, registerLanguage, ru, type Editor } from '../src';
+import { createEditor, en, registerLanguage, ru, type Editor, type LanguagePack } from '../src';
 import { getPluginMessages } from '../src/i18n';
 
 /**
@@ -104,5 +104,28 @@ describe('полнота встроенных переводов', () => {
     const messages = getPluginMessages();
     expect(messages.anchor?.en?.title).toBe('Anchor');
     expect(messages.charmap?.en?.['groups.0']).toBeTruthy();
+  });
+});
+
+describe('языковые пакеты @novaprose/core/i18n/*', () => {
+  const PACK_DIR = join(__dirname, '../src/i18n/packs');
+  const codes = readdirSync(PACK_DIR)
+    .filter((f) => f.endsWith('.ts'))
+    .map((f) => f.replace('.ts', ''));
+
+  it('пакеты есть', () => {
+    expect(codes.length).toBeGreaterThanOrEqual(5);
+  });
+
+  it.each(codes)('%s: подключается и переводит ядро и плагины', async (code) => {
+    const pack = ((await import(join(PACK_DIR, `${code}.ts`))) as { default: LanguagePack })
+      .default;
+    registerLanguage(code, pack);
+    const e = await mount({ language: code, toolbar: 'bold anchor charmap' });
+    expect(tooltip(e, 'bold')).toBe(pack.bold);
+    expect(tooltip(e, 'anchor')).toBe(pack['anchor.title']);
+    expect(tooltip(e, 'charmap')).toBe(pack['charmap.title']);
+    // Перевод отличается от английского — пакет не пустышка.
+    expect(pack.bold).not.toBe(en.bold);
   });
 });

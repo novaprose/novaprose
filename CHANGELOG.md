@@ -8,6 +8,12 @@ All packages in this repository are versioned together. The format follows
 
 ### Localization
 
+- Language packs for German, Spanish, French, Italian and Portuguese (Brazil):
+  `import de from '@novaprose/core/i18n/de'; registerLanguage('de', de)`. Each covers the core
+  and all built-in plugins (289 strings), ships as a separate ~4 KB import and is marked as a draft
+  until reviewed by a native speaker.
+- `scripts/i18n.mjs`: `template` exports every UI string for translators, `check` verifies that
+  packs have every key and the same `{placeholders}` (part of `pnpm check`).
 - Plugin strings are now part of the common translation system. `registerLanguage()` and the
   `translations` option translate plugins too, with keys prefixed by the plugin name
   (`'anchor.title'`, `'comments.reply'`, `'charmap.groups.0'`). Before, a custom language

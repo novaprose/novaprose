@@ -44,6 +44,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./i18n/*": {
+      "import": {
+        "types": "./dist/i18n/*.d.ts",
+        "default": "./dist/i18n/*.js"
+      },
+      "require": {
+        "types": "./dist/i18n/*.d.cts",
+        "default": "./dist/i18n/*.cjs"
+      }
+    },
     "./style.css": "./src/style.css"
   },
   "files": [
@@ -52,7 +62,7 @@
     "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap",
+    "build": "tsup",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
