@@ -130,7 +130,7 @@ export {
   hasHeaderRow,
   hasHeaderColumn,
   isInTable,
-} from './table';
+} from './tables';
 export {
   createCommentStore,
   sanitizeThread,

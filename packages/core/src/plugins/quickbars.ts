@@ -3,7 +3,7 @@ import type { Editor } from '../editor';
 import { isSupportedImage, uploadImages } from '../image';
 import { openLinkDialog } from '../link';
 import { definePlugin } from '../plugins';
-import { insertTable, isInTable } from '../table';
+import { insertTable, isInTable } from '../tables';
 import { icons } from '../ui/icons';
 
 /**

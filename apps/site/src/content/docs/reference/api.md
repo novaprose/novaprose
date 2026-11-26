@@ -49,7 +49,7 @@ Named commands — part of the public API, stable across minor versions:
 | `hasPlugin(name): boolean`                 | whether a plugin is active                                                |
 | `rebuildToolbar()`                         | re-render the toolbar after registering controls late                     |
 | `updateUI()`                               | refresh toolbar state (pressed/disabled) after a display-only change      |
-| `ready: Promise<void>`                     | resolves when all plugins (including lazy ones) are set up                |
+| `ready: Promise<void>`                     | resolves when all plugins and lazy parts (e.g. table editing) are set up  |
 | `mode`                                     | `'classic'`, `'inline'` or `'distraction-free'`                           |
 | `root: HTMLElement`                        | the editor's root element                                                 |
 | `ui.registry`                              | register controls ([Custom buttons](/guides/custom-buttons-and-plugins/)) |

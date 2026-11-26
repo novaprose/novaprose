@@ -126,7 +126,8 @@ createEditor({ element, plugins: [() => import('./my-heavy-plugin')] });
 ```
 
 A plugin that throws during setup is reported in the console and skipped; the editor keeps
-working. Wait for all plugins with `await editor.ready`.
+working. Wait for all plugins with `await editor.ready` (it also covers the table editing
+chunk: `tableCommands` return `false` until it is loaded).
 
 ### Built-in plugins
 

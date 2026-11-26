@@ -15,7 +15,7 @@ import {
   setCellBackground,
   tableCommands,
   tableRect,
-} from '../table';
+} from '../tables';
 import { createColorPanel, defaultColors } from './color-panel';
 import { selectField, textField } from './dialog';
 import { h } from './dom';

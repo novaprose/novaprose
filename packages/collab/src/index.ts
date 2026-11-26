@@ -238,6 +238,8 @@ export function collab(options: CollabOptions): CollabPlugin {
       const { ydoc, awareness } = get();
       const fragment = ydoc.getXmlFragment(options.field ?? 'prosemirror');
       return [
+        // Представления y-prosemirror не готовы к пересозданию; ядро сохраняет их при догрузке
+        // ленивых частей (см. plugin-views.ts в @novaprose/core).
         ySyncPlugin(fragment),
         yCursorPlugin(awareness, { cursorBuilder, selectionBuilder }),
         yUndoPlugin(),

@@ -97,6 +97,21 @@ describe('совместное редактирование', () => {
     expect(a.getHTML()).toBe('<h2>Plan</h2><p>Draft by Boris</p>');
   });
 
+  // Регрессия: догрузка ленивого плагина (quickbars, механика таблиц) перестраивает набор плагинов
+  // ProseMirror, тот пересоздаёт их представления — и y-prosemirror уничтожал UndoManager:
+  // отмена в совместном режиме переставала работать (так было и в демо на сайте).
+  it('отмена работает после догрузки ленивых плагинов', async () => {
+    const { a, b } = pair(['quickbars']);
+    await Promise.all([a.ready, b.ready]);
+    typeAtEnd(a, 'Anna wrote this.');
+    await tick();
+    typeAtEnd(b, ' Boris added this.');
+    await tick();
+    expect(a.exec('undo')).toBe(true);
+    await tick();
+    expect(b.getHTML()).toBe('<p>&nbsp;Boris added this.</p>');
+  });
+
   it('«отменить» откатывает только свои правки, чужие остаются', async () => {
     const { a, b } = pair();
     typeAtEnd(a, 'Anna wrote this.');

@@ -1,7 +1,7 @@
 import { DOMSerializer } from 'prosemirror-model';
 import { AllSelection } from 'prosemirror-state';
 import type { Editor } from '../editor';
-import { insertTable } from '../table';
+import { insertTable } from '../tables';
 import { textField } from './dialog';
 import { h } from './dom';
 import { icons } from './icons';

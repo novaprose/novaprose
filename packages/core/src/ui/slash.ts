@@ -3,7 +3,7 @@ import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
 import { openImageDialog } from '../image';
 import { openLinkDialog } from '../link';
-import { insertTable } from '../table';
+import { insertTable } from '../tables';
 import type { AutocompleterItem } from './autocompleter';
 import { icons } from './icons';
 

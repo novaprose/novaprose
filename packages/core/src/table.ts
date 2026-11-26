@@ -1,6 +1,6 @@
 import { keymap } from 'prosemirror-keymap';
 import { Fragment, type Node as PMNode } from 'prosemirror-model';
-import { TextSelection, type Command, type EditorState, type Plugin } from 'prosemirror-state';
+import { type Command, type EditorState, type Plugin } from 'prosemirror-state';
 import {
   addColumnAfter,
   addColumnBefore,
@@ -22,59 +22,10 @@ import {
   TableView,
   toggleHeader,
 } from 'prosemirror-tables';
-import type { Editor } from './editor';
-import {
-  classAttr,
-  cssValue,
-  schema as baseSchema,
-  type CellVAlign,
-  type NovaSchema,
-  type TableAlign,
-} from './schema';
-import { h } from './ui/dom';
+import { createTable, createTableGridPanel, insertTable, MAX_GRID, tableRect } from './tables';
 
-export const MAX_GRID = 10;
-
-/** Создать таблицу rows×cols; первая строка — заголовки, если withHeader. */
-export function createTable(
-  rows: number,
-  cols: number,
-  withHeader = true,
-  schema: NovaSchema = baseSchema,
-): PMNode {
-  const { table, table_row, table_cell, table_header, paragraph } = schema.nodes;
-  const rowNodes: PMNode[] = [];
-  for (let r = 0; r < rows; r++) {
-    const cellType = withHeader && r === 0 ? table_header : table_cell;
-    const cells: PMNode[] = [];
-    for (let c = 0; c < cols; c++) cells.push(cellType.create(null, paragraph.create()));
-    rowNodes.push(table_row.create(null, cells));
-  }
-  return table.create(null, rowNodes);
-}
-
-/** Вставить таблицу на место выделения и поставить курсор в первую ячейку. */
-export function insertTable(rows: number, cols: number, withHeader = true): Command {
-  return (state, dispatch) => {
-    if (rows < 1 || cols < 1 || rows > 100 || cols > 50) return false;
-    // Таблицы внутри таблиц не вставляем — как и большинство редакторов.
-    if (isInTable(state)) return false;
-    if (dispatch) {
-      const node = createTable(rows, cols, withHeader, state.schema as NovaSchema);
-      const tr = state.tr.replaceSelectionWith(node);
-      // Узлы неизменяемы — вставленную таблицу находим по ссылке на объект.
-      let tablePos = -1;
-      tr.doc.descendants((n, pos) => {
-        if (n === node) tablePos = pos;
-        return tablePos < 0;
-      });
-      // +3: table → row → cell → внутрь первого абзаца.
-      if (tablePos >= 0) tr.setSelection(TextSelection.near(tr.doc.resolve(tablePos + 3)));
-      dispatch(tr.scrollIntoView());
-    }
-    return true;
-  };
-}
+export { createTable, createTableGridPanel, insertTable, MAX_GRID, tableRect };
+import { classAttr, cssValue, type CellVAlign, type NovaSchema, type TableAlign } from './schema';
 
 /** Tab — следующая ячейка; в последней ячейке — новая строка (как в Word и TinyMCE). */
 const nextCellOrNewRow: Command = (state, dispatch, view) => {
@@ -153,83 +104,7 @@ export function isCellSelection(state: EditorState): boolean {
   return state.selection instanceof CellSelection;
 }
 
-/** DOM-прямоугольник текущей таблицы (для позиционирования контекстного тулбара). */
-export function tableRect(editor: Editor): DOMRect | null {
-  const { state } = editor.view;
-  if (!isInTable(state)) return null;
-  const table = findTable(state.selection.$from);
-  if (!table) return null;
-  const dom = editor.view.nodeDOM(table.pos) as HTMLElement | null;
-  return dom?.getBoundingClientRect() ?? null;
-}
-
 export { selectedRect };
-
-/**
- * Панель выбора размера таблицы: сетка до 10×10, подсветка при наведении/стрелках,
- * подпись «3 × 4». Доступна с клавиатуры (стрелки + Enter).
- */
-export function createTableGridPanel(
-  onPick: (rows: number, cols: number) => void,
-  label: (rows: number, cols: number) => string,
-  gridLabel: string,
-): HTMLElement {
-  let rows = 1;
-  let cols = 1;
-  const cells: HTMLButtonElement[] = [];
-  const caption = h('div', { className: 'nova-grid-caption', 'aria-live': 'polite' });
-  const grid = h('div', { className: 'nova-grid', role: 'grid', 'aria-label': gridLabel });
-
-  const paint = () => {
-    for (const cell of cells) {
-      const r = Number(cell.dataset.row);
-      const c = Number(cell.dataset.col);
-      cell.classList.toggle('is-on', r <= rows && c <= cols);
-      cell.tabIndex = r === rows && c === cols ? 0 : -1;
-    }
-    caption.textContent = label(rows, cols);
-  };
-
-  for (let r = 1; r <= MAX_GRID; r++) {
-    for (let c = 1; c <= MAX_GRID; c++) {
-      const cell = h('button', {
-        type: 'button',
-        className: 'nova-grid-cell',
-        role: 'gridcell',
-        'aria-label': label(r, c),
-        'data-row': String(r),
-        'data-col': String(c),
-      });
-      cell.addEventListener('mouseenter', () => {
-        rows = r;
-        cols = c;
-        paint();
-      });
-      cell.addEventListener('click', () => onPick(r, c));
-      cells.push(cell);
-      grid.append(cell);
-    }
-  }
-
-  grid.addEventListener('keydown', (event) => {
-    const moves: Record<string, [number, number]> = {
-      ArrowRight: [0, 1],
-      ArrowLeft: [0, -1],
-      ArrowDown: [1, 0],
-      ArrowUp: [-1, 0],
-    };
-    const move = moves[event.key];
-    if (!move) return;
-    event.preventDefault();
-    rows = Math.min(MAX_GRID, Math.max(1, rows + move[0]));
-    cols = Math.min(MAX_GRID, Math.max(1, cols + move[1]));
-    paint();
-    cells[(rows - 1) * MAX_GRID + (cols - 1)]!.focus();
-  });
-
-  paint();
-  return h('div', { className: 'nova-grid-panel' }, grid, caption);
-}
 
 // ---------- сортировка по столбцу ----------
 

@@ -21,7 +21,8 @@ import { buildInputRules } from './inputrules';
 import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
 import { loadPasteCleaner, pastePlugin, type PasteOptions } from './paste';
-import { tablePlugins } from './table';
+import { loadTables } from './tables';
+import { keepPluginViews, reconfigurePlugins } from './plugin-views';
 import { parserFor } from './parser';
 import {
   createMenubar,
@@ -375,29 +376,33 @@ export class Editor {
     syncPlugins.forEach((plugin) => this.registerCommands(plugin));
     const initialDoc = parseContent(this.schema, options.content ?? '');
 
+    const tablesAnchor = searchPlugin();
+    const initialPlugins = [
+      // Первым: при открытом списке Enter/Tab/стрелки принадлежат автокомплитеру, а не раскладке клавиш.
+      autocompleterPlugin(this),
+      buildInputRules((name) => this.isAllowed(name), this.schema),
+      editorKeys,
+      // Сюда (до общей раскладки) встанут плагины таблиц после загрузки механики: Tab в таблице —
+      // следующая ячейка, а не отступ списка. См. installTables().
+      tablesAnchor,
+      ...buildKeymap((name) => this.resolveCommand(name)),
+      ...(syncPlugins.some((plugin) => plugin.replaceHistory) ? [] : [history()]),
+      dropCursor({ color: 'var(--nova-accent)', width: 2 }),
+      gapCursor(),
+      imageDropPastePlugin(this),
+      embeddedImageUploadPlugin(this),
+      pastePlugin(this),
+      linkBubblePlugin(this),
+      contextToolbarPlugin(this),
+      ...(this.contentRules ? [contentRulesPlugin(this.contentRules)] : []),
+      ...pluginPm,
+      ...(options.prosemirrorPlugins ?? []),
+    ];
+    // Догрузка ленивых частей перестраивает набор плагинов — их представления должны это пережить.
+    keepPluginViews(initialPlugins);
     const state = EditorState.create({
       doc: this.contentRules ? this.contentRules.normalizeDoc(initialDoc) : initialDoc,
-      plugins: [
-        // Первым: при открытом списке Enter/Tab/стрелки принадлежат автокомплитеру, а не раскладке клавиш.
-        autocompleterPlugin(this),
-        buildInputRules((name) => this.isAllowed(name), this.schema),
-        editorKeys,
-        // Таблицы до общей раскладки: Tab в таблице — следующая ячейка, а не отступ списка.
-        ...tablePlugins(),
-        searchPlugin(),
-        ...buildKeymap((name) => this.resolveCommand(name)),
-        ...(syncPlugins.some((plugin) => plugin.replaceHistory) ? [] : [history()]),
-        dropCursor({ color: 'var(--nova-accent)', width: 2 }),
-        gapCursor(),
-        imageDropPastePlugin(this),
-        embeddedImageUploadPlugin(this),
-        pastePlugin(this),
-        linkBubblePlugin(this),
-        contextToolbarPlugin(this),
-        ...(this.contentRules ? [contentRulesPlugin(this.contentRules)] : []),
-        ...pluginPm,
-        ...(options.prosemirrorPlugins ?? []),
-      ],
+      plugins: initialPlugins,
     });
 
     this.editable = options.editable ?? true;
@@ -483,9 +488,26 @@ export class Editor {
       contentCss,
       // Очистка вставки из Office — отдельный чанк, грузится в фоне (см. paste.ts).
       loadPasteCleaner(),
+      // Механика таблиц — отдельный чанк (~10 КБ gzip), грузится в фоне (см. tables.ts).
+      this.installTables(tablesAnchor),
     ]).then(() => {
       if (!this.destroyed) this.emit('init');
     });
+  }
+
+  /**
+   * Подключить механику таблиц (выделение ячеек, ширина колонок, Tab по ячейкам) после её загрузки —
+   * на место перед `anchor`, как если бы плагины были в начальном состоянии.
+   */
+  private async installTables(anchor: Plugin): Promise<void> {
+    const tables = await loadTables();
+    if (!tables || this.destroyed) return;
+    const { state } = this.view;
+    const at = state.plugins.indexOf(anchor);
+    const plugins = [...state.plugins];
+    plugins.splice(at < 0 ? plugins.length : at, 0, ...tables.tablePlugins());
+    reconfigurePlugins(this.view, plugins);
+    this.updateUI();
   }
 
   /** contentStyle сразу, contentCss — по мере загрузки. Каждый редактор — своя область. */
@@ -603,8 +625,7 @@ export class Editor {
     errors.forEach((message) => reportPluginError(message));
     const extraPm = ordered.flatMap((plugin) => this.collectPmPlugins(plugin));
     if (extraPm.length) {
-      const state = this.view.state;
-      this.view.updateState(state.reconfigure({ plugins: [...state.plugins, ...extraPm] }));
+      reconfigurePlugins(this.view, [...this.view.state.plugins, ...extraPm]);
     }
     ordered.forEach((plugin) => {
       this.registerCommands(plugin);

@@ -1,5 +1,5 @@
 import { Schema, type DOMOutputSpec, type MarkSpec, type NodeSpec } from 'prosemirror-model';
-import { tableNodes } from 'prosemirror-tables';
+import { tableNodes } from './table-nodes';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
 
 /**

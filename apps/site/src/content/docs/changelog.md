@@ -74,9 +74,16 @@ All packages in this repository are versioned together. The format follows
 - Smaller first load: the Word / Google Docs / Excel paste cleanup is now a separate chunk, loaded in
   the background right after the editor is created (core: 149.9 → 146.4 KB gzip). A paste in the
   first milliseconds waits for it, so nothing is lost; `await editor.ready` covers it too.
+- Table editing (cell selection, column resizing, row/column commands, sorting, properties) is a
+  separate chunk too, loaded in the background on creation (core: 144.2 → 133.7 KB gzip). Tables
+  in the content render and insert immediately; `tableCommands` and the other table helpers return
+  `false` until the chunk is loaded — call them after `await editor.ready`.
 
 ### Fixes
 
+- When a lazily loaded part of the editor finishes loading (for example the `autolink` plugin),
+  an open slash-command or mention list no longer closes, and in collaborative editing undo and
+  the cursor position no longer break.
 - Spaces you type are no longer lost on save: leading spaces (indentation), double spaces, a space
   after a line break (Shift+Enter) and a trailing space now survive `getHTML()` → `setContent()`.
   They are written as `&nbsp;` where the browser would otherwise collapse them.
