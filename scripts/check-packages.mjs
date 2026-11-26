@@ -6,7 +6,7 @@
  * CDN-сборки и CSS исключены: у них нет и не должно быть типов.
  */
 import { execFileSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
 const tarballs = readdirSync('.release').filter((f) => f.endsWith('.tgz'));
 if (!tarballs.length) {
@@ -29,6 +29,28 @@ const run = (cmd, args) => {
 };
 
 let failed = 0;
+
+// Стили ленивых частей (import css from './x.css?raw') — текстом в коде ядра. Был сбой: сборщик
+// подменял их пустым объектом и клал рядом лишние .css — плагины в npm-сборке оставались без стилей.
+{
+  const dist = 'packages/core/dist';
+  const files = readdirSync(dist);
+  const code = files
+    .filter((f) => f.endsWith('.js'))
+    .map((f) => readFileSync(`${dist}/${f}`, 'utf8'))
+    .join('\n');
+  const problems = [
+    ...files.filter((f) => f.endsWith('.css')).map((f) => `лишний файл стилей ${dist}/${f}`),
+    ...['--nova-page-margins', '.nova-details', '.nova-math']
+      .filter((marker) => !code.includes(marker))
+      .map((marker) => `в коде нет стилей плагинов (${marker})`),
+  ];
+  if (problems.length) {
+    failed++;
+    console.log(`✗ стили плагинов в @novaprose/core\n${problems.join('\n')}\n`);
+  } else console.log('✓ стили плагинов в коде @novaprose/core');
+}
+
 for (const file of tarballs) {
   const path = `.release/${file}`;
   const problems = [];
