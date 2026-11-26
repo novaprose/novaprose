@@ -118,7 +118,7 @@ test('переменные: вставка из меню, «фишка» уда�
   );
   await expect(page.locator('.nova-mergetag')).toHaveText('Номер заказа');
   await page.keyboard.press('Backspace');
-  expect(await html()).toBe('<p>Order </p>');
+  expect(await html()).toBe('<p>Order&nbsp;</p>');
 });
 
 test('переменная в конце абзаца не добавляет пустую строку, даже при img { display: block } на сайте', async ({

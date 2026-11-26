@@ -62,7 +62,7 @@ describe('упоминания в тексте', () => {
     editor.view.dispatch(tr.setSelection(TextSelection.create(tr.doc, end + 4)));
     const to = editor.view.state.selection.from;
     spec(editor).onSelect(items[0]!, { from: to - 3, to }, editor);
-    expect(editor.getHTML()).toBe('<p>Hi <span data-mention="u1">@Anna Ivanova</span> </p>');
+    expect(editor.getHTML()).toBe('<p>Hi <span data-mention="u1">@Anna Ivanova</span>&nbsp;</p>');
     expect(onMention).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'u1', name: 'Anna Ivanova' }),
       editor,

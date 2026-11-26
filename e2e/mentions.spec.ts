@@ -32,7 +32,7 @@ test('«@» в тексте: список людей, стрелка и Enter в
   await page.keyboard.press('ControlOrMeta+End');
   for (let i = 0; i < 'today'.length + 1; i += 1) await page.keyboard.press('Backspace');
   await page.keyboard.press('Backspace');
-  expect(await html(page)).toBe('<p>Ask </p>');
+  expect(await html(page)).toBe('<p>Ask&nbsp;</p>');
 });
 
 test('«@» в комментарии: выбор из списка, имя выделено в обсуждении', async ({ page }) => {

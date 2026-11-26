@@ -537,3 +537,32 @@ test.describe('менюбар и режимы', () => {
     expect(await html(page)).toBe('<p><strong>focus</strong></p>');
   });
 });
+
+test('пробелы, набранные пользователем, переживают сохранение и загрузку', async ({
+  page,
+  isMobile,
+}) => {
+  await open(page);
+  // Отступ в начале, двойной пробел, пробел после Shift+Enter и в конце абзаца.
+  await page.keyboard.type('  a  b');
+  // В эмуляции Android синтетический Shift+Enter не даёт событий, как настоящая клавиатура
+  // (ProseMirror на Android ждёт beforeinput) — проверить на реальном устройстве.
+  if (!isMobile) await page.keyboard.press('Shift+Enter');
+  await page.keyboard.type(' c ');
+  // Текст документа (не DOM: там служебные узлы ProseMirror); перенос строки — «|»,
+  // неразрывный пробел считаем обычным — визуально они одинаковы.
+  const text = () =>
+    page.evaluate(() => {
+      type Doc = {
+        content: { size: number };
+        textBetween(from: number, to: number, block: string, leaf: string): string;
+      };
+      const { doc } = (window.editor as unknown as { view: { state: { doc: Doc } } }).view.state;
+      return doc.textBetween(0, doc.content.size, '\n', '|').replace(/\u00a0/g, ' ');
+    });
+  const typed = await text();
+  expect(typed).toBe(isMobile ? '  a  b c ' : '  a  b| c ');
+  // «Сохранить» и «открыть заново».
+  await page.evaluate(() => window.editor.setContent(window.editor.getHTML()));
+  expect(await text()).toBe(typed);
+});

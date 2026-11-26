@@ -71,7 +71,7 @@ test('Ctrl+Z отменяет только свои правки', async ({ page
 
   await editorOf(page, 'anna').click();
   await page.keyboard.press('ControlOrMeta+z');
-  await expect.poll(() => doc(page, 'boris')).toBe('<p> Boris.</p>');
+  await expect.poll(() => doc(page, 'boris')).toBe('<p>&nbsp;Boris.</p>');
 });
 
 test('комментарий одного участника виден другому с подсветкой и обсуждением', async ({ page }) => {

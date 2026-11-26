@@ -120,7 +120,7 @@ describe('autolink', () => {
     const editor = await mount('<p></p>', { plugins: ['autolink'] });
     type(editor, 'www.example.com and team@example.com ');
     expect(editor.getHTML()).toBe(
-      '<p><a href="https://www.example.com">www.example.com</a> and <a href="mailto:team@example.com">team@example.com</a> </p>',
+      '<p><a href="https://www.example.com">www.example.com</a> and <a href="mailto:team@example.com">team@example.com</a>&nbsp;</p>',
     );
   });
 

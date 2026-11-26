@@ -45,3 +45,37 @@ describe('HTMLSerializer', () => {
     ).toBe('<p><img src="https://a.io/x.png" alt="кот &quot;Барсик&quot;"><br></p>');
   });
 });
+
+describe('пробелы переживают сохранение и загрузку', () => {
+  // Найдено property-based тестом: HTML-парсер схлопывает пробелы, а в редакторе их видно.
+  // Каждый случай: документ → getHTML → setContent → тот же текст.
+  const br = () => nodes.hard_break.create();
+  const cases: [string, ReturnType<typeof schema.text | typeof br>[], string][] = [
+    ['двойной пробел', [schema.text('a  b')], '<p>a &nbsp;b</p>'],
+    ['три пробела', [schema.text('a   b')], '<p>a &nbsp; b</p>'],
+    ['отступ в начале', [schema.text('  a')], '<p>&nbsp; a</p>'],
+    ['пробел в конце абзаца', [schema.text('a ')], '<p>a&nbsp;</p>'],
+    [
+      'пробел после переноса строки',
+      [schema.text('a'), br(), schema.text(' b')],
+      '<p>a<br>&nbsp;b</p>',
+    ],
+    ['пробел перед переносом', [schema.text('a '), br(), schema.text('b')], '<p>a <br>b</p>'],
+    ['обычный текст не меняется', [schema.text('a b c')], '<p>a b c</p>'],
+  ];
+  it.each(cases)('%s', async (_name, content, html) => {
+    const { createEditor } = await import('../src');
+    const out = s.serializeFragment(doc(nodes.paragraph.create(null, content)).content);
+    expect(out).toBe(html);
+    const element = document.createElement('div');
+    const editor = createEditor({ element, content: out });
+    const text = (n: { textContent: string }) => n.textContent.replace(/\u00a0/g, ' ');
+    expect(text(editor.view.state.doc)).toBe(text(nodes.paragraph.create(null, content)));
+    editor.destroy();
+  });
+
+  it('код (pre) не трогаем', () => {
+    const block = nodes.code_block.create(null, schema.text('  x  '));
+    expect(s.serializeNode(block)).toBe('<pre><code>  x  </code></pre>');
+  });
+});

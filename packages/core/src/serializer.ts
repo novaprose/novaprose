@@ -36,6 +36,52 @@ export function escapeText(text: string): string {
     .replace(NBSP, '&nbsp;');
 }
 
+const NBSP_CHAR = '\u00a0';
+
+/**
+ * Пробелы, которые браузер схлопнул бы при разборе HTML, заменяются на неразрывные.
+ * В редакторе (white-space: pre-wrap) пользователь видит каждый пробел, а HTML-парсер выбрасывает
+ * пробел в начале строки и после <br>, сжимает несколько подряд в один и теряет последний
+ * в абзаце. Без этого отступы пробелами и двойные пробелы пропадали бы после сохранения.
+ * Возвращает новый текст для текстовых узлов фрагмента (по индексу), если он изменился.
+ */
+function protectSpaces(fragment: Fragment): Map<number, string> | null {
+  let result: Map<number, string> | null = null;
+  // «Схлопываемая» позиция: начало строки или сразу после обычного пробела.
+  let collapsible = true;
+  const count = fragment.childCount;
+  for (let i = 0; i < count; i++) {
+    const node = fragment.child(i);
+    if (!node.isText) {
+      // Перенос строки (и блок) начинают новую строку, прочие инлайн-узлы — как обычный символ.
+      collapsible = node.type.name === 'hard_break' || !node.isInline;
+      continue;
+    }
+    const text = node.text ?? '';
+    if (!text.includes(' ')) {
+      collapsible = false;
+      continue;
+    }
+    const lineEndsAfter = i === count - 1 || !fragment.child(i + 1).isInline;
+    let out = '';
+    for (let k = 0; k < text.length; k++) {
+      const ch = text[k]!;
+      if (ch !== ' ') {
+        out += ch;
+        collapsible = false;
+      } else if (collapsible || (lineEndsAfter && k === text.length - 1)) {
+        out += NBSP_CHAR;
+        collapsible = false;
+      } else {
+        out += ' ';
+        collapsible = true;
+      }
+    }
+    if (out !== text) (result ??= new Map()).set(i, out);
+  }
+  return result;
+}
+
 export function escapeAttr(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -106,6 +152,12 @@ interface Rendered {
 /** Рендер DOMOutputSpec в строку. Для узлов-листьев content не используется. */
 function renderSpec(spec: DOMOutputSpec): Rendered {
   if (typeof spec === 'string') return { open: '', close: '', hole: false, html: escapeText(spec) };
+  // Значения атрибутов из внешнего JSON (число, null) не должны ронять сохранение всего документа.
+  // Ноль сюда не попадает: в спеке это «дыра» для содержимого.
+  if (typeof spec === 'number' || typeof spec === 'boolean') {
+    return { open: '', close: '', hole: false, html: escapeText(String(spec)) };
+  }
+  if (spec == null) return { open: '', close: '', hole: false, html: '' };
   if (!Array.isArray(spec)) {
     throw new Error('[nova] serializer supports only array/string toDOM specs');
   }
@@ -168,7 +220,8 @@ function renderSpec(spec: DOMOutputSpec): Rendered {
 export class HTMLSerializer {
   private readonly cache = new Map<string, Rendered>();
 
-  serializeFragment(fragment: Fragment): string {
+  serializeFragment(fragment: Fragment, { pre = false }: { pre?: boolean } = {}): string {
+    const texts = pre ? null : protectSpaces(fragment);
     let out = '';
     let active: Mark[] = [];
     let closers: string[] = [];
@@ -180,7 +233,7 @@ export class HTMLSerializer {
       }
     };
 
-    fragment.forEach((node) => {
+    fragment.forEach((node, _offset, index) => {
       if (!node.isInline) {
         closeTo(0);
         out += this.serializeNode(node);
@@ -203,7 +256,9 @@ export class HTMLSerializer {
         closers.push(r.close);
         active.push(mark);
       }
-      out += node.isText ? escapeText(node.text ?? '') : this.serializeNode(node);
+      out += node.isText
+        ? escapeText(texts?.get(index) ?? node.text ?? '')
+        : this.serializeNode(node);
     });
     closeTo(0);
     active = [];
@@ -216,7 +271,9 @@ export class HTMLSerializer {
     if (!toDOM) throw new Error(`[nova] node "${node.type.name}" has no toDOM`);
     const r = renderSpec(toDOM(node));
     if (!r.hole) return r.html;
-    return r.open + this.serializeFragment(node.content) + r.close;
+    // В коде (pre) пробелы сохраняются браузером как есть — защищать их не нужно.
+    const pre = !!node.type.spec.code || node.type.spec.whitespace === 'pre';
+    return r.open + this.serializeFragment(node.content, { pre }) + r.close;
   }
 
   private renderMark(mark: Mark, inline: boolean): Rendered {

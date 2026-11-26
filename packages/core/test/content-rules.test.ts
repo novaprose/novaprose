@@ -109,7 +109,7 @@ describe('нормализация контента', () => {
     const e = mount('<h1>T</h1><p><strong>b</strong> <u>u</u> <img src="https://x.io/i.png"></p>', {
       validElements: 'p,strong/b',
     });
-    expect(e.getHTML()).toBe('<p>T</p><p><strong>b</strong> u </p>');
+    expect(e.getHTML()).toBe('<p>T</p><p><strong>b</strong> u&nbsp;</p>');
   });
 });
 
@@ -149,7 +149,7 @@ describe('ограничения на всех путях изменения', (
     };
     typeAndTrigger('#');
     typeAndTrigger(' ');
-    expect(e.getHTML()).toBe('<p># </p>');
+    expect(e.getHTML()).toBe('<p>#&nbsp;</p>');
     e.setContent('<p></p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1)));
     typeAndTrigger('#');

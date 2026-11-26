@@ -86,8 +86,8 @@ describe('совместное редактирование', () => {
     expect(a.getHTML()).toBe('<p>Anna wrote this. Boris added this.</p>');
     expect(a.exec('undo')).toBe(true);
     await tick();
-    expect(a.getHTML()).toBe('<p> Boris added this.</p>');
-    expect(b.getHTML()).toBe('<p> Boris added this.</p>');
+    expect(a.getHTML()).toBe('<p>&nbsp;Boris added this.</p>');
+    expect(b.getHTML()).toBe('<p>&nbsp;Boris added this.</p>');
     expect(a.exec('redo')).toBe(true);
     await tick();
     expect(b.getHTML()).toBe('<p>Anna wrote this. Boris added this.</p>');
