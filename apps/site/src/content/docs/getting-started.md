@@ -46,9 +46,9 @@ editor.on('change', () => console.log(editor.getHTML()));
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.1/dist/novaprose.css"
+  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.7/dist/novaprose.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.1/dist/novaprose.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.7/dist/novaprose.global.js"></script>
 
 <form method="post" action="/posts">
   <novaprose-editor name="body">

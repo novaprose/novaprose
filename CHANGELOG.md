@@ -4,7 +4,7 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
-## Unreleased
+## 0.7.0 — 2026-11-26
 
 ### Breaking
 
@@ -14,6 +14,14 @@ All packages in this repository are versioned together. The format follows
   embed their own Russian strings; every translation lives in the packs. The `ru` export of
   `@novaprose/core` is removed. The CDN builds (`novaprose.global.js`, `tinymce.global.js`) still
   include Russian. The core first load drops from 147.6 to 144.2 KB gzip.
+- **Table helpers wait for the table editing chunk.** `tableCommands`, `setCellBackground`,
+  `hasHeaderRow` and the other table helpers return `false` (or `null`) for the first milliseconds
+  after the editor is created, until table editing has loaded. Call them after `await editor.ready`.
+  Tables in the content render and insert immediately.
+- **Self-hosted CDN files: copy the whole `dist` folder.** `novaprose.global.js` and
+  `tinymce.global.js` now load their lazy parts from `novaprose-chunks/` and `tinymce-chunks/` next to
+  them. Without those folders the editor still opens, but tables, optional plugins and plugin dialogs
+  can't load their parts.
 
 ### Editing
 

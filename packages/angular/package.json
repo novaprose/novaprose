@@ -1,6 +1,6 @@
 {
   "name": "@novaprose/angular",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "NovaProse rich text editor for Angular: standalone component with ngModel and Reactive Forms support, zoneless and SSR ready.",
   "keywords": [
     "angular",
