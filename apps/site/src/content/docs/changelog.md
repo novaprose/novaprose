@@ -123,6 +123,12 @@ All packages in this repository are versioned together. The format follows
 
 ### Performance
 
+- CDN builds load less up front: table editing, optional plugins, Office paste cleanup and plugin
+  dialogs are now separate files loaded on demand from the same address as the script
+  (`novaprose-chunks/`, `tinymce-chunks/`). The main file shrinks from 168.1 to 140.5 KB gzip
+  (`novaprose.global.js`) and from 178.6 to 151.0 KB (`tinymce.global.js`). The global object and
+  `createEditor()` are available as soon as the script loads, as before. If you host the files
+  yourself, copy the whole `dist` folder.
 - Smaller first load: the Word / Google Docs / Excel paste cleanup is now a separate chunk, loaded in
   the background right after the editor is created (core: 149.9 → 146.4 KB gzip). A paste in the
   first milliseconds waits for it, so nothing is lost; `await editor.ready` covers it too.

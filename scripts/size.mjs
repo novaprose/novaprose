@@ -9,7 +9,7 @@
  *   node scripts/size.mjs --json    то же + JSON в stdout (для отчётов CI)
  */
 import { build } from 'esbuild';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 
 const KB = 1024;
@@ -19,8 +19,10 @@ const gz = (buf) => gzipSync(buf, { level: 9 }).length;
 const BUDGET = {
   coreFirstLoad: 150,
   coreCss: 12,
-  webComponentCdn: 170,
-  tinymceCompatCdn: 180,
+  // CDN: основной файл (ленивые части — отдельные файлы рядом, scripts/build-cdn.mjs). Ноябрь 2026:
+  // 140.5 и 151.0 КБ после выноса частей (было 168.1 и 178.6 одним файлом).
+  webComponentCdn: 150,
+  tinymceCompatCdn: 160,
 };
 
 async function measureEntry(entry, names) {
@@ -72,20 +74,38 @@ function fileSize(path) {
   return gz(readFileSync(path));
 }
 
+/** Ленивые части CDN-сборки (все вместе): грузятся по требованию с того же адреса. */
+function chunksSize(dir) {
+  if (!existsSync(dir)) throw new Error(`Нет папки ${dir} — сначала pnpm build`);
+  return readdirSync(dir)
+    .filter((name) => name.endsWith('.js'))
+    .reduce((sum, name) => sum + fileSize(`${dir}/${name}`), 0);
+}
+
 const core = await measureEntry('./packages/core/dist/index.js', 'Editor');
 const rows = [
   ['@novaprose/core — первая загрузка (с ProseMirror)', core.firstLoad, BUDGET.coreFirstLoad],
   ['@novaprose/core — ленивые плагины (все вместе)', core.lazy, null],
   ['@novaprose/core — style.css', fileSize('packages/core/src/style.css'), BUDGET.coreCss],
   [
-    '@novaprose/web-component — CDN',
+    '@novaprose/web-component — CDN, основной файл',
     fileSize('packages/web-component/dist/novaprose.global.js'),
     BUDGET.webComponentCdn,
   ],
   [
-    '@novaprose/tinymce-compat — CDN',
+    '@novaprose/web-component — CDN, ленивые части',
+    chunksSize('packages/web-component/dist/novaprose-chunks'),
+    null,
+  ],
+  [
+    '@novaprose/tinymce-compat — CDN, основной файл',
     fileSize('packages/tinymce-compat/dist/tinymce.global.js'),
     BUDGET.tinymceCompatCdn,
+  ],
+  [
+    '@novaprose/tinymce-compat — CDN, ленивые части',
+    chunksSize('packages/tinymce-compat/dist/tinymce-chunks'),
+    null,
   ],
 ];
 

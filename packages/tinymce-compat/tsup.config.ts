@@ -1,28 +1,14 @@
-import { copyFile, mkdir } from 'node:fs/promises';
 import { defineConfig } from 'tsup';
 
-export default defineConfig([
-  {
-    // npm: ESM/CJS, ядро — внешняя зависимость.
-    entry: { index: 'src/index.ts' },
-    format: ['esm', 'cjs'],
-    dts: true,
-    clean: false,
-    sourcemap: true,
-    external: ['@novaprose/core', 'prosemirror-state', 'prosemirror-model'],
-  },
-  {
-    // CDN: замена tinymce.min.js — один файл, window.tinymce; стили рядом, novaprose.css.
-    entry: { tinymce: 'src/cdn.ts' },
-    format: ['iife'],
-    platform: 'browser',
-    minify: true,
-    sourcemap: true,
-    clean: false,
-    noExternal: [/.*/],
-    async onSuccess() {
-      await mkdir('dist', { recursive: true });
-      await copyFile('../core/src/style.css', 'dist/novaprose.css');
-    },
-  },
-]);
+/**
+ * npm: ESM/CJS, ядро — внешняя зависимость. CDN-замена tinymce.min.js (dist/tinymce.global.js +
+ * ленивые части в dist/tinymce-chunks/, стили — dist/novaprose.css) — scripts/build-cdn.mjs.
+ */
+export default defineConfig({
+  entry: { index: 'src/index.ts' },
+  format: ['esm', 'cjs'],
+  dts: true,
+  clean: false,
+  sourcemap: true,
+  external: ['@novaprose/core', 'prosemirror-state', 'prosemirror-model'],
+});

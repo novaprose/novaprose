@@ -27,6 +27,11 @@ The script registers the element and exposes a global `NovaProse` with the whole
 (`NovaProse.createEditor(...)`). It is safe to load in `<head>`: the element waits until the
 document is parsed.
 
+Parts that most pages never need (table editing, optional plugins, Office paste cleanup, plugin
+dialogs) are separate files in `dist/novaprose-chunks/`, loaded on demand from the same address as the script.
+To host the files yourself, copy the whole `dist` folder — the script, `novaprose.css` and `novaprose-chunks/`.
+Chunk file names include a content hash, so caches never mix files from different versions.
+
 ## With a bundler
 
 ```bash

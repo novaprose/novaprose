@@ -61,6 +61,11 @@ editor.on('change', () => console.log(editor.getHTML()));
 The script registers the `<novaprose-editor>` element and exposes a global `NovaProse` object with
 the full API (`NovaProse.createEditor(...)`).
 
+Parts that most pages never need (table editing, optional plugins, Office paste cleanup, plugin
+dialogs) are separate files in `dist/novaprose-chunks/`, loaded on demand from the same address as the script.
+To host the files yourself, copy the whole `dist` folder — the script, `novaprose.css` and `novaprose-chunks/`.
+Chunk file names include a content hash, so caches never mix files from different versions.
+
 ## Save the content
 
 `editor.getHTML()` returns clean HTML: every URL has passed the allowlist and only elements and

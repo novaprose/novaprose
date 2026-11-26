@@ -50,7 +50,7 @@
     "./dist/tinymce.global.js"
   ],
   "scripts": {
-    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup && node ../../scripts/build-cdn.mjs --entry src/cdn.ts --out dist/tinymce.global.js --css ../core/src/style.css",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {

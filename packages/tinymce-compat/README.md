@@ -27,6 +27,11 @@ without rewriting it — then move to the native API when you are ready.
 The script sets `window.tinymce` and loads its stylesheet (`novaprose.css`, next to the script).
 `init()` can run in `<head>`: it waits for the document like TinyMCE.
 
+Parts that most pages never need (table editing, optional plugins, Office paste cleanup, plugin
+dialogs) are separate files in `dist/tinymce-chunks/`, loaded on demand from the same address as the script.
+To host the files yourself, copy the whole `dist` folder — the script, `novaprose.css` and `tinymce-chunks/`.
+Chunk file names include a content hash, so caches never mix files from different versions.
+
 ## npm
 
 ```bash
