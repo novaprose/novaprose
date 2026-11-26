@@ -1,5 +1,5 @@
 {$SYNC_DOMAIN} {
-	# WebSocket и /health — в сервер синхронизации.
+	# WebSocket and /health go to the sync server.
 	reverse_proxy sync:1234
 	header {
 		Strict-Transport-Security "max-age=31536000"

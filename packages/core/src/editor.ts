@@ -75,7 +75,7 @@ export type EditorMode = 'classic' | 'inline' | 'distraction-free';
 
 /** Marks a transaction that came from a collaborator (set by @novaprose/collab): it is not user input. */
 export const REMOTE_CHANGE_META = 'nova:remote';
-/** Метка транзакции из API (setContent, insertContent): не считается вводом. */
+/** A transaction marker from the API (setContent, insertContent): it doesn't count as input. */
 export const API_CHANGE_META = 'nova:api';
 
 /** Event details: the second argument of a listener, `editor.on(event, (editor, detail) => …)`. */
@@ -251,12 +251,12 @@ export interface BlockFormat {
   block: 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'pre';
 }
 
-/** Теги, которые insertContent вставляет отдельными блоками. */
+/** Tags that insertContent inserts as separate blocks. */
 const INSERT_BLOCK_TAGS = new Set(
   'P H1 H2 H3 H4 H5 H6 UL OL TABLE BLOCKQUOTE PRE HR DIV FIGURE'.split(' '),
 );
 
-/** Команда «вставить HTML в позицию курсора» (editor.insertContent и шаг цепочки). */
+/** The "insert HTML at the cursor" command (editor.insertContent and a chain step). */
 function insertContentCommand(html: string): Command {
   return (state, dispatch) => {
     if (!dispatch) return true;
@@ -291,10 +291,10 @@ function insertContentCommand(html: string): Command {
   };
 }
 
-/** Номер области стилей содержимого (contentStyle/contentCss) — уникален на странице. */
+/** The number of the content style scope (contentStyle/contentCss), unique on the page. */
 let contentScopeId = 0;
 
-/** Неизвестные имена команд, о которых уже предупредили (по одному разу на страницу). */
+/** Unknown command names already warned about (once per page each). */
 const unknownCommands = new Set<string>();
 
 /**
@@ -338,7 +338,7 @@ export class Editor {
     this.root.className = 'nova-editor';
     const direction = options.direction ?? (isRtlLanguage(options.language) ? 'rtl' : undefined);
     if (direction) this.root.dir = direction;
-    // Без явного направления — как у страницы (dir на <html> или контейнере).
+    // Without an explicit direction, follow the page (dir on <html> or the container).
     this.direction =
       direction ??
       (options.element.closest('[dir]')?.getAttribute('dir') === 'rtl' ? 'rtl' : 'ltr');
@@ -348,7 +348,7 @@ export class Editor {
     const contentHost = document.createElement('div');
     const statusbarHost = document.createElement('div');
     contentHost.className = 'nova-content';
-    // Шапка: менюбар + тулбар. Липкая (sticky) — она, а не тулбар внутри неё.
+    // Header: menubar + toolbar. The header is sticky, not the toolbar inside it.
     const header = document.createElement('div');
     header.className = 'nova-header';
     const menubarHost = document.createElement('div');
@@ -360,7 +360,7 @@ export class Editor {
     this.root.classList.add(`nova-mode-${this.mode}`);
     const distractionFree = this.mode === 'distraction-free';
     if (this.mode !== 'classic') {
-      // Фокус где-то внутри редактора (текст, панели, меню, диалоги) — показываем шапку.
+      // Focus is somewhere inside the editor (text, panels, menus, dialogs): show the header.
       this.root.addEventListener('focusin', () => this.root.classList.add('is-focused'));
       this.root.addEventListener('focusout', () => {
         setTimeout(() => {
@@ -376,7 +376,7 @@ export class Editor {
       () => this.focus(),
       this,
     );
-    // Приглашение в пустой подписи картинки — через CSS-переменную (в HTML документа его нет).
+    // The prompt in an empty image caption goes through a CSS variable (it isn't in the document's HTML).
     this.root.style.setProperty(
       '--nova-caption-placeholder',
       JSON.stringify(this.ui.t('image.captionPlaceholder')),
@@ -384,7 +384,7 @@ export class Editor {
 
     const editorKeys = keymap({
       'Mod-k': () => (openLinkDialog(this), true),
-      // Стандартное сочетание доступности: перейти из текста на панель инструментов.
+      // The standard accessibility shortcut: move from the text to the toolbar.
       'Alt-F9': () => {
         if (!this.menubar) return false;
         this.menubar.focus();
@@ -395,12 +395,12 @@ export class Editor {
         this.toolbar.focus();
         return true;
       },
-      // Перейти на контекстный тулбар (картинка, таблица).
+      // Move to the context toolbar (image, table).
       'Ctrl-F9': () => focusContextToolbar(this),
       'Mod-f': () => (this.openSearch(), true),
       'Mod-Shift-f': () => (toggleFullscreen(this), true),
       'Alt-0': () => (openHelp(this), true),
-      // Escape в тексте закрывает панель поиска, если она открыта.
+      // Escape in the text closes the search bar if it is open.
       Escape: () => {
         if (!this.searchBar.isOpen()) return false;
         this.searchBar.close();
@@ -408,16 +408,16 @@ export class Editor {
       },
     });
 
-    // Плагины: синхронные подключаются сразу (их ProseMirror-плагины — в начальное состояние),
-    // ленивые — после создания редактора.
-    // distraction-free без quickbars бессмысленен — подключаем сам.
+    // Plugins: synchronous ones are attached right away (their ProseMirror plugins go into the initial state),
+    // lazy ones after the editor is created.
+    // distraction-free makes no sense without quickbars, so it is attached automatically.
     const pluginEntries = [...(options.plugins ?? [])];
     if (distractionFree && !pluginEntries.includes('quickbars')) pluginEntries.push('quickbars');
     const resolved = resolveEntries(pluginEntries);
     resolved.errors.forEach((message) => reportPluginError(message));
     const { ordered: syncPlugins, errors: orderErrors } = orderPlugins(resolved.plugins);
     orderErrors.forEach((message) => reportPluginError(message));
-    // Ленивые части плагинов с узлами (NovaPlugin.load) грузятся вместе с ленивыми плагинами.
+    // Lazy parts of plugins with nodes (NovaPlugin.load) load together with the lazy plugins.
     for (const plugin of syncPlugins) if (plugin.load) resolved.loaders.push(plugin.load);
     const pluginPm = syncPlugins.flatMap((plugin) => this.collectPmPlugins(plugin));
 
@@ -426,8 +426,8 @@ export class Editor {
       options.invalidElements !== undefined ||
       options.validStyles !== undefined;
     this.contentRules = hasRules ? new ContentRules(options) : null;
-    // Та же схема, что у createRenderer() на сервере: HTML редактора и сервера совпадает.
-    // Набор классов живой — formatter.register() в setup тоже пополняет его.
+    // The same schema as createRenderer() on the server: the editor's and the server's HTML match.
+    // The set of classes is live: formatter.register() in setup adds to it as well.
     const { schema, allowedClasses } = schemaFromOptions(
       options,
       syncPlugins,
@@ -443,13 +443,13 @@ export class Editor {
 
     const tablesAnchor = searchPlugin();
     const initialPlugins = [
-      // Первым: при открытом списке Enter/Tab/стрелки принадлежат автокомплитеру, а не раскладке клавиш.
+      // First: while the list is open, Enter/Tab/arrows belong to the autocompleter, not the keymap.
       autocompleterPlugin(this),
       buildInputRules((name) => this.isAllowed(name), this.schema),
       codeFenceKeymap((name) => this.isAllowed(name), this.schema),
       editorKeys,
-      // Сюда (до общей раскладки) встанут плагины таблиц после загрузки механики: Tab в таблице —
-      // следующая ячейка, а не отступ списка. См. installTables().
+      // The table plugins go here (before the general keymap) once the mechanics load: Tab in a table is
+      // the next cell, not a list indent. See installTables().
       tablesAnchor,
       ...buildKeymap((name) => this.resolveCommand(name)),
       ...(syncPlugins.some((plugin) => plugin.replaceHistory) ? [] : [history()]),
@@ -461,12 +461,12 @@ export class Editor {
       linkBubblePlugin(this),
       contextToolbarPlugin(this),
       ...(this.contentRules ? [contentRulesPlugin(this.contentRules)] : []),
-      // После плагинов со своими щелчками (ссылка, панели): первый щелчок без фокуса — по месту.
+      // After plugins with their own clicks (link, panels): the first click without focus lands where you clicked.
       firstClickPlugin(),
       ...pluginPm,
       ...(options.prosemirrorPlugins ?? []),
     ];
-    // Догрузка ленивых частей перестраивает набор плагинов — их представления должны это пережить.
+    // Loading lazy parts rebuilds the set of plugins, and their views must survive it.
     keepPluginViews(initialPlugins);
     const state = EditorState.create({
       doc: this.contentRules ? this.contentRules.normalizeDoc(initialDoc) : initialDoc,
@@ -487,13 +487,13 @@ export class Editor {
         'aria-label': this.ui.t('editor.label'),
         ...(options.placeholder ? { 'data-placeholder': options.placeholder } : {}),
       },
-      // ProseMirror вызывает dispatchTransaction с this = представление: плагины (например, синхронизация
-      // совместного редактирования) могут отправить транзакцию ещё внутри конструктора EditorView,
-      // когда this.view редактора не присвоен.
+      // ProseMirror calls dispatchTransaction with this = the view: plugins (collaboration sync,
+      // for example) may dispatch a transaction while still inside the EditorView constructor,
+      // when the editor's this.view isn't assigned yet.
       dispatchTransaction: function (this: EditorView, tr: Transaction) {
         handleTransaction(tr, this);
       },
-      // Тот же парсер для вставки, что и для setContent — одинаковая предобработка.
+      // The same parser for paste as for setContent: the same preprocessing.
       clipboardParser: parserFor(this.schema),
       nodeViews: {
         image: (node, view, getPos) => new ImageView(node, view, getPos, this),
@@ -535,14 +535,14 @@ export class Editor {
             toolbarHost,
             this.toolbarConfig(),
             options.toolbarMode ?? 'sliding',
-            // Пока ленивые плагины не загружены, их кнопки ещё не зарегистрированы — не предупреждаем.
+            // Until lazy plugins load, their buttons aren't registered yet, so no warning.
             { warnUnknown: resolved.loaders.length === 0 },
           );
     if (!this.toolbar) toolbarHost.remove();
     if (!this.toolbar && !this.menubar) header.remove();
 
     this.searchBar = createSearchBar(this, contentHost);
-    // Статусбар по умолчанию только в classic: inline/distraction-free встроены в страницу.
+    // The statusbar is on by default only in classic: inline/distraction-free are part of the page.
     const statusbar = options.statusbar ?? this.mode === 'classic';
     this.statusbar = statusbar ? createStatusbar(this, statusbarHost) : null;
     if (!this.statusbar) statusbarHost.remove();
@@ -554,9 +554,9 @@ export class Editor {
     this.ready = Promise.all([
       resolved.loaders.length ? this.loadLazyPlugins(resolved.loaders) : undefined,
       contentCss,
-      // Очистка вставки из Office — отдельный чанк, грузится в фоне (см. paste.ts).
+      // Office paste cleanup is a separate chunk, loaded in the background (see paste.ts).
       loadPasteCleaner(),
-      // Механика таблиц — отдельный чанк (~10 КБ gzip), грузится в фоне (см. tables.ts).
+      // Table mechanics are a separate chunk (~10 KB gzip), loaded in the background (see tables.ts).
       this.installTables(tablesAnchor),
     ]).then(() => {
       if (!this.destroyed) this.emit('init');
@@ -587,7 +587,7 @@ export class Editor {
     const id = `nova-cs-${++contentScopeId}`;
     this.root.classList.add(id);
     const scope = `.nova-editor.${id} .nova-prosemirror`;
-    // Порядок как в TinyMCE: сначала файлы, затем content_style (он перекрывает файлы).
+    // The order as in TinyMCE: files first, then content_style (it overrides the files).
     const sheets: string[] = files.map(() => '');
     let detach: (() => void) | null = null;
     const apply = () => {
@@ -610,7 +610,7 @@ export class Editor {
     ).then(apply);
   }
 
-  // ---------- плагины ----------
+  // ---------- plugins ----------
 
   /** Whether content restrictions allow a control, command or tag (always true without restrictions). */
   isAllowed(name: string): boolean {
@@ -658,7 +658,7 @@ export class Editor {
       ),
     );
     if (this.destroyed) return;
-    // Схема фиксируется при создании редактора: ленивый плагин не может добавить узлы и марки.
+    // The schema is fixed when the editor is created: a lazy plugin can't add nodes and marks.
     const loaded = results.filter((p): p is NovaPlugin => {
       if (!p) return false;
       if (p.nodes || p.marks) {
@@ -711,12 +711,12 @@ export class Editor {
   }
 
   private handleTransaction(tr: Transaction, view: EditorView = this.view): void {
-    // Плагины с таймерами (курсоры совместного редактирования) могут прислать транзакцию
-    // уже после destroy() — её некуда применять.
+    // Plugins with timers (collaboration cursors) may send a transaction
+    // after destroy(), and there is nothing to apply it to.
     if (view.isDestroyed) return;
     for (const transform of this.transactionTransforms) tr = transform(tr, view.state, this);
     view.updateState(view.state.apply(tr));
-    // Ещё внутри конструктора EditorView: интерфейса и подписчиков пока нет — только состояние.
+    // Still inside the EditorView constructor: no interface and no subscribers yet, only the state.
     if (!this.view) return;
     this.toolbar?.update();
     this.statusbar?.update(tr.docChanged);
@@ -741,7 +741,7 @@ export class Editor {
     this.view.dom.classList.toggle('nova-empty', empty);
   }
 
-  // ---------- содержимое ----------
+  // ---------- content ----------
 
   /** The document's HTML. Deterministic: the same in every browser and in Node. */
   getHTML(): string {
@@ -783,7 +783,7 @@ export class Editor {
     return this.view.dom.classList.contains('nova-empty');
   }
 
-  // ---------- команды ----------
+  // ---------- commands ----------
 
   /** The command for a name: a plugin's override or the built-in one; unknown names return false. */
   resolveCommand(name: CommandName): Command {
@@ -791,7 +791,7 @@ export class Editor {
       this.commandOverrides.get(name) ??
       (Object.prototype.hasOwnProperty.call(commands, name) ? commands[name] : undefined);
     if (command) return command;
-    // Имя из JavaScript без типов (CDN): не исключение, а «не выполнено» и подсказка в консоли.
+    // A name from untyped JavaScript (CDN): not an exception but "not executed" and a hint in the console.
     if (!unknownCommands.has(name)) {
       unknownCommands.add(name);
       console.warn(`[nova] unknown command "${String(name)}": editor.exec() returns false`);
@@ -897,7 +897,7 @@ export class Editor {
     this.root.classList.toggle('nova-disabled', this.disabled);
     if (this.disabled) this.root.setAttribute('aria-disabled', 'true');
     else this.root.removeAttribute('aria-disabled');
-    // Отключённое поле не попадает в порядок Tab (как <textarea disabled>).
+    // A disabled field leaves the Tab order (like <textarea disabled>).
     if (this.disabled) this.view.dom.setAttribute('tabindex', '-1');
     else this.view.dom.removeAttribute('tabindex');
   }
@@ -912,7 +912,7 @@ export class Editor {
     this.emit('editableChange');
   }
 
-  // ---------- события ----------
+  // ---------- events ----------
 
   on<E extends EditorEvent>(event: E, listener: EditorListener<E>): () => void {
     let set = this.listeners.get(event);
@@ -930,7 +930,7 @@ export class Editor {
     ...[detail]: EditorEventDetails[E] extends undefined ? [] : [EditorEventDetails[E]]
   ): void {
     for (const listener of this.listeners.get(event) ?? []) {
-      // Ошибка в обработчике клиента не должна ломать редактор и остальных подписчиков.
+      // An error in the customer's handler must not break the editor and the other subscribers.
       try {
         (listener as EditorListener<E>)(this, detail as EditorEventDetails[E]);
       } catch (error) {
@@ -972,8 +972,8 @@ export function parseContent(
 ): PMNode {
   if (typeof content !== 'string') return PMNode.fromJSON(schema, sanitizeJSON(schema, content));
   const container = document.createElement('div');
-  // Разбор через <template>: скрипты и обработчики не исполняются при парсинге.
-  // Полноценный санитайзер (PRD §4.1, P1) появится отдельным модулем.
+  // Parsing through <template>: scripts and handlers don't run while parsing.
+  // A full sanitizer will come as a separate module.
   const template = document.createElement('template');
   template.innerHTML = content;
   container.appendChild(template.content);

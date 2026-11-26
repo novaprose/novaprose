@@ -114,8 +114,8 @@ export const defaultSlashCommands: SlashCommand[] = [
 ];
 
 /**
- * Ранжирование: совпадение с начала подписи важнее совпадения с начала ключевого слова,
- * а то — важнее вхождения в середину. Пустой запрос — все команды по порядку.
+ * Ranking: a match at the start of the label beats a match at the start of a keyword,
+ * and that beats a match in the middle. An empty query lists all commands in order.
  */
 export function rankSlashCommands(
   commands: SlashCommand[],
@@ -137,7 +137,7 @@ export function rankSlashCommands(
   return scored.sort((a, b) => b[0] - a[0] || a[1] - b[1]).map(([, , cmd]) => cmd);
 }
 
-/** Регистрирует автокомплитер «/» со стандартными командами (плюс пользовательские через опцию). */
+/** Registers the "/" autocompleter with the standard commands (plus custom ones through the option). */
 export function registerSlashCommands(editor: Editor, extra: SlashCommand[] = []): void {
   const { t } = editor.ui;
   const commands = [...defaultSlashCommands, ...extra].filter((cmd) => editor.isAllowed(cmd.name));
@@ -155,7 +155,7 @@ export function registerSlashCommands(editor: Editor, extra: SlashCommand[] = []
     onSelect: (item, range, e) => {
       const cmd = commands.find((c) => c.name === item.value);
       if (!cmd) return;
-      // Сначала убираем «/запрос», затем выполняем команду на очищенном месте.
+      // First remove "/query", then run the command on the cleared spot.
       e.view.dispatch(e.view.state.tr.delete(range.from, range.to));
       cmd.run(e);
     },

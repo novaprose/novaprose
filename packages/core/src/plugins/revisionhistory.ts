@@ -64,7 +64,7 @@ const ICON = icons.history;
 
 const serializer = new HTMLSerializer();
 
-/** Содержимое версии → документ через HTML: те же проверки ссылок, стилей и разметки, что и везде. */
+/** A version's content → a document through HTML: the same checks of links, styles and markup as everywhere. */
 function toDoc(editor: Editor, content: string | Record<string, unknown>): PMNode {
   const html =
     typeof content === 'string'
@@ -194,7 +194,7 @@ function openHistory(editor: Editor, options: RevisionHistoryOptions) {
         );
         button.addEventListener('click', () => {
           void select(item.revision);
-          // Safari не фокусирует кнопку по клику — без этого Esc и стрелки уходили бы мимо истории.
+          // Safari doesn't focus a button on click: without this, Esc and the arrows would miss the history.
           focusSelected();
         });
         return h('li', {}, button);
@@ -257,7 +257,7 @@ function openHistory(editor: Editor, options: RevisionHistoryOptions) {
     if (!selected || !selectedDoc) return;
     const revision = selected;
     const { state } = editor.view;
-    // Отдельный шаг отмены: не склеивается с правкой, сделанной за секунду до восстановления.
+    // A separate undo step: it doesn't merge with an edit made a second before the restore.
     editor.view.dispatch(
       closeHistory(state.tr.replaceWith(0, state.doc.content.size, selectedDoc.content)),
     );
@@ -290,7 +290,7 @@ function openHistory(editor: Editor, options: RevisionHistoryOptions) {
       close();
       return;
     }
-    // Стрелки по списку версий (один элемент в порядке Tab — «roving tabindex»).
+    // Arrows across the version list (one element in the Tab order, a "roving tabindex").
     const target = event.target as HTMLElement;
     if (!target.classList.contains('nova-history-item')) return;
     if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;

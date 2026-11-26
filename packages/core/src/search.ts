@@ -26,9 +26,9 @@ export interface SearchState extends SearchOptions {
   current: number;
 }
 
-/** Верхняя граница — чтобы поиск «е» в книге на 500 000 символов не подвешивал ввод. */
+/** An upper limit, so searching for "e" in a 500,000-character book doesn't freeze typing. */
 export const MAX_MATCHES = 10000;
-/** Символ-заместитель для встроенных объектов (картинка, перенос): занимает ровно одну позицию. */
+/** A placeholder character for embedded objects (an image, a line break): takes exactly one position. */
 const LEAF = '￼';
 
 export const searchKey = new PluginKey<SearchState>('nova-search');
@@ -44,7 +44,7 @@ const EMPTY: SearchState = {
 function buildRegExp({ query, caseSensitive, wholeWord }: SearchOptions): RegExp | null {
   if (!query) return null;
   const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // \b в JS не понимает кириллицу — границы слова через Unicode-классы.
+  // \b in JS doesn't understand non-Latin scripts: word boundaries use Unicode classes.
   const source = wholeWord ? `(?<![\\p{L}\\p{N}_])${escaped}(?![\\p{L}\\p{N}_])` : escaped;
   return new RegExp(source, caseSensitive ? 'gu' : 'giu');
 }
@@ -75,7 +75,7 @@ export function findMatches(doc: PMNode, options: SearchOptions): SearchMatch[] 
   return matches;
 }
 
-/** Первое совпадение на позиции pos или после неё (с переходом в начало). */
+/** The first match at position pos or after it (wrapping around to the start). */
 function indexFrom(matches: SearchMatch[], pos: number): number {
   if (!matches.length) return -1;
   const i = matches.findIndex((m) => m.from >= pos);
@@ -99,7 +99,7 @@ export function searchPlugin(): Plugin<SearchState> {
         }
         if (meta?.type === 'goto') return { ...value, current: meta.index };
         if (tr.docChanged && value.query) {
-          // Документ изменился — пересчитываем, текущим остаётся ближайшее к старому.
+          // The document changed: recount, and the match nearest to the old one stays current.
           const matches = findMatches(newState.doc, value);
           const anchor = value.matches[value.current]?.from;
           const current = anchor === undefined ? -1 : indexFrom(matches, tr.mapping.map(anchor));
@@ -157,7 +157,7 @@ export function findNext(dir: 1 | -1 = 1): Command {
   return (state, dispatch) => {
     const { matches, current } = getSearchState(state);
     if (!matches.length) return false;
-    // Первый переход ведёт на «текущее», если по нему ещё не переходили (выделение не на нём).
+    // The first jump goes to the "current" match if it hasn't been visited yet (the selection isn't on it).
     const onCurrent =
       current >= 0 &&
       state.selection.from === matches[current]!.from &&
@@ -196,7 +196,7 @@ export function replaceAll(replacement: string): Command {
     if (!matches.length) return false;
     if (dispatch) {
       const tr = state.tr;
-      // С конца — чтобы ранние позиции не съезжали.
+      // From the end, so earlier positions don't shift.
       for (let i = matches.length - 1; i >= 0; i--) {
         const { from, to } = matches[i]!;
         const marks = state.doc.resolve(from).marksAcross(state.doc.resolve(to)) ?? [];

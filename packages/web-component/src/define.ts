@@ -1,4 +1,4 @@
-// Побочный импорт: `import '@novaprose/web-component/define'` регистрирует <novaprose-editor>.
+// A side-effect import: `import '@novaprose/web-component/define'` registers <novaprose-editor>.
 import { defineNovaProseEditor } from './element';
 
 defineNovaProseEditor();

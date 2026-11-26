@@ -1,13 +1,13 @@
 /**
- * Инструмент переводчика. Собирает все строки интерфейса — ядро (i18n/en.ts) и все плагины
- * (export const LABELS в src/plugins/*.ts) — в один плоский список ключей.
+ * Translator's tool. Collects every interface string, the core (i18n/en.ts) and all plugins
+ * (export const LABELS in src/plugins/*.ts), into one flat list of keys.
  *
- *   node scripts/i18n.mjs template          → i18n-template.json: { ключ: английская строка }
- *   node scripts/i18n.mjs check [код...]    → проверить пакеты src/i18n/packs/*.ts: все ключи на месте,
- *                                             лишних нет, параметры {name} совпадают, пустых строк нет
- *   node scripts/i18n.mjs stats             → сколько строк и какие пакеты есть
+ *   node scripts/i18n.mjs template          → i18n-template.json: { key: English string }
+ *   node scripts/i18n.mjs check [code...]   → check the packs in src/i18n/packs/*.ts: every key is present,
+ *                                             none extra, {name} parameters match, no empty strings
+ *   node scripts/i18n.mjs stats             → how many strings and which packs exist
  *
- * Ключи плагинов: '<плагин>.<ключ>', списки — '<плагин>.<ключ>.<номер>' (как в рантайме).
+ * Plugin keys: '<plugin>.<key>', lists: '<plugin>.<key>.<index>' (as at runtime).
  */
 import { build } from 'esbuild';
 import { readdirSync, writeFileSync } from 'node:fs';
@@ -18,7 +18,7 @@ const ROOT = resolve(import.meta.dirname, '..');
 const SRC = join(ROOT, 'packages/core/src');
 const PACKS = join(SRC, 'i18n/packs');
 
-/** Собрать TS-модули в один ESM-бандл для Node и импортировать его. */
+/** Bundles TS modules into one ESM bundle for Node and imports it. */
 async function load(entries) {
   const contents = entries
     .map(([name, path]) => `export * as ${name} from ${JSON.stringify(path)};`)
@@ -47,7 +47,7 @@ function flatten(prefix, labels) {
 
 const plugins = readdirSync(join(SRC, 'plugins'))
   .filter((f) => f.endsWith('.ts'))
-  // Ленивая часть плагина (<имя>-ui.ts) пишет подписи под именем плагина: '<имя>.<ключ>'.
+  // The lazy part of a plugin (<name>-ui.ts) writes its labels under the plugin name: '<name>.<key>'.
   .map((f) => [
     `p_${f.replace(/\W/g, '_')}`,
     join(SRC, 'plugins', f),
@@ -61,7 +61,7 @@ const mods = await load([
   ...packFiles.map((f) => [`pack_${f.replace(/\W/g, '_')}`, join(PACKS, f)]),
 ]);
 
-/** Эталон: все ключи ядра и плагинов с английскими строками. */
+/** The reference: every core and plugin key with its English string. */
 const template = { ...mods.en.en };
 for (const [id, , name] of plugins) {
   const labels = mods[id].LABELS;
@@ -79,7 +79,7 @@ const [command = 'stats', ...codes] = process.argv.slice(2);
 if (command === 'template') {
   const file = join(ROOT, 'i18n-template.json');
   writeFileSync(file, `${JSON.stringify(template, null, 2)}\n`);
-  console.log(`${Object.keys(template).length} строк → ${file}`);
+  console.log(`${Object.keys(template).length} strings → ${file}`);
 } else if (command === 'check') {
   let failed = 0;
   for (const f of packFiles) {
@@ -89,23 +89,24 @@ if (command === 'template') {
     const problems = [];
     for (const [key, en] of Object.entries(template)) {
       const value = pack[key];
-      if (value === undefined) problems.push(`нет ключа ${key}`);
-      else if (!value.trim()) problems.push(`пустая строка ${key}`);
+      if (value === undefined) problems.push(`missing key ${key}`);
+      else if (!value.trim()) problems.push(`empty string ${key}`);
       else if (params(value) !== params(en))
-        problems.push(`параметры ${key}: «${value}» vs «${en}»`);
+        problems.push(`parameters ${key}: "${value}" vs "${en}"`);
     }
-    for (const key of Object.keys(pack))
-      if (!(key in template)) problems.push(`лишний ключ ${key}`);
+    for (const key of Object.keys(pack)) if (!(key in template)) problems.push(`extra key ${key}`);
     if (problems.length) {
       failed++;
-      console.log(`✗ ${code}: ${problems.length} проблем\n  ${problems.slice(0, 20).join('\n  ')}`);
-    } else console.log(`✓ ${code}: ${Object.keys(pack).length} строк`);
+      console.log(
+        `✗ ${code}: ${problems.length} problems\n  ${problems.slice(0, 20).join('\n  ')}`,
+      );
+    } else console.log(`✓ ${code}: ${Object.keys(pack).length} strings`);
   }
   process.exit(failed ? 1 : 0);
 } else {
   const core = Object.keys(mods.en.en).length;
   console.log(
-    `Строк всего: ${Object.keys(template).length} (ядро ${core}, плагины ${Object.keys(template).length - core})`,
+    `Strings in total: ${Object.keys(template).length} (core ${core}, plugins ${Object.keys(template).length - core})`,
   );
-  console.log(`Пакеты: ${packFiles.map((f) => f.replace('.ts', '')).join(', ') || 'нет'}`);
+  console.log(`Packs: ${packFiles.map((f) => f.replace('.ts', '')).join(', ') || 'none'}`);
 }

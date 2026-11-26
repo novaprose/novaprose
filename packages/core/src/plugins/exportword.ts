@@ -3,9 +3,9 @@ import { h } from '../ui/dom';
 import { pickLabels } from './shared';
 
 /**
- * Плагин exportword: кнопка и пункт меню «Экспорт в Word» — документ скачивается файлом .docx
- * (лист и поля — из режима страниц). `plugins: ['exportword']`. Сам экспорт — @novaprose/core/docx,
- * он грузится при первом нажатии.
+ * The exportword plugin: the "Export to Word" button and menu item download the document as a .docx file
+ * (the sheet and margins come from page mode). `plugins: ['exportword']`. The export itself is @novaprose/core/docx,
+ * loaded on the first click.
  */
 
 export const LABELS = {
@@ -25,7 +25,7 @@ export const WORD_ICON = (arrow: string) =>
 
 const icon = WORD_ICON('<path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/>');
 
-/** Скачать байты файлом. */
+/** Downloads bytes as a file. */
 export function download(bytes: Uint8Array, filename: string, type: string): void {
   const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type }));
   const link = h('a', { href: url, download: filename });

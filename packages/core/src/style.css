@@ -1,17 +1,17 @@
 /*
- * NovaProse — базовый скин.
- * Все цвета и размеры — CSS-переменные (дизайн-токены, PRD §4.3). Тёмная тема — через
- * prefers-color-scheme или data-theme="dark" на любом предке; data-theme="light" фиксирует светлую.
+ * NovaProse: the base skin.
+ * Every color and size is a CSS variable (design tokens). The dark theme comes from
+ * prefers-color-scheme or data-theme="dark" on any ancestor; data-theme="light" pins the light one.
  */
 
-/* ======================= токены ======================= */
+/* ======================= tokens ======================= */
 
-/* Лист режима страниц (pagelayout) — бумага: светлые токены и в тёмной теме. */
+/* The sheet of the page mode (pagelayout) is paper: light tokens in the dark theme too. */
 .nova-editor,
 .nova-pages .nova-prosemirror {
   --nova-bg: #ffffff;
   --nova-fg: #1f2328;
-  --nova-muted: #59636e; /* ≥4.5:1 на всех поверхностях, включая hover/pressed */
+  --nova-muted: #59636e; /* ≥4.5:1 on every surface, hover/pressed included */
   --nova-subtle: #8c959f;
   --nova-border: #d0d7de;
   --nova-border-strong: #afb8c1;
@@ -24,7 +24,7 @@
   --nova-accent: #0969da;
   --nova-accent-hover: #0858b9;
   --nova-accent-fg: #ffffff;
-  /* Заливка кнопок с белым текстом: контраст не ниже 4.5:1 (WCAG AA). */
+  /* Button fills with white text: contrast of at least 4.5:1 (WCAG AA). */
   --nova-accent-strong: #0969da;
   --nova-accent-strong-hover: #0858b9;
   --nova-focus: #0969da;
@@ -63,7 +63,7 @@
 [data-theme='dark'] .nova-editor {
   --nova-bg: #0d1117;
   --nova-fg: #e6edf3;
-  --nova-muted: #9198a1; /* ≥4.5:1 на всех поверхностях, включая hover/pressed */
+  --nova-muted: #9198a1; /* ≥4.5:1 on every surface, hover/pressed included */
   --nova-subtle: #6e7681;
   --nova-border: #30363d;
   --nova-border-strong: #484f58;
@@ -76,7 +76,7 @@
   --nova-accent: #2f81f7;
   --nova-accent-hover: #4493f8;
   --nova-accent-fg: #ffffff;
-  /* #2f81f7 с белым — 3.7:1, ниже AA; для заливки — темнее (4.6:1). */
+  /* #2f81f7 with white is 3.7:1, below AA; fills use a darker shade (4.6:1). */
   --nova-accent-strong: #1f6feb;
   --nova-accent-strong-hover: #1a63d6;
   --nova-focus: #58a6ff;
@@ -105,7 +105,7 @@
   .nova-editor:not([data-theme='light'] *) {
     --nova-bg: #0d1117;
     --nova-fg: #e6edf3;
-    --nova-muted: #9198a1; /* ≥4.5:1 на всех поверхностях, включая hover/pressed */
+    --nova-muted: #9198a1; /* ≥4.5:1 on every surface, hover/pressed included */
     --nova-subtle: #6e7681;
     --nova-border: #30363d;
     --nova-border-strong: #484f58;
@@ -118,7 +118,7 @@
     --nova-accent: #2f81f7;
     --nova-accent-hover: #4493f8;
     --nova-accent-fg: #ffffff;
-    /* #2f81f7 с белым — 3.7:1, ниже AA; для заливки — темнее (4.6:1). */
+    /* #2f81f7 with white is 3.7:1, below AA; fills use a darker shade (4.6:1). */
     --nova-accent-strong: #1f6feb;
     --nova-accent-strong-hover: #1a63d6;
     --nova-focus: #58a6ff;
@@ -144,7 +144,7 @@
   }
 }
 
-/* ======================= каркас ======================= */
+/* ======================= frame ======================= */
 
 .nova-editor {
   position: relative;
@@ -194,9 +194,9 @@
   outline-offset: 1px;
 }
 
-/* ======================= тулбар ======================= */
+/* ======================= toolbar ======================= */
 
-/* Шапка (менюбар + тулбар) — липкая целиком: тулбар внутри неё не смог бы прилипнуть. */
+/* The header (menubar + toolbar) is sticky as a whole: a toolbar inside it couldn't stick. */
 .nova-header {
   position: sticky;
   top: 0;
@@ -219,7 +219,7 @@
   border-radius: inherit;
 }
 
-/* ---------- менюбар ---------- */
+/* ---------- menubar ---------- */
 
 .nova-menubar {
   display: flex;
@@ -248,9 +248,9 @@
   background: var(--nova-hover);
 }
 
-/* ---------- режимы inline и distraction-free ---------- */
+/* ---------- inline and distraction-free modes ---------- */
 
-/* Редактор встроен в страницу: без рамки и фона, шрифт и цвет — как у страницы. */
+/* The editor is part of the page: no frame or background, the font and color of the page. */
 .nova-editor.nova-mode-inline,
 .nova-editor.nova-mode-distraction-free {
   border: 0;
@@ -265,17 +265,17 @@
   font-size: inherit;
 }
 
-/* Видимая граница редактируемой области при фокусе — иначе непонятно, что текст можно править. */
+/* A visible border of the editable area on focus, otherwise it isn't clear the text can be edited. */
 .nova-mode-inline.is-focused .nova-content,
 .nova-mode-distraction-free.is-focused .nova-content {
   border-radius: var(--nova-radius-sm);
   box-shadow: 0 0 0 2px var(--nova-focus);
 }
 
-/* inline: шапка всплывает над текстом при фокусе. */
+/* inline: the header floats above the text on focus. */
 .nova-mode-inline .nova-header {
   position: absolute;
-  /* top: 0 от sticky-правила сбрасываем: с top и bottom сразу высота схлопывается. */
+  /* Reset top: 0 from the sticky rule: with both top and bottom the height collapses. */
   top: auto;
   left: 0;
   right: 0;
@@ -301,8 +301,8 @@
 .nova-toolbar-sliding {
   flex-wrap: nowrap;
   overflow: hidden;
-  /* Ширина тулбара не должна распирать контейнер клиента (grid/flex): иначе при переносе
-     групп в «⋯» контейнер сужается, ResizeObserver перезапускает раскладку — цикл. */
+  /* The toolbar width must not stretch the customer's container (grid/flex): otherwise when groups
+     move into "⋯" the container shrinks, ResizeObserver restarts the layout, and it loops. */
   contain: inline-size;
 }
 
@@ -413,20 +413,20 @@
   transform: translateY(-2px);
 }
 
-/* ======================= область редактирования ======================= */
+/* ======================= editing area ======================= */
 
 .nova-content {
   flex: 1;
   overflow: auto;
-  /* Ширину задаёт страница, а не содержимое: иначе широкая таблица или длинная строка кода
-     раздувают весь редактор на узком экране вместо прокрутки внутри. */
+  /* The width comes from the page, not the content: otherwise a wide table or a long line of code
+     inflates the whole editor on a narrow screen instead of scrolling inside. */
   contain: inline-size;
   min-width: 0;
 }
 
 .nova-prosemirror {
   position: relative;
-  /* Содержит плавающие (float) картинки внутри области текста. */
+  /* Contains floating images inside the text area. */
   display: flow-root;
   min-height: var(--nova-min-height);
   padding: 16px 20px;
@@ -450,7 +450,7 @@
 .nova-prosemirror.nova-empty::before {
   content: attr(data-placeholder);
   position: absolute;
-  /* Текст — контраст AA (4.5:1), поэтому muted, а не subtle. */
+  /* Text needs AA contrast (4.5:1), so muted, not subtle. */
   color: var(--nova-muted);
   pointer-events: none;
 }
@@ -488,7 +488,7 @@
   font-family: var(--nova-mono);
   font-size: 14px;
   white-space: pre-wrap;
-  /* Код пишется слева направо и в документе на арабском или иврите. */
+  /* Code is written left to right even in an Arabic or Hebrew document. */
   direction: ltr;
   text-align: left;
 }
@@ -527,7 +527,7 @@
   border-radius: 2px;
 }
 
-/* Картинка с подписью: таблица — подпись по ширине картинки, при любом выравнивании. */
+/* An image with a caption: a table, so the caption is as wide as the image with any alignment. */
 .nova-prosemirror figure {
   display: table !important;
   margin: 0.75em 0;
@@ -552,7 +552,7 @@
   text-align: center;
 }
 
-/* Пустая подпись — приглашение на языке интерфейса (текст в --nova-caption-placeholder). */
+/* An empty caption shows a prompt in the interface language (the text is in --nova-caption-placeholder). */
 .nova-prosemirror figcaption:has(> br.ProseMirror-trailingBreak:only-child)::before {
   content: var(--nova-caption-placeholder, '');
   color: var(--nova-muted);
@@ -569,9 +569,9 @@
   animation: nova-pulse 1.2s ease-in-out infinite;
 }
 
-/* ---------- таблицы ---------- */
+/* ---------- tables ---------- */
 
-/* Обёртка от prosemirror-tables: широкая таблица прокручивается, а не ломает вёрстку (мобильные). */
+/* The wrapper from prosemirror-tables: a wide table scrolls instead of breaking the layout (mobile). */
 .nova-prosemirror .tableWrapper {
   margin: 0 0 1em;
   overflow-x: auto;
@@ -605,7 +605,7 @@
   margin-bottom: 0;
 }
 
-/* Выделение нескольких ячеек (CellSelection). */
+/* A selection of several cells (CellSelection). */
 .nova-prosemirror .selectedCell::after {
   content: '';
   position: absolute;
@@ -615,7 +615,7 @@
   pointer-events: none;
 }
 
-/* Маркер ресайза колонки. */
+/* Column resize handle. */
 .nova-prosemirror .column-resize-handle {
   position: absolute;
   top: 0;
@@ -631,7 +631,7 @@
   cursor: col-resize;
 }
 
-/* Сетка выбора размера таблицы. */
+/* The table size picker grid. */
 .nova-grid-panel {
   display: flex;
   flex-direction: column;
@@ -666,7 +666,7 @@
   text-align: center;
 }
 
-/* ---------- картинка: обёртка NodeView, маркеры ресайза, выравнивание ---------- */
+/* ---------- image: NodeView wrapper, resize handles, alignment ---------- */
 
 .nova-image {
   position: relative;
@@ -717,7 +717,7 @@
   touch-action: none;
 }
 
-/* Увеличенная невидимая зона нажатия для пальца. */
+/* A larger invisible touch area for a finger. */
 .nova-image-handle::after {
   content: '';
   position: absolute;
@@ -756,7 +756,7 @@
   cursor: nwse-resize;
 }
 
-/* Размер во время ресайза. */
+/* The size while resizing. */
 .nova-image[data-size]::after {
   content: attr(data-size);
   position: absolute;
@@ -789,7 +789,7 @@
   cursor: default;
 }
 
-/* ======================= поиск и замена ======================= */
+/* ======================= search and replace ======================= */
 
 .nova-search {
   display: flex;
@@ -853,7 +853,7 @@
   box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.9);
 }
 
-/* ======================= полноэкранный режим ======================= */
+/* ======================= fullscreen ======================= */
 
 .nova-editor.nova-fullscreen {
   position: fixed;
@@ -873,7 +873,7 @@
   overflow: auto;
 }
 
-/* Текст в полноэкранном режиме — удобной для чтения ширины, по центру. */
+/* In fullscreen the text gets a comfortable reading width, centered. */
 .nova-fullscreen .nova-prosemirror {
   max-width: 860px;
   min-height: 100%;
@@ -886,7 +886,7 @@ html.nova-fullscreen-lock body {
   overflow: hidden;
 }
 
-/* ======================= предпросмотр, код, справка ======================= */
+/* ======================= preview, source code, help ======================= */
 
 .nova-dialog.nova-dialog-large {
   width: min(900px, 100%);
@@ -951,7 +951,7 @@ html.nova-fullscreen-lock body {
   white-space: nowrap;
 }
 
-/* ======================= статусбар ======================= */
+/* ======================= statusbar ======================= */
 
 .nova-statusbar {
   display: flex;
@@ -964,7 +964,7 @@ html.nova-fullscreen-lock body {
   border-radius: 0 0 var(--nova-radius) var(--nova-radius);
   color: var(--nova-muted);
   font-size: 12px;
-  /* Служебная строка: не выделяется при перетаскивании ручки размера. */
+  /* A service line: not selected while dragging the resize handle. */
   user-select: none;
 }
 
@@ -1001,9 +1001,9 @@ html.nova-fullscreen-lock body {
   cursor: nwse-resize;
 }
 
-/* ---------- справа налево ---------- */
+/* ---------- right to left ---------- */
 
-/* Ручка размера — в левом нижнем углу: иконку и курсор отражаем. */
+/* The resize handle sits in the bottom left corner: the icon and the cursor are mirrored. */
 [dir='rtl'] .nova-editor[data-resize='both'] .nova-resize-handle,
 .nova-editor[dir='rtl'][data-resize='both'] .nova-resize-handle {
   cursor: nesw-resize;
@@ -1013,8 +1013,8 @@ html.nova-fullscreen-lock body {
   transform: scaleX(-1);
 }
 
-/* Иконки со смыслом направления (стрелки отмены, отступы, списки) отражаем,
-   как принято в интерфейсах справа налево. Остальные (жирный, ссылка, картинка) — как есть. */
+/* Icons with a sense of direction (undo arrows, indents, lists) are mirrored,
+   as right-to-left interfaces do. The others (bold, link, image) stay as they are. */
 :is([dir='rtl'] .nova-editor, .nova-editor[dir='rtl'])
   :is(
     [data-control='undo'],
@@ -1038,7 +1038,7 @@ html.nova-fullscreen-lock body {
   outline-offset: 1px;
 }
 
-/* ======================= отключённый редактор ======================= */
+/* ======================= disabled editor ======================= */
 
 .nova-disabled .nova-content,
 .nova-disabled .nova-header,
@@ -1050,7 +1050,7 @@ html.nova-fullscreen-lock body {
   cursor: not-allowed;
 }
 
-/* ======================= оверлеи ======================= */
+/* ======================= overlays ======================= */
 
 .nova-popover,
 .nova-tooltip,
@@ -1078,7 +1078,7 @@ html.nova-fullscreen-lock body {
   padding: 2px;
 }
 
-/* ---------- меню ---------- */
+/* ---------- menu ---------- */
 
 .nova-menu {
   display: flex;
@@ -1130,7 +1130,7 @@ html.nova-fullscreen-lock body {
 
 .nova-menu-shortcut {
   margin-inline-start: 16px;
-  /* Текст — контраст AA (4.5:1), поэтому muted, а не subtle. */
+  /* Text needs AA contrast (4.5:1), so muted, not subtle. */
   color: var(--nova-muted);
   font-family: var(--nova-font);
   font-size: 12px;
@@ -1151,7 +1151,7 @@ html.nova-fullscreen-lock body {
   text-transform: uppercase;
 }
 
-/* ---------- автокомплитер / слэш-команды ---------- */
+/* ---------- autocompleter / slash commands ---------- */
 
 .nova-ac {
   min-width: 240px;
@@ -1180,7 +1180,7 @@ html.nova-fullscreen-lock body {
   color: var(--nova-muted);
 }
 
-/* ---------- палитра ---------- */
+/* ---------- color palette ---------- */
 
 .nova-color-panel {
   display: flex;
@@ -1195,7 +1195,7 @@ html.nova-fullscreen-lock body {
   gap: 4px;
 }
 
-/* Строка палитры нужна только для ARIA (role=row) — в раскладке её нет. */
+/* The palette row exists only for ARIA (role=row): it takes no part in the layout. */
 .nova-swatch-row {
   display: contents;
 }
@@ -1267,7 +1267,7 @@ html.nova-fullscreen-lock body {
   cursor: pointer;
 }
 
-/* ---------- подсказка ---------- */
+/* ---------- tooltip ---------- */
 
 .nova-tooltip {
   display: flex;
@@ -1292,7 +1292,7 @@ html.nova-fullscreen-lock body {
   font-family: var(--nova-font);
 }
 
-/* ---------- панель ссылки ---------- */
+/* ---------- link bubble ---------- */
 
 .nova-bubble {
   display: flex;
@@ -1342,12 +1342,12 @@ html.nova-fullscreen-lock body {
   gap: 2px;
 }
 
-/* На узком экране панель (например, таблицы) переносится в несколько строк, а не уходит за край. */
+/* On a narrow screen a toolbar (a table's, for example) wraps onto several lines instead of running off the edge. */
 .nova-context-toolbar {
   max-width: calc(100vw - 16px);
 }
 
-/* Сенсорный экран: панель у выделения — над клавиатурой во всю ширину (context-toolbar.ts). */
+/* Touch screens: the selection toolbar sits above the keyboard, full width (context-toolbar.ts). */
 .nova-context-toolbar-docked {
   justify-content: center;
   max-width: none;
@@ -1368,7 +1368,7 @@ html.nova-fullscreen-lock body {
   background: var(--nova-border);
 }
 
-/* ---------- уведомления ---------- */
+/* ---------- notifications ---------- */
 
 .nova-notifications {
   position: absolute;
@@ -1429,7 +1429,7 @@ html.nova-fullscreen-lock body {
   height: 14px;
 }
 
-/* ---------- диалог ---------- */
+/* ---------- dialog ---------- */
 
 .nova-dialog-backdrop {
   position: fixed;
@@ -1633,7 +1633,7 @@ html.nova-fullscreen-lock body {
   display: flex;
   align-items: center;
   gap: 10px;
-  /* Текст («или»), а не декор: нужен контраст AA — muted, не subtle. */
+  /* Text ("or"), not decoration: it needs AA contrast, so muted, not subtle. */
   color: var(--nova-muted);
   font-size: 12px;
   text-transform: uppercase;
@@ -1647,7 +1647,7 @@ html.nova-fullscreen-lock body {
   background: var(--nova-border);
 }
 
-/* Узкий экран: диалог — нижний лист, крупнее зоны нажатия. */
+/* Narrow screens: the dialog is a bottom sheet with larger touch areas. */
 @media (max-width: 600px) {
   .nova-dialog-backdrop {
     align-items: flex-end;
@@ -1681,7 +1681,7 @@ html.nova-fullscreen-lock body {
   }
 }
 
-/* ======================= анимации ======================= */
+/* ======================= animations ======================= */
 
 @keyframes nova-pop-in {
   from {
@@ -1717,11 +1717,11 @@ html.nova-fullscreen-lock body {
   }
 }
 
-/* ======================= обязательные стили ProseMirror ======================= */
+/* ======================= styles ProseMirror requires ======================= */
 
-/* Служебная картинка ProseMirror после нередактируемого элемента в конце абзаца (переменная,
-   упоминание, картинка). Обязательный стиль ProseMirror: иначе общий сброс сайта вроде
-   img { display: block } превращает её в лишнюю пустую строку. */
+/* ProseMirror's helper image after a non-editable element at the end of a paragraph (a variable,
+   a mention, an image). A style ProseMirror requires: otherwise a site-wide reset such as
+   img { display: block } turns it into an extra empty line. */
 .nova-prosemirror img.ProseMirror-separator {
   display: inline !important;
   width: auto !important;
@@ -1764,9 +1764,9 @@ html.nova-fullscreen-lock body {
   }
 }
 
-/* ======================= встроенные плагины ======================= */
+/* ======================= built-in plugins ======================= */
 
-/* charmap, emoticons: панель символов */
+/* charmap, emoticons: the symbol panel */
 .nova-symbols {
   display: flex;
   flex-direction: column;
@@ -1811,12 +1811,12 @@ html.nova-fullscreen-lock body {
   text-align: center;
 }
 
-/* visualblocks: границы блоков с подписью тега */
+/* visualblocks: block borders with the tag label */
 .nova-visualblocks
   .nova-prosemirror
   :is(p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol, pre, table) {
   position: relative;
-  /* Место под подпись тега, чтобы она не наезжала на текст. */
+  /* Room for the tag label so it doesn't run into the text. */
   padding-top: 12px;
   outline: 1px dashed var(--nova-border-strong);
   outline-offset: 2px;
@@ -1869,12 +1869,12 @@ html.nova-fullscreen-lock body {
   content: 'pre';
 }
 
-/* autoresize: прокрутка внутри области текста, когда достигнута maxHeight */
+/* autoresize: scrolling inside the text area once maxHeight is reached */
 .nova-autoresize .nova-content {
   overflow-y: auto;
 }
 
-/* anchor: якорь в тексте — небольшая метка (в HTML это пустой <a id>) */
+/* anchor: an anchor in the text is a small marker (in HTML it is an empty <a id>) */
 .nova-prosemirror a[id]:not([href]) {
   display: inline-block;
   width: 0.7em;
@@ -1887,7 +1887,7 @@ html.nova-fullscreen-lock body {
   cursor: pointer;
 }
 
-/* pagebreak: линия разрыва страницы */
+/* pagebreak: the page break line */
 .nova-prosemirror .nova-pagebreak {
   height: 0;
   margin: 1.5em 0;
@@ -1895,7 +1895,7 @@ html.nova-fullscreen-lock body {
   cursor: pointer;
 }
 
-/* media: видео с прозрачным слоем поверх — клик выделяет блок */
+/* media: a video with a transparent layer on top, so a click selects the block */
 .nova-media {
   position: relative;
   display: inline-block;
@@ -1928,7 +1928,7 @@ html.nova-fullscreen-lock body {
   }
 }
 
-/* Составная кнопка (bullist/numlist с advlist): действие + узкая стрелка с вариантами */
+/* A split button (bullist/numlist with advlist): the action + a narrow arrow with variants */
 .nova-tb-split {
   display: inline-flex;
   align-items: center;
@@ -1940,7 +1940,7 @@ html.nova-fullscreen-lock body {
   margin-left: -2px;
 }
 
-/* ---------- Комментарии (плагин comments) ---------- */
+/* ---------- Comments (the comments plugin) ---------- */
 
 .nova-comment {
   background: var(--nova-comment-bg);
@@ -1951,7 +1951,7 @@ html.nova-fullscreen-lock body {
   background: var(--nova-comment-active-bg);
 }
 
-/* Текст и панель рядом; когда места мало (узкий экран), панель уходит под текст во всю ширину. */
+/* The text and the panel side by side; with little room (a narrow screen) the panel goes under the text at full width. */
 .nova-body {
   display: flex;
   flex-wrap: wrap;
@@ -1963,7 +1963,7 @@ html.nova-fullscreen-lock body {
   flex: 999 1 360px;
 }
 
-/* ---------- боковые панели (editor.ui.sidebar) ---------- */
+/* ---------- sidebars (editor.ui.sidebar) ---------- */
 .nova-body > .nova-sidebar {
   display: flex;
   flex: 1 1 280px;
@@ -1996,7 +1996,7 @@ html.nova-fullscreen-lock body {
   padding: 10px;
   overflow: auto;
 }
-/* Панель со своей шапкой (комментарии) сама задаёт отступы и прокрутку. */
+/* A panel with its own header (comments) sets its own padding and scrolling. */
 .nova-sidebar-bare > .nova-sidebar-body {
   display: flex;
   flex-direction: column;
@@ -2004,7 +2004,7 @@ html.nova-fullscreen-lock body {
   overflow: hidden;
 }
 
-/* Узкий редактор: панель под текстом, отделена сверху (порог = 360 + 280 из flex-basis выше). */
+/* A narrow editor: the panel goes under the text, separated at the top (threshold = 360 + 280 from the flex-basis above). */
 .nova-body {
   container-type: inline-size;
 }
@@ -2017,7 +2017,7 @@ html.nova-fullscreen-lock body {
   }
 }
 
-/* ---------- Упоминания (плагин mentions и «@» в комментариях) ---------- */
+/* ---------- Mentions (the mentions plugin and "@" in comments) ---------- */
 
 .nova-prosemirror [data-mention],
 .nova-comment-mention {
@@ -2077,9 +2077,9 @@ html.nova-fullscreen-lock body {
   color: var(--nova-muted);
 }
 
-/* ---------- Режим правок (плагин suggestions) ---------- */
+/* ---------- Suggesting mode (the suggestions plugin) ---------- */
 
-/* Цвет автора приходит в --nova-suggestion (декорация), без неё — зелёный/красный по умолчанию. */
+/* The author's color comes in --nova-suggestion (a decoration); without it, green/red by default. */
 .nova-prosemirror ins[data-suggestion] {
   text-decoration: none;
 }
@@ -2087,7 +2087,7 @@ html.nova-fullscreen-lock body {
   text-decoration: none;
 }
 .nova-sugg-insert {
-  /* В тёмной теме цвет автора осветляется (--nova-suggestion-lift), чтобы читался на тёмном фоне. */
+  /* In the dark theme the author's color is lightened (--nova-suggestion-lift) to read on a dark background. */
   color: color-mix(
     in srgb,
     var(--nova-suggestion, var(--nova-success)),
@@ -2103,15 +2103,15 @@ html.nova-fullscreen-lock body {
     var(--nova-suggestion, var(--nova-danger)),
     white var(--nova-suggestion-lift)
   );
-  /* Без прозрачности: зачёркивания достаточно, а полупрозрачный текст не проходит по контрасту. */
+  /* No transparency: the strike-through is enough, and semi-transparent text fails the contrast check. */
   text-decoration: line-through 2px;
 }
-/* В режиме правок курсор цвета правок — заметно, что ввод станет предложением. */
+/* In suggesting mode the cursor takes the suggestion color: a visible sign that typing becomes a suggestion. */
 .nova-prosemirror.nova-suggesting {
   caret-color: var(--nova-success);
 }
 
-/* ======================= переменные (mergetags) ======================= */
+/* ======================= variables (mergetags) ======================= */
 
 .nova-mergetag {
   display: inline-block;

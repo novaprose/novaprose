@@ -1,9 +1,9 @@
 /*
- * Ручка перетаскивания блоков (плагин draghandle). Подключается вместе с плагином через
+ * The block drag handle (the draghandle plugin). Attached together with the plugin through
  * editor.ui.addStyles.
  */
 
-/* Ручка живёт в прокручиваемой области и двигается вместе с текстом; слева — место под неё. */
+/* The handle lives in the scrolling area and moves with the text; there is room for it on the left. */
 .nova-has-draghandle .nova-content {
   position: relative;
 }
@@ -48,7 +48,7 @@
   height: 16px;
 }
 
-/* Куда упадёт блок: линия между блоками (место считает плагин — по половине блока под мышью). */
+/* Where the block lands: a line between blocks (the plugin computes the place by the half of the block under the mouse). */
 .nova-drop-line {
   position: absolute;
   z-index: 3;
@@ -62,12 +62,12 @@
   display: none;
 }
 
-/* Пока тянут блок ручкой, свой курсор сброса ProseMirror не показываем: место другое. */
+/* While a block is dragged by the handle, ProseMirror's own drop cursor isn't shown: the place is different. */
 .nova-block-dragging :is(.prosemirror-dropcursor-block, .prosemirror-dropcursor-inline) {
   display: none;
 }
 
-/* Блок, выделенный ручкой (картинки, видео и линии оформлены в style.css). */
+/* A block selected by the handle (images, videos and rules are styled in style.css). */
 .nova-has-draghandle
   .nova-prosemirror
   :is(

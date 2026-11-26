@@ -29,9 +29,9 @@ const MARK_TAGS: Record<string, string> = {
 };
 
 /**
- * Считает слова так же, как пользователь: числа и слова с дефисом/апострофом — одно слово.
- * В китайском и японском слова не разделяются пробелами: каждый иероглиф, знак хираганы и катаканы
- * считается словом (как в текстовых процессорах). Корейский пишется с пробелами — как обычно.
+ * Counts words the way a person does: numbers and words with a hyphen/apostrophe are one word.
+ * In Chinese and Japanese words aren't separated by spaces: every ideograph, hiragana and katakana character
+ * counts as a word (as in word processors). Korean is written with spaces and counts as usual.
  */
 const CJK = String.raw`\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}`;
 const LETTER = String.raw`(?:(?![${CJK}])[\p{L}\p{N}])`;
@@ -41,7 +41,7 @@ export function countWords(text: string): number {
   return text.match(WORD)?.length ?? 0;
 }
 
-/** Статусбар: путь к элементу под курсором (p › strong) и счётчик слов. */
+/** The statusbar: the path to the element under the cursor (p › strong) and the word count. */
 export function createStatusbar(editor: Editor, host: HTMLElement) {
   host.className = 'nova-statusbar';
   const path = h('div', { className: 'nova-path', 'aria-hidden': 'true' });
@@ -66,22 +66,22 @@ export function createStatusbar(editor: Editor, host: HTMLElement) {
       const tag = TAGS[node.type.name]?.(node);
       if (tag) parts.push(tag);
     }
-    // Выделен узел целиком (картинка) — он тоже часть пути.
+    // A whole node is selected (an image): it is part of the path too.
     const selected = (editor.view.state.selection as { node?: PMNode }).node;
     if (selected?.type.name === 'image') parts.push('img');
     for (const mark of $from.marks()) {
       const tag = MARK_TAGS[mark.type.name];
       if (tag) parts.push(tag);
     }
-    // Каждый тег — отдельный изолированный фрагмент: справа налево путь идёт справа налево
-    // (латинские имена подряд иначе склеились бы в одну строку слева направо), «›» браузер отразит.
+    // Each tag is a separate isolated fragment: right to left, the path runs right to left
+    // (otherwise consecutive Latin names would merge into one left-to-right string); the browser mirrors "›".
     path.replaceChildren(
       ...parts.flatMap((tag, i) => [
         ...(i ? [' › '] : []),
         h('span', { className: 'nova-path-item' }, tag),
       ]),
     );
-    // Подсчёт слов на большом документе — не на каждое нажатие клавиши.
+    // Counting the words of a large document doesn't happen on every keystroke.
     if (docChanged) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(updateWords, 250);
@@ -106,8 +106,8 @@ const MIN_WIDTH = 200;
 const KEY_STEP = 20;
 
 /**
- * Ручка изменения размера в углу статусбара: тянуть мышью или пальцем, стрелки с клавиатуры.
- * Размер задаётся корню редактора (height, при 'both' — и width).
+ * The resize handle in the statusbar corner: drag it with a mouse or a finger, arrows from the keyboard.
+ * The size is set on the editor root (height, and width too for 'both').
  */
 function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): () => void {
   const root = editor.root;
@@ -123,7 +123,7 @@ function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): (
   host.append(handle);
 
   const setSize = (height: number, width?: number) => {
-    // Размер считаем по рамке (offsetHeight), значит и задаём по рамке — без скачка на ширину border.
+    // The size is measured by the border box (offsetHeight), so it is set by the border box too, without a jump of the border width.
     root.style.boxSizing = 'border-box';
     root.style.height = `${Math.max(MIN_HEIGHT, Math.round(height))}px`;
     if (both && width !== undefined) {
@@ -147,7 +147,7 @@ function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): (
   };
   const onMove = (event: PointerEvent) => {
     if (!start) return;
-    // Справа налево ручка в левом углу: ширина растёт при движении влево.
+    // Right to left the handle is in the left corner: the width grows when moving left.
     const dx = (event.clientX - start.x) * (isRtl(root) ? -1 : 1);
     setSize(start.height + event.clientY - start.y, start.width + dx);
   };

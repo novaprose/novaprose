@@ -1,6 +1,6 @@
 /*
- * Раскрывающиеся блоки (плагин accordion). Подключается вместе с ленивой частью плагина через
- * editor.ui.addStyles. В HTML документа — обычные <details><summary>, это только вид в редакторе.
+ * Collapsible blocks (the accordion plugin). Attached together with the plugin's lazy part through
+ * editor.ui.addStyles. In the document's HTML these are plain <details><summary>; this is only the editor's look.
  */
 .nova-details {
   position: relative;
@@ -44,7 +44,7 @@
   transition: transform 120ms ease;
 }
 
-/* Свёрнутый — стрелка вбок (по направлению текста). */
+/* Collapsed: the arrow points sideways (in the text direction). */
 .nova-details:not(.nova-details-open) > .nova-details-toggle svg {
   transform: rotate(-90deg);
 }
@@ -66,7 +66,7 @@
   display: none;
 }
 
-/* Пустой заголовок — приглашение на языке интерфейса (текст в --nova-summary-placeholder). */
+/* An empty title shows a prompt in the interface language (the text is in --nova-summary-placeholder). */
 .nova-details-content > summary:has(> br.ProseMirror-trailingBreak:only-child)::before {
   content: var(--nova-summary-placeholder, '');
   position: absolute;

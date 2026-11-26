@@ -1,8 +1,8 @@
 /**
- * git-хук commit-msg: сообщение в формате Conventional Commits, как принято в репозитории:
+ * commit-msg git hook: the message follows Conventional Commits, as the repository does:
  *   feat(core): editor.insertContent with table-in-table protection
  *   fix: …   docs: …   chore(release): 0.6.0
- * Подключается через simple-git-hooks (package.json), ставится при pnpm install.
+ * Installed through simple-git-hooks (package.json) on pnpm install.
  */
 import { readFileSync } from 'node:fs';
 
@@ -29,15 +29,15 @@ const TYPES = [
 ];
 const RE = new RegExp(`^(${TYPES.join('|')})(\\([a-z0-9-]+\\))?!?: \\S.{0,99}$`);
 
-// Служебные сообщения git (merge, revert) пропускаем.
+// Service messages from git (merge, revert) are skipped.
 if (/^(Merge|Revert|fixup!|squash!) /.test(subject) || RE.test(subject)) process.exit(0);
 
 console.error(`
-✗ Сообщение коммита не в формате Conventional Commits:
+✗ The commit message doesn't follow Conventional Commits:
     ${subject}
 
-  Нужно: <тип>(<область>): <что сделано, по-английски>
-  Типы: ${TYPES.join(', ')}
-  Пример: fix(core): keep leading spaces after a line break
+  Expected: <type>(<scope>): <what was done, in English>
+  Types: ${TYPES.join(', ')}
+  Example: fix(core): keep leading spaces after a line break
 `);
 process.exit(1);

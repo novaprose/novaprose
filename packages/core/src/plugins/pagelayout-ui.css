@@ -1,4 +1,4 @@
-/* Границы страниц поверх листа (pagelayout-ui). Лист всегда бумажный — цвета светлые. */
+/* Page borders on top of the sheet (pagelayout-ui). The sheet is always paper, so the colors are light. */
 .nova-page-breaks {
   position: absolute;
   z-index: 1;

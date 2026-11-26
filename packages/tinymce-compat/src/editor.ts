@@ -19,8 +19,8 @@ let dialogs: Dialogs | null = null;
 let dialogsLoading: Promise<Dialogs> | null = null;
 
 /**
- * Диалоги по описанию (windowManager.open) — отдельный модуль: в CDN-сборке это ленивая часть.
- * Редактор подгружает его заранее, поэтому open() обычно сразу рисует диалог.
+ * Dialogs from a description (windowManager.open) are a separate module: a lazy part in the CDN build.
+ * The editor loads it in advance, so open() usually draws the dialog right away.
  */
 export function loadDialogs(): Promise<Dialogs> {
   dialogsLoading ??= import('./dialog').then((module) => (dialogs = module));
@@ -28,8 +28,8 @@ export function loadDialogs(): Promise<Dialogs> {
 }
 
 /**
- * API диалога — сразу. Если модуль ещё грузится: setData копит данные (диалог откроется с ними),
- * остальные вызовы ждут открытия.
+ * The dialog API is available at once. While the module is still loading, setData collects data (the dialog
+ * opens with it) and other calls wait for the dialog to open.
  */
 function openDialog(
   core: Editor,
@@ -79,7 +79,7 @@ function openDialog(
 
 type Handler = (event: Record<string, unknown>) => unknown;
 
-/** execCommand → именованная команда NovaProse (имена команд TinyMCE — без учёта регистра). */
+/** execCommand → a named NovaProse command (TinyMCE command names are case-insensitive). */
 const COMMANDS: Record<string, CommandName> = {
   bold: 'bold',
   italic: 'italic',
@@ -103,7 +103,7 @@ const COMMANDS: Record<string, CommandName> = {
   mceblockquote: 'blockquote',
 };
 
-/** Команды раскрывающихся блоков (плагин accordion), как в документации TinyMCE. */
+/** Commands of collapsible blocks (the accordion plugin), as in the TinyMCE documentation. */
 const ACCORDION_COMMANDS = new Set([
   'insertaccordion',
   'removeaccordion',
@@ -123,7 +123,7 @@ const FORMAT_BLOCKS: Record<string, CommandName> = {
   pre: 'codeBlock',
 };
 
-/** Имена иконок TinyMCE → иконки NovaProse (остальные — текстом или через addIcon). */
+/** TinyMCE icon names → NovaProse icons (the rest render as text or through addIcon). */
 const ICON_NAMES: Record<string, keyof typeof icons> = {
   bold: 'bold',
   italic: 'italic',
@@ -166,7 +166,7 @@ const ICON_NAMES: Record<string, keyof typeof icons> = {
   'line-height': 'lineHeight',
 };
 
-/** Встроенные форматы TinyMCE → команды NovaProse. */
+/** Built-in TinyMCE formats → NovaProse commands. */
 const FORMAT_COMMANDS: Record<string, CommandName> = {
   bold: 'bold',
   italic: 'italic',
@@ -218,7 +218,7 @@ function warnDom(method: string): void {
   );
 }
 
-/** SVG, добавленные через editor.ui.registry.addIcon (общие для страницы, как в TinyMCE). */
+/** SVGs added through editor.ui.registry.addIcon (shared by the page, as in TinyMCE). */
 const customIcons = new Map<string, string>();
 
 function resolveIcon(name: unknown): string | undefined {
@@ -228,7 +228,7 @@ function resolveIcon(name: unknown): string | undefined {
   return own ? icons[own] : undefined;
 }
 
-/** Состояние кнопки для onAction/onSetup (api.isActive, setActive, isEnabled, setEnabled). */
+/** Button state for onAction/onSetup (api.isActive, setActive, isEnabled, setEnabled). */
 function buttonApi(compat: CompatEditor) {
   let active = false;
   let enabled = true;
@@ -252,7 +252,7 @@ function buttonApi(compat: CompatEditor) {
         enabled = value;
         compat.core.updateUI();
       },
-      // Совместимость со старыми версиями API.
+      // Compatibility with older versions of the API.
       isDisabled: () => !enabled,
       setDisabled: (value: boolean) => {
         enabled = !value;
@@ -289,11 +289,11 @@ export class CompatEditor {
     this.targetElm = target;
     this.id = id;
     this.settings = settings;
-    // Диалоги своих плагинов — заранее, в фоне: к первому open() модуль уже есть.
+    // Dialogs of your own plugins load in advance, in the background: by the first open() the module is there.
     setTimeout(() => void loadDialogs().catch(() => {}), 0);
   }
 
-  // ---------- содержимое ----------
+  // ---------- content ----------
 
   getContent(args: { format?: string } = {}): string {
     const event = { format: args.format ?? 'html', content: '' };
@@ -350,7 +350,7 @@ export class CompatEditor {
     return this.core.root.ownerDocument.defaultView!;
   }
 
-  // ---------- команды ----------
+  // ---------- commands ----------
 
   /** The value of a command: for ToggleSidebar, the name of the open sidebar. */
   queryCommandValue(command: string): string {
@@ -369,14 +369,14 @@ export class CompatEditor {
       this.insertContent(String(value ?? ''));
       done = true;
     } else if (name === 'togglesidebar') {
-      // Боковая панель из ui.registry.addSidebar (value — её имя).
+      // A sidebar from ui.registry.addSidebar (value is its name).
       void this.core.ui.sidebar.toggle(String(value ?? ''));
       done = true;
     } else if (name === 'mcesetcontent') {
       this.setContent(String(value ?? ''));
       done = true;
     } else if (name === 'mceinserttoc' || name === 'mceupdatetoc') {
-      // Оглавление (плагин tableofcontents) — как его кнопки.
+      // Table of contents (the tableofcontents plugin), like its buttons.
       const control = this.core.ui.registry.get(
         name === 'mceinserttoc' ? 'tableofcontents' : 'tableofcontentsupdate',
       );
@@ -387,7 +387,7 @@ export class CompatEditor {
     } else if (ACCORDION_COMMANDS.has(name)) {
       done = this.accordionCommand(name, value);
     } else if (name === 'codesample') {
-      // Диалог «Пример кода» (плагин codesample) — как нажатие его кнопки.
+      // The "Code sample" dialog (the codesample plugin), like pressing its button.
       const button = this.core.ui.registry.get('codesample');
       if (button?.type === 'button') {
         button.onAction(this.core);
@@ -470,7 +470,7 @@ export class CompatEditor {
     this.commands.set(name.toLowerCase(), callback);
   }
 
-  // ---------- события ----------
+  // ---------- events ----------
 
   on(names: string, handler: Handler, prepend = false): this {
     for (const name of names.toLowerCase().split(/\s+/).filter(Boolean)) {
@@ -538,7 +538,7 @@ export class CompatEditor {
     return (this.handlers.get(name.toLowerCase())?.size ?? 0) > 0;
   }
 
-  // ---------- состояние ----------
+  // ---------- state ----------
 
   isDirty(): boolean {
     return this.dirty;
@@ -580,7 +580,7 @@ export class CompatEditor {
   }
 
   isHidden(): boolean {
-    // В новых DOM-типах hidden может быть «until-found».
+    // In newer DOM types hidden can be "until-found".
     return this.core.root.hidden === true;
   }
 
@@ -592,7 +592,7 @@ export class CompatEditor {
     get: (name: string) => this.settings[name],
     set: (name: string, value: unknown) => {
       this.settings[name] = value;
-      // Опции, которые по документации TinyMCE меняются на лету.
+      // Options that the TinyMCE documentation allows to change on the fly.
       if (name === 'disabled') this.core.setDisabled(value === true);
       return true;
     },
@@ -821,7 +821,7 @@ export class CompatEditor {
       onAction: () => spec.onAction?.(api),
     });
     if (spec.onSetup) {
-      // onSetup вызывается при отрисовке кнопки; teardown — при удалении редактора.
+      // onSetup is called when the button renders; teardown when the editor is removed.
       const run = () => {
         const teardown = spec.onSetup!(api);
         if (typeof teardown === 'function') this.teardowns.push(teardown);
@@ -903,10 +903,10 @@ export class CompatEditor {
     toggle: (name: string, vars: { value?: string } = {}) =>
       this.applyFormat(name, vars, this.formatter.match(name) ? 'remove' : 'apply'),
     match: (name: string): boolean => {
-      // Свои форматы (formats, formatter.register) — формат-движок ядра.
+      // Custom formats (formats, formatter.register) use the core's format engine.
       if (this.core.formatter.has(name)) return this.core.formatter.match(name);
       const key = name.toLowerCase();
-      // Блок (p, h1…h6, blockquote, pre) — по модели документа: блок, где начинается выделение.
+      // A block (p, h1…h6, blockquote, pre) by the document model: the block where the selection starts.
       if (TAG_FORMATS.has(key)) return this.blockMatches(key);
       const command = FORMAT_COMMANDS[key];
       if (command) return this.core.isActive(command);
@@ -915,7 +915,7 @@ export class CompatEditor {
       const { state } = this.core.view;
       const { from, to, empty } = state.selection;
       const type = state.schema.marks[style];
-      // С выделением — есть ли формат в выделенном; без — у курсора.
+      // With a selection: whether the format is in the selected text; without one, at the cursor.
       return empty || !type
         ? getStyle(state, style) !== null
         : state.doc.rangeHasMark(from, to, type);
@@ -925,7 +925,7 @@ export class CompatEditor {
       name.toLowerCase() in FORMAT_COMMANDS ||
       name.toLowerCase() in STYLE_FORMATS,
     register: (name: string | Record<string, unknown>, spec?: unknown) => {
-      // register('name', spec) или register({ name: spec, … }).
+      // register('name', spec) or register({ name: spec, … }).
       const entries = typeof name === 'string' ? [[name, spec] as const] : Object.entries(name);
       for (const [key, value] of entries) {
         const specs = toFormatSpecs(value);
@@ -948,7 +948,7 @@ export class CompatEditor {
       if (key === 'pre') return name === 'code_block';
       if (/^h[1-6]$/.test(key)) return name === 'heading' && node.attrs.level === Number(key[1]);
     }
-    // Выделено всё (курсор перед первым блоком) — смотрим первый текстовый блок.
+    // Everything is selected (the cursor before the first block): look at the first text block.
     let first: { name: string; level: unknown } | null = null;
     this.core.view.state.doc.descendants((node) => {
       if (first || !node.isTextblock) return !first;
@@ -974,7 +974,7 @@ export class CompatEditor {
     const command = FORMAT_COMMANDS[key];
     if (command) {
       const active = this.formatter.match(key);
-      // Блоки (h1…) — применяются; повторное применение не «выключает». Марки — переключаются.
+      // Blocks (h1…) are applied, and applying again doesn't "turn them off". Marks toggle.
       if (BLOCK_FORMATS.has(key)) {
         if (action === 'apply') this.core.exec(command);
         else if (active) this.core.exec('paragraph');

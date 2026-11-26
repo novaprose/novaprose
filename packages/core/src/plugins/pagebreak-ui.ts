@@ -2,7 +2,7 @@ import { definePlugin } from '../plugins';
 import { icons } from '../ui/icons';
 import { pickLabels } from './shared';
 
-/** Ленивая часть плагина pagebreak: кнопка и пункт меню «Разрыв страницы». */
+/** The lazy part of the pagebreak plugin: the "Page break" button and menu item. */
 
 export const LABELS = { en: { title: 'Page break' } };
 

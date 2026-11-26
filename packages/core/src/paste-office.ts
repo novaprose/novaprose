@@ -1,11 +1,11 @@
 /**
- * Очистка HTML, вставленного из Word, Word Online, Google Docs, Excel, Google Sheets, LibreOffice
- * и обычных веб-страниц. Работает до разбора схемой: превращает «офисную» разметку в чистый HTML,
- * который схема поймёт правильно (настоящие списки вместо абзацев с маркерами, стили из классов
- * в style, без служебных тегов и стилей).
+ * Cleans up HTML pasted from Word, Word Online, Google Docs, Excel, Google Sheets, LibreOffice
+ * and regular web pages. Runs before the schema parses it: turns "office" markup into clean HTML
+ * that the schema understands correctly (real lists instead of paragraphs with markers, styles from
+ * classes moved into style, no service tags or styles).
  *
- * Реализовано по публичному описанию формата буфера обмена Office и по наблюдаемому поведению
- * приложений — без чужого кода (clean-room, см. CLAUDE.md).
+ * Built from the public description of the Office clipboard format and the observed behavior of
+ * the applications, without anyone else's code (clean room, see CLAUDE.md).
  */
 
 export type PasteSource =
@@ -21,7 +21,7 @@ export type PasteSource =
 /** 'clean' (default) — without fonts, sizes, spacing and "default" colors; 'keep' — as it is. */
 export type PasteStyles = 'clean' | 'keep';
 
-/** Откуда скопирован HTML (по характерным признакам разметки). */
+/** Where the HTML was copied from (by telltale signs in the markup). */
 export function detectPasteSource(html: string): PasteSource {
   if (/data-pm-slice=/.test(html)) return 'nova';
   if (/<google-sheets-html-origin|data-sheets-(root|value)/i.test(html)) return 'google-sheets';
@@ -42,7 +42,7 @@ export function detectPasteSource(html: string): PasteSource {
   return 'web';
 }
 
-/** Очистить вставляемый HTML. Внутреннее копирование NovaProse не трогаем. */
+/** Cleans up pasted HTML. NovaProse's own internal copy is left alone. */
 export function cleanPastedHTML(html: string, styles: PasteStyles = 'clean'): string {
   const source = detectPasteSource(html);
   if (source === 'nova') return html;
@@ -64,13 +64,13 @@ export function cleanPastedHTML(html: string, styles: PasteStyles = 'clean'): st
   removeBreaksBetweenBlocks(root);
   normalizeEmptyParagraphs(root);
   wrapCellContent(root);
-  // Классы из Office (MsoNormal, xl65, TextRun…) вне Office ничего не значат: их стили уже в style.
+  // Office classes (MsoNormal, xl65, TextRun…) mean nothing outside Office: their styles are already in style.
   if (source !== 'web')
     root.querySelectorAll('[class]').forEach((el) => el.removeAttribute('class'));
   return root.innerHTML;
 }
 
-// ---------- стили из <style> (Word, Excel, LibreOffice хранят форматирование в классах) ----------
+// ---------- styles from <style> (Word, Excel and LibreOffice keep formatting in classes) ----------
 
 type Declarations = Map<string, string>;
 
@@ -93,7 +93,7 @@ function serializeDeclarations(decls: Declarations): string {
   return [...decls].map(([name, value]) => `${name}: ${value}`).join('; ');
 }
 
-/** Переносит правила вида `.xl65 {…}` и `p.MsoTitle {…}` в style элементов. Свой style элемента важнее. */
+/** Moves rules like `.xl65 {…}` and `p.MsoTitle {…}` into the elements' style. The element's own style wins. */
 function inlineClassStyles(root: HTMLElement): void {
   const sheets = [...root.querySelectorAll('style')].map((s) => s.textContent ?? '');
   if (!sheets.length) return;
@@ -126,12 +126,12 @@ function inlineClassStyles(root: HTMLElement): void {
   });
 }
 
-// ---------- служебные элементы ----------
+// ---------- service elements ----------
 
 const DROP_TAGS = /^(STYLE|SCRIPT|META|LINK|TITLE|XML|HEAD|NOSCRIPT|TEMPLATE)$/;
 
 function removeJunk(root: HTMLElement): void {
-  // Комментарии (в т.ч. условные <!--[if …]--> из Word).
+  // Comments (including Word's conditional <!--[if …]-->).
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_COMMENT);
   const comments: Node[] = [];
   while (walker.nextNode()) comments.push(walker.currentNode);
@@ -145,34 +145,34 @@ function removeJunk(root: HTMLElement): void {
       continue;
     }
     if (tag.includes(':')) {
-      // <o:p> — «конец абзаца» Word, <v:…> — векторная графика (VML): удаляем.
-      // Остальные теги с пространством имён (умные теги <st1:…>, <w:sdt>) — разворачиваем.
+      // <o:p> is Word's "end of paragraph", <v:…> is vector graphics (VML): removed.
+      // Other namespaced tags (smart tags <st1:…>, <w:sdt>) are unwrapped.
       const prefix = tag.split(':')[0];
       if (prefix === 'O' || prefix === 'V') el.remove();
       else unwrap(el);
     }
   }
 
-  // Word Online: маркер конца абзаца <span class="EOP">&nbsp;</span>.
+  // Word Online: the end of paragraph marker <span class="EOP">&nbsp;</span>.
   root.querySelectorAll<HTMLElement>('span.EOP').forEach((span) => {
     if (/^\s*$/.test(span.textContent ?? '')) span.remove();
   });
 
   root.querySelectorAll<HTMLElement>('a').forEach((a) => {
     const href = a.getAttribute('href') ?? '';
-    // Google Docs оборачивает внешние ссылки в переадресацию google.com/url?q=… — возвращаем адрес.
+    // Google Docs wraps external links in a google.com/url?q=… redirect: restore the address.
     const redirect = href.match(/^https?:\/\/(www\.)?google\.[a-z.]+\/url\?(.*)$/i);
     if (redirect) {
       const target = new URLSearchParams(redirect[2]).get('q');
       if (target) a.setAttribute('href', target);
     }
-    // Закладки и оглавление Word (<a name="_Toc…">), ссылки на сноски и комментарии.
+    // Word bookmarks and table of contents (<a name="_Toc…">), links to footnotes and comments.
     if (!href || /^#_(ftn|edn|msocom|Toc|Ref)/i.test(href)) unwrap(a);
   });
 
-  // Разрывы страниц Word: <br clear=all style='page-break-before:always'>.
+  // Word page breaks: <br clear=all style='page-break-before:always'>.
   root.querySelectorAll<HTMLElement>('br[style*="page-break"]').forEach((br) => br.remove());
-  // Блоки сносок и комментариев Word в конце документа.
+  // Word's footnote and comment blocks at the end of the document.
   root
     .querySelectorAll<HTMLElement>(
       '[style*="mso-element:footnote-list"], [style*="mso-element:comment-list"], [style*="mso-element:endnote-list"]',
@@ -180,20 +180,20 @@ function removeJunk(root: HTMLElement): void {
     .forEach((el) => el.remove());
 }
 
-// ---------- списки Word для компьютера: абзацы с mso-list → <ul>/<ol> ----------
+// ---------- desktop Word lists: paragraphs with mso-list → <ul>/<ol> ----------
 
 interface WordListItem {
   el: HTMLElement;
   level: number;
   ordered: boolean;
   start: number;
-  /** list-style-type, если отличается от стандартного (disc / decimal). */
+  /** list-style-type when it differs from the default (disc / decimal). */
   style?: string | null;
 }
 
 /**
- * Маркер нумерованного списка: «1.», «1.1.», «1», «a)», «iv.», «(2)». Буква без точки или скобки —
- * не номер: «o» — стандартный маркер второго уровня маркированного списка Word.
+ * A numbered list marker: "1.", "1.1.", "1", "a)", "iv.", "(2)". A letter without a dot or a parenthesis
+ * is not a number: "o" is Word's standard marker for the second level of a bulleted list.
  */
 const ORDERED_MARKER = /^[([]?(\d+(\.\d+)*[.)\]]?|[a-z]{1,4}[.)\]])$/i;
 
@@ -201,7 +201,7 @@ function readWordListItem(el: HTMLElement): WordListItem | null {
   const css = el.getAttribute('style') ?? '';
   const match = css.match(/mso-list:\s*(l\d+)\s+level(\d+)/i);
   if (!match) return null;
-  // Маркер Word кладёт в <span style="mso-list:Ignore">1.<span>&nbsp;&nbsp;</span></span>.
+  // Word puts the marker into <span style="mso-list:Ignore">1.<span>&nbsp;&nbsp;</span></span>.
   const markerEl = [...el.querySelectorAll<HTMLElement>('[style]')].find((s) =>
     /mso-list:\s*Ignore/i.test(s.getAttribute('style') ?? ''),
   );
@@ -232,7 +232,7 @@ function romanToNumber(roman: string): number {
   return total;
 }
 
-/** Стиль и начало нумерации по маркеру: «3.» → decimal с 3, «c)» → lower-alpha с 3, «iv.» → lower-roman с 4. */
+/** Style and start of the numbering from the marker: "3." → decimal from 3, "c)" → lower-alpha from 3, "iv." → lower-roman from 4. */
 function numbering(marker: string): { style: string | null; start: number } {
   const digits = marker.match(/\d+/);
   if (digits) return { style: null, start: Number(digits[0]) };
@@ -250,7 +250,7 @@ function numbering(marker: string): { style: string | null; start: number } {
   };
 }
 
-/** Маркер Word второго уровня «o» — кружок, «§» и «▪» (Wingdings) — квадрат, остальное — точка. */
+/** Word's second-level marker "o" is a circle, "§" and "▪" (Wingdings) a square, anything else a disc. */
 function bulletStyle(marker: string): string | null {
   if (marker === 'o') return 'circle';
   if (/^[§▪■]$/.test(marker)) return 'square';
@@ -261,11 +261,11 @@ function convertWordLists(root: HTMLElement): void {
   const candidates = [
     ...root.querySelectorAll<HTMLElement>('p, div, h1, h2, h3, h4, h5, h6'),
   ].filter((el) => /mso-list:\s*l\d+\s+level\d+/i.test(el.getAttribute('style') ?? ''));
-  // Нумерованные заголовки («1. Введение») — не список: маркер оставляем текстом.
+  // Numbered headings ("1. Introduction") are not a list: the marker stays as text.
   for (const heading of candidates.filter((el) => /^H[1-6]$/.test(el.tagName))) {
     heading.querySelectorAll<HTMLElement>('[style]').forEach((s) => {
       if (!/mso-list:\s*Ignore/i.test(s.getAttribute('style') ?? '')) return;
-      // Маркер «1.» + отступ из неразрывных пробелов → «1. ».
+      // The "1." marker + an indent of non-breaking spaces → "1. ".
       const marker = (s.textContent ?? '').replace(/\s+/g, '');
       s.replaceWith(s.ownerDocument.createTextNode(`${marker} `));
     });
@@ -274,7 +274,7 @@ function convertWordLists(root: HTMLElement): void {
   const done = new Set<HTMLElement>();
   for (const first of paragraphs) {
     if (done.has(first)) continue;
-    // Серия: подряд идущие соседи-пункты.
+    // A run: consecutive siblings that are list items.
     const run: WordListItem[] = [];
     let node: Element | null = first;
     while (node instanceof HTMLElement && paragraphs.includes(node)) {
@@ -290,13 +290,13 @@ function convertWordLists(root: HTMLElement): void {
 
 function nextElement(el: Element): Element | null {
   let next = el.nextSibling;
-  // Пропускаем пустой текст между абзацами.
+  // Skip empty text between paragraphs.
   while (next && next.nodeType === Node.TEXT_NODE && !next.textContent?.trim())
     next = next.nextSibling;
   return next instanceof Element ? next : null;
 }
 
-/** Строит вложенные списки из плоской серии пунктов с уровнями и ставит их на место первого пункта. */
+/** Builds nested lists from a flat run of items with levels and puts them in place of the first item. */
 function buildNestedList(run: WordListItem[]): void {
   const doc = run[0]!.el.ownerDocument;
   const anchor = run[0]!.el;
@@ -310,7 +310,7 @@ function buildNestedList(run: WordListItem[]): void {
       if (item.ordered && item.start !== 1) list.setAttribute('start', String(item.start));
       if (item.style) list.style.listStyleType = item.style;
       if (current) {
-        // Вложенный список — внутрь последнего пункта родителя.
+        // A nested list goes inside the parent's last item.
         const parentItem =
           current.list.lastElementChild ?? current.list.appendChild(doc.createElement('li'));
         parentItem.appendChild(list);
@@ -328,7 +328,7 @@ function buildNestedList(run: WordListItem[]): void {
   run.slice(1).forEach((item) => item.el.remove());
 }
 
-// ---------- списки Google Docs и Word Online: aria-level, разрезанные <ul> ----------
+// ---------- Google Docs and Word Online lists: aria-level, split <ul> ----------
 
 function levelOf(li: Element): number | null {
   const raw = li.getAttribute('aria-level') ?? li.getAttribute('data-aria-level');
@@ -337,7 +337,7 @@ function levelOf(li: Element): number | null {
 }
 
 function normalizeLists(root: HTMLElement): void {
-  // Word Online оборачивает каждый пункт в <div class="ListContainerWrapper"><ul>…</ul></div>.
+  // Word Online wraps each item in <div class="ListContainerWrapper"><ul>…</ul></div>.
   root.querySelectorAll<HTMLElement>('div').forEach((div) => {
     const only = div.children.length === 1 ? div.firstElementChild : null;
     if (
@@ -348,13 +348,13 @@ function normalizeLists(root: HTMLElement): void {
       unwrap(div);
   });
 
-  // Список прямо внутри списка (<ul><li/><ul>…</ul></ul>, бывает в Google Docs) — во вложенный пункт.
+  // A list directly inside a list (<ul><li/><ul>…</ul></ul>, happens in Google Docs) goes into a nested item.
   root.querySelectorAll<HTMLElement>('ul > ul, ul > ol, ol > ul, ol > ol').forEach((list) => {
     const prev = list.previousElementSibling;
     if (prev?.tagName === 'LI') prev.appendChild(list);
   });
 
-  // Серии соседних списков с aria-level — собираем заново с правильной вложенностью.
+  // Runs of adjacent lists with aria-level are rebuilt with the right nesting.
   const lists = [...root.querySelectorAll<HTMLElement>('ul, ol')].filter(
     (l) =>
       !l.parentElement?.closest('ul, ol') && l.querySelector('li[aria-level], li[data-aria-level]'),
@@ -378,7 +378,7 @@ function normalizeLists(root: HTMLElement): void {
   }
 }
 
-/** Пункты списка в порядке документа: вложенные списки выносятся с уровнем на 1 больше (если нет aria-level). */
+/** List items in document order: nested lists come out one level deeper (when there is no aria-level). */
 function collectListItems(list: Element, depth: number, run: WordListItem[]): void {
   for (const li of [...list.children]) {
     if (li.tagName !== 'LI') continue;
@@ -397,7 +397,7 @@ function collectListItems(list: Element, depth: number, run: WordListItem[]): vo
   }
 }
 
-/** Как buildNestedList, но содержимое пункта уже может быть блоками (<p>). */
+/** Like buildNestedList, but an item's content may already be blocks (<p>). */
 function buildNestedListFromBlocks(run: WordListItem[], placeholder: HTMLElement): void {
   const doc = placeholder.ownerDocument;
   const stack: { list: HTMLElement; level: number }[] = [];
@@ -427,35 +427,35 @@ function buildNestedListFromBlocks(run: WordListItem[], placeholder: HTMLElement
 // ---------- Google Docs ----------
 
 function unwrapGoogleDocsWrapper(root: HTMLElement): void {
-  // Всё содержимое Google Docs обёрнуто в <b style="font-weight:normal" id="docs-internal-guid-…">.
+  // All Google Docs content is wrapped in <b style="font-weight:normal" id="docs-internal-guid-…">.
   root.querySelectorAll<HTMLElement>('[id^="docs-internal-guid-"]').forEach(unwrap);
-  // Пункты-чекбоксы — обычные пункты.
+  // Checkbox items become regular items.
   root.querySelectorAll<HTMLElement>('li[role="checkbox"]').forEach((li) => {
     li.removeAttribute('role');
     li.removeAttribute('aria-checked');
   });
 }
 
-// ---------- абзацные стили Word ----------
+// ---------- Word paragraph styles ----------
 
 function convertWordParagraphStyles(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>('p.MsoTitle, p[class*="Title"]').forEach((p) => {
     if (!/\bMsoTitle\b|^Title$/.test(p.className)) return;
     renameElement(p, 'h1');
   });
-  // Обёртки разделов Word.
+  // Word section wrappers.
   root
     .querySelectorAll<HTMLElement>('div.WordSection1, div[class^="WordSection"], div.Section1')
     .forEach(unwrap);
 }
 
-// ---------- стили ----------
+// ---------- styles ----------
 
 const DEFAULT_TEXT_COLORS =
   /^(black|windowtext|auto|#000|#000000|rgb\(0,\s*0,\s*0\)|initial|inherit)$/i;
 const DEFAULT_BACKGROUNDS =
   /^(transparent|white|window|auto|none|#fff|#ffffff|rgba?\(255,\s*255,\s*255(,\s*1)?\)|rgba\(\d+,\s*\d+,\s*\d+,\s*0\)|initial|inherit)$/i;
-/** Свойства, которые описывают оформление документа-источника, а не смысл текста. */
+/** Properties that describe the look of the source document, not the meaning of the text. */
 const CLEAN_DROP =
   /^(font|font-family|font-size|line-height|margin|margin-.+|padding|padding-.+|text-indent|letter-spacing|word-spacing|white-space|height|width|min-height|border|border-.+|tab-stops|layout-grid-mode|page-break-.+|break-.+|orphans|widows|direction|unicode-bidi|font-variant.*|text-transform)$/i;
 
@@ -464,7 +464,7 @@ function cleanStyle(el: HTMLElement, mode: PasteStyles): void {
   const out: Declarations = new Map();
   decls.forEach((value, name) => {
     if (name.startsWith('mso-')) {
-      // Подсветка текста в Word: mso-highlight:yellow → цвет фона.
+      // Text highlighting in Word: mso-highlight:yellow → background color.
       if (
         name === 'mso-highlight' &&
         !DEFAULT_BACKGROUNDS.test(value) &&
@@ -475,25 +475,25 @@ function cleanStyle(el: HTMLElement, mode: PasteStyles): void {
     }
     if (name.startsWith('-webkit-') || name.startsWith('-moz-')) return;
     if (name === 'background') {
-      // Word и Excel пишут фон сокращённо: background:yellow. Берём только простой цвет.
+      // Word and Excel write the background in shorthand: background:yellow. Only a plain color is taken.
       const color = value.split(/\s+/)[0]!;
       if (/^(#[0-9a-f]{3,8}|rgba?\([^)]*\)|[a-z]+)$/i.test(color) && !out.has('background-color'))
         out.set('background-color', color);
       return;
     }
     if (name === 'text-decoration' || name === 'text-decoration-line') {
-      // «underline line-through» и «underline» с лишними частями → то, что понимает схема.
+      // "underline line-through" and "underline" with extra parts → what the schema understands.
       if (/underline/.test(value)) out.set('text-decoration', 'underline');
       else if (/line-through/.test(value)) out.set('text-decoration', 'line-through');
       return;
     }
     if (mode === 'clean' && CLEAN_DROP.test(name)) return;
-    // Вертикальное выравнивание ячеек таблиц (у Sheets и Excel — «снизу» во всех ячейках) — вид источника.
+    // Vertical alignment of table cells (Sheets and Excel put "bottom" in every cell) is the source's look.
     if (mode === 'clean' && name === 'vertical-align' && /^(TD|TH)$/.test(el.tagName)) return;
     out.set(name, value);
   });
 
-  // Цвета «по умолчанию» (чёрный текст, белый/прозрачный фон) — не форматирование.
+  // "Default" colors (black text, white/transparent background) are not formatting.
   const color = out.get('color');
   if (color && DEFAULT_TEXT_COLORS.test(color.trim()) && mode === 'clean') out.delete('color');
   const background = out.get('background-color');
@@ -502,10 +502,10 @@ function cleanStyle(el: HTMLElement, mode: PasteStyles): void {
   if (out.get('font-style') === 'normal') out.delete('font-style');
   if (out.get('text-decoration') === 'none') out.delete('text-decoration');
   if (out.get('vertical-align') === 'baseline') out.delete('vertical-align');
-  // Выравнивание по левому краю — значение по умолчанию, а не форматирование.
+  // Left alignment is the default, not formatting.
   if (/^(left|start)$/i.test(out.get('text-align') ?? '')) out.delete('text-align');
 
-  // Синий цвет и подчёркивание ссылок — оформление источника; на сайте ссылки оформит его CSS.
+  // The blue color and underline of links are the source's look; on the site its CSS styles the links.
   if (mode === 'clean' && el.closest('a')) {
     out.delete('color');
     if (out.get('text-decoration') === 'underline') out.delete('text-decoration');
@@ -515,7 +515,7 @@ function cleanStyle(el: HTMLElement, mode: PasteStyles): void {
   else el.removeAttribute('style');
 }
 
-/** Размеры таблиц и ячеек из атрибутов (width="256", height, valign) — раскладка документа-источника. */
+/** Table and cell sizes from attributes (width="256", height, valign) are the source document's layout. */
 function stripLayoutAttributes(root: HTMLElement): void {
   root.querySelectorAll('table, tr, td, th, col, colgroup').forEach((el) => {
     el.removeAttribute('width');
@@ -524,7 +524,7 @@ function stripLayoutAttributes(root: HTMLElement): void {
   });
 }
 
-// ---------- развёртка пустых обёрток, пустые абзацы, лишние <br> ----------
+// ---------- unwrapping empty wrappers, empty paragraphs, extra <br> ----------
 
 function unwrapMeaningless(root: HTMLElement): void {
   for (const el of [...root.querySelectorAll<HTMLElement>('span, font')].reverse()) {
@@ -535,7 +535,7 @@ function unwrapMeaningless(root: HTMLElement): void {
   }
   root.querySelectorAll('[class]').forEach((el) => el.removeAttribute('class'));
   root.querySelectorAll('[lang]').forEach((el) => el.removeAttribute('lang'));
-  // dir="ltr" Google Docs ставит на каждый абзац — это значение по умолчанию; rtl сохраняем.
+  // Google Docs puts dir="ltr" on every paragraph: that is the default; rtl is kept.
   root.querySelectorAll('[dir]').forEach((el) => {
     if (!/^rtl$/i.test(el.getAttribute('dir') ?? '')) el.removeAttribute('dir');
   });
@@ -543,7 +543,7 @@ function unwrapMeaningless(root: HTMLElement): void {
 
 const BLOCK = /^(P|DIV|H[1-6]|UL|OL|TABLE|BLOCKQUOTE|PRE|HR)$/;
 
-/** <br> между блоками на верхнем уровне (Google Docs ставит их между абзацами) — лишние пустые строки. */
+/** <br> between top-level blocks (Google Docs puts them between paragraphs) are extra empty lines. */
 function removeBreaksBetweenBlocks(root: HTMLElement): void {
   root.querySelectorAll('br').forEach((br) => {
     const parent = br.parentElement;
@@ -575,7 +575,7 @@ function siblingElement(node: Node, dir: -1 | 1): Element | null {
   return s instanceof Element ? s : null;
 }
 
-/** Абзац из одного неразрывного пробела (так Word пишет пустую строку) — пустой абзац. */
+/** A paragraph of a single non-breaking space (the way Word writes an empty line) is an empty paragraph. */
 function normalizeEmptyParagraphs(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>('p').forEach((p) => {
     if (p.children.length === 0 && /^\s*$/.test(p.textContent ?? '')) p.textContent = '';
@@ -583,12 +583,12 @@ function normalizeEmptyParagraphs(root: HTMLElement): void {
 }
 
 /**
- * Ячейки Excel и Google Sheets содержат текст без абзаца, а выравнивание задано на самой ячейке.
- * Оборачиваем инлайн-содержимое в абзац и переносим на него text-align, иначе выравнивание потеряется.
+ * Excel and Google Sheets cells hold text without a paragraph, with the alignment set on the cell itself.
+ * The inline content is wrapped in a paragraph that takes the text-align, otherwise the alignment is lost.
  */
 function wrapCellContent(root: HTMLElement): void {
   root.querySelectorAll<HTMLElement>('td, th').forEach((cell) => {
-    // Формулы Word приходят в MathML: там «td» без style — не ячейка таблицы.
+    // Word formulas come as MathML: a "td" there without style is not a table cell.
     if (!cell.style) return;
     const align = cell.style.textAlign;
     const hasBlock = [...cell.children].some((c) => BLOCK.test(c.tagName));
@@ -602,7 +602,7 @@ function wrapCellContent(root: HTMLElement): void {
   });
 }
 
-// ---------- утилиты ----------
+// ---------- utilities ----------
 
 function unwrap(el: Element): void {
   const parent = el.parentNode;

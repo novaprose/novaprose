@@ -3,7 +3,7 @@ import { definePlugin } from '../plugins';
 import { insertText, openSymbolDialog, pickLabels, symbolPanel, type SymbolGroup } from './shared';
 
 /**
- * Плагин emoticons: эмодзи с поиском + автодополнение «:имя» прямо в тексте (`:smile` → 😄).
+ * The emoticons plugin: emoji with search + ":name" autocomplete right in the text (`:smile` → 😄).
  * `plugins: ['emoticons']`.
  */
 
@@ -190,7 +190,7 @@ export default definePlugin({
       onAction: () => openSymbolDialog(editor, labels.title, panel),
     });
 
-    // «:smi» → список подходящих эмодзи. Не меньше двух букв, чтобы не мешать «:)» и времени «10:30».
+    // ":smi" → a list of matching emoji. At least two letters, so ":)" and the time "10:30" aren't disturbed.
     editor.ui.registry.addAutocompleter('emoticons', {
       trigger: ':',
       minChars: 2,

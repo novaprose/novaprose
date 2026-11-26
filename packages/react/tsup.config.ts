@@ -7,7 +7,7 @@ export default defineConfig({
   clean: true,
   sourcemap: true,
   external: ['react', '@novaprose/core'],
-  // Next.js App Router: компонент и хуки работают только на клиенте. esbuild вырезает директивы
-  // модулей при бандлинге, поэтому добавляем её баннером в каждый выходной файл.
+  // Next.js App Router: the component and hooks work only on the client. esbuild strips module
+  // directives when bundling, so the directive is added as a banner to every output file.
   banner: { js: "'use client';" },
 });

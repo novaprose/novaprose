@@ -1,13 +1,13 @@
-// Упаковывает публикуемые пакеты в .release/*.tgz — ровно то, что уйдёт в npm.
-// Публикуем именно эти архивы (`npm publish .release/<file>.tgz`), чтобы проверенное и
-// опубликованное совпадало байт в байт. Запуск: `pnpm release:pack` (сначала собирает всё).
+// Packs the publishable packages into .release/*.tgz: exactly what goes to npm.
+// These very archives get published (`npm publish .release/<file>.tgz`), so that what was checked and
+// what was published match byte for byte. Run: `pnpm release:pack` (builds everything first).
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
 const out = join(root, '.release');
-// Порядок важен: ядро публикуется первым, обёртки от него зависят.
+// The order matters: the core is published first, the wrappers depend on it.
 const PACKAGES = ['core', 'collab', 'react', 'vue', 'web-component', 'angular', 'tinymce-compat'];
 
 rmSync(out, { recursive: true, force: true });
@@ -18,18 +18,19 @@ for (const name of PACKAGES) {
   const dir = join(root, 'packages', name);
   const manifest = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
   versions.add(manifest.version);
-  // Несобранный пакет — понятная ошибка (иначе npm pack падает невнятным ENOENT).
+  // An unbuilt package gets a clear error (otherwise npm pack fails with a vague ENOENT).
   const built = name === 'angular' ? join(dir, 'dist', 'package.json') : join(dir, 'dist');
-  if (!existsSync(built)) throw new Error(`${name}: нет ${built} — пакет не собран (pnpm build)`);
+  if (!existsSync(built))
+    throw new Error(`${name}: no ${built}, the package isn't built (pnpm build)`);
   if (name === 'angular') {
-    // ng-packagr публикуется из dist (package.json там уже с настоящими версиями).
+    // ng-packagr packages are published from dist (package.json there already has real versions).
     execFileSync('npm', ['pack', '--pack-destination', out], {
       cwd: join(dir, 'dist'),
       shell: true,
       stdio: 'pipe',
     });
   } else {
-    // pnpm pack заменяет workspace:^ на настоящие версии.
+    // pnpm pack replaces workspace:^ with the real versions.
     execFileSync('pnpm', ['pack', '--pack-destination', out], {
       cwd: dir,
       shell: true,
@@ -38,7 +39,7 @@ for (const name of PACKAGES) {
   }
 }
 
-if (versions.size !== 1) throw new Error(`Версии пакетов разошлись: ${[...versions].join(', ')}`);
+if (versions.size !== 1) throw new Error(`Package versions differ: ${[...versions].join(', ')}`);
 
 const files = readdirSync(out).filter((f) => f.endsWith('.tgz'));
 for (const file of files) {
@@ -46,9 +47,9 @@ for (const file of files) {
     cwd: out,
   }).toString();
   if (manifest.includes('workspace:'))
-    throw new Error(`${file}: в зависимостях остался workspace:`);
-  if (/"private":\s*true/.test(manifest)) throw new Error(`${file}: пакет помечен private`);
+    throw new Error(`${file}: a workspace: range is left in the dependencies`);
+  if (/"private":\s*true/.test(manifest)) throw new Error(`${file}: the package is marked private`);
 }
 const ordered = PACKAGES.map((name) => files.find((f) => f.startsWith(`novaprose-${name}-`)));
-console.log(`Версия ${[...versions][0]}. Архивы в .release/ (публиковать в этом порядке):`);
+console.log(`Version ${[...versions][0]}. Archives in .release/ (publish in this order):`);
 for (const file of ordered) console.log(`  ${file}`);

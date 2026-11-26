@@ -4,8 +4,8 @@ import type { MenuEntry } from '../ui/menu';
 import { insertText, pickLabels } from './shared';
 
 /**
- * Плагин insertdatetime: вставка текущей даты/времени в формате языка редактора.
- * Подключается лениво: `plugins: ['insertdatetime']` — код грузится отдельным чанком.
+ * The insertdatetime plugin: inserts the current date/time in the format of the editor's language.
+ * Attached lazily: `plugins: ['insertdatetime']`, the code loads as a separate chunk.
  */
 
 const ICON = icons.dateTime;
@@ -33,14 +33,14 @@ export default definePlugin({
   setup(editor) {
     const lang = editor.options.language ?? 'en';
     const labels = pickLabels(editor, 'insertdatetime', LABELS);
-    // `now` — подменяемая точка для тестов.
+    // `now` is a replaceable point for tests.
     const now = () =>
       (editor.options.pluginOptions?.insertdatetime as { now?: () => Date } | undefined)?.now?.() ??
       new Date();
     const format = (kind: keyof typeof FORMATS) =>
       new Intl.DateTimeFormat(lang, FORMATS[kind]).format(now());
 
-    // Пункт менюбара «Вставка → Дата/время» — дата и время по умолчанию.
+    // The menubar item "Insert → Date/time" inserts the default date and time.
     editor.ui.registry.addMenuItem('insertdatetime', {
       text: labels.title,
       icon: ICON,

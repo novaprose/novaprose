@@ -1,6 +1,6 @@
-# Сервер синхронизации NovaProse + Caddy (HTTPS от Let's Encrypt).
-# На сервере: /opt/novaprose/{compose.yml,Caddyfile,.env,sync-server/}; запуск — docker compose up -d --build.
-# .env: SYNC_DOMAIN, NOVA_SYNC_SECRET, NOVA_SYNC_PUBLIC_PREFIX — не коммитить.
+# The NovaProse sync server + Caddy (HTTPS from Let's Encrypt).
+# On the server: /opt/novaprose/{compose.yml,Caddyfile,.env,sync-server/}; start with docker compose up -d --build.
+# .env: SYNC_DOMAIN, NOVA_SYNC_SECRET, NOVA_SYNC_PUBLIC_PREFIX. Never commit it.
 services:
   sync:
     build: ./sync-server
@@ -10,7 +10,7 @@ services:
       NOVA_SYNC_PUBLIC_PREFIX: ${NOVA_SYNC_PUBLIC_PREFIX:-}
     volumes:
       - sync-data:/data
-    # Наружу не публикуется: доступ только через Caddy.
+    # Not published to the outside: reachable only through Caddy.
     expose:
       - '1234'
     mem_limit: 768m

@@ -11,12 +11,12 @@ import type {
 } from './form-dialog-types';
 
 /**
- * Диалог по описанию полей: подписи, подсказки, проверка, ошибки у поля, доступность
- * (label, aria-invalid, aria-describedby, фокус на первом неверном поле), вкладки (WAI-ARIA tabs)
- * и поле файлов с зоной перетаскивания. Ленивый чанк ядра.
+ * A dialog from a field description: labels, hints, validation, errors next to the field, accessibility
+ * (label, aria-invalid, aria-describedby, focus on the first invalid field), tabs (WAI-ARIA tabs)
+ * and a file field with a drop zone. A lazy chunk of the core.
  */
 
-/** Стили диалога (ошибки полей, вкладки, файлы) — подключаются вместе с его кодом. */
+/** The dialog's styles (field errors, tabs, files) attach together with its code. */
 export const formDialogCss = css;
 
 type NamedField = Extract<DialogField, { name: string }>;
@@ -26,9 +26,9 @@ interface Control {
   input: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
   error: HTMLElement;
   hintId?: string;
-  /** Номер вкладки, на которой поле (для перехода к ошибке). */
+  /** The index of the tab the field is on (to jump to an error). */
   tab: number;
-  /** Поле файлов: выбранные файлы и перерисовка их списка. */
+  /** A file field: the chosen files and redrawing their list. */
   files?: File[];
   renderFiles?: () => void;
 }
@@ -39,7 +39,7 @@ type OpenDialog = (
   },
 ) => DialogHandle;
 
-/** Файл подходит под accept ('image/*,.pdf,application/zip'). */
+/** The file matches accept ('image/*,.pdf,application/zip'). */
 function accepts(accept: string | undefined, file: File): boolean {
   if (!accept) return true;
   const name = file.name.toLowerCase();
@@ -137,7 +137,7 @@ export function openFormDialog(
     close: () => handle?.close(),
   };
 
-  /** Проверка всех полей: ошибки у полей; фокус на первом неверном (с переходом на его вкладку). */
+  /** Validates every field: errors next to the fields; focus on the first invalid one (switching to its tab). */
   const validate = (data: DialogData): boolean => {
     let first: Control | null = null;
     controls.forEach((control, name) => {
@@ -178,8 +178,8 @@ export function openFormDialog(
   };
 
   /**
-   * Поле файлов: скрытый <input type=file> (он и получает фокус) + зона перетаскивания,
-   * под ней подсказка (про допустимые файлы), затем список выбранных.
+   * A file field: a hidden <input type=file> (it is what receives focus) + a drop zone,
+   * a hint under it (about the allowed files), then the list of chosen files.
    */
   const fileField = (
     field: Extract<DialogField, { type: 'file' }>,
@@ -288,7 +288,7 @@ export function openFormDialog(
         placeholder: field.placeholder,
       });
       if (field.code) {
-        // Код: без проверки орфографии, автозамены и заглавных букв на телефоне, строки не переносятся.
+        // Code: no spell checking, autocorrect or capitalization on phones, no line wrapping.
         input.spellcheck = false;
         input.setAttribute('autocapitalize', 'off');
         input.setAttribute('autocorrect', 'off');
@@ -335,7 +335,7 @@ export function openFormDialog(
         },
       );
     }
-    // Обязательное поле отмечено звёздочкой; дикторам её не читаем — им сообщает aria-required.
+    // A required field is marked with an asterisk; screen readers don't read it, aria-required tells them.
     const label = h(
       field.type === 'file' ? 'span' : 'label',
       {
@@ -349,7 +349,7 @@ export function openFormDialog(
     );
     const hint = hintId ? h('p', { id: hintId, className: 'nova-hint' }, field.hint!) : null;
     if (field.type === 'file') {
-      // Имя поля для дикторов — его подпись (зона — тоже label, но с текстом «перетащите…»).
+      // The field name for screen readers is its label (the zone is a label too, but with the text "drop…").
       input.setAttribute('aria-labelledby', `${id}-label`);
       return h(
         'div',
@@ -370,7 +370,7 @@ export function openFormDialog(
       : h('div', { className: 'nova-field' }, label, input, hint, error);
   };
 
-  /** Вкладки по WAI-ARIA: tablist, стрелки (в RTL — зеркально), Home/End, панели tabpanel. */
+  /** Tabs per WAI-ARIA: tablist, arrows (mirrored in RTL), Home/End, tabpanel panels. */
   const renderTabs = (tabs: NonNullable<DialogSpec['tabs']>): HTMLElement => {
     const baseId = uniqueId('nova-tab');
     const buttons: HTMLButtonElement[] = [];

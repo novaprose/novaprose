@@ -7,13 +7,13 @@ import { rangeText, suggestInsert, suggestRewrite } from './ai-edit';
 import { pickLabels } from './shared';
 
 /**
- * Плагин ai: помощник ИИ, чьи правки приходят предложениями — как от соавтора. Выделили текст →
- * «Улучшить», «Короче», свой запрос → изменённые слова появляются правками, каждую можно принять
- * или отклонить (плагин suggestions). Без выделения — текст у курсора («Продолжить»).
+ * The ai plugin: an AI assistant whose edits arrive as suggestions, like a co-author's. Select text →
+ * "Improve", "Shorter", your own request → the changed words appear as suggestions, each of which can be accepted
+ * or rejected (the suggestions plugin). Without a selection, text at the cursor ("Continue").
  *
- * Модель — ваша: `pluginOptions.ai.request` отправляет запрос на ваш сервер (ключ API в браузере
- * держать нельзя) и возвращает текст или поток кусков текста. `plugins: ['suggestions', 'ai']`.
- * Кнопки — как у TinyMCE: aidialog (окно) и aishortcuts (быстрые действия).
+ * The model is yours: `pluginOptions.ai.request` sends the request to your server (an API key must never
+ * live in the browser) and returns text or a stream of text chunks. `plugins: ['suggestions', 'ai']`.
+ * Buttons as in TinyMCE: aidialog (the window) and aishortcuts (quick actions).
  */
 
 export const LABELS = {
@@ -80,7 +80,7 @@ export interface AiOptions {
   name?: string;
 }
 
-/** Инструкции быстрых действий для модели. */
+/** Instructions of the quick actions for the model. */
 export const INSTRUCTIONS: Record<Exclude<AiAction, 'custom'>, string> = {
   improve:
     'Improve the writing: make it clearer and more natural. Keep the meaning and the language.',
@@ -95,7 +95,7 @@ export const INSTRUCTIONS: Record<Exclude<AiAction, 'custom'>, string> = {
     'Continue the text from where it ends: one or two paragraphs in the same style and language.',
 };
 
-/** Действия, которым нужно выделение (переписать или пересказать выделенное). */
+/** Actions that need a selection (rewrite or summarize what is selected). */
 const NEEDS_SELECTION: AiAction[] = [
   'improve',
   'fix',
@@ -116,7 +116,7 @@ function isIterable(value: unknown): value is AsyncIterable<string> {
   return !!value && typeof (value as AsyncIterable<string>)[Symbol.asyncIterator] === 'function';
 }
 
-/** Запуск запроса и применение ответа предложениями; ошибки и отмена — без изменений текста. */
+/** Runs the request and applies the answer as suggestions; errors and cancelling leave the text unchanged. */
 async function runAi(
   editor: Editor,
   action: AiAction,
@@ -130,7 +130,7 @@ async function runAi(
   const author = { id: 'ai', name: String(options.name || labels.author).slice(0, 80) };
   const { state } = editor.view;
   const { from: start, to: end, empty } = state.selection;
-  // Позиции выделения ведём через правки, пришедшие, пока модель пишет (соавторы, автосохранение).
+  // Selection positions are mapped through edits that arrive while the model writes (co-authors, autosave).
   let from = start;
   let to = end;
   const off = editor.on('change', (_e, { transaction }) => {
@@ -163,7 +163,7 @@ async function runAi(
     const now = editor.view.state;
     let tr;
     if (action === 'summarize') {
-      // Пересказ — новым абзацем после выделенного.
+      // A summary goes as a new paragraph after the selection.
       tr = suggestInsert(now, now.doc.resolve(to).end(), text, author, { newParagraph: true });
     } else if (empty || action === 'continue') {
       tr = suggestInsert(now, to, text, author);
@@ -178,7 +178,7 @@ async function runAi(
   }
 }
 
-/** Окно помощника: свой запрос, быстрые действия, ответ по мере написания. */
+/** The assistant window: your own request, quick actions, the answer as it is written. */
 function openAiDialog(editor: Editor, preset?: AiAction): void {
   const labels = pickLabels(editor, 'ai', LABELS);
   const empty = editor.view.state.selection.empty;

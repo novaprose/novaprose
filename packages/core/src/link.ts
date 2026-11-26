@@ -27,7 +27,7 @@ export interface LinkAttrs {
   target?: string | null;
 }
 
-/** Диапазон, к которому относится ссылка: выделение или ссылка под курсором. */
+/** The range a link applies to: the selection or the link under the cursor. */
 function linkTarget(state: EditorState): { from: number; to: number } {
   const { from, to, empty, $from } = state.selection;
   if (empty) return markRange(state, marksOf(state).link, $from.pos) ?? { from, to };
@@ -82,7 +82,7 @@ export function openLinkDialog(editor: Editor): void {
   const existing = getLinkAt(state);
   const range = linkTarget(state);
   const selectedText = state.doc.textBetween(range.from, range.to);
-  // Текст ссылки редактируем, только если выделение не пересекает несколько блоков/узлов.
+  // The link text is editable only if the selection doesn't span several blocks/nodes.
   const canEditText =
     !selectedText.includes('\n') && state.selection.$from.sameParent(state.doc.resolve(range.to));
 

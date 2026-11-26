@@ -26,12 +26,12 @@ import css from './codesample.css?raw';
 import { pickLabels } from './shared';
 
 /**
- * Плагин codesample: подсветка синтаксиса в блоках кода, выбор языка и диалог «Пример кода»
- * (кнопка `codesample`, как у TinyMCE). `plugins: ['codesample']`.
+ * The codesample plugin: syntax highlighting in code blocks, language choice and the "Code sample" dialog
+ * (the `codesample` button, as in TinyMCE). `plugins: ['codesample']`.
  *
- * Подсветка — highlight.js, только в редакторе (оформление поверх текста): HTML на выходе прежний,
- * `<pre><code class="language-js">`, его подсветит любая библиотека на странице сайта. Ядро
- * highlight.js и грамматики грузятся, когда в документе появляется блок кода на этом языке.
+ * Highlighting is highlight.js, in the editor only (decorations on top of the text): the output HTML stays
+ * `<pre><code class="language-js">`, and any library on the site's page can highlight it. The highlight.js core
+ * and grammars load when a code block in that language appears in the document.
  */
 
 export const LABELS = {
@@ -57,13 +57,13 @@ export interface CodeSampleOptions {
   grammars?: Record<string, CodeGrammarLoader>;
 }
 
-/** Блоки кода больше этого (в символах) перекрашиваются после паузы в наборе, а не на каждую букву. */
+/** Code blocks larger than this (in characters) are recolored after a pause in typing, not on every letter. */
 const SYNC_LIMIT = 20_000;
 const DEFER_DELAY = 300;
 
 interface HighlightState {
   set: DecorationSet;
-  /** Есть большие блоки, которые ждут перекраски после паузы. */
+  /** There are large blocks waiting to be recolored after a pause. */
   deferred: boolean;
 }
 
@@ -71,14 +71,14 @@ type Meta = 'refresh' | 'deferred';
 
 const key = new PluginKey<HighlightState>('nova-codesample');
 
-/** Блок кода, в котором стоит курсор (выделение целиком внутри одного блока). */
+/** The code block with the cursor (the selection entirely inside one block). */
 export function codeBlockAt(state: EditorState): { node: PMNode; pos: number } | null {
   const { $from, $to } = state.selection;
   if ($from.parent.type.name !== 'code_block' || !$from.sameParent($to)) return null;
   return { node: $from.parent, pos: $from.before() };
 }
 
-/** Язык блока кода под курсором (null — простой текст). */
+/** The language of the code block under the cursor (null means plain text). */
 export function setCodeLanguage(language: string | null): Command {
   return (state, dispatch) => {
     const block = codeBlockAt(state);
@@ -88,7 +88,7 @@ export function setCodeLanguage(language: string | null): Command {
   };
 }
 
-/** Все загрузки грамматик завершены и подсветка нарисована (для тестов и печати). */
+/** Every grammar load has finished and the highlighting is drawn (for tests and printing). */
 export async function codeHighlightIdle(state: EditorState): Promise<void> {
   const highlighter = key.get(state)?.spec.highlighter as Highlighter | undefined;
   await highlighter?.idle();
@@ -98,19 +98,19 @@ function sameLanguage(a: string | null, b: string): boolean {
   return !!a && a.toLowerCase() === b.toLowerCase();
 }
 
-/** Список для меню и диалога; язык блока не из списка — первым, чтобы было видно, какой он. */
+/** The list for the menu and the dialog; a block language not in the list goes first, so you can see what it is. */
 function languageChoices(languages: CodeLanguage[], current: string | null): CodeLanguage[] {
   if (!current || languages.some((l) => sameLanguage(current, l.value))) return languages;
   return [{ value: current, label: languageLabel(current, languages) }, ...languages];
 }
 
 function highlightPlugin(highlighter: Highlighter, languages: CodeLanguage[]): Plugin {
-  /** Оформление одного блока: атрибуты <pre> (подпись языка) и отрезки подсветки. */
+  /** The decorations of one block: <pre> attributes (the language label) and highlighted ranges. */
   const decorate = (node: PMNode, pos: number): Decoration[] => {
     const language = codeLanguage(node.attrs.language);
     const attrs: Record<string, string> = { spellcheck: 'false' };
     if (language) attrs['data-language'] = languageLabel(language, languages);
-    // spec.codeBlock — узел, по которому оформление построено: другой узел — пора перекрасить.
+    // spec.codeBlock is the node the decorations were built for: a different node means it is time to recolor.
     const decorations = [Decoration.node(pos, pos + node.nodeSize, attrs, { codeBlock: node })];
     const segments = highlighter.highlight(node.textContent, language);
     if (Array.isArray(segments)) {
@@ -132,7 +132,7 @@ function highlightPlugin(highlighter: Highlighter, languages: CodeLanguage[]): P
     return DecorationSet.create(doc, decorations);
   };
 
-  /** Перекрасить только изменившиеся блоки: остальное оформление просто сдвигается. */
+  /** Recolors only the blocks that changed: the other decorations just shift. */
   const update = (tr: Transaction, previous: DecorationSet, force: boolean): HighlightState => {
     let set = previous.map(tr.mapping, tr.doc);
     let deferred = false;
@@ -146,7 +146,7 @@ function highlightPlugin(highlighter: Highlighter, languages: CodeLanguage[]): P
         deferred = true;
         return false;
       }
-      // find() цепляет и соседей, касающихся границ, — убираем только своё.
+      // find() also catches neighbors touching the edges, so only our own are removed.
       set = set
         .remove(set.find(pos, end).filter((d) => d.from >= pos && d.to <= end))
         .add(tr.doc, decorate(node, pos));
@@ -175,7 +175,7 @@ function highlightPlugin(highlighter: Highlighter, languages: CodeLanguage[]): P
         if (view.isDestroyed) return;
         view.dispatch(view.state.tr.setMeta(key, meta).setMeta('addToHistory', false));
       };
-      // Догрузилась грамматика — перекрасить блоки на этом языке (и на всех остальных).
+      // A grammar loaded: recolor the blocks in that language (and in all the others).
       const stop = highlighter.onLoad(() => dispatchMeta('refresh'));
       let timer: ReturnType<typeof setTimeout> | undefined;
       const schedule = () => {
@@ -194,7 +194,7 @@ function highlightPlugin(highlighter: Highlighter, languages: CodeLanguage[]): P
   });
 }
 
-/** Вставить блок: пустой абзац под курсором он заменяет, иначе встаёт на место выделения. */
+/** Inserts a block: it replaces an empty paragraph under the cursor, otherwise it takes the selection's place. */
 function insertBlock(state: EditorState, block: PMNode): Transaction {
   const { $from, empty } = state.selection;
   const tr = state.tr;
@@ -211,7 +211,7 @@ function insertBlock(state: EditorState, block: PMNode): Transaction {
   } else {
     tr.replaceSelectionWith(block);
   }
-  // Курсор — в конец кода: можно сразу дописывать.
+  // The cursor goes to the end of the code, so you can keep typing.
   let end = -1;
   tr.doc.descendants((node, pos) => {
     if (end >= 0) return false;
@@ -222,7 +222,7 @@ function insertBlock(state: EditorState, block: PMNode): Transaction {
   return tr;
 }
 
-/** Диалог «Пример кода»: курсор в блоке кода — правка блока, иначе — вставка нового. */
+/** The "Code sample" dialog: with the cursor in a code block it edits the block, otherwise it inserts a new one. */
 async function codeDialog(
   editor: Editor,
   languages: CodeLanguage[],
@@ -264,7 +264,7 @@ async function codeDialog(
   const next = editor.view.state;
   const type = next.schema.nodes.code_block!;
   const node = type.create({ language }, code ? next.schema.text(code) : undefined);
-  // Пока диалог был открыт, документ мог измениться (соавторы) — ищем блок заново.
+  // While the dialog was open the document may have changed (co-authors): find the block again.
   const target = block ? codeBlockAt(next) : null;
   let tr: Transaction;
   if (target) {
@@ -341,7 +341,7 @@ export default definePlugin({
         return entries;
       },
     });
-    // Выше таблиц (priority 1): блок кода в ячейке — язык важнее кнопок таблицы.
+    // Above tables (priority 1): for a code block in a cell the language matters more than the table buttons.
     registry.addContextToolbar('codesample', {
       label: labels.toolbar,
       priority: 1,
@@ -351,8 +351,8 @@ export default definePlugin({
         const dom = block ? (e.view.nodeDOM(block.pos) as HTMLElement | null) : null;
         return dom?.getBoundingClientRect() ?? null;
       },
-      // Над правым углом блока, рядом с подписью языка: не закрывает ни код, ни текст слева.
-      // Код всегда слева направо — и в документе справа налево угол тот же, правый.
+      // Above the block's right corner, next to the language label: covers neither the code nor the text on the left.
+      // Code is always left to right, so in a right-to-left document the corner is the right one too.
       placement: (e) => (isRtl(e.root) ? 'top-start' : 'top-end'),
       items: 'codelanguage',
     });

@@ -3,9 +3,9 @@ import { activeElement, h, logicalKey } from '../ui/dom';
 import { registerPluginMessages, type PluginLabels } from '../i18n';
 
 /**
- * Подписи встроенного плагина. Плагины грузятся лениво, поэтому строки живут в самом плагине
- * (en — эталон, ru — встроенный перевод), но переводятся общей системой i18n под ключами
- * `<плагин>.<ключ>`: registerLanguage('de', { 'anchor.title': … }) и опция `translations` их видят.
+ * Labels of a built-in plugin. Plugins load lazily, so the strings live in the plugin itself
+ * (en is the reference; translations live in the language packs), but they go through the shared i18n system under the keys
+ * `<plugin>.<key>`: registerLanguage('de', { 'anchor.title': … }) and the `translations` option see them.
  */
 export function pickLabels<T extends PluginLabels>(
   editor: Editor,
@@ -31,13 +31,13 @@ export function insertText(editor: Editor, text: string): void {
 
 export interface SymbolGroup {
   title: string;
-  /** [символ, название для поиска и экранного диктора] */
+  /** [character, name for search and screen readers] */
   items: readonly (readonly [string, string])[];
 }
 
 /**
- * Панель выбора символа: поиск + сетка кнопок по группам. Стрелки двигают фокус по сетке,
- * Enter/пробел — вставить, Esc закрывает панель (общий стек поповеров).
+ * A character picker panel: search + a grid of buttons by group. Arrows move focus across the grid,
+ * Enter/space inserts, Esc closes the panel (the shared popover stack).
  */
 export function symbolPanel(options: {
   groups: SymbolGroup[];
@@ -109,7 +109,7 @@ export function symbolPanel(options: {
     const cells = [...list.querySelectorAll<HTMLButtonElement>('.nova-symbols-cell')];
     const index = cells.indexOf(activeElement(list) as HTMLButtonElement);
     if (index < 0) return;
-    // Ширина строки сетки — по фактическому положению кнопок.
+    // The width of a grid row comes from the actual position of the buttons.
     const perRow = Math.max(1, cells.filter((c) => c.offsetTop === cells[0]!.offsetTop).length);
     const step: Record<string, number> = {
       ArrowRight: 1,
@@ -130,7 +130,7 @@ export function symbolPanel(options: {
   return panel;
 }
 
-/** Открыть панель символов в диалоге (для пункта меню, когда кнопки нет на тулбаре). */
+/** Opens the character panel in a dialog (for a menu item when the button isn't on the toolbar). */
 export function openSymbolDialog(
   editor: Editor,
   title: string,

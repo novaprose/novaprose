@@ -1,9 +1,9 @@
 /*
- * История версий (плагин revisionhistory).
- * Подключается при подключении плагина через editor.ui.addStyles — не входит в style.css первой загрузки.
+ * Version history (the revisionhistory plugin).
+ * Attached when the plugin is attached, through editor.ui.addStyles; not part of the first-load style.css.
  */
 
-/* ---------- История версий (плагин revisionhistory) ---------- */
+/* ---------- Version history (the revisionhistory plugin) ---------- */
 
 .nova-editor.nova-history-open {
   min-height: 460px;
@@ -156,7 +156,7 @@ div.nova-diff-removed {
   border-radius: var(--nova-radius-sm);
 }
 
-/* Узко: список версий над текстом, полосой. */
+/* Narrow: the version list as a strip above the text. */
 @container (max-width: 600px) {
   .nova-history-body {
     flex-direction: column-reverse;
@@ -168,7 +168,7 @@ div.nova-diff-removed {
     border-bottom: 1px solid var(--nova-border);
   }
 }
-/* Кнопки истории — одной группой в первой строке, легенда — второй строкой. */
+/* History buttons in one group on the first line, the legend on the second. */
 .nova-history-legend {
   order: 1;
   flex-basis: 100%;

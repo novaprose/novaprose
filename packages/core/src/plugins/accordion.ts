@@ -9,14 +9,14 @@ import css from './accordion.css?raw';
 import { pickLabels } from './shared';
 
 /**
- * Плагин accordion: раскрывающиеся блоки — заголовок и содержимое, которое сворачивается
- * (`<details><summary>`), как у TinyMCE (`accordion`) и Tiptap (Details). `plugins: ['accordion']`.
+ * The accordion plugin: collapsible blocks with a title and content that folds away
+ * (`<details><summary>`), as in TinyMCE (`accordion`) and Tiptap (Details). `plugins: ['accordion']`.
  *
- * Здесь — узлы и их вид в редакторе со стрелкой (нужны с первой отрисовки); кнопка, команды и
- * клавиши — ленивой частью accordion-ui.ts.
+ * Here are the nodes and their view in the editor with an arrow (needed from the first render); the button, commands and
+ * keys are in the lazy part, accordion-ui.ts.
  */
 
-/** Подписи (ленивая часть берёт их отсюда: ключи переводов — accordion.*). */
+/** Labels (the lazy part takes them from here: translation keys are accordion.*). */
 export const LABELS = {
   en: {
     accordion: 'Accordion',
@@ -50,7 +50,7 @@ function accordionNodes(editor: Editor): Record<string, NodeSpec> {
       group: 'block',
       content: 'details_summary block+',
       defining: true,
-      // Из JSON может прийти что угодно: свёрнут только явный false.
+      // JSON can bring anything: only an explicit false means collapsed.
       attrs: { open: { default: true } },
       parseDOM: [
         {
@@ -73,7 +73,7 @@ function accordionNodes(editor: Editor): Record<string, NodeSpec> {
       content: 'inline*',
       defining: true,
       isolating: true,
-      // Только как заголовок раскрывающегося блока; <summary> где-то ещё — просто текст.
+      // Only as the title of a collapsible block; a <summary> anywhere else is just text.
       parseDOM: [{ tag: 'summary', context: 'details/' }],
       toDOM: (): DOMOutputSpec => ['summary', 0],
     },
@@ -85,7 +85,7 @@ export interface Found {
   pos: number;
 }
 
-/** Самый внутренний раскрывающийся блок вокруг позиции. */
+/** The innermost collapsible block around a position. */
 export function detailsAround($pos: ResolvedPos): Found | null {
   for (let depth = $pos.depth; depth > 0; depth--) {
     const node = $pos.node(depth);
@@ -96,16 +96,16 @@ export function detailsAround($pos: ResolvedPos): Found | null {
 
 export const isOpen = (node: PMNode) => node.attrs.open !== false;
 
-/** Конец текста заголовка (позиция курсора после последнего символа). */
+/** The end of the title text (the cursor position after the last character). */
 export const summaryEnd = (details: Found) =>
   details.pos + 2 + details.node.firstChild!.content.size;
 
-/** Свернуть или раскрыть: это вид, а не правка — в историю отмены не попадает. */
+/** Collapsing or expanding is a view change, not an edit: it doesn't go into the undo history. */
 export function setOpen(tr: Transaction, details: Found, open: boolean): Transaction {
   return tr.setNodeAttribute(details.pos, 'open', open).setMeta('addToHistory', false);
 }
 
-/** Отрисовка: рамка, стрелка-кнопка и содержимое (заголовок + блоки). */
+/** Rendering: the frame, the arrow button and the content (title + blocks). */
 class DetailsView implements NodeView {
   dom: HTMLElement;
   contentDOM: HTMLElement;
@@ -121,11 +121,11 @@ class DetailsView implements NodeView {
       type: 'button',
       className: 'nova-details-toggle',
       contentEditable: 'false',
-      // Не в порядке Tab (Tab выводит из редактора); с клавиатуры — Ctrl/Cmd+Enter в заголовке.
+      // Not in the Tab order (Tab leaves the editor); from the keyboard it is Ctrl/Cmd+Enter in the title.
       tabIndex: -1,
     }) as HTMLButtonElement;
     this.toggle.append(icon(icons.chevronDown));
-    // Кнопка не забирает фокус у текста.
+    // The button doesn't take focus from the text.
     this.toggle.addEventListener('mousedown', (event) => event.preventDefault());
     this.toggle.addEventListener('click', () => {
       const pos = getPos();
@@ -187,7 +187,7 @@ export default definePlugin({
   },
   setup(editor) {
     editor.ui.addStyles('nova-accordion', css);
-    // Приглашение в пустом заголовке — через CSS-переменную (в HTML документа его нет).
+    // The prompt in an empty title goes through a CSS variable (it isn't in the document's HTML).
     const { summary } = pickLabels(editor, 'accordion', LABELS);
     editor.root.style.setProperty('--nova-summary-placeholder', JSON.stringify(summary));
   },

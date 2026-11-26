@@ -9,8 +9,8 @@ import { loadTemml, mathLatex, renderMath } from './math';
 import { pickLabels } from './shared';
 
 /**
- * Ленивая часть плагина math: диалог «Формула» с живым просмотром, ввод `$формула$` в тексте и
- * `$$` в начале строки, Enter на выделенной формуле, кнопка и пункт меню `math`.
+ * The lazy part of the math plugin: the "Formula" dialog with a live preview, typing `$formula$` in the text and
+ * `$$` at the start of a line, Enter on a selected formula, the `math` button and menu item.
  */
 
 export const LABELS = {
@@ -25,7 +25,7 @@ export const LABELS = {
 
 type Labels = (typeof LABELS)['en'];
 
-/** Выделенная формула (после нажатия на неё или стрелками). */
+/** The selected formula (after a click on it or with the arrows). */
 function selectedMath(state: EditorState): NodeSelection | null {
   const { selection } = state;
   return selection instanceof NodeSelection &&
@@ -46,7 +46,7 @@ async function mathDialog(editor: Editor, labels: Labels): Promise<void> {
     role: 'group',
     'aria-label': labels.preview,
   });
-  // Ошибка в формуле — текстом под просмотром (объявляется экранным диктором без потери фокуса).
+  // An error in the formula shows as text under the preview (a screen reader announces it without losing focus).
   const message = h('p', { className: 'nova-field-error', 'aria-live': 'polite', hidden: true });
   const draw = (source: string, display: boolean) => {
     if (!source.trim()) {
@@ -86,7 +86,7 @@ async function mathDialog(editor: Editor, labels: Labels): Promise<void> {
   const next = editor.view.state;
   const type = next.schema.nodes[data.block === true ? 'math_block' : 'math_inline']!;
   const node = type.create({ latex: source });
-  // Пока диалог был открыт, документ мог измениться — формулу ищем заново.
+  // While the dialog was open the document may have changed: the formula is found again.
   const current = selected ? selectedMath(next) : null;
   const tr =
     current && current.node.type === type
@@ -98,13 +98,13 @@ async function mathDialog(editor: Editor, labels: Labels): Promise<void> {
   editor.focus();
 }
 
-/** Нет ли под курсором марки кода: «$x$» в коде — это код, а не формула. */
+/** Whether there is no code mark under the cursor: "$x$" in code is code, not a formula. */
 const inCode = (state: EditorState) =>
   state.selection.$from.marks().some((mark) => mark.type.name === 'code');
 
 /**
- * `$x^2$` в тексте — формула в строке. Как в Pandoc: после открывающего и перед закрывающим «$» —
- * не пробел, поэтому «$5 и $10» остаётся текстом; «\$» — экранированный доллар.
+ * `$x^2$` in the text is an inline formula. As in Pandoc: after the opening "$" and before the closing one
+ * there is no space, so "$5 and $10" stays text; "\$" is an escaped dollar.
  */
 function inlineRule(): InputRule {
   return new InputRule(/(^|[^$\\])\$([^\s$](?:[^$]*[^\s$\\])?)\$$/, (state, match, start, end) => {
@@ -115,7 +115,7 @@ function inlineRule(): InputRule {
   });
 }
 
-/** `$$` и пробел в начале строки — формула отдельной строкой, сразу правка. */
+/** `$$` and a space at the start of a line make a formula on its own line, opened for editing right away. */
 function blockRule(editor: Editor, labels: Labels): InputRule {
   return new InputRule(/^\$\$\s$/, (state, _match, start, end) => {
     const type = state.schema.nodes.math_block;

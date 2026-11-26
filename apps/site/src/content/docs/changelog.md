@@ -3,7 +3,7 @@ title: Changelog
 description: "Release notes for all @novaprose packages."
 ---
 
-<!-- Сгенерировано из CHANGELOG.md: правьте его, затем pnpm --filter @novaprose/site sync-docs -->
+<!-- Generated from CHANGELOG.md: edit it, then run pnpm --filter @novaprose/site sync-docs -->
 
 All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)

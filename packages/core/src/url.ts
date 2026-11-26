@@ -1,15 +1,15 @@
 /**
- * Проверка URL против XSS (javascript:, vbscript:, data:text/html и т.п.).
- * Относительные адреса и якоря разрешены.
+ * URL checks against XSS (javascript:, vbscript:, data:text/html and the like).
+ * Relative addresses and anchors are allowed.
  */
 const SAFE_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 const SAFE_IMAGE_PROTOCOLS = new Set(['http:', 'https:', 'blob:']);
 const SAFE_DATA_IMAGE = /^data:image\/(png|jpe?g|gif|webp|avif|bmp);base64,/i;
 
 function protocolOf(url: string): string | null {
-  // Документ мог прийти из JSON: вместо строки — число или null.
+  // The document may come from JSON: a number or null instead of a string.
   if (typeof url !== 'string') return null;
-  // Убираем управляющие символы и пробелы, которыми маскируют "java\tscript:".
+  // Strip the control characters and spaces used to disguise "java\tscript:".
   // eslint-disable-next-line no-control-regex
   const cleaned = url.replace(/[\u0000- \u007f-\u009f]/g, '');
   const match = cleaned.match(/^([a-z][a-z0-9+.-]*):/i);

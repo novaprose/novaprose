@@ -6,7 +6,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    // Скрипты репозитория и пример отрисовки на сервере выполняются в Node.
+    // Repository scripts and the server rendering example run in Node.
     files: [
       'scripts/**/*.mjs',
       'packages/*/scripts/**/*.mjs',
@@ -24,7 +24,7 @@ export default tseslint.config(
     },
   },
   {
-    // Сервер синхронизации — программа для Node.
+    // The sync server is a Node program.
     files: ['apps/sync-server/src/**/*.mjs'],
     languageOptions: {
       globals: {
@@ -37,8 +37,8 @@ export default tseslint.config(
     },
   },
   {
-    // Редактор может жить в теневом корне: там document.activeElement — хост, а у слушателей на
-    // document цель события подменена. Только через activeElement() / listenDocument() из ui/dom.ts.
+    // The editor can live in a shadow root: there document.activeElement is the host, and listeners on
+    // document see a retargeted event. Only through activeElement() / listenDocument() from ui/dom.ts.
     files: ['packages/core/src/**/*.ts'],
     ignores: ['packages/core/src/ui/dom.ts'],
     rules: {

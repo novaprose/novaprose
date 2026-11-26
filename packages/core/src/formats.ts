@@ -1,8 +1,8 @@
-// Форматы и стили (как formats / style_formats в TinyMCE): именованные наборы «тег + классы + стили»,
-// которые применяются к выделению. Три вида:
-//   block    — сменить тип блока (p, h1–h6, blockquote, pre) и задать классы/стили;
-//   inline   — отметить текст (span с классами/стилями или strong, em, code…);
-//   selector — добавить классы/стили уже существующим элементам (p,h1 / img / blockquote).
+// Formats and styles (like formats / style_formats in TinyMCE): named sets of "tag + classes + styles"
+// applied to the selection. Three kinds:
+//   block    change the block type (p, h1–h6, blockquote, pre) and set classes/styles;
+//   inline   mark the text (a span with classes/styles, or strong, em, code…);
+//   selector add classes/styles to existing elements (p,h1 / img / blockquote).
 import type { Mark, MarkType, Node as PMNode } from 'prosemirror-model';
 import { NodeSelection, type EditorState, type Transaction } from 'prosemirror-state';
 import { lift, wrapIn } from 'prosemirror-commands';
@@ -81,7 +81,7 @@ export function classList(value: unknown): string[] {
   return typeof value === 'string' ? value.split(/\s+/).filter(Boolean) : [];
 }
 
-/** Все классы из форматов — их схема сохраняет при разборе HTML. */
+/** Every class from the formats: the schema keeps them when parsing HTML. */
 export function formatClasses(specs: Iterable<FormatSpec | StyleFormat>): string[] {
   const out: string[] = [];
   for (const spec of specs) {
@@ -104,7 +104,7 @@ const withoutClasses = (value: unknown, drop: string[]) => {
   return rest.length ? rest.join(' ') : null;
 };
 
-/** text-align / line-height из styles формата → атрибуты блока. */
+/** text-align / line-height from a format's styles → block attributes. */
 function blockStyles(spec: FormatSpec): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [prop, value] of Object.entries(spec.styles ?? {})) {
@@ -117,7 +117,7 @@ function blockStyles(spec: FormatSpec): Record<string, unknown> {
   return out;
 }
 
-/** Марки инлайн-формата: тег, классы (span_class) и поддерживаемые стили. */
+/** The marks of an inline format: tag, classes (span_class) and supported styles. */
 function inlineMarks(state: EditorState, spec: FormatSpec): Mark[] {
   const marks = marksOf(state) as Record<string, MarkType | undefined>;
   const out: Mark[] = [];
@@ -148,7 +148,7 @@ const selectorTags = (spec: FormatSpec) =>
       return false;
     });
 
-/** Узлы выделения, подходящие под selector (включая родителей и выделенную картинку). */
+/** Nodes of the selection matching the selector (parents and a selected image included). */
 function selectedNodes(state: EditorState, tags: string[]): { node: PMNode; pos: number }[] {
   const out: { node: PMNode; pos: number }[] = [];
   const matches = (node: PMNode) => tags.some((tag) => BLOCK_TAGS[tag]!(node));
@@ -157,7 +157,7 @@ function selectedNodes(state: EditorState, tags: string[]): { node: PMNode; pos:
     return [{ node: selection.node, pos: selection.from }];
   }
   const { $from, from, to } = selection;
-  // Родители курсора (цитата вокруг абзаца) — nodesBetween при пустом выделении их не даёт.
+  // The cursor's parents (a quote around a paragraph): nodesBetween doesn't return them for an empty selection.
   for (let depth = $from.depth; depth > 0; depth--) {
     const node = $from.node(depth);
     if (matches(node)) out.push({ node, pos: $from.before(depth) });
@@ -168,7 +168,7 @@ function selectedNodes(state: EditorState, tags: string[]): { node: PMNode; pos:
   return out;
 }
 
-/** Текстовые блоки выделения (абзацы и заголовки) — для блочных форматов. */
+/** Text blocks of the selection (paragraphs and headings), for block formats. */
 function textBlocks(state: EditorState): { node: PMNode; pos: number }[] {
   const out: { node: PMNode; pos: number }[] = [];
   const { from, to } = state.selection;
@@ -255,7 +255,7 @@ export class Formatter {
     if (!this.editor.isEditable()) return false;
     const specs = this.resolve(format);
     if (!specs.length) return false;
-    // Вариантов несколько (например, selector для блоков и inline для текста) — применяем подходящий.
+    // There are several variants (for example, a selector for blocks and inline for text): apply the one that fits.
     const spec = specs.find((s) => canApply(this.editor.view.state, s)) ?? specs[0]!;
     return this.run((state, tr) => applySpec(state, tr, spec));
   }
@@ -287,7 +287,7 @@ function canApply(state: EditorState, spec: FormatSpec): boolean {
   return true;
 }
 
-/** Блок несёт стили формата (выравнивание, интервал). */
+/** The block carries the format's styles (alignment, spacing). */
 function hasBlockStyles(node: PMNode, spec: FormatSpec): boolean {
   if (node.type.name === 'image') return true;
   return Object.entries(blockStyles(spec)).every(([key, value]) => node.attrs[key] === value);
@@ -334,7 +334,7 @@ function matchSpec(state: EditorState, spec: FormatSpec): boolean {
   return false;
 }
 
-/** Марка m содержит формат mark: тот же тип и (для span_class) все классы. */
+/** Mark m contains format mark: the same type and (for span_class) all of its classes. */
 function markCovers(m: Mark, mark: Mark): boolean {
   if (m.type !== mark.type) return false;
   if (mark.type.name === 'span_class')
@@ -394,7 +394,7 @@ function applySpec(state: EditorState, tr: Transaction, spec: FormatSpec): boole
         class: withClasses(node.attrs.class, classes),
       });
     }
-    // Картинка остаётся выделенной.
+    // The image stays selected.
     if (state.selection instanceof NodeSelection)
       tr.setSelection(NodeSelection.create(tr.doc, state.selection.from));
     return true;
@@ -425,7 +425,7 @@ function removeSpec(state: EditorState, tr: Transaction, spec: FormatSpec): void
     const quote = blockquoteAt(state);
     if (!quote) return;
     const rest = withoutClasses(quote.node.attrs.class, classes);
-    // Формат только из классов — снимаем классы; иначе убираем саму цитату.
+    // A format of classes only removes the classes; otherwise the quote itself is removed.
     if (classes.length && rest !== null) {
       tr.setNodeMarkup(quote.pos, undefined, { ...quote.node.attrs, class: rest });
       return;
@@ -477,7 +477,7 @@ function removeSpec(state: EditorState, tr: Transaction, spec: FormatSpec): void
         tr.removeMark(from, to, mark.type);
         continue;
       }
-      // Убираем только классы формата; остальные классы span остаются.
+      // Only the format's classes are removed; other classes of the span stay.
       state.doc.nodesBetween(from, to, (node, pos) => {
         if (!node.isText) return;
         const current = node.marks.find((m) => m.type === mark.type);

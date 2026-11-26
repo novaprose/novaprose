@@ -4,22 +4,22 @@ import { lcs, tokenize } from './history-diff';
 import { OWN, suggestTransaction, type SuggestionAuthor } from './suggestions';
 
 /**
- * Правки ИИ — предложениями, как от соавтора. Переписанный текст сравнивается с исходным по словам:
- * меняются только изменённые слова (каждое — своя правка, принять или отклонить можно по одной),
- * неизменённые сохраняют оформление (жирный, ссылки, цвет). Атомы в тексте (упоминания, переменные)
- * сравниваются как слова: тронет их ИИ — их замена тоже будет предложением.
+ * AI edits arrive as suggestions, like a co-author's. The rewritten text is compared with the original word by word:
+ * only changed words change (each one is its own suggestion that can be accepted or rejected separately),
+ * unchanged ones keep their formatting (bold, links, color). Atoms in the text (mentions, variables)
+ * are compared as words: if the AI touches them, their replacement is a suggestion too.
  */
 
 export interface TextSegment {
-  /** Начало и конец текста блока внутри диапазона. */
+  /** The start and end of the block's text inside the range. */
   from: number;
   to: number;
   text: string;
-  /** Позиция в документе для каждого символа text (у атома все его символы — его позиция). */
+  /** The document position of every character of text (all characters of an atom share its position). */
   chars: number[];
 }
 
-/** Текстовые блоки в диапазоне — обрезанные по нему, с позицией каждого символа. */
+/** Text blocks in the range, cut to it, with the position of every character. */
 export function textSegments(doc: PMNode, from: number, to: number): TextSegment[] {
   const segments: TextSegment[] = [];
   doc.nodesBetween(from, to, (node, pos) => {
@@ -41,7 +41,7 @@ export function textSegments(doc: PMNode, from: number, to: number): TextSegment
           }
         }
       } else if (child.isLeaf) {
-        // Атом целиком внутри выделения — его текст (@Анна, {{client}}); перенос строки — \n.
+        // An atom entirely inside the selection gives its text (@Anna, {{client}}); a line break gives \n.
         const leaf =
           child.type.name === 'hard_break' ? '\n' : (child.type.spec.leafText?.(child) ?? '￼');
         for (let k = 0; k < leaf.length; k++) chars.push(at);
@@ -54,14 +54,14 @@ export function textSegments(doc: PMNode, from: number, to: number): TextSegment
   return segments;
 }
 
-/** Текст диапазона для запроса к модели: абзацы через пустую строку. */
+/** The range's text for the model request: paragraphs separated by an empty line. */
 export function rangeText(doc: PMNode, from: number, to: number): string {
   return textSegments(doc, from, to)
     .map((segment) => segment.text)
     .join('\n\n');
 }
 
-/** Ответ модели → абзацы (одиночный перевод строки внутри абзаца — пробел). */
+/** The model's answer → paragraphs (a single line break inside a paragraph is a space). */
 export function paragraphs(text: string): string[] {
   return text
     .replace(/\r\n?/g, '\n')
@@ -71,12 +71,12 @@ export function paragraphs(text: string): string[] {
     .filter((p, index, all) => p || all.length === 1);
 }
 
-/** Замены изменённых слов одного блока — с конца, чтобы позиции начала оставались верными. */
+/** Replacements of the changed words of one block, from the end, so the start positions stay correct. */
 function rewriteSegment(tr: Transaction, segment: TextSegment, next: string): void {
   const before = tokenize(segment.text);
   const after = tokenize(next);
   const pairs = lcs(before, after, (a, b) => a === b) ?? [];
-  // Расхождения между совпавшими парами: старые [i0, i1) → новые [j0, j1).
+  // Gaps between matched pairs: old [i0, i1) → new [j0, j1).
   const hunks: Array<[number, number, number, number]> = [];
   let i = 0;
   let j = 0;
@@ -100,9 +100,9 @@ function rewriteSegment(tr: Transaction, segment: TextSegment, next: string): vo
 }
 
 /**
- * Переписанный текст диапазона → шаги замены только изменённых слов. Абзацы ответа ложатся на блоки
- * по порядку; если их больше — лишние дописываются в последний блок, меньше — у блоков без пары
- * текст удаляется (структура документа не меняется — правки остаются текстовыми и отменяемыми).
+ * The range's rewritten text → steps that replace only the changed words. The answer's paragraphs map onto the blocks
+ * in order; extra ones are appended to the last block, and with fewer, the text of blocks without a pair
+ * is deleted (the document structure doesn't change, so the edits stay textual and undoable).
  */
 export function rewriteTransaction(
   state: EditorState,
@@ -121,7 +121,7 @@ export function rewriteTransaction(
   return tr;
 }
 
-/** Правки ИИ к диапазону — предложениями от его имени. */
+/** AI edits to the range, as suggestions under its name. */
 export function suggestRewrite(
   state: EditorState,
   from: number,
@@ -135,10 +135,10 @@ export function suggestRewrite(
 }
 
 /**
- * Текст ИИ у позиции (продолжение, пересказ) — предложением; абзацы — новыми абзацами.
- * `newParagraph` — начать с нового абзаца (пересказ после выделенного). Посреди абзаца ответ встаёт
- * в этот абзац одной вставкой: разрыв абзаца правкой не отслеживается, и «отклонить» оставило бы
- * абзац разрезанным надвое.
+ * AI text at a position (a continuation, a summary) as a suggestion; paragraphs become new paragraphs.
+ * `newParagraph` starts with a new paragraph (a summary after the selection). In the middle of a paragraph the answer goes
+ * into that paragraph as one insertion: a paragraph break isn't tracked as a suggestion, and "reject" would leave
+ * the paragraph cut in two.
  */
 export function suggestInsert(
   state: EditorState,
@@ -152,7 +152,7 @@ export function suggestInsert(
   const $pos = state.doc.resolve(pos);
   let parts = paragraphs(text);
   if (!newParagraph && pos < $pos.end()) parts = [parts.join(' ')];
-  // Вплотную к слову — через пробел (модель часто начинает без него); так же перед словом после.
+  // Right next to a word, add a space (the model often starts without one); the same before a following word.
   const before = state.doc.textBetween(Math.max(0, pos - 1), pos, '\n', '￼');
   if (!newParagraph && parts[0] && before && !/\s$/.test(before) && /^[\p{L}\p{N}]/u.test(parts[0]))
     parts[0] = ` ${parts[0]}`;

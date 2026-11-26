@@ -17,7 +17,7 @@ import { h } from './ui/dom';
 
 export { isInTable };
 
-// ---------- ленивая механика ----------
+// ---------- lazy mechanics ----------
 
 type TableCommandName =
   | 'addRowBefore'
@@ -33,8 +33,8 @@ type TableCommandName =
   | 'deleteTable';
 
 /**
- * Что механика таблиц (./table) даёт лёгкой части. Явный интерфейс, а не `import type * as`:
- * так проще читать и так не спотыкается сборка .d.ts при взаимных импортах модулей.
+ * What the table mechanics (./table) give the light part. An explicit interface instead of `import type * as`:
+ * easier to read, and the .d.ts build doesn't trip over mutual imports between modules.
  */
 interface TableModule {
   tableCommands: Record<TableCommandName, Command>;
@@ -53,7 +53,7 @@ interface TableModule {
 let tables: TableModule | null = null;
 let loading: Promise<TableModule | null> | null = null;
 
-/** Загрузить механику таблиц (один раз на страницу). При сбое сети — повтор при следующем вызове. */
+/** Loads the table mechanics (once per page). On a network failure it retries on the next call. */
 export function loadTables(): Promise<TableModule | null> {
   loading ??= import('./table').then(
     (module) => (tables = module),
@@ -66,7 +66,7 @@ export function loadTables(): Promise<TableModule | null> {
   return loading;
 }
 
-/** Загруженный модуль механики таблиц или null. */
+/** The loaded table mechanics module, or null. */
 export function loadedTables(): TableModule | null {
   return tables;
 }
@@ -105,7 +105,7 @@ export function hasHeaderColumn(state: EditorState): boolean {
   return tables?.hasHeaderColumn(state) ?? false;
 }
 
-/** Выделено ли несколько ячеек (для «объединить»). */
+/** Whether several cells are selected (for "merge"). */
 export function isCellSelection(state: EditorState): boolean {
   return tables?.isCellSelection(state) ?? false;
 }
@@ -133,11 +133,11 @@ export function sortTable(direction: SortDirection, locale?: string): Command {
     tables ? tables.sortTable(direction, locale)(state, dispatch, view) : false;
 }
 
-// ---------- лёгкая часть ----------
+// ---------- the light part ----------
 
 export const MAX_GRID = 10;
 
-/** DOM-прямоугольник текущей таблицы (для позиционирования контекстного тулбара). */
+/** The DOM rectangle of the current table (to position the context toolbar). */
 export function tableRect(editor: Editor): DOMRect | null {
   const { $from } = editor.view.state.selection;
   for (let depth = $from.depth; depth > 0; depth--) {
@@ -171,18 +171,18 @@ export function createTable(
 export function insertTable(rows: number, cols: number, withHeader = true): Command {
   return (state, dispatch) => {
     if (rows < 1 || cols < 1 || rows > 100 || cols > 50) return false;
-    // Таблицы внутри таблиц не вставляем — как и большинство редакторов.
+    // Tables inside tables aren't inserted, as in most editors.
     if (isInTable(state)) return false;
     if (dispatch) {
       const node = createTable(rows, cols, withHeader, state.schema as NovaSchema);
       const tr = state.tr.replaceSelectionWith(node);
-      // Узлы неизменяемы — вставленную таблицу находим по ссылке на объект.
+      // Nodes are immutable: the inserted table is found by object reference.
       let tablePos = -1;
       tr.doc.descendants((n, pos) => {
         if (n === node) tablePos = pos;
         return tablePos < 0;
       });
-      // +3: table → row → cell → внутрь первого абзаца.
+      // +3: table → row → cell → inside the first paragraph.
       if (tablePos >= 0) tr.setSelection(TextSelection.near(tr.doc.resolve(tablePos + 3)));
       dispatch(tr.scrollIntoView());
     }
@@ -191,8 +191,8 @@ export function insertTable(rows: number, cols: number, withHeader = true): Comm
 }
 
 /**
- * Панель выбора размера таблицы: сетка до 10×10, подсветка при наведении/стрелках,
- * подпись «3 × 4». Доступна с клавиатуры (стрелки + Enter).
+ * The table size picker: a grid up to 10×10, highlighted on hover/arrows,
+ * with a "3 × 4" label. Works from the keyboard (arrows + Enter).
  */
 export function createTableGridPanel(
   onPick: (rows: number, cols: number) => void,

@@ -41,7 +41,7 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
-/** Найти позицию картинки с данным src (нужно, т.к. документ мог измениться за время загрузки). */
+/** Finds the position of the image with the given src (the document may have changed during the upload). */
 function findImage(view: EditorView, src: string): number | null {
   let found: number | null = null;
   view.state.doc.descendants((node, pos) => {
@@ -66,23 +66,23 @@ export function uploadImages(editor: Editor, files: File[], pos?: number): void 
     const tr = view.state.tr;
     if (pos !== undefined) tr.insert(Math.min(pos, tr.doc.content.size), node);
     else tr.replaceSelectionWith(node);
-    // Загружаемая картинка подсвечивается CSS-правилом img[src^="blob:"].
+    // An image being uploaded is highlighted by the img[src^="blob:"] CSS rule.
     view.dispatch(tr.scrollIntoView());
     startUpload(editor, file, blobUrl, 0);
   }
 }
 
-/** Паузы перед автоматическими повторами: большинство сбоев сети временные. */
+/** Pauses before automatic retries: most network failures are temporary. */
 export const UPLOAD_RETRY_DELAYS = [1000, 3000];
 
-/** Сервер вернул небезопасный адрес — повтор не поможет. */
+/** The server returned an unsafe address: retrying won't help. */
 class UnsafeUploadUrl extends Error {}
 
 /**
- * Загрузка одной картинки с повторами. Картинка (локальная blob:-копия) остаётся в документе, пока
- * её судьба не решена: успех — подмена src; сбой — два автоповтора, затем уведомление с кнопками
- * «Повторить» и «Убрать картинку». Закрыли уведомление — картинка убирается: blob:-адрес не должен
- * попасть в сохранённый документ.
+ * Uploads one image with retries. The image (a local blob: copy) stays in the document until
+ * its fate is decided: on success src is replaced; on failure, two automatic retries, then a notification with
+ * "Retry" and "Remove image" buttons. Closing the notification removes the image: a blob: address must not
+ * end up in the saved document.
  */
 function startUpload(editor: Editor, file: File, blobUrl: string, attempt: number): void {
   const view = editor.view;
@@ -106,7 +106,7 @@ function startUpload(editor: Editor, file: File, blobUrl: string, attempt: numbe
       const at = view.isDestroyed ? null : findImage(view, blobUrl);
       if (at !== null) {
         const current = view.state.doc.nodeAt(at)!;
-        // Подмена src не должна быть отдельным шагом undo.
+        // Replacing src must not be a separate undo step.
         view.dispatch(
           view.state.tr
             .setNodeMarkup(at, undefined, { ...current.attrs, src: url })
@@ -116,7 +116,7 @@ function startUpload(editor: Editor, file: File, blobUrl: string, attempt: numbe
       release();
     })
     .catch((error: unknown) => {
-      // Редактор закрыт или картинку уже удалили — повторять нечего.
+      // The editor is closed or the image was already removed: nothing to retry.
       if (view.isDestroyed || findImage(view, blobUrl) === null) return release();
       const delay = UPLOAD_RETRY_DELAYS[attempt];
       if (handler && delay !== undefined && !(error instanceof UnsafeUploadUrl)) {
@@ -142,11 +142,11 @@ function startUpload(editor: Editor, file: File, blobUrl: string, attempt: numbe
     .finally(() => notice?.close());
 }
 
-// ---------- автозагрузка встроенных (data:) картинок ----------
+// ---------- automatic upload of embedded (data:) images ----------
 
 const DATA_IMAGE = /^data:(image\/(?:png|jpe?g|gif|webp|avif|bmp));base64,(.+)$/i;
 
-/** data:-URL → File без fetch (fetch data: может запрещать CSP connect-src). */
+/** data: URL → File without fetch (CSP connect-src may forbid fetching data:). */
 export function dataUrlToFile(src: string, name = 'pasted-image'): File | null {
   const match = src.match(DATA_IMAGE);
   if (!match) return null;
@@ -162,7 +162,7 @@ export function dataUrlToFile(src: string, name = 'pasted-image'): File | null {
   }
 }
 
-/** Заменить src у всех картинок с данным src (без шага в истории). */
+/** Replaces src on every image with the given src (without a history step). */
 function replaceImageSrc(view: EditorView, from: string, to: string): void {
   const tr = view.state.tr;
   view.state.doc.descendants((node, pos) => {
@@ -174,8 +174,8 @@ function replaceImageSrc(view: EditorView, from: string, to: string): void {
 }
 
 /**
- * Загрузить встроенную картинку через uploadImage и подменить data:-URL на адрес с сервера.
- * При ошибке картинка остаётся встроенной: содержимое не теряется, пользователь видит уведомление.
+ * Uploads an embedded image through uploadImage and replaces the data: URL with the server's address.
+ * On error the image stays embedded: no content is lost, and the user sees a notification.
  */
 export async function uploadEmbeddedImage(editor: Editor, src: string): Promise<void> {
   const handler = editor.options.uploadImage;
@@ -190,7 +190,7 @@ export async function uploadEmbeddedImage(editor: Editor, src: string): Promise<
     replaceImageSrc(editor.view, src, url);
   } catch (error) {
     console.error('[nova] embedded image upload failed', error);
-    // Картинка остаётся встроенной (ничего не потеряно) — можно догрузить на сервер позже.
+    // The image stays embedded (nothing lost): it can be uploaded to the server later.
     editor.ui.notify({
       text: editor.ui.t('image.uploadFailed'),
       type: 'error',
@@ -215,8 +215,8 @@ function dataImageSrcs(doc: PMNode, type: PMNode['type']): Set<string> {
 }
 
 /**
- * Встроенные картинки, появившиеся при вставке или перетаскивании (Word, другие приложения), сразу
- * загружаются через uploadImage. Без uploadImage остаются встроенными, как и раньше.
+ * Embedded images that appear on paste or drop (Word, other applications) are uploaded right away
+ * through uploadImage. Without uploadImage they stay embedded, as before.
  */
 export function embeddedImageUploadPlugin(editor: Editor): Plugin {
   return new Plugin({
@@ -230,7 +230,7 @@ export function embeddedImageUploadPlugin(editor: Editor): Plugin {
       const type = nodesOf(newState).image;
       const before = dataImageSrcs(oldState.doc, type);
       const added = [...dataImageSrcs(newState.doc, type)].filter((src) => !before.has(src));
-      // Загрузку запускаем после применения транзакции: изменять документ здесь нельзя.
+      // The upload starts after the transaction is applied: the document can't be changed here.
       if (added.length)
         queueMicrotask(() => added.forEach((src) => void uploadEmbeddedImage(editor, src)));
       return null;
@@ -238,7 +238,7 @@ export function embeddedImageUploadPlugin(editor: Editor): Plugin {
   });
 }
 
-/** Плагин: картинки из буфера обмена и перетаскивание файлов. */
+/** Plugin: images from the clipboard and dropped files. */
 export function imageDropPastePlugin(editor: Editor): Plugin {
   return new Plugin({
     key: new PluginKey('nova-image-drop-paste'),
@@ -247,7 +247,7 @@ export function imageDropPastePlugin(editor: Editor): Plugin {
         if (!editor.isAllowed('image')) return false;
         const data = event.clipboardData;
         if (!data) return false;
-        // При копировании из Word в буфере есть и HTML, и картинка-скриншот — берём HTML.
+        // When copying from Word, the clipboard has both HTML and a screenshot image: take the HTML.
         if (data.getData('text/html')) return false;
         const files = [...data.files].filter(isSupportedImage);
         if (!files.length) return false;
@@ -275,7 +275,7 @@ export function openImageDialog(editor: Editor): void {
     accept: 'image/png,image/jpeg,image/gif,image/webp,image/avif',
     className: 'nova-visually-hidden',
     tabindex: '-1',
-    // Выбор файла — через видимую зону ниже; само поле скрыто, но подпись у него обязана быть.
+    // Choosing a file goes through the visible area below; the field itself is hidden, but it must have a label.
     'aria-label': t('image.drop'),
     'aria-hidden': 'true',
   });
@@ -339,7 +339,7 @@ export function openImageDialog(editor: Editor): void {
   });
 }
 
-// ---------- выделенная картинка: размер, выравнивание, alt ----------
+// ---------- the selected image: size, alignment, alt ----------
 
 /** The selected image: the node (image or figure), its position and the image's attributes. */
 export interface SelectedImage {
@@ -374,7 +374,7 @@ export function getSelectedImage(state: EditorState): SelectedImage | null {
   return null;
 }
 
-/** Есть ли у выделенной картинки подпись. */
+/** Whether the selected image has a caption. */
 export function hasImageCaption(state: EditorState): boolean {
   return getSelectedImage(state)?.node.type === nodesOf(state).figure;
 }
@@ -384,9 +384,9 @@ const pick = (attrs: Record<string, unknown>) =>
   Object.fromEntries(IMAGE_ATTRS.map((name) => [name, attrs[name] ?? null]));
 
 /**
- * Включить или убрать подпись у выделенной картинки.
- * Включить: картинка становится отдельным блоком <figure>, курсор — в подписи.
- * Убрать: картинка возвращается в абзац; текст подписи не теряется — он становится абзацем ниже.
+ * Turns the caption of the selected image on or off.
+ * On: the image becomes a separate <figure> block, the cursor goes into the caption.
+ * Off: the image returns into a paragraph; the caption text isn't lost, it becomes a paragraph below.
  */
 export const toggleImageCaption: Command = (state, dispatch) => {
   const image = getSelectedImage(state);
@@ -407,7 +407,7 @@ export const toggleImageCaption: Command = (state, dispatch) => {
     return true;
   }
 
-  // Картинка в строке: вынести её блоком после своего абзаца (абзац без неё остаётся, если не пуст).
+  // An image inside a line: move it out as a block after its paragraph (the paragraph without it stays if not empty).
   const $pos = state.doc.resolve(pos);
   const blockStart = $pos.before($pos.depth);
   const blockEnd = $pos.after($pos.depth);
@@ -415,7 +415,7 @@ export const toggleImageCaption: Command = (state, dispatch) => {
     nodes.figure_image.create(pick(attrs)),
     nodes.figcaption.create(),
   ]);
-  // Курсор в подписи: вход в figure (+1), картинка (+1), вход в подпись (+1).
+  // Cursor in the caption: into the figure (+1), the image (+1), into the caption (+1).
   const CAPTION = 3;
   if ($pos.parent.childCount === 1) {
     tr.replaceWith(blockStart, blockEnd, figure);
@@ -423,14 +423,14 @@ export const toggleImageCaption: Command = (state, dispatch) => {
   } else {
     tr.insert(blockEnd, figure);
     tr.delete(pos, pos + node.nodeSize);
-    // -1: позиция перед только что вставленной figure (а не после неё).
+    // -1: the position before the figure just inserted (not after it).
     tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map(blockEnd, -1) + CAPTION));
   }
   dispatch(tr.scrollIntoView());
   return true;
 };
 
-/** Enter в подписи — новый абзац после картинки (подпись — одна строка, как в Word). */
+/** Enter in a caption makes a new paragraph after the image (a caption is one line, as in Word). */
 export const exitImageCaption: Command = (state, dispatch) => {
   const { $from } = state.selection;
   if ($from.parent.type !== nodesOf(state).figcaption) return false;

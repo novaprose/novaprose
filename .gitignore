@@ -1,6 +1,6 @@
 node_modules/
 dist/
-# Временные копии сборки (dist-hold и т.п.) — тоже не в репозиторий.
+# Temporary copies of a build (dist-hold and the like) stay out of the repository too.
 dist-*/
 coverage/
 .vite/
@@ -16,15 +16,15 @@ test-results/
 .release/
 .astro/
 
-# Данные локального сервера синхронизации
+# Data of the local sync server
 apps/sync-server/data/
 
-# Граф знаний graphify — локальный инструмент, пересобирается командой /graphify
+# The graphify knowledge graph: a local tool, rebuilt with /graphify
 graphify-out/
 i18n-template.json
 
-# Примеры ставятся заново (StackBlitz, проверка перед релизом) — без своих lock-файлов.
+# Examples are installed fresh (StackBlitz, the pre-release check), without their own lock files.
 examples/*/package-lock.json
 
-# Результаты замеров скорости (pnpm perf)
+# Speed measurement results (pnpm perf)
 perf-results/

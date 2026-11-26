@@ -3,7 +3,7 @@ title: React
 description: "React component and hooks for NovaProse: controlled value, React Hook Form, Next.js."
 ---
 
-<!-- Сгенерировано из packages/react/README.md: правьте README, затем pnpm --filter @novaprose/site sync-docs -->
+<!-- Generated from packages/react/README.md: edit the README, then run pnpm --filter @novaprose/site sync-docs -->
 
 React bindings for the [NovaProse](/getting-started/) rich text
 editor: a ready-made `<NovaProseEditor>` component and hooks for building your own UI

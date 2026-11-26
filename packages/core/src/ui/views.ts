@@ -3,7 +3,7 @@ import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
 import { formatShortcut, h } from './dom';
 
-// ---------- полноэкранный режим ----------
+// ---------- fullscreen ----------
 
 export function isFullscreen(editor: Editor): boolean {
   return editor.root.classList.contains('nova-fullscreen');
@@ -18,7 +18,7 @@ export function toggleFullscreen(editor: Editor, value = !isFullscreen(editor)):
   editor.focus();
 }
 
-// ---------- предпросмотр ----------
+// ---------- preview ----------
 
 /**
  * A preview of the result. The DOM is built by the schema's serializer (no HTML string parsing), in
@@ -30,7 +30,7 @@ export function openPreview(editor: Editor): void {
   content.append(
     DOMSerializer.fromSchema(editor.schema).serializeFragment(editor.view.state.doc.content),
   );
-  // Ссылки в предпросмотре открываем в новой вкладке, чтобы не уйти со страницы с несохранённым текстом.
+  // Links in the preview open in a new tab, so you don't leave the page with unsaved text.
   content.querySelectorAll('a[href]').forEach((a) => {
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
@@ -43,7 +43,7 @@ export function openPreview(editor: Editor): void {
   });
 }
 
-// ---------- HTML-код ----------
+// ---------- HTML source ----------
 
 /** Line breaks after block tags, so the HTML is easy to read and edit. */
 export function formatHTML(html: string): string {
@@ -77,10 +77,10 @@ export function openSourceCode(editor: Editor): void {
       return true;
     },
   });
-  // Enter в textarea — перенос строки, а не отправка формы (у textarea так по умолчанию).
+  // Enter in a textarea is a line break, not a form submit (the textarea default).
 }
 
-// ---------- справка по горячим клавишам ----------
+// ---------- keyboard shortcuts help ----------
 
 interface ShortcutRow {
   label: MessageKey;

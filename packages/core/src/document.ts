@@ -28,10 +28,10 @@ export type DocumentOptions = Pick<
 > &
   ContentRulesOptions;
 
-/** Общий сериализатор: кэш вывода марок у него свой на каждый тип марки (схему). */
+/** The shared serializer: it keeps its own mark output cache per mark type (schema). */
 export const htmlSerializer = new HTMLSerializer();
 
-/** Языки, которые пишут справа налево (по основной части кода: ar-EG → ar). */
+/** Languages written right to left (by the main part of the code: ar-EG → ar). */
 const RTL_LANGUAGES = new Set(['ar', 'he', 'iw', 'fa', 'ur', 'ps', 'sd', 'ug', 'yi', 'dv', 'ckb']);
 export function isRtlLanguage(language: string | undefined): boolean {
   return !!language && RTL_LANGUAGES.has(language.toLowerCase().split(/[-_]/)[0]!);
@@ -42,9 +42,9 @@ function report(message: string, error?: unknown): void {
 }
 
 /**
- * Схема документа: базовая + узлы и марки синхронных плагинов, классы из форматов и списков,
- * правила разметки. `context` — то, что получают узлы плагинов (`nodes(editor)`): при создании схемы
- * у редактора готовы только настройки.
+ * The document schema: the base one + nodes and marks of synchronous plugins, classes from formats and lists,
+ * markup rules. `context` is what plugin nodes receive (`nodes(editor)`): when the schema is created,
+ * only the editor's settings are ready.
  */
 export function schemaFromOptions(
   options: DocumentOptions,
@@ -52,8 +52,8 @@ export function schemaFromOptions(
   direction: 'ltr' | 'rtl',
   context: { options: DocumentOptions },
 ): { schema: NovaSchema; allowedClasses: Set<string> } {
-  // Классы, которые схема сохраняет при разборе: из форматов, стилей и validClasses.
-  // Набор живой — formatter.register() в редакторе тоже пополняет его.
+  // Classes the schema keeps when parsing: from formats, styles and validClasses.
+  // The set is live: formatter.register() in the editor adds to it too.
   const allowedClasses = new Set([
     ...formatClasses(Object.values(options.formats ?? {}).flat()),
     ...formatClasses(options.styleFormats ?? []),
@@ -63,7 +63,7 @@ export function schemaFromOptions(
     ),
   ]);
   const htmlRules = htmlRulesFor(options);
-  // `p[class]` в правилах без validClasses — классы сохраняются (как у TinyMCE по умолчанию).
+  // `p[class]` in the rules without validClasses: classes are kept (as TinyMCE does by default).
   const allClasses =
     options.validClasses === true ||
     (options.validClasses === undefined && !!htmlRules?.classOnBuiltIn);
@@ -72,8 +72,8 @@ export function schemaFromOptions(
   const nodes: Record<string, NodeSpec> = {};
   const marks: Record<string, MarkSpec> = {};
   for (const plugin of plugins) {
-    // Узлы могут зависеть от настроек плагина (например, имя атрибута переменной). Сбой одного
-    // плагина — без его узлов, но редактор (и отрисовка на сервере) работает.
+    // Nodes may depend on plugin settings (for example, the variable's attribute name). If one
+    // plugin fails, it goes without its nodes, but the editor (and server rendering) keeps working.
     let pluginNodes: Record<string, NodeSpec> | undefined;
     try {
       pluginNodes =
@@ -105,7 +105,7 @@ export function schemaFromOptions(
 
 type AttrSpecs = Record<string, { validate?: string | ((value: unknown) => void) }>;
 
-/** Проходит ли значение проверку `validate` атрибута схемы ("number", "string|null", функция). */
+/** Whether a value passes the `validate` check of a schema attribute ("number", "string|null", a function). */
 function attrValid(spec: AttrSpecs[string] | undefined, value: unknown): boolean {
   const validate = spec?.validate;
   if (!validate) return true;
@@ -123,16 +123,16 @@ function attrValid(spec: AttrSpecs[string] | undefined, value: unknown): boolean
 
 function sanitizeAttrs(specs: AttrSpecs | undefined, attrs: unknown): unknown {
   if (!attrs || typeof attrs !== 'object' || !specs) return attrs;
-  // Значение не того типа заменяем значением по умолчанию (просто убираем — подставит схема).
+  // A value of the wrong type is replaced with the default (just removed: the schema fills it in).
   return Object.fromEntries(
     Object.entries(attrs).filter(([name, value]) => attrValid(specs[name], value)),
   );
 }
 
 /**
- * Документ из JSON (БД, API, старые версии) мог сохраниться с атрибутами не того типа:
- * `colspan: null` и т.п. ProseMirror в таком случае отвергает ВЕСЬ документ — пользователь не
- * открыл бы его из-за одной ячейки. Здесь неверные значения атрибутов заменяются умолчаниями.
+ * A document from JSON (a database, an API, old versions) may have been saved with attributes of the wrong type:
+ * `colspan: null` and the like. ProseMirror then rejects the WHOLE document, and the user couldn't
+ * open it because of one cell. Here wrong attribute values are replaced with defaults.
  */
 export function sanitizeJSON(
   schema: NovaSchema,

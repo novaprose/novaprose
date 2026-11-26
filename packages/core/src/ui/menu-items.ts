@@ -16,7 +16,7 @@ export function printContent(editor: Editor): void {
   );
 }
 
-/** Диалог «Вставить таблицу» для меню (в тулбаре — сетка). */
+/** The "Insert table" dialog for the menu (the toolbar has the grid). */
 export function openInsertTableDialog(editor: Editor): void {
   const { t } = editor.ui;
   const rows = textField({ label: t('table.rows'), value: '3' });

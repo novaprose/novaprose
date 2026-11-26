@@ -1,8 +1,8 @@
 /**
- * jsdom не считает вёрстку, а ProseMirror при прокрутке к выделению спрашивает координаты.
- * Заглушки нужны только для юнит-тестов; реальное поведение проверяем в браузерных e2e (Playwright).
+ * jsdom doesn't compute layout, and ProseMirror asks for coordinates when scrolling to the selection.
+ * The stubs are only for unit tests; real behavior is checked in the browser e2e tests (Playwright).
  */
-// В тестах с окружением node (SSR) DOM нет — заглушки не нужны.
+// Tests in the node environment (SSR) have no DOM and need no stubs.
 if (typeof window !== 'undefined') installDomStubs();
 
 function installDomStubs(): void {
@@ -31,7 +31,7 @@ function installDomStubs(): void {
 
   Element.prototype.scrollIntoView ??= () => {};
 
-  // jsdom не реализует ClipboardEvent; ProseMirror создаёт его в view.pasteHTML().
+  // jsdom doesn't implement ClipboardEvent; ProseMirror creates one in view.pasteHTML().
   if (typeof globalThis.ClipboardEvent === 'undefined') {
     class ClipboardEventStub extends Event {
       readonly clipboardData: DataTransfer | null;
@@ -44,8 +44,8 @@ function installDomStubs(): void {
   }
 }
 
-// Node 26 объявляет свой localStorage (без файла хранилища — недоступный), и он перекрывает jsdom.
-// Для тестов — простое хранилище в памяти.
+// Node 26 declares its own localStorage (unusable without a storage file), and it shadows jsdom's.
+// Tests get a simple in-memory storage.
 if (typeof window !== 'undefined') {
   let works = false;
   try {

@@ -24,14 +24,14 @@ export interface NotificationHandle {
   setText(text: string): void;
 }
 
-/** Уведомления внутри редактора (аналог editor.notificationManager). */
+/** Notifications inside the editor (like editor.notificationManager). */
 export class Notifications {
   private readonly region: HTMLDivElement;
   private readonly closeLabel: string;
 
   constructor(host: HTMLElement, closeLabel: string) {
     this.closeLabel = closeLabel;
-    // aria-live — экранный диктор зачитывает уведомления без переноса фокуса.
+    // aria-live: the screen reader reads notifications without moving focus.
     this.region = h('div', { className: 'nova-notifications', 'aria-live': 'polite' });
     host.append(this.region);
   }
@@ -81,7 +81,7 @@ export class Notifications {
     );
     closeBtn.addEventListener('click', dismiss);
     if (timeout > 0) timer = setTimeout(dismiss, timeout);
-    // Есть действие — фокус на нём: с клавиатуры можно сразу нажать «Повторить».
+    // With an action, focus goes to it: from the keyboard you can press "Retry" right away.
     actions[0]?.focus({ preventScroll: true });
 
     return { close, setText: (value) => (text.textContent = value) };

@@ -1,13 +1,13 @@
 /**
- * Представления плагинов ProseMirror, переживающие перестройку набора плагинов.
+ * ProseMirror plugin views that survive a rebuild of the plugin set.
  *
- * Редактор догружает части лениво (механика таблиц, плагины по имени) и подключает их через
- * `state.reconfigure`. ProseMirror при любой смене набора плагинов уничтожает представления ВСЕХ
- * плагинов и создаёт заново — открытый список автодополнения закрывался, синхронизация совместного
- * редактирования перерисовывала документ, отмена y-prosemirror теряла историю. Здесь представление
- * создаётся один раз на редактор: при перестройке, которую делает сам редактор
- * (`reconfigurePlugins`), оно сохраняется и продолжает получать обновления, а уничтожается при
- * закрытии редактора или когда его плагин убран из набора.
+ * The editor loads parts lazily (table mechanics, plugins by name) and attaches them through
+ * `state.reconfigure`. On any change of the plugin set, ProseMirror destroys the views of ALL
+ * plugins and creates them again: an open autocomplete list closed, collaboration sync
+ * redrew the document, y-prosemirror undo lost its history. Here a view
+ * is created once per editor: on a rebuild done by the editor itself
+ * (`reconfigurePlugins`) it is kept and keeps receiving updates, and it is destroyed when
+ * the editor closes or its plugin is removed from the set.
  */
 import type { Plugin, PluginView } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
@@ -16,7 +16,7 @@ const reconfiguring = new WeakSet<EditorView>();
 const kept = new WeakMap<EditorView, Map<Plugin, PluginView>>();
 const wrapped = new WeakSet<Plugin>();
 
-/** Подготовить плагины: их представления будут переживать `reconfigurePlugins`. */
+/** Prepares the plugins: their views will survive `reconfigurePlugins`. */
 export function keepPluginViews(plugins: readonly Plugin[]): void {
   for (const plugin of plugins) {
     const spec = plugin.spec;
@@ -41,7 +41,7 @@ export function keepPluginViews(plugins: readonly Plugin[]): void {
   }
 }
 
-/** Сменить набор плагинов, сохранив представления оставшихся. */
+/** Changes the plugin set, keeping the views of the plugins that stay. */
 export function reconfigurePlugins(view: EditorView, plugins: Plugin[]): void {
   keepPluginViews(plugins);
   reconfiguring.add(view);
@@ -50,7 +50,7 @@ export function reconfigurePlugins(view: EditorView, plugins: Plugin[]): void {
   } finally {
     reconfiguring.delete(view);
   }
-  // Плагин убран из набора — его представление больше не нужно.
+  // The plugin was removed from the set: its view isn't needed anymore.
   const views = kept.get(view);
   if (!views) return;
   for (const [plugin, inner] of views) {

@@ -15,7 +15,7 @@ export interface CodeLanguage {
   label: string;
 }
 
-/** Встроенные грамматики по имени highlight.js. */
+/** Built-in grammars by highlight.js name. */
 export const GRAMMARS: Record<string, CodeGrammarLoader> = {
   bash: () => import('highlight.js/lib/languages/bash'),
   c: () => import('highlight.js/lib/languages/c'),
@@ -46,16 +46,16 @@ export const GRAMMARS: Record<string, CodeGrammarLoader> = {
 };
 
 /**
- * Грамматики, которые нужны вместе с основной: HTML подсвечивает <script> и <style> чужими
- * языками — без них код внутри остался бы бесцветным.
+ * Grammars needed together with the main one: HTML highlights <script> and <style> with other
+ * languages, and without them the code inside would stay colorless.
  */
 export const GRAMMAR_DEPENDENCIES: Record<string, string[]> = {
   xml: ['javascript', 'css'],
 };
 
 /**
- * Синонимы → грамматика. Значения из чужого HTML (Prism, TinyMCE, GitHub, Markdown) и из VS Code:
- * `markup` у Prism и TinyMCE — это HTML/XML, `sh` — Bash, `ts` — TypeScript.
+ * Aliases → grammar. Values from other people's HTML (Prism, TinyMCE, GitHub, Markdown) and from VS Code:
+ * `markup` in Prism and TinyMCE is HTML/XML, `sh` is Bash, `ts` is TypeScript.
  */
 export const ALIASES: Record<string, string> = {
   sh: 'bash',
@@ -106,7 +106,7 @@ export const ALIASES: Record<string, string> = {
   yml: 'yaml',
 };
 
-/** Список языков по умолчанию (меню выбора и диалог). Названия языков не переводятся. */
+/** The default list of languages (the picker menu and the dialog). Language names aren't translated. */
 export const DEFAULT_LANGUAGES: CodeLanguage[] = [
   { value: 'bash', label: 'Bash' },
   { value: 'c', label: 'C' },
@@ -137,7 +137,7 @@ export const DEFAULT_LANGUAGES: CodeLanguage[] = [
   { value: 'yaml', label: 'YAML' },
 ];
 
-/** Подписи для синонимов, которых нет в списке (блок с `language-js` показывается как JavaScript). */
+/** Labels for aliases not in the list (a block with `language-js` shows as JavaScript). */
 const ALIAS_LABELS: Record<string, string> = {
   js: 'JavaScript',
   jsx: 'JSX',
@@ -159,7 +159,7 @@ const ALIAS_LABELS: Record<string, string> = {
   ps1: 'PowerShell',
 };
 
-/** Подпись языка: из списка, затем из синонимов, иначе само значение. */
+/** A language's label: from the list, then from the aliases, otherwise the value itself. */
 export function languageLabel(value: string, languages: readonly CodeLanguage[]): string {
   const key = value.toLowerCase();
   return languages.find((l) => l.value.toLowerCase() === key)?.label ?? ALIAS_LABELS[key] ?? value;

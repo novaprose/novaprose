@@ -7,8 +7,8 @@ import type { TextDirection } from '../schema';
 import { pickLabels } from './shared';
 
 /**
- * Плагин directionality: направление текста абзацев и заголовков (`dir="rtl"` / `dir="ltr"`) —
- * для арабского, иврита, фарси. Кнопки `ltr` и `rtl`; повторное нажатие снимает направление.
+ * The directionality plugin: the text direction of paragraphs and headings (`dir="rtl"` / `dir="ltr"`),
+ * for Arabic, Hebrew, Persian. The `ltr` and `rtl` buttons; pressing again removes the direction.
  * `plugins: ['directionality']`.
  */
 

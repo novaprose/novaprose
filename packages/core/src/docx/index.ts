@@ -1,4 +1,4 @@
-// Встроенные плагины по имени (plugins: ['mentions']) — и при импорте только этого входа (сервер).
+// Built-in plugins by name (plugins: ['mentions']), also when only this entry is imported (on the server).
 import '../plugins/index';
 import { Node as PMNode } from 'prosemirror-model';
 import { createRenderer, type DocumentOptions } from '../document';
@@ -8,12 +8,12 @@ import { toDocx, type DocxExportOptions } from './export';
 import { fromDocx, type DocxImportResult } from './import';
 
 /**
- * Word (.docx): `@novaprose/core/docx`. Без сторонних библиотек и без DOM — экспорт и разбор
- * работают и в браузере, и на сервере (Node 18+). В редакторе — плагины exportword и importword.
+ * Word (.docx): `@novaprose/core/docx`. No third-party libraries and no DOM: export and parsing
+ * work both in the browser and on the server (Node 18+). In the editor: the exportword and importword plugins.
  *
- *   const bytes = await exportDocx(editor);            // Uint8Array файла .docx
- *   await importDocx(editor, file);                    // файл из <input type="file">
- *   const bytes = await exportDocx(savedJson, { plugins: ['mentions'] }); // на сервере
+ *   const bytes = await exportDocx(editor);            // a Uint8Array of the .docx file
+ *   await importDocx(editor, file);                    // a file from <input type="file">
+ *   const bytes = await exportDocx(savedJson, { plugins: ['mentions'] }); // on the server
  */
 
 export { fromDocx, toDocx };

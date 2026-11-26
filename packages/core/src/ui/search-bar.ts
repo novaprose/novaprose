@@ -15,14 +15,14 @@ export interface SearchBarHandle {
   open(): void;
   close(): void;
   isOpen(): boolean;
-  /** Обновить счётчик после изменения документа. */
+  /** Updates the counter after the document changes. */
   update(): void;
   destroy(): void;
 }
 
 /**
- * Панель «Найти и заменить» под тулбаром (не модальная: можно править текст, не закрывая её).
- * Enter — следующее, Shift+Enter — предыдущее, Esc — закрыть и вернуться в текст.
+ * The "Find and replace" bar under the toolbar (not modal: the text can be edited while it stays open).
+ * Enter goes to the next match, Shift+Enter to the previous one, Esc closes it and returns to the text.
  */
 export function createSearchBar(editor: Editor, before: HTMLElement): SearchBarHandle {
   const { t } = editor.ui;
@@ -143,14 +143,14 @@ export function createSearchBar(editor: Editor, before: HTMLElement): SearchBarH
     })(editor.view.state, editor.view.dispatch);
   };
 
-  /** Поле могло измениться без события input (автозаполнение) — сверяем перед действием. */
+  /** The field may have changed without an input event (autofill): compare before acting. */
   const sync = () => {
     if (timer || getSearchState(editor.view.state).query !== findInput.value) run();
   };
 
   findInput.addEventListener('input', () => {
     if (timer) clearTimeout(timer);
-    // Небольшая задержка: на большом документе не пересчитываем на каждый символ.
+    // A small delay: a large document isn't recounted on every character.
     timer = setTimeout(run, 120);
   });
 
@@ -159,7 +159,7 @@ export function createSearchBar(editor: Editor, before: HTMLElement): SearchBarH
       event.preventDefault();
       sync();
       editor.exec(findNext(event.shiftKey ? -1 : 1));
-      // exec переводит фокус в редактор — возвращаем в поле, чтобы жать Enter дальше.
+      // exec moves focus into the editor: return it to the field so Enter keeps working.
       findInput.focus();
     }
   });
@@ -177,7 +177,7 @@ export function createSearchBar(editor: Editor, before: HTMLElement): SearchBarH
       handle.close();
     }
   });
-  // Кнопки не уводят фокус из поля, чтобы Enter продолжал работать.
+  // Buttons don't take focus from the field, so Enter keeps working.
   bar.addEventListener('mousedown', (event) => {
     if ((event.target as HTMLElement).closest('button')) event.preventDefault();
   });
@@ -203,7 +203,7 @@ export function createSearchBar(editor: Editor, before: HTMLElement): SearchBarH
     open() {
       const wasHidden = bar.hidden;
       bar.hidden = false;
-      // Выделенный текст (одна строка) — сразу как запрос, как в браузерах и IDE.
+      // Selected text (one line) becomes the query right away, as in browsers and IDEs.
       const { from, to, empty } = editor.view.state.selection;
       const selected = empty ? '' : editor.view.state.doc.textBetween(from, to, ' ');
       if (selected && !selected.includes('\n') && selected.length <= 100)

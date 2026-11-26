@@ -1,9 +1,9 @@
 /*
- * Диалоги по описанию полей (editor.ui.dialog): ошибки полей, сообщения, вкладки, файлы.
- * Подключается при первом открытии такого диалога (вместе с его кодом) через editor.ui.addStyles — не входит в style.css первой загрузки.
+ * Dialogs from a field description (editor.ui.dialog): field errors, messages, tabs, files.
+ * Attached when such a dialog first opens (together with its code) through editor.ui.addStyles; not part of the first-load style.css.
  */
 
-/* Диалоги по описанию полей (editor.ui.dialog) */
+/* Dialogs from a field description (editor.ui.dialog) */
 .nova-required {
   color: var(--nova-danger);
 }
@@ -15,14 +15,14 @@
 .nova-input[aria-invalid='true'] {
   border-color: var(--nova-danger);
 }
-/* Многострочное поле: высота — по rows (у .nova-input она одна строка). textarea — для специфичности. */
+/* A multi-line field: the height comes from rows (.nova-input has one line). textarea is for specificity. */
 textarea.nova-textarea {
   height: auto;
   padding: 8px 10px;
   line-height: 1.5;
   resize: vertical;
 }
-/* Поле для кода (textarea с code: true) */
+/* A code field (textarea with code: true) */
 textarea.nova-input-code {
   font-family: var(--nova-mono);
   font-size: 13px;
@@ -35,7 +35,7 @@ textarea.nova-input-code {
   border-radius: var(--nova-radius-sm);
   background: var(--nova-hover);
 }
-/* Вкладки диалога (WAI-ARIA tabs) */
+/* Dialog tabs (WAI-ARIA tabs) */
 .nova-tabs {
   display: flex;
   gap: 2px;
@@ -69,9 +69,9 @@ textarea.nova-input-code {
   display: none;
 }
 
-/* Поле файлов: зона перетаскивания (сам input скрыт, фокус — на ней через :focus-within) */
-/* Зона — та же, что в диалоге картинки (.nova-dropzone в style.css); здесь только отличия поля файлов:
-   компактнее, текст и кнопка в строку, фокус скрытого input виден на зоне. */
+/* A file field: the drop zone (the input itself is hidden, focus shows on the zone through :focus-within) */
+/* The zone is the same as in the image dialog (.nova-dropzone in style.css); only the file field's differences are here:
+   more compact, text and button in a row, the hidden input's focus visible on the zone. */
 .nova-file-field .nova-dropzone {
   flex-direction: row;
   flex-wrap: wrap;

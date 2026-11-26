@@ -7,42 +7,42 @@ import {
 } from './code-languages';
 
 /**
- * Подсветка кода на highlight.js: ядро и грамматики грузятся по требованию (первый блок кода на
- * языке), результат — отрезки текста с классами `hljs-*` для оформления (Decoration.inline).
+ * Code highlighting with highlight.js: the core and grammars load on demand (the first code block in a
+ * language); the result is text ranges with `hljs-*` classes for decorations (Decoration.inline).
  */
 
-/** Отрезок подсветки: смещения в тексте блока и классы (как у highlight.js: `hljs-keyword`). */
+/** A highlighted range: offsets in the block's text and classes (as in highlight.js: `hljs-keyword`). */
 export interface HighlightSegment {
   from: number;
   to: number;
   className: string;
 }
 
-/** Результат подсветки: отрезки; null — подсвечивать нечего; 'loading' — грамматика грузится. */
+/** The highlighting result: ranges; null means nothing to highlight; 'loading' means the grammar is loading. */
 export type HighlightResult = HighlightSegment[] | null | 'loading';
 
 let core: Promise<HLJSApi> | null = null;
 
-/** Ядро highlight.js — один модуль на страницу (второй вызов не скачивает его заново). */
+/** The highlight.js core: one module per page (a second call doesn't download it again). */
 function loadCore(): Promise<HLJSApi> {
   core ??= import('highlight.js/lib/core').then(
     (module) => module.default,
     (error: unknown) => {
-      core = null; // сеть моргнула — следующий блок кода попробует снова
+      core = null; // a network hiccup: the next code block tries again
       throw error;
     },
   );
   return core;
 }
 
-// Разметка highlight.js: <span class="…">, </span>, экранированные символы и текст.
+// highlight.js markup: <span class="…">, </span>, escaped characters and text.
 const TOKEN = /<span class="([^"]*)">|<\/span>|&(?:amp|lt|gt|quot|#x27);|[^<&]+/g;
 
 /**
- * HTML highlight.js → отрезки без вложенности: у каждого куска текста — классы всех объемлющих
- * областей (`hljs-meta hljs-keyword`), соседние куски с одинаковыми классами склеены.
- * null, если длина текста не сошлась с кодом (неожиданная разметка): лучше без подсветки, чем
- * подсветка не тех символов.
+ * highlight.js HTML → ranges without nesting: every piece of text gets the classes of all enclosing
+ * scopes (`hljs-meta hljs-keyword`), adjacent pieces with the same classes are merged.
+ * null if the text length doesn't match the code (unexpected markup): better no highlighting than
+ * highlighting the wrong characters.
  */
 export function toSegments(html: string, length: number): HighlightSegment[] | null {
   const segments: HighlightSegment[] = [];
@@ -51,7 +51,7 @@ export function toSegments(html: string, length: number): HighlightSegment[] | n
   for (const match of html.matchAll(TOKEN)) {
     const text = match[0];
     if (match[1] !== undefined) {
-      // language-xml и т. п. — обёртка вложенного языка, для оформления не нужна.
+      // language-xml and the like wrap a nested language and aren't needed for decorations.
       stack.push(
         match[1]
           .split(' ')
@@ -75,8 +75,8 @@ export function toSegments(html: string, length: number): HighlightSegment[] | n
 }
 
 /**
- * Подсветка для одного редактора: свой экземпляр highlight.js (настройки highlight.js на странице
- * сайта нам не мешают, свои грамматики не конфликтуют с чужими редакторами).
+ * Highlighting for one editor: its own highlight.js instance (highlight.js settings on the site's page
+ * don't affect us, and our grammars don't conflict with other editors).
  */
 export class Highlighter {
   private hljs: HLJSApi | null = null;
@@ -86,7 +86,7 @@ export class Highlighter {
 
   constructor(private readonly grammars: Record<string, CodeGrammarLoader>) {}
 
-  /** Грамматика для языка блока: по имени или синониму; null — язык не задан или неизвестен. */
+  /** The grammar for a block's language: by name or alias; null when the language is not set or unknown. */
   grammarFor(language: string | null): string | null {
     if (!language) return null;
     const key = language.toLowerCase();
@@ -112,7 +112,7 @@ export class Highlighter {
     }
   }
 
-  /** Загрузить грамматику (и нужные ей) — слушатели onLoad узнают о готовности. */
+  /** Loads a grammar (and the ones it needs); onLoad listeners learn when it is ready. */
   load(name: string): Promise<void> {
     let promise = this.loading.get(name);
     if (promise) return promise;
@@ -138,13 +138,13 @@ export class Highlighter {
     return promise;
   }
 
-  /** Подписка на загрузку грамматик; возвращает отписку. */
+  /** Subscribes to grammar loads; returns the unsubscribe function. */
   onLoad(listener: () => void): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
   }
 
-  /** Все начатые загрузки завершены (для тестов и печати). */
+  /** Every started load has finished (for tests and printing). */
   async idle(): Promise<void> {
     let size = -1;
     while (size !== this.loading.size) {

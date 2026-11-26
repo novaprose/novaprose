@@ -3,9 +3,9 @@ import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
 
 /**
- * Плагин visualblocks: показать границы блоков (абзацы, заголовки, списки, цитаты, таблицы)
- * с подписью тега — удобно разбирать вставленный текст. `plugins: ['visualblocks']`,
- * `pluginOptions: { visualblocks: { default: true } }` — включить сразу.
+ * The visualblocks plugin: shows the borders of blocks (paragraphs, headings, lists, quotes, tables)
+ * with the tag label, handy for sorting out pasted text. `plugins: ['visualblocks']`,
+ * `pluginOptions: { visualblocks: { default: true } }` turns it on right away.
  */
 
 const ICON = icons.visualBlocks;

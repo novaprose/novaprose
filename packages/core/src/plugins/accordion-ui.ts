@@ -14,12 +14,12 @@ import { detailsAround, isOpen, LABELS, setOpen, summaryEnd, type Found } from '
 import { pickLabels } from './shared';
 
 /**
- * Ленивая часть плагина accordion: кнопка `accordion`, команды, клавиши и курсор в свёрнутом.
- * Enter в заголовке — новый абзац в начале содержимого; Backspace в начале заголовка — убрать
- * рамку (текст остаётся); Ctrl/Cmd+Enter в заголовке — свернуть или раскрыть.
+ * The lazy part of the accordion plugin: the `accordion` button, commands, keys and the cursor in collapsed blocks.
+ * Enter in the title adds a new paragraph at the start of the content; Backspace at the start of the title removes
+ * the frame (the text stays); Ctrl/Cmd+Enter in the title collapses or expands.
  */
 
-/** Свернуть или раскрыть блок под курсором; курсор из скрытого содержимого — в заголовок. */
+/** Collapses or expands the block under the cursor; a cursor in hidden content moves to the title. */
 export const toggleAccordion: Command = (state, dispatch) => {
   const details = detailsAround(state.selection.$from);
   if (!details) return false;
@@ -34,7 +34,7 @@ export const toggleAccordion: Command = (state, dispatch) => {
   return true;
 };
 
-/** Раскрыть (true), свернуть (false) или переключить (undefined) все блоки документа. */
+/** Expands (true), collapses (false) or toggles (undefined) every block in the document. */
 export function toggleAllAccordions(open?: boolean): Command {
   return (state, dispatch) => {
     const all: Found[] = [];
@@ -47,7 +47,7 @@ export function toggleAllAccordions(open?: boolean): Command {
       const target = open ?? !all.every((d) => isOpen(d.node));
       const tr = state.tr;
       for (const details of all) setOpen(tr, details, target);
-      // Свернули — курсор не должен остаться в скрытом.
+      // Collapsed: the cursor must not stay in the hidden part.
       const around = detailsAround(tr.selection.$from);
       if (!target && around && tr.selection.from > summaryEnd(around)) {
         tr.setSelection(TextSelection.create(tr.doc, summaryEnd(around)));
@@ -59,8 +59,8 @@ export function toggleAllAccordions(open?: boolean): Command {
 }
 
 /**
- * Вставить раскрывающийся блок: выделенные блоки (или блок под курсором) становятся его
- * содержимым, курсор — в пустой заголовок.
+ * Inserts a collapsible block: the selected blocks (or the block under the cursor) become its
+ * content, the cursor goes into the empty title.
  */
 export const insertAccordion: Command = (state, dispatch) => {
   const { details, details_summary: summary } = state.schema.nodes;
@@ -85,7 +85,7 @@ export const insertAccordion: Command = (state, dispatch) => {
   return true;
 };
 
-/** Убрать рамку: заголовок — обычным абзацем, содержимое остаётся на месте. */
+/** Removes the frame: the title becomes a regular paragraph, the content stays in place. */
 export const removeAccordion: Command = (state, dispatch) => {
   const details = detailsAround(state.selection.$from);
   if (!details) return false;
@@ -98,7 +98,7 @@ export const removeAccordion: Command = (state, dispatch) => {
     node.forEach((child, _offset, index) => {
       if (index > 0) blocks.push(child);
     });
-    // Позиции внутри сдвигаются на открывающий тег блока (и на пустой заголовок, если его нет).
+    // Positions inside shift by the block's opening tag (and by the empty title if there is none).
     const shift = summary.content.size ? -1 : -1 - summary.nodeSize;
     const tr = state.tr.replaceWith(pos, pos + node.nodeSize, blocks);
     const head = Math.min(Math.max(state.selection.head + shift, pos), tr.doc.content.size);
@@ -108,7 +108,7 @@ export const removeAccordion: Command = (state, dispatch) => {
   return true;
 };
 
-/** Enter в заголовке: текст после курсора — новым абзацем в начале содержимого (блок раскрыт). */
+/** Enter in the title: the text after the cursor becomes a new paragraph at the start of the content (the block expands). */
 const enterInSummary: Command = (state, dispatch) => {
   const { $from, $to } = state.selection;
   if ($from.parent.type.name !== 'details_summary' || !$from.sameParent($to)) return false;
@@ -121,7 +121,7 @@ const enterInSummary: Command = (state, dispatch) => {
     const bodyStart = tr.mapping.map(summaryEnd(details)) + 1;
     const first = tr.doc.nodeAt(bodyStart);
     if (!rest.size && first?.type.name === 'paragraph' && first.content.size === 0) {
-      // Пустой первый абзац уже есть — просто перейти в него.
+      // An empty first paragraph already exists: just move into it.
       tr.setSelection(TextSelection.create(tr.doc, bodyStart + 1));
     } else {
       tr.delete($cursor.pos, $cursor.end());
@@ -135,7 +135,7 @@ const enterInSummary: Command = (state, dispatch) => {
   return true;
 };
 
-/** Backspace в начале заголовка — убрать рамку (как у списков: выйти из структуры). */
+/** Backspace at the start of the title removes the frame (as with lists: leave the structure). */
 const backspaceInSummary: Command = (state, dispatch) => {
   const { $from, empty } = state.selection;
   if (!empty || $from.parent.type.name !== 'details_summary' || $from.parentOffset > 0) {
@@ -144,7 +144,7 @@ const backspaceInSummary: Command = (state, dispatch) => {
   return removeAccordion(state, dispatch);
 };
 
-/** Ctrl/Cmd+Enter в заголовке — свернуть или раскрыть. */
+/** Ctrl/Cmd+Enter in the title collapses or expands. */
 const toggleInSummary: Command = (state, dispatch) =>
   state.selection.$from.parent.type.name === 'details_summary' && toggleAccordion(state, dispatch);
 
@@ -152,9 +152,9 @@ function cursorPlugin(): Plugin {
   return new Plugin({
     key: new PluginKey('nova-accordion-cursor'),
     /**
-     * Курсор в свёрнутом содержимом невидим, и набор ушёл бы в скрытое. Курсор туда перевели
-     * (поиск, отмена, стрелки) — блок раскрывается; оказался там из-за смены содержимого
-     * (setContent, правки соавтора) — переходит в заголовок, блок остаётся свёрнутым.
+     * A cursor in collapsed content is invisible, and typing would go into the hidden part. If the cursor was moved there
+     * (search, undo, arrows), the block expands; if it ended up there because the content changed
+     * (setContent, a co-author's edits), it moves to the title and the block stays collapsed.
      */
     appendTransaction(transactions, _old, state: EditorState) {
       if (!transactions.some((tr) => tr.selectionSet || tr.docChanged)) return null;
@@ -162,7 +162,7 @@ function cursorPlugin(): Plugin {
       const hidden: Found[] = [];
       for (let depth = 1; depth <= $from.depth; depth++) {
         const node = $from.node(depth);
-        // В заголовке (первый ребёнок) курсор виден и у свёрнутого блока.
+        // In the title (the first child) the cursor is visible even in a collapsed block.
         if (node.type.name === 'details' && !isOpen(node) && $from.index(depth) > 0) {
           hidden.push({ node, pos: $from.before(depth) });
         }
@@ -199,7 +199,7 @@ export default definePlugin({
       tooltip: labels.accordion,
       isEnabled: (e) => isEnabled(e) && (e.can(insertAccordion) || e.can(removeAccordion)),
       isActive: (e) => !!detailsAround(e.view.state.selection.$from),
-      // Как у списков: в блоке — убрать рамку, иначе — сделать блоком.
+      // As with lists: inside a block, remove the frame; otherwise make a block.
       onAction: (e) =>
         e.exec(detailsAround(e.view.state.selection.$from) ? removeAccordion : insertAccordion),
     });

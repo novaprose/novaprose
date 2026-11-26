@@ -1,11 +1,11 @@
 import type { Node as PMNode } from 'prosemirror-model';
 
 /**
- * Различия между версией и текущим документом для просмотра истории.
- * Сравниваем текстовые блоки (абзацы, заголовки, пункты списков): совпавшие пропускаем, у изменённых —
- * сравнение по словам. Результат — в позициях документа версии (его и показываем):
- * - added: текст, который есть только в версии;
- * - removed: текст, который есть только в текущем документе (показывается вставкой на месте).
+ * Differences between a version and the current document, for viewing the history.
+ * Text blocks are compared (paragraphs, headings, list items): matching ones are skipped, changed ones get
+ * a word-by-word comparison. The result is in positions of the version's document (the one that is shown):
+ * - added: text that exists only in the version;
+ * - removed: text that exists only in the current document (shown as an insertion in place).
  */
 
 export interface DiffResult {
@@ -14,19 +14,19 @@ export interface DiffResult {
 }
 
 interface Block {
-  /** Позиция перед узлом блока. */
+  /** The position before the block node. */
   pos: number;
-  /** Позиция конца содержимого блока. */
+  /** The position of the end of the block's content. */
   end: number;
-  /** Глубина родителя блока (0 — блок на верхнем уровне документа). */
+  /** The depth of the block's parent (0 means the block is at the top level of the document). */
   depth: number;
   type: string;
   text: string;
-  /** Позиция в документе для каждого символа text. */
+  /** The document position of every character of text. */
   chars: number[];
 }
 
-/** Ограничение на размер таблицы LCS: дальше — грубее, но без зависания на огромных документах. */
+/** A limit on the LCS table size: beyond it the result is coarser, but huge documents don't hang. */
 const MAX_CELLS = 2_000_000;
 
 function textblocks(doc: PMNode): Block[] {
@@ -59,7 +59,7 @@ function textblocks(doc: PMNode): Block[] {
   return blocks;
 }
 
-/** Пары индексов наибольшей общей подпоследовательности (или null — слишком большая таблица). */
+/** Index pairs of the longest common subsequence (or null when the table is too large). */
 export function lcs<T>(a: T[], b: T[], eq: (x: T, y: T) => boolean): [number, number][] | null {
   const n = a.length;
   const m = b.length;
@@ -87,7 +87,7 @@ export function lcs<T>(a: T[], b: T[], eq: (x: T, y: T) => boolean): [number, nu
   return pairs;
 }
 
-/** Слова и пробелы между ними — единицы сравнения. */
+/** Words and the spaces between them: the units of comparison. */
 export const tokenize = (text: string) => text.split(/(\s+)/).filter(Boolean);
 
 function addRange(result: DiffResult, from: number, to: number) {
@@ -97,9 +97,9 @@ function addRange(result: DiffResult, from: number, to: number) {
   else result.added.push({ from, to });
 }
 
-/** Блок изменён: сравнение по словам. */
+/** A block changed: compare word by word. */
 function diffBlock(result: DiffResult, rev: Block, cur: Block) {
-  // Тот же текст, другой тип блока (абзац → заголовок): отмечаем блок целиком.
+  // The same text, a different block type (paragraph → heading): the whole block is marked.
   if (rev.text === cur.text) {
     if (rev.text) addRange(result, rev.chars[0]!, rev.end);
     return;
@@ -112,7 +112,7 @@ function diffBlock(result: DiffResult, rev: Block, cur: Block) {
     if (cur.text) result.removed.push({ pos: rev.end, text: cur.text, block: false });
     return;
   }
-  // Смещение каждого токена версии в символах.
+  // The offset of every token of the version, in characters.
   const offsets: number[] = [];
   let offset = 0;
   for (const token of a) {
@@ -136,7 +136,7 @@ function diffBlock(result: DiffResult, rev: Block, cur: Block) {
       const start = offsets[i]!;
       addRange(result, charPos(start), charPos(start + a[i]!.length - 1) + 1);
     }
-    // Удалённое — после добавленного, перед следующим совпавшим словом.
+    // What was removed goes after what was added, before the next matching word.
     flushRemoved(pj, pi);
     i = pi + 1;
     j = pj + 1;
@@ -144,8 +144,8 @@ function diffBlock(result: DiffResult, rev: Block, cur: Block) {
 }
 
 /**
- * Куда вставить блок, которого нет в версии: перед следующим блоком версии, но на глубине удалённого
- * (абзац, стоявший перед списком, — перед списком, а не внутри его первого пункта).
+ * Where to insert a block that isn't in the version: before the next block of the version, but at the depth of the removed one
+ * (a paragraph that stood before a list goes before the list, not inside its first item).
  */
 function blockAnchor(revision: PMNode, next: Block | undefined, depth: number): number {
   if (!next) return revision.content.size;
@@ -162,7 +162,7 @@ export function diffDocs(revision: PMNode, current: PMNode): DiffResult {
   let i = 0;
   let j = 0;
   for (const [pi, pj] of [...pairs, [rev.length, cur.length] as [number, number]]) {
-    // Промежуток несовпавших блоков: попарно — по словам, остаток — целиком.
+    // A gap of unmatched blocks: pairs are compared word by word, the rest as a whole.
     const revGap = rev.slice(i, pi);
     const curGap = cur.slice(j, pj);
     const common = Math.min(revGap.length, curGap.length);

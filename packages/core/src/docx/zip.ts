@@ -1,7 +1,7 @@
 /**
- * ZIP для .docx без сторонних библиотек: сжатие — встроенные CompressionStream / DecompressionStream
- * (deflate-raw есть во всех современных браузерах и в Node 18+). Дата файлов постоянная —
- * один и тот же документ даёт одни и те же байты.
+ * ZIP for .docx without third-party libraries: compression uses the built-in CompressionStream / DecompressionStream
+ * (deflate-raw exists in every modern browser and in Node 18+). File dates are constant, so
+ * the same document always gives the same bytes.
  */
 
 export interface ZipEntry {
@@ -27,7 +27,7 @@ export function crc32(data: Uint8Array): number {
   return (crc ^ 0xffffffff) >>> 0;
 }
 
-/** Прогнать байты через поток сжатия или распаковки. */
+/** Runs bytes through a compression or decompression stream. */
 async function through(data: Uint8Array, transform: TransformStream<Uint8Array, Uint8Array>) {
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
@@ -55,7 +55,7 @@ async function through(data: Uint8Array, transform: TransformStream<Uint8Array, 
 
 const canCompress = () => typeof CompressionStream !== 'undefined';
 
-/** Собрать ZIP. Сжатие — deflate (если браузер умеет), иначе файлы хранятся как есть. */
+/** Builds a ZIP. Compression is deflate (if the browser supports it), otherwise files are stored as they are. */
 export async function zip(entries: ZipEntry[]): Promise<Uint8Array> {
   const locals: Uint8Array[] = [];
   const central: Uint8Array[] = [];
@@ -74,11 +74,11 @@ export async function zip(entries: ZipEntry[]): Promise<Uint8Array> {
 
     const local = new DataView(new ArrayBuffer(30));
     local.setUint32(0, 0x04034b50, true);
-    local.setUint16(4, 20, true); // версия для распаковки
-    local.setUint16(6, 0x0800, true); // имена в UTF-8
+    local.setUint16(4, 20, true); // version needed to extract
+    local.setUint16(6, 0x0800, true); // UTF-8 names
     local.setUint16(8, method, true);
-    local.setUint16(10, 0, true); // время 00:00
-    local.setUint16(12, 0x21, true); // дата 1980-01-01
+    local.setUint16(10, 0, true); // time 00:00
+    local.setUint16(12, 0x21, true); // date 1980-01-01
     local.setUint32(14, crc, true);
     local.setUint32(18, body.length, true);
     local.setUint32(22, entry.data.length, true);
@@ -119,7 +119,7 @@ export async function zip(entries: ZipEntry[]): Promise<Uint8Array> {
   return out;
 }
 
-/** Файлы ZIP по именам. Шифрование и ZIP64 не поддерживаются (в .docx их не бывает). */
+/** ZIP files by name. Encryption and ZIP64 aren't supported (a .docx never has them). */
 export async function unzip(bytes: Uint8Array): Promise<Map<string, Uint8Array>> {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   let end = -1;

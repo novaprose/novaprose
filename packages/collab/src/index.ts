@@ -94,7 +94,7 @@ export function colorFor(name: string): string {
   return PALETTE[Math.abs(hash) % PALETTE.length]!;
 }
 
-/** Курсор участника: полоса и подпись с именем. Без innerHTML — имя приходит от других клиентов. */
+/** A participant's cursor: a bar and a name label. No innerHTML: the name comes from other clients. */
 function cursorBuilder(user: { name?: string; color?: string }): HTMLElement {
   const color =
     typeof user.color === 'string' && /^#[0-9a-f]{3,8}$/i.test(user.color) ? user.color : '#64748b';
@@ -112,7 +112,7 @@ function cursorBuilder(user: { name?: string; color?: string }): HTMLElement {
 function selectionBuilder(user: { color?: string }) {
   const color =
     typeof user.color === 'string' && /^#[0-9a-f]{6}$/i.test(user.color) ? user.color : '#64748b';
-  // Прозрачность через 8-значный hex: выделение видно, текст под ним читается.
+  // Transparency through an 8-digit hex: the selection shows and the text under it stays readable.
   return { class: 'nova-collab-selection', style: `background-color: ${color}33;` };
 }
 
@@ -135,11 +135,11 @@ interface Connection {
   ydoc: Y.Doc;
   awareness: Awareness;
   destroy(): void;
-  /** Запросы к серверу (только при подключении к серверу синхронизации). */
+  /** Requests to the server (only when connected to a sync server). */
   request?: ServerRequest;
 }
 
-/** Ответа на запрос к серверу ждём не дольше. */
+/** How long to wait for the server's answer to a request. */
 const REQUEST_TIMEOUT = 15_000;
 
 function connect(options: CollabOptions): Connection {
@@ -151,7 +151,7 @@ function connect(options: CollabOptions): Connection {
     throw new Error('[nova] collab: pass url and document, or your own ydoc');
   }
   const ydoc = new Y.Doc();
-  // Ответы сервера на запросы (история версий): по номеру запроса rid.
+  // Server answers to requests (version history), matched by the request number rid.
   const waiting = new Map<
     number,
     { resolve: (reply: Record<string, unknown>) => void; timer: ReturnType<typeof setTimeout> }
@@ -226,10 +226,10 @@ export function collab(options: CollabOptions): CollabPlugin {
 
   const plugin = definePlugin({
     name: 'collab',
-    // Своя история: Ctrl+Z отменяет только свои правки, не чужие.
+    // Its own history: Ctrl+Z undoes only your own edits, not other people's.
     replaceHistory: true,
     commands: { undo: undoCommand, redo: redoCommand },
-    // Правки соавторов — не ввод этого пользователя: событие input для них не срабатывает.
+    // Co-authors' edits are not this user's input: the input event doesn't fire for them.
     transformTransaction: (tr) =>
       (tr.getMeta(ySyncPluginKey) as { isChangeOrigin?: boolean } | undefined)?.isChangeOrigin
         ? tr.setMeta(REMOTE_CHANGE_META, true)
@@ -238,8 +238,8 @@ export function collab(options: CollabOptions): CollabPlugin {
       const { ydoc, awareness } = get();
       const fragment = ydoc.getXmlFragment(options.field ?? 'prosemirror');
       return [
-        // Представления y-prosemirror не готовы к пересозданию; ядро сохраняет их при догрузке
-        // ленивых частей (см. plugin-views.ts в @novaprose/core).
+        // y-prosemirror views aren't ready to be recreated; the core keeps them when lazy parts
+        // load (see plugin-views.ts in @novaprose/core).
         ySyncPlugin(fragment),
         yCursorPlugin(awareness, { cursorBuilder, selectionBuilder }),
         yUndoPlugin(),
@@ -266,7 +266,7 @@ export function collab(options: CollabOptions): CollabPlugin {
     setUser: publishUser,
     commentStore: () => (comments ??= yCommentStore(get().ydoc)),
     versions: () => {
-      // Текущее соединение (после destroy редактора его нет — новое не открываем).
+      // The current connection (after the editor is destroyed there is none, and no new one is opened).
       const request: ServerRequest = (message) => {
         const current = connection?.request;
         if (!current) {

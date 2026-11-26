@@ -62,7 +62,7 @@ export interface NodeViewOptions {
 /** A view factory for NovaPlugin.nodeViews: the core calls it with its editor. */
 export type NodeViewFactory = (editor: Editor) => NodeViewConstructor;
 
-/** Свои элементы управления вида — их события редактору не нужны. */
+/** The view's own controls: the editor doesn't need their events. */
 const CONTROLS = 'input, textarea, select, button, label, [data-node-view-control]';
 
 function report(message: string, error: unknown): void {
@@ -88,13 +88,13 @@ class RenderedNodeView implements NodeView {
     this.dom.setAttribute('data-node-view', node.type.name);
     if (options.className) this.dom.className = options.className;
     this.contentDOM = node.isLeaf ? null : document.createElement(options.contentAs ?? tag);
-    // До первой отрисовки содержимое — прямо в корне: ProseMirror ждёт его внутри dom.
+    // Before the first render the content sits right in the root: ProseMirror expects it inside dom.
     if (this.contentDOM) this.dom.append(this.contentDOM);
     try {
       this.renderer = create(editor);
       this.renderer.mount(this.dom, this.props());
     } catch (error) {
-      // Сбой отрисовщика не ломает редактор: узел остаётся редактируемым, без своей разметки.
+      // A renderer failure doesn't break the editor: the node stays editable, without its own markup.
       report(`Node view for "${node.type.name}" failed to render`, error);
     }
   }
@@ -162,16 +162,16 @@ class RenderedNodeView implements NodeView {
     if (this.options.stopEvent) return this.options.stopEvent(event);
     const target = event.target;
     if (!(target instanceof Element) || this.contentDOM?.contains(target)) return false;
-    // Перетаскивание и вставка — дело редактора; щелчки и ввод в своих полях вида — нет.
+    // Drag and drop and paste are the editor's business; clicks and typing in the view's own fields aren't.
     if (event.type.startsWith('drag') || event.type === 'drop') return false;
     const control = target.closest(CONTROLS);
     return !!control && this.dom.contains(control);
   }
 
   ignoreMutation(mutation: ViewMutationRecord): boolean {
-    // Узел без содержимого: внутри всё — разметка отрисовщика, редактору читать нечего.
+    // A node without content: everything inside is the renderer's markup, the editor has nothing to read.
     if (!this.contentDOM) return true;
-    // Своя разметка вокруг содержимого (и перенос самого contentDOM в неё) — не правка документа.
+    // Its own markup around the content (and moving contentDOM itself into it) isn't a document edit.
     if (mutation.target === this.contentDOM && mutation.type === 'attributes') return true;
     return !this.contentDOM.contains(mutation.target);
   }

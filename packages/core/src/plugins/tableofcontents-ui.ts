@@ -15,12 +15,12 @@ import { LABELS, tocEntries, tocSettings, type TocEntry } from './tableofcontent
 import { pickLabels } from './shared';
 
 /**
- * Ленивая часть плагина tableofcontents: оглавление следит за заголовками (новый, переименованный,
- * удалённый — пункты обновляются в той же правке, отмена откатывает и их), выдаёт заголовкам
- * устойчивые id и ведёт по ссылкам внутри редактора, не меняя адрес страницы.
+ * The lazy part of the tableofcontents plugin: the table of contents follows the headings (new, renamed,
+ * deleted: the items update in the same edit, and undo rolls them back too), gives headings
+ * stable ids and follows links inside the editor without changing the page address.
  */
 
-/** Новый id заголовка: короткий и случайный — у двух соавторов не совпадёт. */
+/** A new heading id: short and random, so it won't clash between two co-authors. */
 function newId(used: Set<string>): string {
   let id: string;
   do id = `toc-${Math.random().toString(36).slice(2, 8)}`;
@@ -42,8 +42,8 @@ function sameEntries(value: unknown, entries: TocEntry[]): boolean {
 }
 
 /**
- * Привести оглавления к заголовкам документа: id тем, у кого его нет или он повторяется, и пункты.
- * null — менять нечего (оглавлений нет или они уже верны).
+ * Brings the tables of contents in line with the document's headings: ids for those without one or with a duplicate, and the items.
+ * null means nothing to change (no table of contents, or it is already correct).
  */
 export function syncTableOfContents(state: EditorState, depth: number): Transaction | null {
   const tocs: { node: PMNode; pos: number }[] = [];
@@ -79,13 +79,13 @@ export function syncTableOfContents(state: EditorState, depth: number): Transact
 function tocPlugin(editor: Editor, depth: number): Plugin {
   return new Plugin({
     key: new PluginKey('nova-tableofcontents'),
-    // В той же правке, что и заголовок: отмена откатывает и оглавление.
+    // In the same edit as the heading: undo rolls back the table of contents too.
     appendTransaction(transactions, _old, state) {
       return transactions.some((tr) => tr.docChanged) ? syncTableOfContents(state, depth) : null;
     },
     props: {
       handleDOMEvents: {
-        // Ссылка оглавления в редакторе — к заголовку, без перехода по адресу страницы.
+        // A table of contents link in the editor goes to the heading, without navigating the page address.
         click(view, event) {
           const target = event.target instanceof Element ? event.target : null;
           const link = target?.closest('a[href^="#"]');
@@ -111,7 +111,7 @@ function tocPlugin(editor: Editor, depth: number): Plugin {
       },
     },
     view(view) {
-      // Документ загружен со старым оглавлением (или из JSON без пунктов) — привести сразу.
+      // The document loaded with an old table of contents (or from JSON without items): fix it right away.
       const tr = syncTableOfContents(view.state, depth);
       if (tr && editor.isEditable()) view.dispatch(tr.setMeta('addToHistory', false));
       return {};
@@ -119,7 +119,7 @@ function tocPlugin(editor: Editor, depth: number): Plugin {
   });
 }
 
-/** Вставить оглавление на место курсора (пустой абзац заменяется). */
+/** Inserts a table of contents at the cursor (an empty paragraph is replaced). */
 function insertToc(title: string | null): Command {
   return (state, dispatch) => {
     const type = state.schema.nodes.toc;
@@ -157,7 +157,7 @@ export default definePlugin({
       isEnabled: enabled,
       onAction: (e) => e.exec(insert),
     });
-    // Обновляется само; кнопка — для конфигов TinyMCE (tableofcontentsupdate).
+    // It updates by itself; the button is for TinyMCE configs (tableofcontentsupdate).
     editor.ui.registry.addButton('tableofcontentsupdate', {
       icon: icons.history,
       tooltip: labels.update,

@@ -1,7 +1,7 @@
-// Часть страниц сайта генерируется, чтобы не держать две копии текста:
-// - страницы фреймворков — из README пакетов (README видно и на npmjs.com);
-// - changelog — из корневого CHANGELOG.md.
-// Запуск: pnpm --filter @novaprose/site sync-docs. Проверка без записи (CI): `--check`.
+// Some pages of the site are generated so that the text doesn't live in two copies:
+// - framework pages come from the package READMEs (the README shows on npmjs.com too);
+// - the changelog comes from the root CHANGELOG.md.
+// Run: pnpm --filter @novaprose/site sync-docs. Check without writing (CI): `--check`.
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const root = new URL('../../../', import.meta.url);
@@ -18,7 +18,7 @@ function emit(name, target, page) {
   try {
     current = readFileSync(url, 'utf8');
   } catch {
-    // нет файла — значит устарел
+    // no file means it is outdated
   }
   if (current !== page) stale.push(name);
 }
@@ -48,7 +48,7 @@ for (const [pkg, [title, description]] of Object.entries(PAGES)) {
     .replaceAll('https://www.npmjs.com/package/@novaprose/angular', '/frameworks/angular/');
   const page =
     `---\ntitle: ${title}\ndescription: ${JSON.stringify(description)}\n---\n\n` +
-    `<!-- Сгенерировано из packages/${pkg}/README.md: правьте README, затем pnpm --filter @novaprose/site sync-docs -->\n\n` +
+    `<!-- Generated from packages/${pkg}/README.md: edit the README, then run pnpm --filter @novaprose/site sync-docs -->\n\n` +
     md.trimEnd() +
     '\n';
   emit(pkg, `apps/site/src/content/docs/frameworks/${pkg}.md`, page);
@@ -59,12 +59,12 @@ emit(
   'changelog',
   'apps/site/src/content/docs/changelog.md',
   '---\ntitle: Changelog\ndescription: "Release notes for all @novaprose packages."\n---\n\n' +
-    '<!-- Сгенерировано из CHANGELOG.md: правьте его, затем pnpm --filter @novaprose/site sync-docs -->\n\n' +
+    '<!-- Generated from CHANGELOG.md: edit it, then run pnpm --filter @novaprose/site sync-docs -->\n\n' +
     changelog.trimEnd() +
     '\n',
 );
 
 if (stale.length) {
-  console.error(`Устарели сгенерированные страницы: ${stale.join(', ')}. Запустите sync-docs.`);
+  console.error(`Generated pages are outdated: ${stale.join(', ')}. Run sync-docs.`);
   process.exit(1);
 }

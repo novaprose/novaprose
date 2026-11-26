@@ -26,8 +26,8 @@ export type FilePicker = (request: {
 }) => Promise<FilePickResult | null | undefined> | FilePickResult | null | undefined;
 
 /**
- * Добавляет к полю адреса кнопку «Обзор», если задан options.filePicker.
- * onPick — заполнить остальные поля диалога (текст ссылки, alt…).
+ * Adds a "Browse" button to an address field when options.filePicker is set.
+ * onPick fills in the dialog's other fields (link text, alt…).
  */
 export function attachFilePicker(
   editor: Editor,
@@ -64,7 +64,7 @@ export function attachFilePicker(
       console.error('[nova] filePicker failed:', error);
     } finally {
       button.disabled = false;
-      // Диалог мог закрыться, пока открыт ваш менеджер файлов.
+      // The dialog may have closed while your file manager was open.
       if (input.isConnected) input.focus();
     }
   });

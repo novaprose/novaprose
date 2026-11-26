@@ -1,11 +1,11 @@
 /**
- * esbuild-плагин: `import css from './x.css?raw'` — текст CSS (минифицированный) строкой.
- * Так стили ленивых частей (панели, диалоги) едут вместе с их кодом, а не в style.css первой
- * загрузки; подключает их editor.ui.addStyles. Vite/Vitest понимают ?raw сами.
+ * esbuild plugin: `import css from './x.css?raw'` gives the CSS text (minified) as a string.
+ * This way the styles of lazy parts (panels, dialogs) travel with their code instead of the first-load
+ * style.css; editor.ui.addStyles attaches them. Vite/Vitest understand ?raw by themselves.
  *
- * Путь модуля сохраняет суффикс ?raw: иначе обработчики CSS сборщика (у tsup — свой, по
- * расширению .css в любом пространстве имён) забирают модуль себе — и вместо текста стилей в коде
- * оказывается пустой объект (так и было в npm-сборке до ноября 2026). Проверяет
+ * The module path keeps the ?raw suffix: otherwise the bundler's CSS handlers (tsup has its own, by
+ * the .css extension in any namespace) take the module, and the code gets an empty object instead of
+ * the style text (that is what happened in the npm build until November 2026). Checked by
  * scripts/check-packages.mjs.
  */
 import { readFile } from 'node:fs/promises';

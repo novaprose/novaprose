@@ -22,7 +22,7 @@ import { h } from './dom';
 import { icons } from './icons';
 
 /**
- * Кнопки таблиц (имена — как в публичной документации TinyMCE) и контекстный тулбар таблицы.
+ * Table buttons (names from the public TinyMCE documentation) and the table context toolbar.
  */
 export function registerTableUi(editor: Editor): void {
   const { registry, t } = editor.ui;
@@ -96,7 +96,7 @@ export function registerTableUi(editor: Editor): void {
       }),
   });
 
-  // Сортировка строк по столбцу с курсором (как «Sort» в расширенных таблицах TinyMCE).
+  // Sorting rows by the column with the cursor (like "Sort" in TinyMCE's advanced tables).
   registry.addMenuButton('advtablesort', {
     icon: icons.sort,
     tooltip: t('table.sort'),
@@ -135,7 +135,7 @@ export function registerTableUi(editor: Editor): void {
   });
 }
 
-/** Выбор стиля из списка (tableClassList / tableCellClassList); без списка — поля нет. */
+/** Picking a style from the list (tableClassList / tableCellClassList); without a list there is no field. */
 function classSelect(
   editor: Editor,
   list: { title: string; value: string }[] | undefined,
@@ -145,7 +145,7 @@ function classSelect(
   const { t } = editor.ui;
   const options = [{ value: '', label: t('table.styleDefault') }];
   for (const o of list) if (o.value) options.push({ value: o.value, label: o.title });
-  // Класс не из списка (пришёл с HTML) — показываем как есть, чтобы не потерять при сохранении.
+  // A class not from the list (it came with the HTML) is shown as is, so it isn't lost on save.
   if (current && !options.some((o) => o.value === current))
     options.push({ value: current, label: current });
   return selectField({ label: t('table.style'), value: current ?? '', options });
@@ -175,7 +175,7 @@ function openTableProps(editor: Editor): void {
     body: h('div', { className: 'nova-form' }, styles?.el ?? null, width.el, align.el),
     submitLabel: t('dialog.save'),
     onSubmit: () => {
-      // «600» без единиц — пиксели.
+      // "600" without units means pixels.
       const raw = width.input.value.trim().replace(/^(\d+(\.\d+)?)$/, '$1px');
       const props = {
         width: raw || null,

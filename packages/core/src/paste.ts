@@ -8,9 +8,9 @@ import type { PasteStyles } from './paste-office';
 import { extractRtfImages, hasLocalFileImages, replaceLocalImages } from './paste-rtf';
 
 /**
- * Очистка вставки из Office/Google (~11 КБ) — отдельный чанк: нужна только в момент вставки.
- * Грузится сразу после создания редактора в фоне (и входит в `editor.ready`), так что к первому
- * Ctrl+V обычно уже готова. Если вставка случилась раньше — её ждёт handleDOMEvents.paste ниже.
+ * Office/Google paste cleanup (~11 KB) is a separate chunk: it is needed only at the moment of pasting.
+ * It loads in the background right after the editor is created (and is part of `editor.ready`), so by the first
+ * Ctrl+V it is usually ready. If a paste happens earlier, handleDOMEvents.paste below waits for it.
  */
 type PasteCleaner = typeof PasteOffice;
 let cleaner: PasteCleaner | null = null;
@@ -20,7 +20,7 @@ export function loadPasteCleaner(): Promise<PasteCleaner | null> {
   loading ??= import('./paste-office').then(
     (module) => (cleaner = module),
     () => {
-      // Сеть подвела — попробуем при следующей вставке, а пока вставка без очистки Office.
+      // The network failed: try again on the next paste, and paste without Office cleanup for now.
       loading = null;
       return null;
     },
@@ -88,15 +88,15 @@ export function htmlToPlainText(html: string): string {
 }
 
 export function pastePlugin(editor: Editor): Plugin {
-  // Флаг защиты от рекурсии: pasteText сам вызывает обработку вставки.
+  // A recursion guard flag: pasteText itself triggers paste handling.
   let reentrant = false;
   return new Plugin({
     key,
     props: {
       /**
-       * Вставка в пустой абзац заменяет его целиком: иначе первый вставленный абзац «сливается» с
-       * пустым и теряет своё оформление (выравнивание, интервал, тип блока). В непустой абзац —
-       * как обычно: первый абзац продолжает текущий, как в Word.
+       * Pasting into an empty paragraph replaces it entirely: otherwise the first pasted paragraph "merges" with
+       * the empty one and loses its formatting (alignment, spacing, block type). Into a non-empty paragraph
+       * it works as usual: the first paragraph continues the current one, as in Word.
        */
       transformPasted(slice, view) {
         const { selection } = view.state;
@@ -115,11 +115,11 @@ export function pastePlugin(editor: Editor): Plugin {
       transformPastedHTML(html) {
         const { pastePreprocess, pastePostprocess, pasteStyles } = editor.options;
         let result = pastePreprocess ? pastePreprocess(html, editor) : html;
-        // Очистка разметки Word, Google Docs, Excel и т.п. (своё копирование внутри редактора не трогаем).
-        // Схема и санитайзер работают и без неё: безопасность от этого чанка не зависит.
+        // Cleans up Word, Google Docs, Excel and similar markup (copying inside the editor is left alone).
+        // The schema and the sanitizer work without it too: security doesn't depend on this chunk.
         if (cleaner) result = cleaner.cleanPastedHTML(result, pasteStyles ?? 'clean');
         if (pastePostprocess) {
-          // Разбор в <template> инертен: скрипты не выполняются, картинки не грузятся.
+          // Parsing in a <template> is inert: scripts don't run, images don't load.
           const template = document.createElement('template');
           template.innerHTML = result;
           const container = document.createElement('div');
@@ -131,14 +131,14 @@ export function pastePlugin(editor: Editor): Plugin {
       },
       handleDOMEvents: {
         /**
-         * Вставка HTML раньше, чем догрузилась очистка (первые миллисекунды после создания или
-         * медленная сеть): забираем данные буфера сейчас (после события они недоступны), ждём чанк
-         * и вставляем как обычно — через transformPastedHTML уже с очисткой.
+         * HTML pasted before the cleanup has loaded (the first milliseconds after creation or
+         * a slow network): take the clipboard data now (after the event it is gone), wait for the chunk
+         * and paste as usual, through transformPastedHTML, this time with the cleanup.
          */
         paste(view, event) {
           if (cleaner || reentrant || editor.isPasteAsText()) return false;
           const data = event.clipboardData;
-          // Из редактора кода — свой путь (handlePaste), очистка Office там не нужна.
+          // From the code editor: its own path (handlePaste), no Office cleanup needed there.
           if (data?.getData(VSCODE_DATA)) return false;
           const html = data?.getData('text/html');
           if (!html) return false;
@@ -171,12 +171,12 @@ export function pastePlugin(editor: Editor): Plugin {
           }
         };
         if (pasteFromCodeEditor(view, event, editor, pasteText)) return true;
-        // Пустая строка (а не только null) — тоже «нет данных»: в Firefox clipboardData
-        // синтетического события пустой, но существует.
+        // An empty string (not only null) also means "no data": in Firefox the clipboardData
+        // of a synthetic event is empty but exists.
         const html = event.clipboardData?.getData('text/html');
 
         if (!editor.isPasteAsText()) {
-          // Картинки Word для компьютера: в HTML — недоступные file:-пути, данные — в RTF.
+          // Images from desktop Word: the HTML has unreachable file: paths, the data is in the RTF.
           const rtf =
             html && hasLocalFileImages(html) ? event.clipboardData?.getData('text/rtf') : '';
           if (!html || !rtf || !editor.isAllowed('image')) return false;
@@ -203,10 +203,10 @@ export function pastePlugin(editor: Editor): Plugin {
   });
 }
 
-/** Метаданные, которые VS Code (и редакторы на его основе) кладёт в буфер обмена вместе с кодом. */
+/** Metadata that VS Code (and editors based on it) puts on the clipboard along with code. */
 const VSCODE_DATA = 'vscode-editor-data';
 
-/** Языки VS Code, чьи имена не совпадают с привычными в `language-…`. */
+/** VS Code languages whose names differ from the usual ones in `language-…`. */
 const VSCODE_LANGUAGES: Record<string, string> = {
   shellscript: 'bash',
   typescriptreact: 'tsx',
@@ -215,9 +215,9 @@ const VSCODE_LANGUAGES: Record<string, string> = {
 };
 
 /**
- * Вставка из VS Code: в HTML буфера — вёрстка с цветами и шрифтом темы редактора, в документе они
- * не нужны. Несколько строк кода — блок кода с языком файла; одна строка, Markdown и простой
- * текст — обычный текст (без цветов темы).
+ * Paste from VS Code: the clipboard HTML has markup with the colors and font of the editor theme, which the
+ * document doesn't need. Several lines of code become a code block with the file's language; one line, Markdown and plain
+ * text become regular text (without the theme colors).
  */
 function pasteFromCodeEditor(
   view: EditorView,
@@ -229,15 +229,15 @@ function pasteFromCodeEditor(
   const meta = data?.getData(VSCODE_DATA);
   const raw = data?.getData('text/plain');
   if (!meta || !raw) return false;
-  // В блоке кода ProseMirror и так вставит простой текст.
+  // Inside a code block ProseMirror pastes plain text anyway.
   if (view.state.selection.$from.parent.type.spec.code) return false;
   let mode: unknown;
   try {
     mode = (JSON.parse(meta) as { mode?: unknown }).mode;
   } catch {
-    // Не JSON — язык неизвестен, вставим как код без языка.
+    // Not JSON: the language is unknown, paste as code without a language.
   }
-  // Скопированная строка целиком (Ctrl+C без выделения) заканчивается переводом строки — он лишний.
+  // A whole copied line (Ctrl+C without a selection) ends with a line break, which is extra.
   const text = raw.replace(/\r\n?/g, '\n').replace(/\n$/, '');
   const codeBlock = view.state.schema.nodes.code_block;
   if (

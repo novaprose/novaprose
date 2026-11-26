@@ -10,12 +10,12 @@ import { keymap } from 'prosemirror-keymap';
 import type { Command, Plugin } from 'prosemirror-state';
 import { schema as baseSchema, type NovaSchema } from './schema';
 
-/** Язык после забора блока кода — те же символы, что допускает класс `language-…`. */
+/** The language after a code block fence: the same characters the `language-…` class allows. */
 const LANGUAGE = '([A-Za-z0-9_+#.-]{0,32})';
 
 /**
- * Markdown-шорткаты при наборе (PRD §4.2, text patterns): #, -, 1., >, ```.
- * isAllowed — ограничения контента: запрещённый шорткат просто не срабатывает.
+ * Markdown shortcuts while typing (text patterns): #, -, 1., >, ```.
+ * isAllowed applies the content restrictions: a forbidden shortcut simply doesn't fire.
  */
 export function buildInputRules(
   isAllowed: (name: string) => boolean = () => true,
@@ -36,25 +36,25 @@ export function buildInputRules(
   }
   if (isAllowed('bullist')) rules.push(wrappingInputRule(/^\s*([-+*])\s$/, nodes.bullet_list));
   if (isAllowed('codeblock')) {
-    // Забор, как в Markdown: «```» и пробел (или Enter — codeFenceKeymap), с языком — «```js ».
+    // A fence as in Markdown: "```" and a space (or Enter, codeFenceKeymap), with a language "```js ".
     rules.push(
       textblockTypeInputRule(new RegExp(`^\`\`\`${LANGUAGE}\\s$`), nodes.code_block, (match) => ({
         language: match[1] || null,
       })),
     );
   }
-  // По правилу на каждый разрешённый уровень: «## » не должен давать запрещённый h2.
+  // One rule per allowed level: "## " must not produce a forbidden h2.
   for (let level = 1; level <= 6; level++) {
     if (!isAllowed(`h${level}`)) continue;
     rules.push(textblockTypeInputRule(new RegExp(`^(#{${level}})\\s$`), nodes.heading, { level }));
   }
-  // Типографские кавычки зависят от языка («ёлочки» vs “лапки”) — это Advanced Typography, P2.
+  // Typographic quotes depend on the language (« guillemets » vs “curly quotes”), so they are left out for now.
   return inputRules({ rules });
 }
 
 /**
- * Enter в конце абзаца «```» или «```js» — блок кода (с языком). Input rules срабатывают только
- * на ввод текста, а забор в Markdown обычно закрывают именно Enter.
+ * Enter at the end of a "```" or "```js" paragraph makes a code block (with the language). Input rules fire only
+ * on typed text, and a Markdown fence is usually closed with Enter.
  */
 export function codeFenceKeymap(
   isAllowed: (name: string) => boolean = () => true,

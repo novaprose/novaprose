@@ -19,10 +19,10 @@ import css from './draghandle.css?raw';
 import { pickLabels } from './shared';
 
 /**
- * Плагин draghandle: ручка слева от блока под мышью. Потянуть — перенести блок (абзац, заголовок,
- * пункт списка, таблицу, картинку) в другое место документа; нажать — выделить блок и открыть
- * меню: выше, ниже, копия, удалить. С клавиатуры то же — Alt+Shift+↑/↓ (команды ядра).
- * Только для мыши и пера: на сенсорных экранах перетаскивания HTML нет.
+ * The draghandle plugin: a handle to the left of the block under the mouse. Drag it to move the block (paragraph, heading,
+ * list item, table, image) elsewhere in the document; click it to select the block and open
+ * a menu: up, down, duplicate, delete. From the keyboard the same is Alt+Shift+↑/↓ (core commands).
+ * Mouse and pen only: touch screens have no HTML drag and drop.
  */
 
 export const LABELS = {
@@ -38,21 +38,21 @@ const HANDLE_WIDTH = 20;
 const HANDLE_HEIGHT = 24;
 const GAP = 4;
 
-/** Перетаскиваемый блок и список, из которого он взят (пункт списка уносит его вид с собой). */
+/** The dragged block and the list it was taken from (a list item carries its list kind along). */
 interface DragSource {
   node: PMNode;
   pos: number;
   list: PMNode | null;
 }
 
-/** Удалить выделенный блок (после нажатия на ручку выделен он). */
+/** Deletes the selected block (after a click on the handle, it is the one selected). */
 const deleteBlock: Command = (state, dispatch) => {
   if (!(state.selection instanceof NodeSelection)) return false;
   dispatch?.(state.tr.deleteSelection().scrollIntoView());
   return true;
 };
 
-/** Колонка текста: края области редактора без внутренних полей. */
+/** The text column: the edges of the editing area without its inner padding. */
 function textColumn(view: EditorView): {
   left: number;
   right: number;
@@ -70,8 +70,8 @@ function textColumn(view: EditorView): {
 }
 
 /**
- * Единица под точкой. Над текстом — по горизонтали мыши (вложенный пункт списка), левее или
- * правее текста — у его края.
+ * The unit under the point. Over the text, by the mouse's horizontal position (a nested list item); to the left or
+ * right of the text, at its edge.
  */
 function unitAtPoint(view: EditorView, x: number, y: number): BlockUnit | null {
   const column = textColumn(view);
@@ -83,7 +83,7 @@ function unitAtPoint(view: EditorView, x: number, y: number): BlockUnit | null {
   return blockUnitAt(view.state.doc.resolve(found.inside >= 0 ? found.inside : found.pos));
 }
 
-/** Строка, по которой выравнивается ручка: первая строка текста блока или его верх. */
+/** The line the handle aligns with: the first line of the block's text or its top. */
 function firstLine(
   view: EditorView,
   unit: BlockUnit,
@@ -102,7 +102,7 @@ function firstLine(
       const { top, bottom } = view.coordsAtPos(textPos);
       return { top, bottom };
     } catch {
-      // позиция вне отрисованного — выравниваем по блоку
+      // a position outside what is rendered: align with the block
     }
   }
   const rect = dom.getBoundingClientRect();
@@ -114,14 +114,14 @@ interface DropTarget {
   line: { left: number; right: number; y: number };
 }
 
-/** Куда упадёт блок: верхняя половина блока под мышью — перед ним, нижняя — после. */
+/** Where the block lands: the upper half of the block under the mouse means before it, the lower half after it. */
 function dropTarget(view: EditorView, x: number, y: number): DropTarget | null {
   const unit = unitAtPoint(view, x, y);
   const dom = unit && view.nodeDOM(unit.pos);
   if (!unit || !(dom instanceof HTMLElement)) return null;
   const box = dom.getBoundingClientRect();
   const before = y < box.top + box.height / 2;
-  // У пункта списка линия начинается от маркера.
+  // For a list item the line starts at the marker.
   const edge = (
     (unit.node.type.name === 'list_item' && dom.parentElement) ||
     dom
@@ -137,9 +137,9 @@ function dropTarget(view: EditorView, x: number, y: number): DropTarget | null {
 }
 
 /**
- * Вставить блок в позицию между блоками. Пункт списка вне списка — в такой же список, что был
- * (чек-лист остаётся чек-листом), а рядом с таким же списком — в него. Абзац между пунктами —
- * новым пунктом. Возвращает позицию вставленного узла или null, если поставить некуда.
+ * Inserts a block at a position between blocks. A list item outside a list goes into the same kind of list it was in
+ * (a checklist stays a checklist), and next to the same kind of list, into it. A paragraph between items
+ * becomes a new item. Returns the position of the inserted node, or null if there is nowhere to put it.
  */
 function insertBlock(
   tr: Transaction,
@@ -179,7 +179,7 @@ function insertBlock(
   return null;
 }
 
-/** Перенос (или копия) блока в позицию target. null — ничего не изменилось. */
+/** Moves (or copies) a block to the target position. null means nothing changed. */
 export function moveBlockTo(
   state: EditorState,
   source: DragSource,
@@ -188,14 +188,14 @@ export function moveBlockTo(
 ): Transaction | null {
   const { node } = source;
   const end = source.pos + node.nodeSize;
-  // Брошен на своё же место (или внутрь себя) — без изменений.
+  // Dropped on its own place (or inside itself): no change.
   if (!copy && target >= source.pos && target <= end) return null;
   const tr = state.tr;
   if (!copy) tr.deleteRange(source.pos, end);
   let pos = tr.mapping.map(target);
   let inserted = insertBlock(tr, pos, node, source.list);
   if (inserted === null) {
-    // Сюда такой блок не встаёт — ближайшее подходящее место (как у ProseMirror).
+    // Such a block doesn't fit here: the nearest suitable place (as ProseMirror does).
     const point = dropPoint(tr.doc, pos, new Slice(Fragment.from(node), 0, 0));
     if (point === null || point === pos) return null;
     pos = point;
@@ -228,7 +228,7 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
       const handle = h('div', {
         className: 'nova-drag-handle',
         draggable: 'true',
-        // Только для мыши: с клавиатуры те же действия — Alt+Shift+↑/↓ и Delete.
+        // Mouse only: from the keyboard the same actions are Alt+Shift+↑/↓ and Delete.
         'aria-hidden': 'true',
         title: labels.handle,
         hidden: true,
@@ -255,7 +255,7 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
         const dom = view.nodeDOM(next.pos);
         if (!(dom instanceof HTMLElement)) return hide();
         unit = next;
-        // У пункта списка ручка — левее маркера: по краю самого списка.
+        // For a list item the handle sits left of the marker, at the edge of the list itself.
         const edge = (
           (next.node.type.name === 'list_item' && dom.parentElement) ||
           dom
@@ -275,7 +275,7 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
         if (!pointer || source) return;
         if (!editor.isEditable() || view.composing) return hide();
         const { x, y } = pointer;
-        // Мышь между ручкой и текстом своего блока — оставить ручку на месте.
+        // The mouse is between the handle and the text of its block: leave the handle where it is.
         if (unit && !handle.hidden) {
           const dom = view.nodeDOM(unit.pos);
           if (dom instanceof HTMLElement) {
@@ -299,8 +299,8 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
         pointer = null;
         if (!source) hide();
       };
-      // Набор текста — ручка не мешает, до следующего движения мыши (в том числе отложенного
-      // до кадра: иначе он показал бы её снова).
+      // While typing the handle stays out of the way until the next mouse move (including one deferred
+      // to the next frame: otherwise it would show the handle again).
       const forgetPointer = () => {
         pointer = null;
         cancelAnimationFrame(frame);
@@ -340,7 +340,7 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
         const selection = NodeSelection.create(view.state.doc, unit.pos);
         view.dispatch(view.state.tr.setSelection(selection));
         const slice = selection.content();
-        // Для сброса в другой редактор или приложение — HTML и текст блока.
+        // For a drop into another editor or application: the block's HTML and text.
         const box = document.createElement('div');
         box.append(DOMSerializer.fromSchema(view.state.schema).serializeFragment(slice.content));
         event.dataTransfer.clearData();
@@ -352,8 +352,8 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
         event.dataTransfer.effectAllowed = 'copyMove';
         const dom = view.nodeDOM(unit.pos);
         if (dom instanceof HTMLElement) event.dataTransfer.setDragImage(dom, 0, 0);
-        // Как у перетаскивания самого ProseMirror: срез нужен, чтобы сброс узнал «своё»
-        // (с Ctrl, на Mac — с ⌥, — копия); место сброса считает handleDrop выше.
+        // As with ProseMirror's own dragging: the slice lets the drop recognize "its own" content
+        // (with Ctrl, or ⌥ on a Mac, it is a copy); handleDrop above computes the drop position.
         view.dragging = { slice, move: true, node: selection } as EditorView['dragging'];
         handle.classList.add('nova-drag-handle-active');
         editor.root.classList.add('nova-block-dragging');
@@ -429,7 +429,7 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
 
       return {
         update(_view, previous) {
-          // Документ изменился (набор, перенос, отмена) — блоки сдвинулись, ручка устарела.
+          // The document changed (typing, a move, undo): blocks shifted and the handle is stale.
           if (!source && previous.doc !== view.state.doc) forgetPointer();
         },
         destroy() {
@@ -453,7 +453,7 @@ export default definePlugin({
   prosemirrorPlugins: (editor) => [handlePlugin(editor, pickLabels(editor, 'draghandle', LABELS))],
   setup(editor) {
     editor.ui.addStyles('nova-draghandle', css);
-    // Место под ручку слева от текста (см. draghandle.css).
+    // Room for the handle to the left of the text (see draghandle.css).
     editor.root.classList.add('nova-has-draghandle');
     return () => editor.root.classList.remove('nova-has-draghandle');
   },

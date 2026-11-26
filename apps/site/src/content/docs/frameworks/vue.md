@@ -3,7 +3,7 @@ title: Vue
 description: "Vue 3 component with v-model and composables for NovaProse."
 ---
 
-<!-- Сгенерировано из packages/vue/README.md: правьте README, затем pnpm --filter @novaprose/site sync-docs -->
+<!-- Generated from packages/vue/README.md: edit the README, then run pnpm --filter @novaprose/site sync-docs -->
 
 Vue 3 bindings for the [NovaProse](/getting-started/) rich text
 editor: a `<NovaProseEditor>` component with `v-model` and composables for building your own UI

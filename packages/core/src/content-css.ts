@@ -1,21 +1,21 @@
-// Стили содержимого (contentStyle / contentCss): CSS клиента применяется только к тексту
-// конкретного редактора. Редактор живёт не в iframe, поэтому каждое правило приписываем к его
-// области текста: `body`/`html`/`:root` — это сама область, остальные селекторы — внутри неё.
+// Content styles (contentStyle / contentCss): the customer's CSS applies only to the text of
+// that particular editor. The editor doesn't live in an iframe, so every rule is scoped to its
+// text area: `body`/`html`/`:root` are the area itself, other selectors apply inside it.
 
-/** Эти at-правила не зависят от селекторов — оставляем как есть. */
+/** These at-rules don't depend on selectors and are left as they are. */
 const GLOBAL_AT_RULES =
   /^@(font-face|(-webkit-)?keyframes|property|counter-style|page|font-feature-values|font-palette-values)\b/i;
-/** Группирующие at-правила: внутри обычные правила — их тоже приписываем. */
+/** Grouping at-rules: the regular rules inside them are scoped too. */
 const GROUP_AT_RULES = /^@(media|supports|container|layer|document|scope)\b/i;
 
 interface Item {
-  /** Текст до `{` или весь оператор (`@import …;`). */
+  /** The text before `{`, or the whole statement (`@import …;`). */
   prelude: string;
-  /** Содержимое `{…}`; null — оператор без блока. */
+  /** The content of `{…}`; null for a statement without a block. */
   body: string | null;
 }
 
-/** Делит CSS на элементы верхнего уровня, учитывая строки, комментарии и вложенные скобки. */
+/** Splits CSS into top-level items, minding strings, comments and nested brackets. */
 function splitTopLevel(css: string): Item[] {
   const items: Item[] = [];
   let i = 0;
@@ -26,7 +26,7 @@ function splitTopLevel(css: string): Item[] {
     const ch = css[i]!;
     if (ch === '/' && css[i + 1] === '*') {
       const end = css.indexOf('*/', i + 2);
-      // Комментарий вырезаем: внутри селектора он только мешает.
+      // A comment is cut out: inside a selector it only gets in the way.
       const cut = end === -1 ? css.length : end + 2;
       if (depth === 0) {
         css = css.slice(0, i) + css.slice(cut);
@@ -64,7 +64,7 @@ function splitTopLevel(css: string): Item[] {
   return items;
 }
 
-/** Делит список селекторов по запятым верхнего уровня (не внутри :is(a, b) и [x="a,b"]). */
+/** Splits a selector list at top-level commas (not inside :is(a, b) and [x="a,b"]). */
 function splitSelectors(list: string): string[] {
   const parts: string[] = [];
   let depth = 0;
@@ -98,7 +98,7 @@ function scopeSelector(selector: string, scope: string): string {
     rest = rest.slice(m[0].length);
   }
   if (!root) return `${scope} ${selector}`;
-  // body.dark / body[dir] / body:hover — уточнение самой области (без пробела).
+  // body.dark / body[dir] / body:hover refine the area itself (no space).
   if (/^[.#[:]/.test(rest)) {
     const end = rest.search(/[\s>+~]/);
     return end === -1
@@ -108,19 +108,19 @@ function scopeSelector(selector: string, scope: string): string {
   return rest ? `${scope} ${rest}` : scope;
 }
 
-/** Приписывает все правила CSS к области `scope`. @import должны быть уже встроены. */
+/** Scopes every CSS rule to the `scope` area. @imports must already be inlined. */
 export function scopeCss(css: string, scope: string): string {
   const out: string[] = [];
   for (const { prelude, body } of splitTopLevel(css)) {
     if (body === null) {
-      // @charset, @import (не встроенный), @namespace, @layer a, b; — @layer без блока безопасен.
+      // @charset, @import (not inlined), @namespace, @layer a, b; @layer without a block is safe.
       if (/^@layer\b/i.test(prelude)) out.push(`${prelude};`);
       continue;
     }
     if (GLOBAL_AT_RULES.test(prelude)) out.push(`${prelude}{${body}}`);
     else if (GROUP_AT_RULES.test(prelude)) out.push(`${prelude}{${scopeCss(body, scope)}}`);
     else if (prelude.startsWith('@'))
-      continue; // неизвестное at-правило — не рискуем
+      continue; // an unknown at-rule: no risks taken
     else {
       const selectors = splitSelectors(prelude).map((s) => scopeSelector(s, scope));
       if (selectors.length) out.push(`${selectors.join(', ')}{${body}}`);
@@ -129,7 +129,7 @@ export function scopeCss(css: string, scope: string): string {
   return out.join('\n');
 }
 
-/** Относительные url(…) в файле стилей → абсолютные (иначе они считались бы от страницы). */
+/** Relative url(…) in a style file → absolute (otherwise they would resolve against the page). */
 export function absolutizeUrls(css: string, base: string): string {
   return css.replace(/url\(\s*(['"]?)([^'")]+)\1\s*\)/gi, (match, quote: string, url: string) => {
     if (/^(data:|https?:|\/\/|#)/i.test(url)) return match;
@@ -143,7 +143,7 @@ export function absolutizeUrls(css: string, base: string): string {
 
 const IMPORT = /@import\s+(?:url\(\s*)?(['"]?)([^'")\s;]+)\1\s*\)?([^;]*);/gi;
 
-/** Загружает файл стилей и встраивает его @import (до 3 уровней). */
+/** Loads a style file and inlines its @imports (up to 3 levels). */
 export async function loadCss(url: string, depth = 0): Promise<string> {
   const base = new URL(url, document.baseURI).href;
   const response = await fetch(base);
@@ -165,8 +165,8 @@ export async function loadCss(url: string, depth = 0): Promise<string> {
 }
 
 /**
- * Подключает CSS к документу (или shadow root) редактора. Конструируемые таблицы стилей
- * не требуют 'unsafe-inline' в CSP; где их нет — обычный <style>. Возвращает функцию удаления.
+ * Attaches CSS to the editor's document (or shadow root). Constructable style sheets don't need
+ * 'unsafe-inline' in the CSP; where they are missing, a regular <style>. Returns a removal function.
  */
 export function attachCss(host: HTMLElement, css: string): () => void {
   const root = host.getRootNode() as Document | ShadowRoot;
@@ -183,7 +183,7 @@ export function attachCss(host: HTMLElement, css: string): () => void {
         root.adoptedStyleSheets = root.adoptedStyleSheets.filter((s) => s !== sheet);
       };
     } catch {
-      // старый браузер с частичной поддержкой — ниже <style>
+      // an old browser with partial support: fall through to <style>
     }
   }
   const style = document.createElement('style');

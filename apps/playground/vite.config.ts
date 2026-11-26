@@ -3,9 +3,9 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 /**
- * Грамматики подсветки кода грузятся через import() из плагина codesample. Без заранее
- * подготовленных зависимостей Vite находит их при первом блоке кода и перезагружает все открытые
- * страницы — e2e, идущие параллельно, теряли страницу посреди проверки. Список — из самого плагина.
+ * Code highlighting grammars load through import() from the codesample plugin. Without dependencies
+ * prepared in advance, Vite discovers them at the first code block and reloads every open page,
+ * and e2e tests running in parallel lost their page midway. The list comes from the plugin itself.
  */
 const grammars = [
   ...readFileSync(
@@ -19,7 +19,7 @@ export default defineConfig({
     include: ['@novaprose/core > highlight.js/lib/core', '@novaprose/core > temml', ...grammars],
   },
   resolve: {
-    // Playground работает напрямую с исходниками ядра — правки видны сразу, без сборки.
+    // The playground works directly with the core sources: changes show up at once, without a build.
     alias: {
       '@novaprose/core/style.css': fileURLToPath(
         new URL('../../packages/core/src/style.css', import.meta.url),
@@ -46,7 +46,7 @@ export default defineConfig({
       '@novaprose/collab': fileURLToPath(
         new URL('../../packages/collab/src/index.ts', import.meta.url),
       ),
-      // Языковые пакеты — до общего псевдонима ядра (иначе он перехватит путь).
+      // Language packs go before the shared core alias (otherwise it takes over the path).
       '@novaprose/core/i18n': fileURLToPath(
         new URL('../../packages/core/src/i18n/packs', import.meta.url),
       ),

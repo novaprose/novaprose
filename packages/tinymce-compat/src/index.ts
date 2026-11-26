@@ -48,13 +48,13 @@ function warnOnce(message: string): void {
   console.warn(`[nova] tinymce-compat: ${message}`);
 }
 
-/** Номер для id редакторов без собственного id (mce_1, mce_2…). */
+/** The number for ids of editors without their own id (mce_1, mce_2…). */
 let counter = 0;
 
 const px = (value: unknown) => (typeof value === 'number' ? `${value}px` : String(value));
 
 export function createTinymce(): TinyMCECompat {
-  // valid_elements с атрибутами, extended_valid_elements и custom_elements — частые опции TinyMCE.
+  // valid_elements with attributes, extended_valid_elements and custom_elements are common TinyMCE options.
   registerHtmlRules(htmlRules);
   const all: CompatEditor[] = [];
   const plugins = new Map<string, PluginFn>();
@@ -99,7 +99,7 @@ export function createTinymce(): TinyMCECompat {
       content: initial,
       setup: (editor) => {
         compat = new CompatEditor(editor, target, id, settings);
-        // Плагины, добавленные через tinymce.PluginManager.add, — как в TinyMCE: (editor, url).
+        // Plugins added through tinymce.PluginManager.add, as in TinyMCE: (editor, url).
         for (const name of custom) {
           try {
             plugins.get(name)!(compat, '');
@@ -116,7 +116,7 @@ export function createTinymce(): TinyMCECompat {
     if (config.max_height !== undefined) core.root.style.maxHeight = px(config.max_height);
     if (config.width !== undefined) core.root.style.width = px(config.width);
 
-    // События: изменения, выделение, фокус и клавиатура — с именами из API TinyMCE.
+    // Events: changes, selection, focus and keyboard, with names from the TinyMCE API.
     let changedSinceFocus = false;
     core.on('change', () => {
       compat.setDirty(true);
@@ -151,7 +151,7 @@ export function createTinymce(): TinyMCECompat {
     ]) {
       core.view.dom.addEventListener(name, (event) => compat.fireNative(name, event));
     }
-    // Отправка формы — содержимое в <textarea>, как делает TinyMCE.
+    // Submitting the form puts the content into the <textarea>, as TinyMCE does.
     const form = isTextarea ? target.form : target.closest('form');
     form?.addEventListener('submit', () => compat.save());
     compat.on('remove', () => {
@@ -181,14 +181,14 @@ export function createTinymce(): TinyMCECompat {
       return [...all];
     },
     async init(config) {
-      // init часто вызывают в <head>: элементов ещё нет — ждём разбора документа, как TinyMCE.
+      // init is often called in <head>: the elements don't exist yet, so wait for the document to parse, as TinyMCE does.
       if (document.readyState === 'loading') {
         await new Promise((resolve) =>
           document.addEventListener('DOMContentLoaded', resolve, { once: true }),
         );
       }
-      // Язык с загрузчиком (в CDN-сборке — все пакеты) — до создания редакторов, как langs/<код>.js у
-      // TinyMCE: строки интерфейса берутся при создании. Не загрузился — английский, редактор работает.
+      // A language with a loader (every pack in the CDN build) loads before the editors are created, like langs/<code>.js
+      // in TinyMCE: interface strings are read at creation. If it fails to load, English is used and the editor works.
       if (typeof config.language === 'string') {
         await loadLanguage(config.language.replace('_', '-')).catch((error: unknown) => {
           console.warn('[nova] tinymce-compat: language pack failed to load', error);

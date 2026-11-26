@@ -9,8 +9,8 @@ import { icons } from './icons';
 import { positionFloating } from './popover';
 
 /**
- * Контекстная панель ссылки (как в Google Docs): появляется, когда курсор стоит в ссылке.
- * Показывает адрес и действия «изменить / скопировать / убрать».
+ * The link context bubble (as in Google Docs): appears when the cursor is in a link.
+ * Shows the address and the "edit / copy / remove" actions.
  */
 export function linkBubblePlugin(editor: Editor): Plugin {
   return new Plugin({

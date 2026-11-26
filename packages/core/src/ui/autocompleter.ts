@@ -44,7 +44,7 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-/** Ищет «триггер + запрос» прямо перед курсором: в начале блока или после пробела. */
+/** Looks for "trigger + query" right before the cursor: at the start of a block or after a space. */
 function findMatch(view: EditorView, editor: Editor): Match | null {
   const { selection } = view.state;
   if (!selection.empty) return null;
@@ -62,7 +62,7 @@ function findMatch(view: EditorView, editor: Editor): Match | null {
     if (!m) continue;
     const query = m[1] ?? '';
     if (query.length < (spec.minChars ?? 0)) continue;
-    // Триггер в начале запрошенного куска мог оказаться посреди слова, которого мы не видим.
+    // The trigger at the start of the requested piece could be in the middle of a word we can't see.
     const start = $pos.parentOffset - query.length - spec.trigger.length;
     const prevChar = start > 0 ? $pos.parent.textBetween(start - 1, start, '\0', '\0') : '';
     if (prevChar && !/\s/.test(prevChar)) continue;
@@ -72,15 +72,15 @@ function findMatch(view: EditorView, editor: Editor): Match | null {
 }
 
 /**
- * Плагин автокомплитеров (слэш-команды, упоминания, эмодзи).
- * Фокус остаётся в тексте; список связан с редактором через aria-activedescendant (паттерн combobox).
+ * The autocompleters plugin (slash commands, mentions, emoji).
+ * Focus stays in the text; the list is linked to the editor through aria-activedescendant (the combobox pattern).
  */
 export function autocompleterPlugin(editor: Editor): Plugin {
   let list: HTMLDivElement;
   let items: AutocompleterItem[] = [];
   let active = 0;
   let match: Match | null = null;
-  /** Позиция триггера, для которого пользователь нажал Escape, — не открываем снова. */
+  /** The position of a trigger the user pressed Escape for: it isn't opened again. */
   let dismissedAt: number | null = null;
   let requestId = 0;
   const listId = uniqueId('nova-ac');
@@ -93,8 +93,8 @@ export function autocompleterPlugin(editor: Editor): Plugin {
     items = [];
     view.dom.removeAttribute('aria-activedescendant');
     view.dom.removeAttribute('aria-controls');
-    // aria-expanded у role=textbox не разрешён (axe: aria-allowed-attr) — список связан через
-    // aria-controls и aria-activedescendant, этого достаточно скринридерам.
+    // aria-expanded isn't allowed on role=textbox (axe: aria-allowed-attr): the list is linked through
+    // aria-controls and aria-activedescendant, which is enough for screen readers.
     view.dom.removeAttribute('aria-expanded');
   };
 
@@ -132,7 +132,7 @@ export function autocompleterPlugin(editor: Editor): Plugin {
             ? h('span', { className: 'nova-menu-shortcut' }, item.detail)
             : null,
       );
-      // mousedown, а не click: иначе редактор потеряет фокус и выделение до выбора.
+      // mousedown, not click: otherwise the editor loses focus and the selection before the choice.
       option.addEventListener('mousedown', (event) => {
         event.preventDefault();
         select(view, index);
@@ -177,7 +177,7 @@ export function autocompleterPlugin(editor: Editor): Plugin {
     if (!changed && isOpen()) return renderItems(view);
     const id = ++requestId;
     void Promise.resolve(next.spec.fetch(next.query, editor)).then((result) => {
-      // Ответ устарел — пользователь уже печатает дальше.
+      // The answer is outdated: the user has kept typing.
       if (id !== requestId || !match) return;
       items = result.slice(0, next.spec.maxResults ?? 10);
       active = 0;

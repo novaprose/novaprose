@@ -1,4 +1,4 @@
-# Сервер совместного редактирования NovaProse.
+# The NovaProse collaboration server.
 #   docker build -t novaprose-sync apps/sync-server
 #   docker run -p 1234:1234 -e NOVA_SYNC_SECRET=… -v novaprose-sync:/data novaprose-sync
 FROM node:24-slim
@@ -12,7 +12,7 @@ COPY package.json ./
 RUN npm install --omit=dev --no-audit --no-fund && npm cache clean --force
 COPY src ./src
 
-# Документы — в томе /data; процесс — не от root.
+# Documents live in the /data volume; the process doesn't run as root.
 RUN mkdir -p /data && chown node:node /data
 VOLUME /data
 USER node

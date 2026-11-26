@@ -25,13 +25,13 @@ export interface MentionsOptions {
   maxResults?: number;
 }
 
-/** id пользователя: UUID, числа, e-mail, логины — без пробелов, кавычек и угловых скобок. */
+/** A user id: UUIDs, numbers, e-mails, logins, without spaces, quotes or angle brackets. */
 export const MENTION_ID_RE = /^[\w.@:+-]{1,128}$/;
 const MAX_NAME = 80;
 
 const cleanName = (value: string) => value.replace(/^@/, '').trim().slice(0, MAX_NAME);
 
-/** Подходящие люди: id и имя проверены и обрезаны (данные приходят из чужого API). */
+/** Matching people: id and name checked and trimmed (the data comes from someone else's API). */
 export async function findMentionUsers(
   fetch: MentionsOptions['fetch'],
   query: string,
@@ -83,7 +83,7 @@ export default definePlugin({
           },
         },
       ],
-      // Документ мог прийти из JSON: id проверяем и при выводе, имя — только текст.
+      // The document may come from JSON: the id is checked on output too, the name is only text.
       toDOM: (node) => [
         'span',
         { 'data-mention': MENTION_ID_RE.test(node.attrs.id as string) ? node.attrs.id : null },

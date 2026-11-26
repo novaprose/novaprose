@@ -6,8 +6,8 @@ import type { MentionUser } from './mentions';
 import css from './comments-panel.css?raw';
 
 /**
- * Панель обсуждений (грузится лениво при первом открытии). Все данные пользователей — только через
- * textContent (h()), без innerHTML: комментарии пишут другие люди.
+ * The discussion panel (loads lazily on first open). All user data goes only through
+ * textContent (h()), never innerHTML: other people write the comments.
  */
 
 const PALETTE = [
@@ -40,7 +40,7 @@ export function createCommentsPanel(controller: CommentsController) {
   const absolute = new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeStyle: 'short' });
   const titleId = uniqueId('nova-comments-title');
 
-  // Черновики ответов и правок переживают перерисовку (приходят чужие комментарии).
+  // Drafts of replies and edits survive a redraw (other people's comments arrive).
   const drafts = new Map<string, string>();
   const draftMentions = new Map<string, Map<string, CommentAuthor>>();
   let editing: { threadId: string; commentId: string } | null = null;
@@ -119,8 +119,8 @@ export function createCommentsPanel(controller: CommentsController) {
   }
 
   /**
-   * Поле ввода с кнопками; Ctrl/Cmd+Enter — отправить. «@» — список людей (combobox: стрелки, Enter/Tab,
-   * Esc), выбранный человек вставляется как «@Имя» и попадает в mentions комментария.
+   * An input field with buttons; Ctrl/Cmd+Enter sends. "@" opens a list of people (combobox: arrows, Enter/Tab,
+   * Esc); the chosen person is inserted as "@Name" and goes into the comment's mentions.
    */
   function composer(opts: {
     key: string;
@@ -150,7 +150,7 @@ export function createCommentsPanel(controller: CommentsController) {
       opts.submitLabel,
     );
 
-    // ----- «@»-подсказки -----
+    // ----- "@" suggestions -----
     const list = h('ul', {
       id: listId,
       className: 'nova-mention-list',
@@ -195,7 +195,7 @@ export function createCommentsPanel(controller: CommentsController) {
                   ? h('span', { className: 'nova-mention-detail' }, user.description)
                   : null,
               );
-              // mousedown: поле не теряет фокус до выбора.
+              // mousedown: the field keeps focus until the choice is made.
               option.addEventListener('mousedown', (event) => {
                 event.preventDefault();
                 pick(index);
@@ -274,7 +274,7 @@ export function createCommentsPanel(controller: CommentsController) {
           }
         }
         if (event.key === 'Escape') {
-          // Закрыть только список, не панель и не черновик.
+          // Close only the list, not the panel or the draft.
           event.preventDefault();
           event.stopPropagation();
           closeList();
@@ -311,7 +311,7 @@ export function createCommentsPanel(controller: CommentsController) {
     );
   }
 
-  /** Текст комментария: «@Имя» упомянутых — отдельным span (только textContent, без разметки). */
+  /** The comment text: the "@Name" of mentioned people in a separate span (textContent only, no markup). */
   function commentText(comment: Comment) {
     const p = h('p', { className: 'nova-comment-text' });
     const names = (comment.mentions ?? [])
@@ -383,7 +383,7 @@ export function createCommentsPanel(controller: CommentsController) {
               },
               labels.edit,
             ),
-            // Первый комментарий удаляется вместе с обсуждением.
+            // The first comment is deleted together with the thread.
             index > 0
               ? h(
                   'button',
@@ -464,7 +464,7 @@ export function createCommentsPanel(controller: CommentsController) {
           : null,
       ),
     );
-    // Клик по карточке — выделить её фрагмент в тексте (кнопки и поля работают как обычно).
+    // A click on a card selects its fragment in the text (buttons and fields work as usual).
     card.addEventListener('click', (event) => {
       if ((event.target as Element).closest('button, textarea, input, a')) return;
       if (controller.active() !== thread.id) controller.setActive(thread.id, true);
@@ -480,7 +480,7 @@ export function createCommentsPanel(controller: CommentsController) {
   }
 
   function render() {
-    // Фокус в поле ввода сохраняется при перерисовке (пришёл чужой комментарий, пока вы пишете).
+    // Focus in the input field survives a redraw (someone's comment arrived while you were typing).
     const active = activeElement(list);
     const focused = list.contains(active)
       ? (active as HTMLElement).getAttribute('data-draft')

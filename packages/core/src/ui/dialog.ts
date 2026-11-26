@@ -28,8 +28,8 @@ export interface DialogHandle {
 }
 
 /**
- * Модальный диалог: focus trap, Escape, возврат фокуса, Enter = отправка формы.
- * На узких экранах CSS превращает его в нижний лист (sheet).
+ * A modal dialog: focus trap, Escape, focus return, Enter submits the form.
+ * On narrow screens CSS turns it into a bottom sheet.
  */
 export function openDialog(options: DialogOptions): DialogHandle {
   const titleId = uniqueId('nova-dialog-title');
@@ -127,8 +127,8 @@ export function openDialog(options: DialogOptions): DialogHandle {
     }
   });
 
-  // Если фокус всё же ушёл наружу (клик мимо, программный фокус) — возвращаем в диалог.
-  // Цель — настоящая и в теневом корне (у слушателя на document она подменена хостом).
+  // If focus still leaves (a click outside, programmatic focus), it is returned to the dialog.
+  // The real target, inside a shadow root too (for a listener on document it is replaced by the host).
   const stopKeepFocus = listenDocument(form, 'focusin', (_event, target) => {
     if (!form.contains(target)) {
       (form.querySelector<HTMLElement>(FOCUSABLE) ?? form).focus();
@@ -138,13 +138,13 @@ export function openDialog(options: DialogOptions): DialogHandle {
   const first =
     options.initialFocus ??
     form.querySelector<HTMLElement>('.nova-dialog-body input, .nova-dialog-body textarea');
-  // Без полей ввода — на видимую кнопку (submit может быть скрыт у информационных диалогов).
+  // Without input fields, focus goes to a visible button (submit may be hidden in informational dialogs).
   (first ?? (options.submitLabel ? submit : cancel)).focus();
 
   return { el: form, close, setError, setBusy };
 }
 
-// ---------- поля форм ----------
+// ---------- form fields ----------
 
 export interface TextFieldOptions {
   label: string;
@@ -203,7 +203,7 @@ export interface SelectFieldOptions {
   options: { value: string; label: string }[];
 }
 
-/** Выпадающий список с подписью — для диалогов свойств. */
+/** A drop-down list with a label, for property dialogs. */
 export function selectField(options: SelectFieldOptions): {
   el: HTMLElement;
   select: HTMLSelectElement;

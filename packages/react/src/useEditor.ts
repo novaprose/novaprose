@@ -52,7 +52,7 @@ export function useEditor(
 
   useIsomorphicLayoutEffect(() => {
     if (!element) return;
-    // onDestroy в ядро не передаём: его вызываем сами в очистке, всегда свежий из optionsRef.
+    // onDestroy isn't passed to the core: we call it ourselves in the cleanup, always fresh from optionsRef.
     const { onCreate, onDestroy, onChange, ...rest } = optionsRef.current;
     void onDestroy;
     const instance = createWithPortals(portals, () =>

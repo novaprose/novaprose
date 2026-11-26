@@ -28,7 +28,7 @@ export interface ContentRulesOptions {
   validStyles?: string | Record<string, string>;
 }
 
-/** Синонимы → канонический тег NovaProse. */
+/** Synonyms → the canonical NovaProse tag. */
 const ALIASES: Record<string, string> = {
   b: 'strong',
   i: 'em',
@@ -43,7 +43,7 @@ const ALIASES: Record<string, string> = {
   figcaption: 'figure',
 };
 
-/** Все теги, которыми оперирует NovaProse. p и текст разрешены всегда. */
+/** Every tag NovaProse works with. p and text are always allowed. */
 export const KNOWN_TAGS = [
   'p',
   'h1',
@@ -76,7 +76,7 @@ export const KNOWN_TAGS = [
   'span',
 ] as const;
 
-/** Стили NovaProse и какой CSS-свойство каждый пишет. */
+/** NovaProse styles and the CSS property each one writes. */
 export const KNOWN_STYLES = [
   'color',
   'background-color',
@@ -89,8 +89,8 @@ export const KNOWN_STYLES = [
 ] as const;
 
 /**
- * Что нужно контролу/команде/пункту меню, чтобы быть доступным.
- * Ключи — имена кнопок тулбара, пунктов меню и слэш-команд.
+ * What a control/command/menu item needs in order to be available.
+ * Keys are the names of toolbar buttons, menu items and slash commands.
  */
 const REQUIREMENTS: Record<string, string[]> = {
   bold: ['strong'],
@@ -157,7 +157,7 @@ function parseList(value: string | undefined): Set<string> | null {
   if (value === undefined) return null;
   const set = new Set<string>();
   for (const raw of value.split(',')) {
-    // TinyMCE-модификаторы в начале (-p, #p, +p, !p) и атрибуты в [...] отбрасываем.
+    // TinyMCE modifiers at the start (-p, #p, +p, !p) and attributes in [...] are dropped.
     const item = raw
       .trim()
       .replace(/^[-#+!]+/, '')
@@ -190,9 +190,9 @@ export class ContentRules {
     const valid = parseList(options.validElements);
     const invalid = parseList(options.invalidElements) ?? new Set();
     const tags = new Set<string>(valid ?? KNOWN_TAGS);
-    // extendedValidElements дополняет список validElements.
+    // extendedValidElements adds to the validElements list.
     if (valid) for (const tag of parseList(options.extendedValidElements) ?? []) tags.add(tag);
-    // Неявные зависимости: список без li или таблица без tr/td бессмысленны.
+    // Implicit dependencies: a list without li or a table without tr/td makes no sense.
     if (tags.has('ul') || tags.has('ol')) tags.add('li');
     if (tags.has('table')) {
       tags.add('tr');
@@ -265,7 +265,7 @@ export class ContentRules {
 
   /** Bring a node in line with the rules. Returns 0…n nodes (a disallowed block can dissolve). */
   normalize(node: PMNode): PMNode[] {
-    // Схема узла, а не общая базовая: у редактора с плагинами она своя.
+    // The node's schema, not the shared base one: an editor with plugins has its own.
     const schema = node.type.schema as NovaSchema;
     const { nodes } = schema;
     if (node.isText) {
@@ -284,7 +284,7 @@ export class ContentRules {
           ),
         ];
       case nodes.figure: {
-        // Картинки запрещены — от подписи остаётся текст; figure запрещён — картинка и подпись абзацами.
+        // Images are forbidden: only the caption text remains; figure is forbidden: the image and caption become paragraphs.
         const caption = node.childCount > 1 ? node.child(1).content : null;
         const captionBlocks = caption?.size
           ? [nodes.paragraph.create(null, this.normalizeChildren(caption))]
@@ -340,7 +340,7 @@ export class ContentRules {
         return this.isTagAllowed('blockquote') ? make() : asBlocks(children);
       case nodes.code_block:
         if (this.isTagAllowed('pre')) return make();
-        // Блок кода → абзацы построчно.
+        // A code block → paragraphs, line by line.
         return node.textContent
           .split('\n')
           .map((line) => nodes.paragraph.create(null, line ? schema.text(line) : null));
@@ -355,7 +355,7 @@ export class ContentRules {
       case nodes.table:
         return this.isTagAllowed('table') ? make() : flattenTable(children);
       case nodes.table_header:
-        // th запрещён — ячейка остаётся обычной (td).
+        // th is forbidden: the cell stays a regular one (td).
         return this.isTagAllowed('th') ? make() : make(nodes.table_cell, node.attrs);
       case nodes.table_cell:
         return make(nodes.table_cell, {
@@ -381,7 +381,7 @@ export class ContentRules {
   }
 }
 
-/** Инлайн-содержимое без блока-обёртки оборачиваем в абзац. */
+/** Inline content without a wrapping block is wrapped in a paragraph. */
 function asBlocks(fragment: Fragment): PMNode[] {
   const out: PMNode[] = [];
   let inline: PMNode[] = [];
@@ -401,7 +401,7 @@ function asBlocks(fragment: Fragment): PMNode[] {
   return out;
 }
 
-/** Список запрещён — пункты превращаются в их содержимое (абзацы, вложенные блоки). */
+/** A list is forbidden: the items turn into their content (paragraphs, nested blocks). */
 function flattenItems(fragment: Fragment): PMNode[] {
   const out: PMNode[] = [];
   fragment.forEach((item) => {
@@ -412,7 +412,7 @@ function flattenItems(fragment: Fragment): PMNode[] {
   return out;
 }
 
-/** Таблица запрещена — содержимое ячеек по порядку. */
+/** A table is forbidden: the cells' content in order. */
 function flattenTable(fragment: Fragment): PMNode[] {
   const out: PMNode[] = [];
   fragment.forEach((row) => row.forEach((cell) => cell.forEach((block) => out.push(block))));
@@ -422,8 +422,8 @@ function flattenTable(fragment: Fragment): PMNode[] {
 const key = new PluginKey('nova-content-rules');
 
 /**
- * Нормализует только изменившуюся часть документа (findDiffStart/End) — дёшево даже на больших текстах.
- * Срабатывает на любой путь изменения: ввод, вставка, перетаскивание, setContent, команды.
+ * Normalizes only the changed part of the document (findDiffStart/End): cheap even on large texts.
+ * Fires on any path of change: typing, paste, drag and drop, setContent, commands.
  */
 export function contentRulesPlugin(rules: ContentRules): Plugin {
   return new Plugin({
@@ -446,11 +446,11 @@ export function contentRulesPlugin(rules: ContentRules): Plugin {
       });
       if (!replacements.length) return null;
       const tr = newState.tr;
-      // С конца — чтобы ранние позиции не съезжали.
+      // From the end, so earlier positions don't shift.
       for (const { from, to, nodes } of replacements.reverse()) {
         if (nodes.length) tr.replaceWith(from, to, nodes);
         else if (tr.doc.childCount > 1) tr.delete(from, to);
-        // Документ не может быть пустым — последний блок заменяем пустым абзацем.
+        // A document can't be empty: the last block is replaced with an empty paragraph.
         else tr.replaceWith(from, to, (newState.schema as NovaSchema).nodes.paragraph.create());
       }
       return tr.setMeta(

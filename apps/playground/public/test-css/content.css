@@ -1,4 +1,4 @@
-/* Тестовые стили содержимого для e2e (contentCss): @import, относительный url(), body. */
+/* Test content styles for e2e (contentCss): @import, a relative url(), body. */
 @import 'base.css';
 
 body {

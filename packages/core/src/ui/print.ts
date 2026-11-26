@@ -3,10 +3,10 @@ import { pageLayout, type PageLayout } from '../plugins/pagelayout';
 import { h } from './dom';
 
 /**
- * Печать как на экране: копия текста редактора — вместе с видами узлов (формулы, подсветка кода,
- * свои блоки) — в скрытом iframe со всеми стилями страницы, включая contentStyle/contentCss.
- * В режиме страниц (pagelayout) лист тот же: размер и поля — в @page, ширина текста та же, поэтому
- * страницы делятся там же, где редактор рисует их границы. Ленивый модуль: грузится при печати.
+ * Printing as on screen: a copy of the editor's text, node views included (formulas, code highlighting,
+ * custom blocks), in a hidden iframe with every style of the page, contentStyle/contentCss included.
+ * In page mode (pagelayout) the sheet is the same: size and margins in @page, the same text width, so
+ * pages break where the editor draws their borders. A lazy module: it loads on print.
  */
 
 interface StyleSource {
@@ -15,7 +15,7 @@ interface StyleSource {
   media?: string;
 }
 
-/** Правила таблицы стилей текстом (сторонние, без доступа к правилам, — ссылкой). */
+/** A style sheet's rules as text (third-party sheets without access to their rules, as a link). */
 function sourceOf(sheet: CSSStyleSheet, fontsOnly: boolean): StyleSource | null {
   if (sheet.disabled) return null;
   const media = sheet.media?.mediaText;
@@ -28,8 +28,8 @@ function sourceOf(sheet: CSSStyleSheet, fontsOnly: boolean): StyleSource | null 
 }
 
 /**
- * Стили, в которых редактор рисует текст. Внутри теневого корня — его стили и шрифты документа
- * (стили документа туда не проникают — не берём их и в печать).
+ * The styles the editor draws the text with. Inside a shadow root, its styles and the document's fonts
+ * (document styles don't reach inside it, so they don't go into the print either).
  */
 function styleSources(editor: Editor): StyleSource[] {
   const root = editor.root.getRootNode();
@@ -41,7 +41,7 @@ function styleSources(editor: Editor): StyleSource[] {
   return [...sheets(document, !!shadow), ...(shadow ? sheets(shadow, false) : [])];
 }
 
-/** Печать поверх стилей страницы: только содержимое, лист из режима страниц, без рамок редактора. */
+/** Printing on top of the page styles: only the content, the sheet from page mode, no editor frame. */
 export function printCss(layout: PageLayout | undefined): string {
   const page = layout
     ? `size: ${layout.width}mm ${layout.height}mm; margin: ${layout.margins.top}mm ${layout.margins.right}mm ${layout.margins.bottom}mm ${layout.margins.left}mm;`
@@ -69,16 +69,16 @@ body > .nova-print { display: block !important; }
 `;
 }
 
-/** Копия текста редактора без следов редактирования. */
+/** A copy of the editor's text without traces of editing. */
 function contentClone(dom: HTMLElement): HTMLElement {
   const clone = dom.cloneNode(true) as HTMLElement;
   clone.removeAttribute('contenteditable');
   clone.classList.remove('ProseMirror-focused', 'nova-empty');
   for (const el of clone.querySelectorAll('.ProseMirror-gapcursor, .nova-image-handle'))
     el.remove();
-  // Ленивые картинки в невидимом iframe не загрузились бы никогда.
+  // Lazy images in an invisible iframe would never load.
   for (const el of clone.querySelectorAll('[loading]')) el.removeAttribute('loading');
-  // cloneNode не копирует рисунок canvas — переносим картинкой.
+  // cloneNode doesn't copy a canvas drawing, so it is carried over as an image.
   const originals = dom.querySelectorAll('canvas');
   clone.querySelectorAll('canvas').forEach((canvas, index) => {
     try {
@@ -88,13 +88,13 @@ function contentClone(dom: HTMLElement): HTMLElement {
       image.className = canvas.className;
       canvas.replaceWith(image);
     } catch {
-      // холст с чужими картинками (tainted) — останется пустым
+      // a canvas with cross-origin images (tainted) stays empty
     }
   });
   return clone;
 }
 
-/** Документ печати: стили страницы, печатные правила и корень как у редактора. */
+/** The print document: the page styles, print rules and a root like the editor's. */
 export function buildPrintDocument(editor: Editor, doc: Document): void {
   for (const source of styleSources(editor)) {
     if (source.href) {
@@ -115,11 +115,11 @@ export function buildPrintDocument(editor: Editor, doc: Document): void {
   const style = doc.createElement('style');
   style.textContent = printCss(pageLayout(editor)?.layout);
   doc.head.append(style);
-  // Бумага светлая и при тёмной теме системы.
+  // Paper is light even with a dark system theme.
   doc.documentElement.setAttribute('data-theme', 'light');
   if (editor.root.closest('[lang]'))
     doc.documentElement.lang = editor.root.closest('[lang]')!.getAttribute('lang')!;
-  // Классы корня редактора: области стилей содержимого (contentStyle/contentCss) и режим страниц.
+  // Classes of the editor root: the content style scopes (contentStyle/contentCss) and page mode.
   const root = doc.createElement('div');
   root.className = `${editor.root.className} nova-print`;
   root.dir = editor.direction;
@@ -130,7 +130,7 @@ export function buildPrintDocument(editor: Editor, doc: Document): void {
   doc.body.append(root);
 }
 
-/** Картинки, таблицы стилей и шрифты документа печати загружены (но не дольше 2 с). */
+/** The print document's images, style sheets and fonts have loaded (but no longer than 2 s). */
 function loaded(doc: Document): Promise<void> {
   const waits: Promise<unknown>[] = [];
   const onLoad = (el: HTMLElement) =>
@@ -141,7 +141,7 @@ function loaded(doc: Document): Promise<void> {
   for (const image of doc.images) if (!image.complete) waits.push(onLoad(image));
   for (const link of doc.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'))
     if (!link.sheet) waits.push(onLoad(link));
-  void doc.body.offsetHeight; // раскладка запускает загрузку шрифтов
+  void doc.body.offsetHeight; // layout starts loading the fonts
   if (doc.fonts) waits.push(doc.fonts.ready);
   return Promise.race([
     Promise.all(waits).then(() => undefined),
@@ -149,7 +149,7 @@ function loaded(doc: Document): Promise<void> {
   ]);
 }
 
-/** Напечатать содержимое редактора (диалог печати браузера; там же — «Сохранить как PDF»). */
+/** Prints the editor's content (the browser's print dialog, which also offers "Save as PDF"). */
 export async function print(editor: Editor): Promise<void> {
   const iframe = h('iframe', { title: 'print', 'aria-hidden': 'true', tabindex: '-1' });
   iframe.style.cssText =
@@ -158,8 +158,8 @@ export async function print(editor: Editor): Promise<void> {
   const doc = iframe.contentDocument;
   const win = iframe.contentWindow;
   if (!doc || !win) return iframe.remove();
-  // Стандартный режим, как у страницы с редактором: пустой iframe — в режиме совместимости (quirks),
-  // где строки и таблицы раскладываются иначе и страницы делились бы не там.
+  // Standards mode, as on the page with the editor: an empty iframe is in quirks mode,
+  // where lines and tables are laid out differently and pages would break in the wrong places.
   doc.open();
   doc.write('<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>');
   doc.close();

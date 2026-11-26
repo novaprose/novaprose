@@ -76,7 +76,7 @@ export function definePlugin(plugin: NovaPlugin): NovaPlugin {
   return plugin;
 }
 
-// ---------- глобальный реестр (аналог PluginManager.add) ----------
+// ---------- the global registry (like PluginManager.add) ----------
 
 const registry = new Map<string, NovaPlugin | Loader>();
 
@@ -89,12 +89,12 @@ export function isPluginRegistered(name: string): boolean {
   return registry.has(name);
 }
 
-// ---------- разрешение конфига ----------
+// ---------- resolving the config ----------
 
 export interface ResolvedPlugins {
-  /** Синхронные плагины в порядке зависимостей. */
+  /** Synchronous plugins in dependency order. */
   plugins: NovaPlugin[];
-  /** Ленивые загрузчики (грузятся после создания редактора). */
+  /** Lazy loaders (they load after the editor is created). */
   loaders: Loader[];
   errors: string[];
 }
@@ -103,7 +103,7 @@ function isLoader(entry: unknown): entry is Loader {
   return typeof entry === 'function';
 }
 
-/** Превращает конфиг в список: имена — из реестра, загрузчики — отдельно. */
+/** Turns the config into a list: names from the registry, loaders separately. */
 export function resolveEntries(entries: PluginEntry[]): ResolvedPlugins {
   const plugins: NovaPlugin[] = [];
   const loaders: Loader[] = [];
@@ -124,9 +124,9 @@ export function resolveEntries(entries: PluginEntry[]): ResolvedPlugins {
 }
 
 /**
- * Упорядочить по зависимостям (топологическая сортировка).
- * Плагин с отсутствующей или циклической зависимостью исключается, остальные работают.
- * available — имена уже подключённых плагинов (для догружаемых).
+ * Orders by dependencies (a topological sort).
+ * A plugin with a missing or circular dependency is excluded, the others work.
+ * available are the names of already attached plugins (for those loaded later).
  */
 export function orderPlugins(
   plugins: NovaPlugin[],

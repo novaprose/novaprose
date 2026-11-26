@@ -1,6 +1,6 @@
 /*
- * Панель обсуждений (плагин comments).
- * Подключается при первом открытии панели через editor.ui.addStyles — не входит в style.css первой загрузки.
+ * The discussion panel (the comments plugin).
+ * Attached when the panel first opens, through editor.ui.addStyles; not part of the first-load style.css.
  */
 
 .nova-comments {

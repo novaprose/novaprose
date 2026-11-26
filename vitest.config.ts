@@ -2,10 +2,10 @@ import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
-// Windows: если тесты запущены из папки с «c:» в нижнем регистре (Git Bash и т.п.), Node грузит
-// часть модулей как «c:\…», часть как «C:\…» — это разные URL, и React, Angular, ProseMirror
-// оказываются в двух копиях (ложные падения: useRef of null, instanceof NodeType, ключи плагинов).
-// Приводим корень и рабочую папку к настоящему регистру — тогда копия одна, как в браузере.
+// Windows: when tests start from a folder with a lowercase "c:" (Git Bash and the like), Node loads
+// some modules as "c:\…" and some as "C:\…". Those are different URLs, so React, Angular and ProseMirror
+// end up in two copies (false failures: useRef of null, instanceof NodeType, plugin keys).
+// The root and the working folder are normalized to the real case, so there is one copy, as in a browser.
 const root = realpathSync.native(fileURLToPath(new URL('.', import.meta.url)));
 if (process.cwd() !== root && process.cwd().toLowerCase() === root.toLowerCase())
   process.chdir(root);
@@ -13,9 +13,9 @@ if (process.cwd() !== root && process.cwd().toLowerCase() === root.toLowerCase()
 export default defineConfig({
   root,
   resolve: {
-    // Тесты всегда идут по исходникам пакетов, без предварительной сборки.
+    // Tests always run on the package sources, without building first.
     alias: {
-      // Отдельные входы — до общего псевдонима ядра (иначе он перехватит путь).
+      // Separate entries go before the shared core alias (otherwise it takes over the path).
       '@novaprose/core/html-rules': fileURLToPath(
         new URL('./packages/core/src/html-rules.ts', import.meta.url),
       ),
@@ -30,8 +30,8 @@ export default defineConfig({
       include: ['packages/*/src/**/*.{ts,tsx}', 'apps/sync-server/src/**'],
       exclude: ['**/*.d.ts', 'packages/angular/**', 'packages/*/src/**/index.ts'],
       reporter: ['text-summary', 'html', 'json-summary'],
-      // «Храповик»: чуть ниже текущего уровня (ноябрь 2026: строки 90.6%, ветви 84.9%).
-      // Покрытие может только расти — поднимайте пороги вслед за ним.
+      // A ratchet: slightly below the current level (November 2026: lines 90.6%, branches 84.9%).
+      // Coverage can only grow: raise the thresholds after it.
       thresholds: { lines: 89, statements: 89, branches: 83, functions: 80 },
     },
     include: [

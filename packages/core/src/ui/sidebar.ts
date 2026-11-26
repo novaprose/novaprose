@@ -87,7 +87,7 @@ export class Sidebars {
         this.editor.updateUI();
       });
     }
-    // Повторный вызов, пока панель загружается, ждёт ту же загрузку.
+    // A repeated call while the panel is loading waits for the same load.
     await this.opening;
     if (options.focus && this.current === name) {
       const el = this.mounted.get(name)!.el;

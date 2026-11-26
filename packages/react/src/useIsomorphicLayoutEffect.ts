@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect } from 'react';
 
-// На сервере useLayoutEffect выдаёт предупреждение — там он всё равно не нужен.
+// On the server useLayoutEffect prints a warning, and it isn't needed there anyway.
 export const useIsomorphicLayoutEffect =
   typeof window !== 'undefined' ? useLayoutEffect : useEffect;

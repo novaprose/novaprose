@@ -1,8 +1,8 @@
 /*
- * Подсветка синтаксиса (плагин codesample). Подключается вместе с плагином через editor.ui.addStyles.
- * Всё — под :where(), с нулевой специфичностью: цвета меняются переменными --nova-code-* на
- * .nova-editor или любой темой highlight.js (.hljs-keyword { … }) без !important.
- * Цвета — контраст не ниже 4.5:1 на фоне --nova-code-bg в светлой и тёмной теме.
+ * Syntax highlighting (the codesample plugin). Attached together with the plugin through editor.ui.addStyles.
+ * Everything is under :where() with zero specificity: colors change through the --nova-code-* variables on
+ * .nova-editor or with any highlight.js theme (.hljs-keyword { … }) without !important.
+ * Colors have a contrast of at least 4.5:1 on the --nova-code-bg background in the light and dark themes.
  */
 :where(.nova-editor) {
   --nova-code-keyword: #b3245a;
@@ -51,7 +51,7 @@
   }
 }
 
-/* Подпись языка в углу блока — только оформление (не текст документа и не для диктора). */
+/* The language label in the block's corner is decoration only (not document text and not for screen readers). */
 :where(.nova-prosemirror pre[data-language]) {
   position: relative;
   padding-top: 26px;
@@ -71,8 +71,8 @@
 }
 
 /*
- * Токены. Классы — как у highlight.js; вложенные области склеены в один элемент
- * («hljs-meta hljs-string»), поэтому частные правила стоят после общих.
+ * Tokens. Classes as in highlight.js; nested scopes are merged into one element
+ * ("hljs-meta hljs-string"), so specific rules come after general ones.
  */
 :where(.nova-prosemirror pre) :where(.hljs-meta) {
   color: var(--nova-code-meta);
@@ -134,7 +134,7 @@
   color: var(--nova-code-attr);
 }
 
-/* Вставка ${…} в строке шаблона — обычный код, а не строка. */
+/* An interpolation ${…} in a template string is regular code, not a string. */
 :where(.nova-prosemirror pre) :where(.hljs-subst) {
   color: var(--nova-fg);
 }

@@ -1,15 +1,15 @@
 /**
- * Бюджет размера. Считает то, что реально скачает пользователь, в gzip:
- *  - первая загрузка ядра: точка входа + все статически подключённые чанки (вместе с ProseMirror),
- *    сжатые одним файлом — так их отдаёт сборка приложения (Vite/Rollup, webpack кладут всё, что
- *    нужно точке входа, в один чанк; проверено сборкой Vite: 135.2 КБ при 135.4 КБ здесь). Сумма
- *    отдельно сжатых чанков esbuild — для сведения: она растёт от дробления на чанки, а не от кода;
- *  - ленивые плагины: всё, что грузится через import() — отдельно, только для информации;
- *  - CSS и CDN-сборки (готовые файлы).
- * Падает (exit 1), если превышен любой бюджет. Нужна сборка: pnpm build.
+ * Size budget. Counts what a user actually downloads, gzipped:
+ *  - first load of the core: the entry point + every statically imported chunk (ProseMirror included),
+ *    compressed as one file, the way an app build serves them (Vite/Rollup and webpack put everything
+ *    an entry point needs into one chunk; verified with a Vite build: 135.2 KB vs 135.4 KB here). The sum
+ *    of separately compressed esbuild chunks is for reference: it grows with chunk splitting, not with code;
+ *  - lazy plugins: everything loaded through import(), separately, for information only;
+ *  - CSS and CDN builds (finished files).
+ * Fails (exit 1) when any budget is exceeded. Needs a build: pnpm build.
  *
- *   node scripts/size.mjs           проверка
- *   node scripts/size.mjs --json    то же + JSON в stdout (для отчётов CI)
+ *   node scripts/size.mjs           check
+ *   node scripts/size.mjs --json    the same + JSON on stdout (for CI reports)
  */
 import { build } from 'esbuild';
 import { Buffer } from 'node:buffer';
@@ -19,13 +19,13 @@ import { gzipSync } from 'node:zlib';
 const KB = 1024;
 const gz = (buf) => gzipSync(buf, { level: 9 }).length;
 
-/** Бюджеты в КБ gzip. Поднимать только осознанно, с записью в CHANGELOG. */
+/** Budgets in KB gzip. Raise them only deliberately, with a CHANGELOG entry. */
 const BUDGET = {
-  // Ноябрь 2026: 135.4 КБ одним файлом (до смены способа счёта — 150 по сумме чанков, это 142.5).
+  // November 2026: 135.4 KB as one file (before the counting method changed: 150 by the sum of chunks, that is 142.5).
   coreFirstLoad: 145,
   coreCss: 12,
-  // CDN: основной файл (ленивые части — отдельные файлы рядом, scripts/build-cdn.mjs). Ноябрь 2026:
-  // 140.5 и 151.0 КБ после выноса частей (было 168.1 и 178.6 одним файлом).
+  // CDN: the main file (lazy parts are separate files next to it, scripts/build-cdn.mjs). November 2026:
+  // 140.5 and 151.0 KB after moving the parts out (it was 168.1 and 178.6 as one file).
   webComponentCdn: 150,
   tinymceCompatCdn: 160,
 };
@@ -53,9 +53,9 @@ async function measureEntry(entry, names) {
   const outputs = Object.fromEntries(
     Object.entries(res.metafile.outputs).map(([k, v]) => [k.replace(/^size-out\//, ''), v]),
   );
-  // Ленивые чанки тоже точки входа (import()), нам нужна именно наша — <stdin>.
+  // Lazy chunks are entry points too (import()); we need ours, <stdin>.
   const entryKey = Object.keys(outputs).find((k) => outputs[k].entryPoint === '<stdin>');
-  // Статические импорты — тянутся сразу; динамические — лениво.
+  // Static imports load right away; dynamic ones load lazily.
   const first = new Set();
   const walk = (k) => {
     if (first.has(k)) return;
@@ -79,13 +79,13 @@ async function measureEntry(entry, names) {
 }
 
 function fileSize(path) {
-  if (!existsSync(path)) throw new Error(`Нет файла ${path} — сначала pnpm build`);
+  if (!existsSync(path)) throw new Error(`No file ${path}: run pnpm build first`);
   return gz(readFileSync(path));
 }
 
-/** Ленивые части CDN-сборки (все вместе): грузятся по требованию с того же адреса. */
+/** Lazy parts of a CDN build (all together): loaded on demand from the same address. */
 function chunksSize(dir) {
-  if (!existsSync(dir)) throw new Error(`Нет папки ${dir} — сначала pnpm build`);
+  if (!existsSync(dir)) throw new Error(`No folder ${dir}: run pnpm build first`);
   return readdirSync(dir)
     .filter((name) => name.endsWith('.js'))
     .reduce((sum, name) => sum + fileSize(`${dir}/${name}`), 0);
@@ -93,40 +93,44 @@ function chunksSize(dir) {
 
 const core = await measureEntry('./packages/core/dist/index.js', 'Editor');
 const rows = [
-  ['@novaprose/core — первая загрузка (с ProseMirror)', core.firstLoad, BUDGET.coreFirstLoad],
-  [`  то же суммой ${core.chunks} отдельно сжатых чанков esbuild`, core.chunkSum, null],
-  ['@novaprose/core — ленивые плагины (все вместе)', core.lazy, null],
+  ['@novaprose/core: first load (with ProseMirror)', core.firstLoad, BUDGET.coreFirstLoad],
+  [
+    `  the same as a sum of ${core.chunks} separately compressed esbuild chunks`,
+    core.chunkSum,
+    null,
+  ],
+  ['@novaprose/core: lazy plugins (all together)', core.lazy, null],
   ['@novaprose/core — style.css', fileSize('packages/core/src/style.css'), BUDGET.coreCss],
   [
-    '@novaprose/web-component — CDN, основной файл',
+    '@novaprose/web-component: CDN, main file',
     fileSize('packages/web-component/dist/novaprose.global.js'),
     BUDGET.webComponentCdn,
   ],
   [
-    '@novaprose/web-component — CDN, ленивые части',
+    '@novaprose/web-component: CDN, lazy parts',
     chunksSize('packages/web-component/dist/novaprose-chunks'),
     null,
   ],
   [
-    '@novaprose/tinymce-compat — CDN, основной файл',
+    '@novaprose/tinymce-compat: CDN, main file',
     fileSize('packages/tinymce-compat/dist/tinymce.global.js'),
     BUDGET.tinymceCompatCdn,
   ],
   [
-    '@novaprose/tinymce-compat — CDN, ленивые части',
+    '@novaprose/tinymce-compat: CDN, lazy parts',
     chunksSize('packages/tinymce-compat/dist/tinymce-chunks'),
     null,
   ],
 ];
 
 let failed = 0;
-console.log('Размер (gzip):');
+console.log('Size (gzip):');
 for (const [name, size, budget] of rows) {
   const kb = (size / KB).toFixed(1);
   const over = budget != null && size > budget * KB;
   if (over) failed++;
-  const tail = budget == null ? '' : ` / ${budget} КБ ${over ? '✗ ПРЕВЫШЕН' : '✓'}`;
-  console.log(`  ${name.padEnd(52)} ${kb.padStart(7)} КБ${tail}`);
+  const tail = budget == null ? '' : ` / ${budget} KB ${over ? '✗ OVER BUDGET' : '✓'}`;
+  console.log(`  ${name.padEnd(52)} ${kb.padStart(7)} KB${tail}`);
 }
 if (process.argv.includes('--json')) {
   console.log(
@@ -134,6 +138,6 @@ if (process.argv.includes('--json')) {
   );
 }
 if (failed) {
-  console.error(`\nБюджет превышен (${failed}). Уменьшите размер или осознанно поднимите BUDGET.`);
+  console.error(`\nBudget exceeded (${failed}). Reduce the size or raise BUDGET deliberately.`);
   process.exit(1);
 }

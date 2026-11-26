@@ -8,19 +8,19 @@ import {
 } from 'prosemirror-state';
 
 /**
- * Блоки как единицы перемещения: Alt+Shift+↑/↓ и ручка перетаскивания (плагин draghandle).
- * Единица — самый внутренний пункт списка, иначе блок верхнего уровня (абзац, заголовок, таблица
- * или цитата целиком, картинка).
+ * Blocks as units of movement: Alt+Shift+↑/↓ and the drag handle (the draghandle plugin).
+ * The unit is the innermost list item, otherwise a top-level block (a paragraph, a heading, a whole table
+ * or quote, an image).
  */
 export interface BlockUnit {
   node: PMNode;
-  /** Позиция перед узлом. */
+  /** The position before the node. */
   pos: number;
-  /** Глубина узла (у блока верхнего уровня — 1). */
+  /** The node's depth (1 for a top-level block). */
   depth: number;
 }
 
-/** Единица вокруг позиции. Позиция между блоками верхнего уровня — следующий блок. */
+/** The unit around a position. A position between top-level blocks means the next block. */
 export function blockUnitAt($pos: ResolvedPos): BlockUnit | null {
   for (let depth = $pos.depth; depth > 0; depth--) {
     const node = $pos.node(depth);
@@ -33,7 +33,7 @@ export function blockUnitAt($pos: ResolvedPos): BlockUnit | null {
   return { node: $pos.node(1), pos: $pos.before(1), depth: 1 };
 }
 
-/** Выделенный узел — сам по себе единица; иначе — единица вокруг начала выделения. */
+/** A selected node is a unit by itself; otherwise the unit around the start of the selection. */
 export function selectedBlockUnit(state: EditorState): BlockUnit | null {
   const { selection } = state;
   if (selection instanceof NodeSelection) {
@@ -50,12 +50,12 @@ interface UnitRange {
   to: number;
 }
 
-/** Соседние единицы под выделением (выделение через несколько абзацев двигает их вместе). */
+/** Adjacent units under the selection (a selection across several paragraphs moves them together). */
 function unitRange(state: EditorState): UnitRange | null {
   const unit = selectedBlockUnit(state);
   if (!unit) return null;
   const { selection } = state;
-  // Курсор в ячейке таблицы: строки — не блоки, а таблицу целиком двигают ручкой.
+  // The cursor in a table cell: rows aren't blocks, and the whole table is moved with the handle.
   if (!(selection instanceof NodeSelection) && unit.node.type.spec.tableRole === 'table') {
     return null;
   }
@@ -75,7 +75,7 @@ function unitRange(state: EditorState): UnitRange | null {
   return { parent, startIndex, endIndex, from: unit.pos, to };
 }
 
-/** Выделение после перемещения: то же, сдвинутое вместе с блоком. */
+/** The selection after a move: the same one, shifted along with the block. */
 function shiftSelection(tr: Transaction, state: EditorState, shift: number): void {
   const { selection } = state;
   tr.setSelection(
@@ -85,7 +85,7 @@ function shiftSelection(tr: Transaction, state: EditorState, shift: number): voi
   );
 }
 
-/** Поменять блок (или выделенные блоки) местами с соседом выше (-1) или ниже (1). */
+/** Swaps the block (or the selected blocks) with the neighbor above (-1) or below (1). */
 export function moveBlock(direction: -1 | 1): Command {
   return (state, dispatch) => {
     const range = unitRange(state);
@@ -114,11 +114,11 @@ export function moveBlock(direction: -1 | 1): Command {
   };
 }
 
-/** Копия выделенного блока сразу под ним (выделяется копия). */
+/** A copy of the selected block right below it (the copy gets selected). */
 export const duplicateBlock: Command = (state, dispatch) => {
   const unit = selectedBlockUnit(state);
   if (!unit) return false;
-  // Курсор в ячейке: копировать таблицу целиком можно только выделив её (ручкой).
+  // The cursor in a cell: a whole table can be copied only by selecting it (with the handle).
   if (unit.node.type.spec.tableRole === 'table' && !(state.selection instanceof NodeSelection)) {
     return false;
   }

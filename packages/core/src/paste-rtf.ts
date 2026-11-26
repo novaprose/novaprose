@@ -1,26 +1,26 @@
 /**
- * Картинки из буфера обмена Word для компьютера.
+ * Images from the desktop Word clipboard.
  *
- * В HTML Word ссылается на картинки локальными путями (`<img src="file:///C:/…/clip_image001.png">`),
- * которые браузер не откроет. Сами картинки лежат в RTF-варианте того же буфера: группы `{\pict …}`
- * с шестнадцатеричными данными. Достаём PNG и JPEG и подставляем их по порядку вместо file:-ссылок.
+ * In HTML, Word refers to images by local paths (`<img src="file:///C:/…/clip_image001.png">`)
+ * that a browser won't open. The images themselves are in the RTF flavor of the same clipboard: `{\pict …}` groups
+ * with hexadecimal data. PNG and JPEG are extracted and put in place of the file: links, in order.
  *
- * По публичной спецификации RTF (группы \pict, \pngblip, \jpegblip, \shppict/\nonshppict) — без чужого кода.
+ * Built from the public RTF specification (\pict, \pngblip, \jpegblip, \shppict/\nonshppict groups), without anyone else's code.
  */
 
 export interface RtfImage {
   type: 'image/png' | 'image/jpeg';
-  /** Данные в base64 (для data:-URL). */
+  /** The data in base64 (for a data: URL). */
   base64: string;
 }
 
-/** Найти конец группы, начинающейся с '{' в позиции start (учитывая вложенность и экранирование). */
+/** Finds the end of a group starting with '{' at position start (minding nesting and escaping). */
 function groupEnd(rtf: string, start: number): number {
   let depth = 0;
   for (let i = start; i < rtf.length; i++) {
     const ch = rtf[i];
     if (ch === '\\') {
-      i++; // экранированный символ (\{, \}, \\) или начало управляющего слова — пропускаем следующий
+      i++; // an escaped character (\{, \}, \\) or the start of a control word: skip the next one
       continue;
     }
     if (ch === '{') depth++;
@@ -32,7 +32,7 @@ function groupEnd(rtf: string, start: number): number {
   return -1;
 }
 
-/** Содержимое группы без вложенных групп ({\*\picprop…}, {\*\blipuid…}). */
+/** The group's content without nested groups ({\*\picprop…}, {\*\blipuid…}). */
 function withoutNestedGroups(body: string): string {
   let out = '';
   let depth = 0;
@@ -61,7 +61,7 @@ function hexToBase64(hex: string): string | null {
   return btoa(binary);
 }
 
-/** PNG и JPEG из RTF по порядку. Векторные WMF/EMF и резервные копии (\nonshppict) пропускаются. */
+/** PNG and JPEG from the RTF, in order. Vector WMF/EMF and fallback copies (\nonshppict) are skipped. */
 export function extractRtfImages(rtf: string): RtfImage[] {
   const images: RtfImage[] = [];
   let from = 0;
@@ -71,7 +71,7 @@ export function extractRtfImages(rtf: string): RtfImage[] {
     const end = groupEnd(rtf, start);
     if (end < 0) break;
     from = end + 1;
-    // Резервная копия картинки для старых читателей RTF — дубль, пропускаем.
+    // A fallback copy of the image for old RTF readers: a duplicate, skipped.
     if (/\\nonshppict\s*$/.test(rtf.slice(Math.max(0, start - 16), start))) continue;
     const body = withoutNestedGroups(rtf.slice(start + 1, end));
     const type = /\\pngblip(?![a-z])/.test(body)
@@ -83,7 +83,7 @@ export function extractRtfImages(rtf: string): RtfImage[] {
     const hex = body.replace(/\\[a-z]+-?\d* ?/gi, '').replace(/\s+/g, '');
     const base64 = hexToBase64(hex);
     if (!base64) continue;
-    // Проверка сигнатуры: не доверяем ключевому слову, если данные не совпадают с форматом.
+    // A signature check: the keyword isn't trusted if the data doesn't match the format.
     const head = atob(base64.slice(0, 12));
     const valid =
       type === 'image/png'
@@ -94,14 +94,14 @@ export function extractRtfImages(rtf: string): RtfImage[] {
   return images;
 }
 
-/** Есть ли в HTML картинки с локальными file:-ссылками (признак картинок Word). */
+/** Whether the HTML has images with local file: links (a sign of Word images). */
 export function hasLocalFileImages(html: string): boolean {
   return /<img[^>]+src=["']?file:/i.test(html);
 }
 
 /**
- * Подставить картинки из RTF вместо file:-ссылок. Только при совпадении количества — иначе
- * сопоставление ненадёжно, и такие картинки просто не вставятся (как раньше).
+ * Puts images from the RTF in place of file: links. Only when the counts match: otherwise
+ * the matching is unreliable, and such images just aren't pasted (as before).
  */
 export function replaceLocalImages(html: string, images: RtfImage[]): string {
   const template = document.createElement('template');

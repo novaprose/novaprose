@@ -1,13 +1,13 @@
 name: CodeQL
 
-# Статический анализ безопасности кода (XSS, prototype pollution, ReDoS, небезопасные регулярки).
-# Найденное появляется в Security → Code scanning репозитория.
+# Static security analysis of the code (XSS, prototype pollution, ReDoS, unsafe regular expressions).
+# Findings show up under Security → Code scanning of the repository.
 on:
   push:
     branches: [main]
   pull_request:
   schedule:
-    - cron: '41 3 * * 1' # раз в неделю — новые правила CodeQL на старом коде
+    - cron: '41 3 * * 1' # once a week: new CodeQL rules on old code
 
 permissions:
   contents: read

@@ -143,7 +143,7 @@ export class Registry {
     const own = this.menuItems.get(name.toLowerCase());
     if (own) return own;
     const control = this.get(name);
-    // В меню составная кнопка — её основное действие.
+    // In a menu a split button is its main action.
     if (control?.type !== 'button' && control?.type !== 'split') return undefined;
     return {
       text: control.tooltip,

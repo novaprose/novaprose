@@ -3,7 +3,7 @@ title: Angular
 description: "Angular standalone component for NovaProse with ngModel and Reactive Forms."
 ---
 
-<!-- Сгенерировано из packages/angular/README.md: правьте README, затем pnpm --filter @novaprose/site sync-docs -->
+<!-- Generated from packages/angular/README.md: edit the README, then run pnpm --filter @novaprose/site sync-docs -->
 
 Angular bindings for the [NovaProse](/getting-started/) rich text
 editor: a standalone component that works with `ngModel` and Reactive Forms, in zone.js and

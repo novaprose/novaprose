@@ -7,7 +7,7 @@ import { icons } from '../ui/icons';
 import { parseMediaUrl } from './media';
 import { pickLabels } from './shared';
 
-/** Ленивая часть плагина media: диалог «Видео», кнопка и пункт меню. */
+/** The lazy part of the media plugin: the "Video" dialog, the button and the menu item. */
 
 const ICON = icons.media;
 

@@ -8,18 +8,18 @@ import css from './math.css?raw';
 import { pickLabels } from './shared';
 
 /**
- * Плагин math: формулы LaTeX — в строке (`$E=mc^2$`) и отдельной строкой. `plugins: ['math']`.
- * В HTML — исходник LaTeX: `<span data-type="inline-math" data-latex="E=mc^2">\(E=mc^2\)</span>`
- * (тот же формат у Tiptap; текст с \( \) понимают KaTeX и MathJax на странице сайта). В редакторе
- * формула рисуется через MathML (Temml, ~58 КБ gzip, грузится, когда в документе есть формула):
- * браузер показывает её сам, без шрифтов и стилей.
+ * The math plugin: LaTeX formulas inline (`$E=mc^2$`) and on their own line. `plugins: ['math']`.
+ * The HTML holds the LaTeX source: `<span data-type="inline-math" data-latex="E=mc^2">\(E=mc^2\)</span>`
+ * (the same format as Tiptap; KaTeX and MathJax on the site's page understand the text with \( \)). In the editor
+ * the formula is drawn with MathML (Temml, ~58 KB gzip, loaded when the document has a formula):
+ * the browser renders it itself, without fonts and styles.
  *
- * Здесь — узлы и их вид (нужны с первой отрисовки); диалог, ввод `$…$` и кнопка — math-ui.ts.
+ * Here are the nodes and their view (needed from the first render); the dialog, `$…$` input and the button are in math-ui.ts.
  */
 
 export const LABELS = { en: { empty: 'Formula' } };
 
-/** Исходник формулы: строка разумной длины (из HTML и JSON может прийти что угодно). */
+/** The formula source: a string of reasonable length (HTML and JSON can bring anything). */
 export function mathLatex(value: unknown): string {
   return typeof value === 'string' ? value.slice(0, 10_000) : '';
 }
@@ -27,12 +27,12 @@ export function mathLatex(value: unknown): string {
 type Temml = typeof TemmlEngine;
 let temml: Promise<Temml | null> | null = null;
 
-/** Temml — один на страницу, по первому требованию. */
+/** Temml: one per page, loaded on first demand. */
 export function loadTemml(): Promise<Temml | null> {
   temml ??= import('temml').then(
     (module) => module.default,
     (error: unknown) => {
-      temml = null; // сеть моргнула — следующая формула попробует снова
+      temml = null; // a network hiccup: the next formula tries again
       console.warn('[nova] math: could not load the formula renderer', error);
       return null;
     },
@@ -41,9 +41,9 @@ export function loadTemml(): Promise<Temml | null> {
 }
 
 /**
- * Нарисовать формулу в элемент. Без доверия к LaTeX (`trust: false`): \href и подобное не работают.
- * Ошибка в формуле (или сбой движка) — исходник в элементе и текст ошибки в ответе: вид ошибки
- * выбирает вызывающий (подсказка у формулы, строка под просмотром в диалоге).
+ * Draws a formula into an element. No trust in the LaTeX (`trust: false`): \href and the like don't work.
+ * An error in the formula (or an engine failure) leaves the source in the element and the error text in the answer: how the error
+ * shows is up to the caller (a tooltip on the formula, a line under the preview in the dialog).
  */
 export function renderMath(
   engine: Temml,
@@ -93,7 +93,7 @@ function mathSpec(block: boolean): NodeSpec {
   };
 }
 
-/** Вид формулы: исходник, пока Temml не загрузился, затем MathML. Нажатие — правка (math-ui). */
+/** The formula view: the source until Temml loads, then MathML. A click edits it (math-ui). */
 class MathView implements NodeView {
   dom: HTMLElement;
   private latex = '';
@@ -118,20 +118,20 @@ class MathView implements NodeView {
     this.latex = latex;
     const block = this.node.type.name === 'math_block';
     this.dom.classList.toggle('nova-math-empty', !latex.trim());
-    // Сразу — исходник (виден и без сети), формула — когда загрузится движок.
+    // The source right away (visible without a network), the formula once the engine loads.
     this.dom.textContent = latex.trim() ? latex : '';
     if (!latex.trim()) return;
     void loadTemml().then((engine) => {
       if (!engine || this.latex !== latex) return;
       const error = renderMath(engine, latex, this.dom, block);
-      // Ошибка — исходник с волнистой линией, текст ошибки — в подсказке.
+      // An error: the source with a wavy underline, the error text in a tooltip.
       this.dom.classList.toggle('nova-math-error', !!error);
       if (error) this.dom.title = error;
       else this.dom.removeAttribute('title');
     });
   }
 
-  /** Выделить формулу и открыть правку (кнопка math регистрируется ленивой частью). */
+  /** Selects the formula and opens editing (the math button is registered by the lazy part). */
   private edit(): void {
     const pos = this.getPos();
     if (pos === undefined || !this.editor.isEditable()) return;
@@ -178,7 +178,7 @@ export default definePlugin({
   ],
   setup(editor) {
     editor.ui.addStyles('nova-math', css);
-    // Пустая формула — подпись на языке интерфейса (в HTML документа её нет).
+    // An empty formula shows a label in the interface language (it isn't in the document's HTML).
     const { empty } = pickLabels(editor, 'math', LABELS);
     editor.root.style.setProperty('--nova-math-empty', JSON.stringify(empty));
   },

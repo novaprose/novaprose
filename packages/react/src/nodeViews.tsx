@@ -21,8 +21,8 @@ import { createRoot, type Root } from 'react-dom/client';
 import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
 
 /**
- * Виды узлов на React. Компонент рисуется порталом внутри вашего дерева (у <NovaProseEditor> или
- * {nodeViews} из useEditor) — ему доступен контекст приложения: тема, переводы, хранилище.
+ * Node views in React. The component renders through a portal inside your tree (at <NovaProseEditor> or
+ * {nodeViews} from useEditor), so it has the app context: theme, translations, store.
  *
  *   function Callout({ node, updateAttributes }: NodeViewProps) {
  *     return <div className="callout"><NodeViewContent /></div>;
@@ -30,9 +30,9 @@ import { useIsomorphicLayoutEffect } from './useIsomorphicLayoutEffect';
  *   definePlugin({ name: 'callout', nodes: { callout: {…} }, nodeViews: { callout: reactNodeView(Callout) } });
  */
 
-/** Порталы видов узлов одного редактора. */
+/** The node view portals of one editor. */
 export class NodeViewPortals {
-  /** Хост порталов отрисован (иначе виды не появятся — предупреждаем). */
+  /** The portal host is rendered (otherwise the views never appear, so we warn). */
   mounted = false;
   private readonly portals = new Map<string, ReactPortal>();
   private snapshot: ReactPortal[] = [];
@@ -61,10 +61,10 @@ export class NodeViewPortals {
 }
 
 const hosts = new WeakMap<Editor, NodeViewPortals>();
-/** Порталы редактора, который создаётся прямо сейчас (виды узлов строятся внутри createEditor). */
+/** Portals of the editor being created right now (node views are built inside createEditor). */
 let creating: NodeViewPortals | null = null;
 
-/** Создать редактор так, чтобы его виды узлов рисовались порталами в `portals`. */
+/** Creates an editor whose node views render through portals in `portals`. */
 export function createWithPortals(portals: NodeViewPortals, create: () => Editor): Editor {
   creating = portals;
   try {
@@ -76,7 +76,7 @@ export function createWithPortals(portals: NodeViewPortals, create: () => Editor
   }
 }
 
-/** Рисует порталы видов узлов; useEditor отдаёт его как `nodeViews`. */
+/** Renders the node view portals; useEditor returns it as `nodeViews`. */
 export function NodeViewHost({ portals }: { portals: NodeViewPortals }): ReactNode {
   useIsomorphicLayoutEffect(() => {
     portals.mounted = true;
@@ -127,7 +127,7 @@ export function reactNodeView(
     const portals = hosts.get(editor) ?? creating;
     const key = `nova-node-view-${++counter}`;
     let dom: HTMLElement;
-    // Редактор создан без обёртки NovaProse (createEditor напрямую) — свой корень React.
+    // The editor was created without a NovaProse wrapper (createEditor directly): its own React root.
     let root: Root | null = null;
 
     const render = (props: NodeViewProps) => {
@@ -158,7 +158,7 @@ export function reactNodeView(
         portals?.delete(key);
         const current = root;
         root = null;
-        // Размонтировать корень посреди отрисовки React нельзя — после неё.
+        // A root can't be unmounted in the middle of a React render, so it happens after it.
         if (current) setTimeout(() => current.unmount());
       },
     };

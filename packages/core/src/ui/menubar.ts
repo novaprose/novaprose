@@ -40,8 +40,8 @@ export interface MenubarHandle {
 }
 
 /**
- * Менюбар по WAI-ARIA menubar: Alt+F9 — фокус, стрелки ←/→ — соседние меню (и при открытом меню
- * тоже), ↓/Enter — открыть, Esc — закрыть и вернуться в текст.
+ * The menubar per WAI-ARIA menubar: Alt+F9 focuses it, the ←/→ arrows go to neighboring menus (with a menu open
+ * too), ↓/Enter opens, Esc closes and returns to the text.
  */
 export function createMenubar(
   editor: Editor,
@@ -59,7 +59,7 @@ export function createMenubar(
   const title = (def: MenuDefinition) =>
     def.title.startsWith('menu.') ? t(def.title as MessageKey) : def.title;
 
-  /** Пункты меню: неизвестные/запрещённые пропускаем, лишние разделители убираем. */
+  /** Menu items: unknown/forbidden ones are skipped, extra separators removed. */
   const entries = (def: MenuDefinition): MenuEntry[] => {
     const out: MenuEntry[] = [];
     for (const token of def.items.split(/\s+/)) {
@@ -101,7 +101,7 @@ export function createMenubar(
     const items = entries(def);
     if (!items.length) return;
     const menu = createMenu(items, () => editor.ui.closePopover(), title(def));
-    // ←/→ внутри открытого меню — соседнее меню (стандартное поведение менюбара).
+    // ←/→ inside an open menu go to the neighboring menu (standard menubar behavior).
     menu.addEventListener('keydown', (event) => {
       const key = logicalKey(event, menu);
       if (key !== 'ArrowLeft' && key !== 'ArrowRight') return;
@@ -146,7 +146,7 @@ export function createMenubar(
       if (open?.index === index) return close();
       openMenu(index, event.detail === 0);
     });
-    // Меню открыто — наведение на соседний заголовок переключает меню (как в настольных приложениях).
+    // With a menu open, hovering over a neighboring title switches the menu (as in desktop applications).
     button.addEventListener('mouseenter', () => {
       if (open && open.index !== index) openMenu(index, false);
     });
@@ -180,7 +180,7 @@ export function createMenubar(
     },
     { signal },
   );
-  // Не забираем фокус у текста при клике мышью — иначе пропадёт выделение.
+  // A mouse click doesn't take focus from the text, otherwise the selection disappears.
   host.addEventListener(
     'mousedown',
     (event) => {

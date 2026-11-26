@@ -1,8 +1,8 @@
 import { defineConfig } from 'tsup';
 
 /**
- * npm: ESM/CJS, ядро — внешняя зависимость. CDN-сборка (dist/novaprose.global.js + ленивые части
- * в dist/novaprose-chunks/) — scripts/build-cdn.mjs, шаг build после tsup.
+ * npm: ESM/CJS, the core is an external dependency. The CDN build (dist/novaprose.global.js + lazy parts
+ * in dist/novaprose-chunks/) is scripts/build-cdn.mjs, the build step after tsup.
  */
 export default defineConfig({
   entry: { index: 'src/index.ts', define: 'src/define.ts' },

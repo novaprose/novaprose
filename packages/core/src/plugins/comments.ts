@@ -132,7 +132,7 @@ export function getComments(editor: Editor): CommentsController | undefined {
   return controllers.get(editor);
 }
 
-/** Все фрагменты с комментариями: id → диапазоны. */
+/** Every commented fragment: id → ranges. */
 function collectRanges(doc: PMNode): Map<string, { from: number; to: number }[]> {
   const result = new Map<string, { from: number; to: number }[]>();
   doc.descendants((node, pos) => {
@@ -142,7 +142,7 @@ function collectRanges(doc: PMNode): Map<string, { from: number; to: number }[]>
       const id = mark.attrs.id as string;
       const list = result.get(id) ?? [];
       const last = list[list.length - 1];
-      // Соседние текстовые узлы (другое форматирование) — один непрерывный фрагмент.
+      // Adjacent text nodes (different formatting) form one continuous fragment.
       if (last && last.to === pos) last.to = pos + node.nodeSize;
       else list.push({ from: pos, to: pos + node.nodeSize });
       result.set(id, list);
@@ -165,7 +165,7 @@ export default definePlugin({
   marks: {
     comment: {
       attrs: { id: {} },
-      // Ввод на границе фрагмента не расширяет его; разные обсуждения могут перекрываться.
+      // Typing at the edge of a fragment doesn't extend it; different threads may overlap.
       inclusive: false,
       excludes: '',
       parseDOM: [
@@ -186,7 +186,7 @@ export default definePlugin({
   },
 
   prosemirrorPlugins: (editor) => {
-    // Кэш подсветки: пересчитываем, только когда изменились документ, ветки или активная ветка.
+    // The highlight cache: recomputed only when the document, the threads or the active thread change.
     let cache: { doc: PMNode; threads: unknown; state: PluginState; set: DecorationSet } | null =
       null;
     return [
@@ -245,8 +245,8 @@ export default definePlugin({
         },
         view: () => ({
           update(view, prev) {
-            // Курсор зашёл в прокомментированный текст — показываем его обсуждение.
-            // Только перемещение курсора (клик, стрелки): при наборе текста панель не навязываем.
+            // The cursor entered commented text: show its thread.
+            // Only on cursor moves (a click, arrows): the panel isn't pushed while typing.
             if (prev.selection.eq(view.state.selection) || prev.doc !== view.state.doc) return;
             const controller = getComments(editor);
             if (!controller || commentsKey.getState(view.state)!.pending) return;
@@ -281,7 +281,7 @@ export default definePlugin({
     const userSource =
       options.mentions ??
       (editor.options.pluginOptions?.mentions as MentionsOptions | undefined)?.fetch;
-    /** Упомянутые, чьё «@Имя» осталось в тексте (выбрал из списка, потом стёр — не уведомляем). */
+    /** Mentioned people whose "@Name" is still in the text (picked from the list, then erased: no notification). */
     const keepMentions = (text: string, mentions: CommentAuthor[] = []) => {
       const unique = new Map(mentions.map((m) => [m.id, m]));
       return [...unique.values()].filter((m) => text.includes(`@${m.name}`));
@@ -309,8 +309,8 @@ export default definePlugin({
       null;
     let panelOpen = false;
 
-    // Панель — общая боковая панель редактора (editor.ui.sidebar): одна открытая за раз, рядом с
-    // текстом, на узком экране — под ним. Шапку с заголовком и закрытием рисует сама панель.
+    // The panel is the editor's shared sidebar (editor.ui.sidebar): one open at a time, next to the
+    // text, under it on a narrow screen. The panel draws its own header with the title and the close button.
     editor.ui.registry.addSidebar('comments', {
       title: labels.panel,
       button: false,
@@ -323,7 +323,7 @@ export default definePlugin({
       },
       onShow: () => {
         panelOpen = true;
-        // hidden у самой панели — для совместимости со стилями и тестами, видимостью управляет sidebar.
+        // hidden on the panel itself is for compatibility with styles and tests; the sidebar controls visibility.
         if (panel) panel.el.hidden = false;
         editor.root.classList.add('nova-comments-open');
         panel?.render();
@@ -359,7 +359,7 @@ export default definePlugin({
         if (selection.empty || !editor.isEditable()) return false;
         dispatchMeta({ pending: { from: selection.from, to: selection.to }, active: null });
         void controller.openPanel().then(() => {
-          // Панель могла быть уже открыта — перерисовать, чтобы появилось поле нового комментария.
+          // The panel may already be open: redraw it so the new comment field appears.
           panel?.render();
           panel?.focusComposer();
         });
@@ -388,7 +388,7 @@ export default definePlugin({
           state.tr
             .addMark(pending.from, pending.to, markType().create({ id }))
             .setMeta(commentsKey, { pending: null, active: id } satisfies Meta)
-            // Комментарий — не правка текста: Ctrl+Z не должен его снимать.
+            // A comment isn't a text edit: Ctrl+Z must not remove it.
             .setMeta('addToHistory', false),
         );
         panel?.render();
@@ -439,7 +439,7 @@ export default definePlugin({
     };
     controllers.set(editor, controller);
 
-    // Изменения веток (свои, из бэкенда, от других участников) — перерисовать подсветку и панель.
+    // Thread changes (your own, from the backend, from other participants) redraw the highlight and the panel.
     const unsubscribe = store.subscribe(() => {
       if (editor.view.isDestroyed) return;
       dispatchMeta({ refresh: true });
@@ -480,7 +480,7 @@ export default definePlugin({
 
     return () => {
       unsubscribe();
-      // Панель уничтожает editor.ui.sidebar (очистка из render).
+      // editor.ui.sidebar destroys the panel (the cleanup from render).
       controllers.delete(editor);
     };
   },

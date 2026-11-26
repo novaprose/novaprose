@@ -8,28 +8,28 @@ import css from './pagelayout-ui.css?raw';
 import { pickLabels } from './shared';
 
 /**
- * Ленивая часть режима страниц: где кончается каждая страница. Строки текста, картинки и строки
- * таблиц меряются в самом редакторе (лист той же ширины, что и страница при печати), затем
- * раскладываются по страницам так же, как это сделает печать (orphans/widows: 1, строки таблиц и
- * картинки не делятся, разрыв страницы — с новой страницы). Линии рисуются поверх листа —
- * вне DOM ProseMirror, поэтому не мешают вводу.
+ * The lazy part of page mode: where each page ends. Text lines, images and table rows
+ * are measured in the editor itself (the sheet has the same width as the printed page), then
+ * laid out into pages the way printing will do it (orphans/widows: 1, table rows and
+ * images aren't split, a page break starts a new page). The lines are drawn on top of the sheet,
+ * outside ProseMirror's DOM, so they don't interfere with typing.
  */
 
 export const LABELS = { en: { page: 'Page {page}' } };
 
-/** CSS-пикселей в миллиметре (96 dpi — так считают и экран, и печать браузера). */
+/** CSS pixels per millimetre (96 dpi: both the screen and browser printing count this way). */
 export const PX_PER_MM = 96 / 25.4;
 
 export interface Line {
   top: number;
   bottom: number;
-  /** Разрыв страницы: следующая строка — с новой страницы. */
+  /** A page break: the next line starts a new page. */
   forced?: boolean;
-  /** У разрыва: верхнее поле следующего блока (после принудительного разрыва оно сохраняется). */
+  /** At a break: the top margin of the next block (it is kept after a forced break). */
   offset?: number;
 }
 
-/** Целиком на одной странице: картинки, строки таблиц, поля ввода видов узлов. */
+/** Kept whole on one page: images, table rows, input fields of node views. */
 const ATOMIC = new Set([
   'IMG',
   'VIDEO',
@@ -43,7 +43,7 @@ const ATOMIC = new Set([
   'BUTTON',
 ]);
 
-/** Прямоугольники строк содержимого в координатах листа (от его верхнего края). */
+/** Rectangles of content lines in sheet coordinates (from its top edge). */
 export function collectLines(root: HTMLElement): Line[] {
   const top = root.getBoundingClientRect().top;
   const lines: Line[] = [];
@@ -65,7 +65,7 @@ export function collectLines(root: HTMLElement): Line[] {
         } else if (ATOMIC.has(child.tagName) || child.localName === 'svg') {
           push(child.getBoundingClientRect());
         } else if (child.childNodes.length === 1 && child.firstChild?.nodeName === 'BR') {
-          // Пустой абзац: строки текста нет, но место он занимает.
+          // An empty paragraph: no text line, but it takes up space.
           push(child.getBoundingClientRect());
         } else {
           walk(child);
@@ -77,7 +77,7 @@ export function collectLines(root: HTMLElement): Line[] {
   return lines;
 }
 
-/** Строки, которые делят одну линию (текст разными шрифтами, картинка в строке), — одна строка. */
+/** Lines that share one line (text in different fonts, an inline image) count as one line. */
 function mergeLines(lines: Line[]): Line[] {
   const merged: Line[] = [];
   for (const line of [...lines].sort((a, b) => a.top - b.top || a.bottom - b.bottom)) {
@@ -90,15 +90,15 @@ function mergeLines(lines: Line[]): Line[] {
 }
 
 export interface PageBreak {
-  /** Где начинается текст новой страницы (для раскладки). */
+  /** Where the text of the new page starts (for the layout). */
   at: number;
-  /** Где рисовать границу: между строками или на самом разрыве страницы. */
+  /** Where to draw the border: between lines or at the page break itself. */
   mark: number;
 }
 
 /**
- * Где начинаются страницы со второй (в координатах листа). `start` — верх области текста первой
- * страницы, `height` — высота области текста страницы.
+ * Where pages start from the second one on (in sheet coordinates). `start` is the top of the text area of the first
+ * page, `height` is the height of a page's text area.
  */
 export function paginate(lines: Line[], start: number, height: number): PageBreak[] {
   const breaks: PageBreak[] = [];
@@ -148,7 +148,7 @@ class PageBreaks {
       typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => this.schedule());
     this.observer?.observe(view.dom);
     if (view.dom.parentElement) this.observer?.observe(view.dom.parentElement);
-    // Картинки догружаются, шрифты подменяются — строки сдвигаются.
+    // Images finish loading, fonts get swapped: lines shift.
     view.dom.addEventListener('load', this.schedule, true);
     view.dom.ownerDocument.fonts?.ready.then(this.schedule, () => {});
     this.schedule();
@@ -171,7 +171,7 @@ class PageBreaks {
     const dom = this.view.dom;
     if (!layout || this.destroyed) return;
     const width = dom.getBoundingClientRect().width;
-    // Лист уже страницы (узкий экран): строки переносятся не так, как при печати.
+    // The sheet is narrower than the page (a narrow screen): lines wrap differently from print.
     if (!width || Math.abs(width - layout.width * PX_PER_MM) > 1.5)
       return this.render(null, layout);
     const start = parseFloat(getComputedStyle(dom).paddingTop) || 0;
@@ -195,7 +195,7 @@ class PageBreaks {
           ),
         ),
       );
-      // Последняя страница — до конца, как лист бумаги: от её начала — текст и нижнее поле.
+      // The last page runs to the end, like a sheet of paper: from its start, the text and the bottom margin.
       const last = breaks?.[breaks.length - 1]?.at;
       if (last !== undefined) {
         const rest = (layout.height - layout.margins.top) * PX_PER_MM;

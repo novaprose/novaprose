@@ -2,11 +2,11 @@ import { ELEMENT_ID_RE } from '../element-id';
 import { definePlugin } from '../plugins';
 
 /**
- * Плагин anchor: якорь `<a id="…"></a>` для ссылок вида `#раздел`. `plugins: ['anchor']`.
- * Здесь — узел (схема создаётся вместе с редактором); диалог и кнопка — в anchor-ui.ts.
+ * The anchor plugin: an anchor `<a id="…"></a>` for links like `#section`. `plugins: ['anchor']`.
+ * Here is the node (the schema is created together with the editor); the dialog and the button are in anchor-ui.ts.
  */
 
-/** Безопасный идентификатор: без пробелов и кавычек (общая проверка с id заголовков). */
+/** A safe identifier: no spaces or quotes (the same check as for heading ids). */
 const ID_RE = ELEMENT_ID_RE;
 
 export default definePlugin({
@@ -35,7 +35,7 @@ export default definePlugin({
           },
         },
       ],
-      // Документ мог прийти из JSON — идентификатор проверяем и на выходе.
+      // The document may come from JSON: the identifier is checked on output too.
       toDOM: (node) => ['a', { id: ID_RE.test(node.attrs.id as string) ? node.attrs.id : null }],
     },
   },

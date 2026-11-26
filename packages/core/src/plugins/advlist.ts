@@ -8,10 +8,10 @@ import type { ButtonSpec } from '../ui/registry';
 import { pickLabels } from './shared';
 
 /**
- * Плагин advlist: стиль маркеров (точка, кружок, квадрат) и нумерации (1, a, A, i, I, α).
- * Кнопки `bullist` и `numlist` становятся составными: основная часть переключает список,
- * стрелка — выбор стиля. `plugins: ['advlist']`; наборы стилей — `pluginOptions.advlist`
- * (`bullets`, `numbers`, как advlist_bullet_styles / advlist_number_styles).
+ * The advlist plugin: bullet styles (disc, circle, square) and numbering styles (1, a, A, i, I, α).
+ * The `bullist` and `numlist` buttons become split buttons: the main part toggles the list,
+ * the arrow picks the style. `plugins: ['advlist']`; the style sets come from `pluginOptions.advlist`
+ * (`bullets`, `numbers`, like advlist_bullet_styles / advlist_number_styles).
  */
 
 export interface AdvlistOptions {
@@ -33,7 +33,7 @@ export const LABELS = {
   },
 };
 
-/** Ближайший список нужного типа вокруг выделения. */
+/** The nearest list of the right type around the selection. */
 function findList(
   state: EditorState,
   type: NodeType,
@@ -53,7 +53,7 @@ function applyStyle(
   fallback: string,
 ): void {
   const type = () => nodesOf(editor.view.state)[kind];
-  // Не в списке этого типа — сначала создаём список, потом задаём стиль.
+  // Not in a list of this type: create the list first, then set the style.
   if (!findList(editor.view.state, type()))
     editor.exec(kind === 'bullet_list' ? 'bulletList' : 'orderedList');
   const list = findList(editor.view.state, type());

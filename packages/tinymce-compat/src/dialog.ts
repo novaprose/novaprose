@@ -85,7 +85,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
   return node;
 }
 
-/** htmlpanel: HTML от разработчика интеграции — без скриптов, обработчиков и javascript:-ссылок. */
+/** htmlpanel: HTML from the integration developer, without scripts, handlers and javascript: links. */
 function safeHtml(html: string): DocumentFragment {
   const template = document.createElement('template');
   template.innerHTML = html;
@@ -146,7 +146,7 @@ export function openSpecDialog(
         input.addEventListener('input', () => notifyChange(name));
         if (name) {
           controls.set(name, {
-            // urlinput хранит { value }, остальные — строку.
+            // urlinput keeps { value }, the others a string.
             get: () => (item.type === 'urlinput' ? { value: input.value } : input.value),
             set: (value) => {
               input.value = String(
@@ -308,7 +308,7 @@ export function openSpecDialog(
     }
   }
 
-  // Кнопки: submit — кнопка диалога, custom — ряд в конце, cancel — стандартная «Отмена».
+  // Buttons: submit is the dialog's button, custom ones form a row at the end, cancel is the standard "Cancel".
   const buttons = spec.buttons ?? [];
   const submit = buttons.find((b) => b.type === 'submit');
   const custom = buttons.filter((b) => b.type === 'custom');
@@ -384,7 +384,7 @@ export function openSpecDialog(
     ...(submit ? { submitLabel: submit.text } : {}),
     ...(spec.size === 'large' ? { size: 'large' as const } : {}),
     onSubmit: () => {
-      // Как в TinyMCE: диалог закрывает сам обработчик (api.close()).
+      // As in TinyMCE: the handler closes the dialog itself (api.close()).
       spec.onSubmit?.(api);
       return closedByApi;
     },

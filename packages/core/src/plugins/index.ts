@@ -12,8 +12,8 @@ import pagebreak from './pagebreak';
 import pagelayout from './pagelayout';
 
 /**
- * Каталог встроенных плагинов NovaProse. Каждый подключается по имени (`plugins: ['insertdatetime']`)
- * и загружается лениво — отдельным чанком, не увеличивая ядро.
+ * The catalog of built-in NovaProse plugins. Each one is attached by name (`plugins: ['insertdatetime']`)
+ * and loads lazily, as a separate chunk, without growing the core.
  */
 registerPlugin('insertdatetime', () => import('./insertdatetime'));
 registerPlugin('quickbars', () => import('./quickbars'));
@@ -31,9 +31,9 @@ registerPlugin('exportword', () => import('./exportword'));
 registerPlugin('importword', () => import('./importword'));
 registerPlugin('ai', () => import('./ai'));
 
-// Плагины с узлами документа: схема нужна при создании редактора, поэтому они не ленивые.
+// Plugins with document nodes: the schema is needed when the editor is created, so they aren't lazy.
 registerPlugin('anchor', anchor);
-// Узлы — сразу, интерфейс и команды — ленивой частью (NovaPlugin.load).
+// Nodes right away, the interface and commands in the lazy part (NovaPlugin.load).
 registerPlugin('accordion', accordion);
 registerPlugin('tableofcontents', tableofcontents);
 registerPlugin('math', math);

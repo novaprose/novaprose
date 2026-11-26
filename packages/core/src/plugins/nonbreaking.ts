@@ -3,7 +3,7 @@ import { keymap } from 'prosemirror-keymap';
 import { definePlugin } from '../plugins';
 import { insertText, pickLabels } from './shared';
 
-/** Плагин nonbreaking: неразрывный пробел (кнопка и Ctrl/Cmd+Shift+Space). `plugins: ['nonbreaking']`. */
+/** The nonbreaking plugin: a non-breaking space (the button and Ctrl/Cmd+Shift+Space). `plugins: ['nonbreaking']`. */
 
 const NBSP = String.fromCharCode(0xa0);
 const ICON = icons.nonBreaking;

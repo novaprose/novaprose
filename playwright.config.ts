@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Браузерные e2e-тесты против playground. Проверяют то, чего не видит jsdom:
- * реальный ввод, выделение, горячие клавиши, вставку, раскладку тулбара.
+ * Browser e2e tests against the playground. They check what jsdom can't see:
+ * real typing, selection, keyboard shortcuts, paste, toolbar layout.
  */
 export default defineConfig({
   testDir: './e2e',
@@ -28,7 +28,7 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
     },
     {
-      // Сервер синхронизации для collab.html: режим разработки, документы только в памяти.
+      // Sync server for collab.html: development mode, documents only in memory.
       command: 'node apps/sync-server/src/server.mjs --dev',
       url: 'http://localhost:1234/health',
       reuseExistingServer: !process.env.CI,

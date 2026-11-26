@@ -47,9 +47,9 @@ export interface CommentStore {
   deleteThread(threadId: string): void;
 }
 
-/** Идентификатор ветки: безопасен в атрибуте и селекторе. */
+/** A thread identifier: safe in an attribute and a selector. */
 export const COMMENT_ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
-/** Ограничения против случайных (или злонамеренных) гигантских данных. */
+/** Limits against accidental (or malicious) giant data. */
 export const COMMENT_MAX_LENGTH = 5000;
 export const COMMENT_NAME_MAX_LENGTH = 80;
 

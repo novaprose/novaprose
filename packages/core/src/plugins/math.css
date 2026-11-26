@@ -1,4 +1,4 @@
-/* Формулы (плагин math): вид в редакторе. Подключается вместе с плагином (видна с первой отрисовки). */
+/* Formulas (the math plugin): the look in the editor. Attached together with the plugin (visible from the first render). */
 .nova-math {
   border-radius: 4px;
   cursor: pointer;
@@ -25,13 +25,13 @@
   outline: 2px solid var(--nova-accent);
 }
 
-/* Пока движок не загрузился — исходник моноширинным; пустая — подпись приглушённым. */
+/* Until the engine loads, the source in monospace; an empty formula shows a muted label. */
 .nova-math:not(:has(math)) {
   font-family: var(--nova-mono);
   font-size: 0.9em;
 }
 
-/* Ошибка в формуле — исходник цветом ошибки с волнистой линией (текст ошибки — в подсказке). */
+/* An error in the formula: the source in the error color with a wavy underline (the error text is in a tooltip). */
 .nova-math-error {
   color: var(--nova-danger);
   text-decoration: underline wavy;
@@ -44,7 +44,7 @@
   font-family: var(--nova-font);
 }
 
-/* Просмотр в диалоге «Формула». */
+/* The preview in the "Formula" dialog. */
 .nova-math-preview {
   min-height: 2.5em;
   padding: 8px;

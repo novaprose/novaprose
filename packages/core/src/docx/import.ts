@@ -93,7 +93,7 @@ function bytesToBase64(bytes: Uint8Array): string {
   return btoa(binary);
 }
 
-/** Путь части относительно папки ссылающейся части: word/ + media/x.png → word/media/x.png. */
+/** A part's path relative to the folder of the referring part: word/ + media/x.png → word/media/x.png. */
 function resolvePart(base: string, target: string): string {
   if (target.startsWith('/')) return target.slice(1);
   const parts = base.split('/').slice(0, -1);
@@ -107,14 +107,14 @@ function resolvePart(base: string, target: string): string {
 class DocxReader {
   readonly warnings = new Set<string>();
   private readonly styles = new Map<string, Style>();
-  private readonly levels = new Map<string, Level[]>(); // numId → уровни
+  private readonly levels = new Map<string, Level[]>(); // numId → levels
   private readonly starts = new Map<string, number>(); // numId:ilvl → startOverride
   private readonly footnotes = new Map<string, XmlElement>();
   private readonly notes: string[] = [];
   private rels = new Map<string, Rel>();
   private part = 'word/document.xml';
   private images = 0;
-  /** Внутри строки-заголовка таблицы: th и так жирный — жирность текста не переносим. */
+  /** Inside a table header row: th is bold anyway, so text boldness isn't carried over. */
   private inHeader = false;
 
   constructor(private readonly files: Map<string, Uint8Array>) {}
@@ -142,7 +142,7 @@ class DocxReader {
 
   load(): XmlElement | undefined {
     const root = this.relsOf('_rels/.rels');
-    // Главная часть — по связи officeDocument (обычно word/document.xml).
+    // The main part comes through the officeDocument relationship (usually word/document.xml).
     const rootRels = this.xml('_rels/.rels');
     for (const rel of elements(path(rootRels, 'Relationships'), 'Relationship'))
       if ((rel.attrs.Type ?? '').endsWith('/officeDocument'))
@@ -195,7 +195,7 @@ class DocxReader {
     return path(this.xml(this.part), 'w:document', 'w:body');
   }
 
-  /** Стиль и его предки (basedOn), без циклов. */
+  /** A style and its ancestors (basedOn), without cycles. */
   private styleChain(id: string | undefined): Style[] {
     const chain: Style[] = [];
     const seen = new Set<string>();
@@ -229,12 +229,12 @@ class DocxReader {
     return null;
   }
 
-  // ---------- текст ----------
+  // ---------- text ----------
 
-  /** Оформление отрезка. Внутри ссылки цвет и подчёркивание — оформление самой ссылки: не переносим. */
+  /** A run's formatting. Inside a link, color and underline belong to the link itself and aren't carried over. */
   private runStyle(rPr: XmlElement | undefined, inLink = false): { open: string; close: string } {
     const props: XmlElement[] = [];
-    // Символьный стиль (Strong, Emphasis…) — раньше прямого оформления.
+    // A character style (Strong, Emphasis…) comes before direct formatting.
     for (const style of this.styleChain(val(element(rPr, 'w:rStyle'))).reverse())
       if (style.rPr && !(inLink && style.name === 'hyperlink')) props.push(style.rPr);
     if (rPr) props.push(rPr);
@@ -267,7 +267,7 @@ class DocxReader {
       const sz = Number(val(element(p, 'w:sz')));
       if (sz > 0) size = `${sz / 2}pt`;
     }
-    // Моноширинный шрифт — код (его фон и шрифт задаёт оформление кода в редакторе).
+    // A monospace font means code (the editor's code styling sets its background and font).
     const code = MONOSPACE.test(font);
     const css: string[] = [];
     if (color) css.push(`color: ${color}`);
@@ -275,7 +275,7 @@ class DocxReader {
       css.push(`background-color: ${background}`);
     if (font && !code) css.push(`font-family: ${font}`);
     if (size) css.push(`font-size: ${size}`);
-    // Оформление по умолчанию (шрифт и размер) не переносим, чтобы не засорять текст.
+    // Default formatting (font and size) isn't carried over, to keep the text clean.
     const tags: string[] = [];
     if (bold) tags.push('strong');
     if (italic) tags.push('em');
@@ -337,7 +337,7 @@ class DocxReader {
     );
   }
 
-  /** Старые картинки (VML): v:imagedata внутри w:pict / w:object. */
+  /** Old images (VML): v:imagedata inside w:pict / w:object. */
   private vml(pict: XmlElement): string {
     let data: XmlElement | undefined;
     let shape: XmlElement | undefined;
@@ -366,8 +366,8 @@ class DocxReader {
   }
 
   /**
-   * Содержимое абзаца в HTML. Возвращает отрезки, разделённые разрывами страниц.
-   * Поля (fldChar): между begin и separate — код (не текст), после separate — результат.
+   * Paragraph content as HTML. Returns pieces separated by page breaks.
+   * Fields (fldChar): between begin and separate is the code (not text), after separate the result.
    */
   private inline(parent: XmlElement, state: InlineState): void {
     for (const node of elements(parent)) {
@@ -404,7 +404,7 @@ class DocxReader {
           this.warnings.add('equations');
           break;
         default:
-          // w:del, w:moveFrom (принятые исправления), закладки, комментарии, w:proofErr — без текста.
+          // w:del, w:moveFrom (accepted revisions), bookmarks, comments, w:proofErr: no text.
           break;
       }
     }
@@ -440,7 +440,7 @@ class DocxReader {
           break;
         case 'w:sym': {
           const code = parseInt(node.attrs['w:char'] ?? '', 16);
-          // Символы шрифтов Symbol/Wingdings лежат в области F000 — их не угадать.
+          // Characters of the Symbol/Wingdings fonts sit in the F000 range: there is no guessing them.
           if (Number.isFinite(code) && code < 0xe000) text += escape(String.fromCodePoint(code));
           break;
         }
@@ -518,7 +518,7 @@ class DocxReader {
       .trim();
   }
 
-  // ---------- блоки ----------
+  // ---------- blocks ----------
 
   private paragraph(p: XmlElement, list: ListState, out: string[]): void {
     const pPr = element(p, 'w:pPr');
@@ -529,7 +529,7 @@ class DocxReader {
     this.inline(p, state);
     const parts = state.parts();
 
-    // Оформление абзаца.
+    // Paragraph formatting.
     const styles = this.styleChain(styleId);
     const jc = val(element(pPr, 'w:jc')) ?? styles.find((s) => s.jc)?.jc;
     const css: string[] = [];
@@ -548,7 +548,7 @@ class DocxReader {
     const rtl = on(element(pPr, 'w:bidi'));
     const attrs = `${css.length ? ` style="${css.join('; ')}"` : ''}${rtl ? ' dir="rtl"' : ''}`;
 
-    // Закладка в начале заголовка — его id (ссылки оглавления Word ведут на неё).
+    // A bookmark at the start of a heading becomes its id (Word's table of contents links point to it).
     const mark = elements(p, 'w:bookmarkStart').find((b) => b.attrs['w:name'] !== '_GoBack');
     const id = level && mark ? ` id="${escape(mark.attrs['w:name'] ?? '')}"` : '';
 
@@ -556,13 +556,13 @@ class DocxReader {
       list.close(out);
       out.push(PAGE_BREAK);
     }
-    // Пустой абзац с нижней границей — горизонтальная линия (так её пишут Word и наш экспорт).
+    // An empty paragraph with a bottom border is a horizontal rule (that is how Word and our export write it).
     if (parts.length === 1 && !parts[0] && !level && element(element(pPr, 'w:pBdr'), 'w:bottom')) {
       list.close(out);
       out.push('<hr>');
       return;
     }
-    // Пункт чек-листа: «☐ »/«☒ » в начале обычного абзаца.
+    // A checklist item: "☐ "/"☒ " at the start of a regular paragraph.
     const check = !level && !numId ? /^([☐☒☑]) /.exec(parts[0] ?? '') : null;
     if (check && parts.length === 1) {
       list.item(out, 'checklist', 0, false, '', 1, check[1] !== '☐');
@@ -577,7 +577,7 @@ class DocxReader {
         list.close(out);
         out.push(PAGE_BREAK);
       }
-      // Пустые куски вокруг разрыва страницы — не абзацы.
+      // Empty pieces around a page break are not paragraphs.
       if (!html && parts.length > 1) return;
       if (numId && numId !== '0' && index === 0) {
         const ilvl = Number(val(element(numPr, 'w:ilvl')) ?? 0);
@@ -629,7 +629,7 @@ class DocxReader {
       }
       return { tr, cells };
     });
-    // Объединение по вертикали: начало (restart) забирает продолжения под собой.
+    // A vertical merge: the start (restart) takes the continuations below it.
     rows.forEach((row, r) => {
       for (const cell of row.cells) {
         if (cell.merge !== 'restart') continue;
@@ -687,7 +687,7 @@ class DocxReader {
       } else if (node.name === 'w:altChunk') this.warnings.add('embedded content (altChunk)');
     }
     list.close(out);
-    // Сноски — в конец документа.
+    // Footnotes go to the end of the document.
     if (parent.name === 'w:body' && this.notes.length) out.push('<hr>', ...this.notes.splice(0));
     if (out.length === before && parent.name === 'w:tc') out.push('<p></p>');
   }
@@ -701,7 +701,7 @@ class DocxReader {
     let width = mm(size.attrs['w:w']);
     let height = mm(size.attrs['w:h']);
     if (!(width > 0 && height > 0)) return undefined;
-    // Альбомная ориентация, а размеры — книжные (так пишут некоторые программы): верим ориентации.
+    // Landscape orientation with portrait sizes (some programs write it that way): trust the orientation.
     if (size.attrs['w:orient'] === 'landscape' && width < height) [width, height] = [height, width];
     const margins: Partial<PageMargins> = {};
     for (const side of ['top', 'right', 'bottom', 'left'] as const) {
@@ -725,17 +725,17 @@ const PAGE_BREAK = '<div class="nova-pagebreak" style="break-after: page;"></div
 
 const MONOSPACE =
   /^(consolas|courier( new)?|menlo|monaco|lucida console|source code pro|fira (code|mono)|jetbrains mono|cascadia (code|mono)|monospace)$/i;
-/** Фон, которым наш экспорт и редакторы кода подкрашивают код, — у кода в редакторе свой. */
+/** The background our export and code editors use to shade code: code in the editor has its own. */
 const CODE_SHADES = new Set(['#f3f4f6', '#f6f8fa']);
 
-/** Содержимое абзаца, порезанное разрывами страниц. */
+/** Paragraph content cut by page breaks. */
 class InlineState {
   private current: string[] = [];
   private readonly done: string[] = [];
-  /** Внутри поля: code — код поля (не текст), result — его результат. */
+  /** Inside a field: code is the field code (not text), result is its result. */
   field: 'code' | 'result' | null = null;
   readonly fields: Array<{ code: string; link: boolean }> = [];
-  /** Глубина ссылок (w:hyperlink, поле HYPERLINK). */
+  /** Link depth (w:hyperlink, the HYPERLINK field). */
   links = 0;
 
   push(html: string): void {
@@ -752,7 +752,7 @@ class InlineState {
   }
 }
 
-/** Открытые списки: вложенность по ilvl, новый список — при смене нумерации или вида. */
+/** Open lists: nesting by ilvl, a new list when the numbering or the kind changes. */
 class ListState {
   private readonly stack: Array<{ numId: string; level: number; tag: 'ul' | 'ol' }> = [];
 

@@ -1,6 +1,6 @@
 /*
- * Чек-листы (плагин checklist): галочка в первой колонке пункта, содержимое — во второй.
- * Подключается при подключении плагина через editor.ui.addStyles.
+ * Checklists (the checklist plugin): the checkbox in the item's first column, the content in the second.
+ * Attached when the plugin is attached, through editor.ui.addStyles.
  */
 
 .nova-prosemirror ul[data-type='taskList'] {
@@ -8,8 +8,8 @@
   list-style: none;
 }
 
-/* Галочка — в отступе пункта, абсолютно: текст течёт как обычный абзац. С grid/flex браузеры
-   путали движение курсора (End в пункте уводил курсор в начало первого пункта — найдено e2e). */
+/* The checkbox sits in the item's indent, absolutely positioned: the text flows like a regular paragraph. With grid/flex browsers
+   confused cursor movement (End in an item sent the cursor to the start of the first item, found by e2e). */
 .nova-prosemirror li[data-type='taskItem'] {
   position: relative;
   padding-inline-start: 1.6em;
@@ -41,7 +41,7 @@
   background: var(--nova-accent-strong);
 }
 
-/* Галочка — рамка из двух сторон, повёрнутая на 45°. */
+/* The check mark is a two-sided border rotated by 45°. */
 .nova-check[aria-checked='true']::after {
   content: '';
   width: 0.28em;

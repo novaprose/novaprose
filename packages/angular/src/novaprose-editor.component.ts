@@ -96,8 +96,8 @@ export class NovaProseEditorComponent
         language: this.language,
       }).filter(([, value]) => value !== undefined),
     );
-    // Вне зоны: ProseMirror шлёт много событий (выделение, ввод), и каждое не должно
-    // запускать проверку изменений во всём приложении.
+    // Outside the zone: ProseMirror sends many events (selection, typing), and none of them should
+    // trigger change detection across the whole application.
     const editor = this.zone.runOutsideAngular(() =>
       createEditor({
         ...this.init,

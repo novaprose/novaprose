@@ -1,7 +1,7 @@
 import type { Editor } from '../editor';
 import type { Translator } from '../i18n';
 
-/** Какие стили уже подключены к документу или теневому корню (один раз на корень). */
+/** Which styles are already attached to the document or a shadow root (once per root). */
 const addedStyles = new WeakMap<Document | ShadowRoot, Set<string>>();
 import { openDialog, type DialogHandle, type DialogOptions } from './dialog';
 import { h } from './dom';
@@ -64,7 +64,7 @@ export class UiManager {
         root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
         return;
       } catch {
-        // частичная поддержка — ниже <style>
+        // partial support: fall through to <style>
       }
     }
     const style = document.createElement('style');

@@ -1,9 +1,9 @@
 import { definePlugin } from '../plugins';
 
 /**
- * Плагин pagebreak: разрыв страницы для печати и PDF —
+ * The pagebreak plugin: a page break for printing and PDF:
  * `<div class="nova-pagebreak" style="break-after: page;"></div>`. `plugins: ['pagebreak']`.
- * Здесь — узел (схема создаётся вместе с редактором); кнопка — в pagebreak-ui.ts.
+ * Here is the node (the schema is created together with the editor); the button is in pagebreak-ui.ts.
  */
 
 export default definePlugin({
@@ -16,7 +16,7 @@ export default definePlugin({
       selectable: true,
       parseDOM: [
         { tag: 'div.nova-pagebreak' },
-        // Разрыв из других редакторов и Word: пустой блок с page-break-after / break-after.
+        // A break from other editors and Word: an empty block with page-break-after / break-after.
         {
           tag: 'div',
           getAttrs: (dom) => {

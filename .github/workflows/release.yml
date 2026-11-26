@@ -1,14 +1,14 @@
 name: Release
 
-# Публикация в npm по тегу vX.Y.Z. Без токенов: npm trusted publishing (OIDC).
-# Каждый пакет на npmjs.com должен доверять этому workflow — см. docs/RELEASING.md.
+# Publishes to npm on a vX.Y.Z tag. No tokens: npm trusted publishing (OIDC).
+# Every package on npmjs.com must trust this workflow: see docs/RELEASING.md.
 on:
   push:
     tags: ['v*']
 
 permissions:
   contents: read
-  id-token: write # OIDC-токен для npm trusted publishing
+  id-token: write # OIDC token for npm trusted publishing
 
 concurrency:
   group: release
@@ -26,7 +26,7 @@ jobs:
           node-version: 22
           cache: pnpm
           registry-url: https://registry.npmjs.org
-      # Trusted publishing требует npm >= 11.5.1.
+      # Trusted publishing needs npm >= 11.5.1.
       - run: npm install -g npm@^11.5.1
       - run: pnpm install --frozen-lockfile
 
@@ -38,19 +38,19 @@ jobs:
           fi
 
       - run: pnpm check
-      # Сборка, архивы, бюджет размера, publint + типы ESM/CJS — до публикации, а не после.
+      # Build, archives, size budget, publint + ESM/CJS types: before publishing, not after.
       - run: pnpm verify:release
-      # Примеры — из этих же архивов, их версии и ссылки CDN — на выпускаемый минор.
+      # Examples come from the same archives; their versions and CDN links point to the minor being released.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify:examples --strict
-      # Замеры скорости с порогами — как в CI.
+      # Speed measurements with limits, as in CI.
       - run: pnpm perf
 
       - name: Publish to npm (core first)
         run: |
           VERSION=$(node -p "require('./packages/core/package.json').version")
           for name in core collab react vue web-component angular tinymce-compat; do
-            # Уже опубликованную версию пропускаем: перезапуск workflow безопасен.
+            # A version that is already published is skipped, so rerunning the workflow is safe.
             if npm view "@novaprose/$name@$VERSION" version >/dev/null 2>&1; then
               echo "@novaprose/$name@$VERSION already published, skipping"; continue
             fi

@@ -57,7 +57,7 @@ function millimetres(value: unknown, min: number, max: number, fallback: number)
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n * 10) / 10)) : fallback;
 }
 
-/** Настройки → лист. Мусор из конфига — умолчания; поле не больше трети листа. */
+/** Settings → the sheet. Garbage from the config gets the defaults; a margin is at most a third of the sheet. */
 export function resolvePageLayout(options: PageLayoutOptions = {}): PageLayout {
   const custom = typeof options.size === 'object' && options.size !== null;
   const name: PageSizeName =
@@ -156,7 +156,7 @@ export function pageLayout(editor: Editor): PageLayoutController | undefined {
   };
 }
 
-/** Для ленивой части: число страниц посчитано. */
+/** For the lazy part: the number of pages has been computed. */
 export function setPageCount(editor: Editor, pages: number | null): void {
   const state = states.get(editor);
   if (!state || state.pages === pages) return;

@@ -24,7 +24,7 @@ export const NovaProseEditor = defineComponent({
     defaultValue: { type: String, default: undefined },
     /** Any core options. Read on mount; to apply new ones, change `key`. */
     init: { type: Object as PropType<NovaProseInit>, default: undefined },
-    // Для Boolean явный default: undefined, иначе Vue превращает отсутствующий проп в false.
+    // An explicit default: undefined for Boolean, otherwise Vue turns a missing prop into false.
     editable: { type: Boolean, default: undefined },
     placeholder: { type: String, default: undefined },
     toolbar: {
@@ -48,7 +48,7 @@ export const NovaProseEditor = defineComponent({
   },
   setup(props, { emit, expose, attrs }) {
     const input = ref<HTMLInputElement | null>(null);
-    // Пока применяем внешний modelValue, не эмитим update: иначе reset формы вернулся бы «эхом».
+    // While an external modelValue is being applied, update isn't emitted: otherwise a form reset would echo back.
     let syncing = false;
 
     const explicit = Object.fromEntries(
@@ -101,7 +101,7 @@ export const NovaProseEditor = defineComponent({
       },
     );
 
-    /** Экземпляр `Editor` через template ref: `editorRef.value.editor`. */
+    /** The `Editor` instance through a template ref: `editorRef.value.editor`. */
     expose({
       get editor() {
         return editor.value;

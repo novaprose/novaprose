@@ -12,8 +12,8 @@ interface Rendered {
 }
 
 /**
- * Плагин контекстных тулбаров (editor.ui.registry.addContextToolbar).
- * Один плавающий контейнер; содержимое — первый тулбар, чей predicate сейчас истинен.
+ * The context toolbars plugin (editor.ui.registry.addContextToolbar).
+ * One floating container; its content is the first toolbar whose predicate is currently true.
  */
 export function contextToolbarPlugin(editor: Editor): Plugin {
   return new Plugin({
@@ -70,7 +70,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
         );
       };
 
-      // Пока мышь тянет выделение, панель не показываем (иначе мерцает) — покажем после отпускания.
+      // While the mouse drags a selection the panel isn't shown (otherwise it flickers): it shows after release.
       let dragging = false;
       const onPointerDown = (event: PointerEvent) => {
         if (event.pointerType === 'mouse' && event.button === 0) dragging = true;
@@ -78,7 +78,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
       const onPointerUp = () => {
         if (!dragging) return;
         dragging = false;
-        // После mouseup браузер ещё дообновляет выделение — даём ProseMirror его прочитать.
+        // After mouseup the browser still finishes updating the selection: let ProseMirror read it.
         setTimeout(() => update(view), 0);
       };
       view.dom.addEventListener('pointerdown', onPointerDown);
@@ -87,9 +87,9 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
       const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 
       /**
-       * Сенсорный экран: панель у выделения не плавает рядом с ним — там «ручки» выделения и
-       * системное меню «Скопировать/Вставить», которые она закрывала бы (или они — её). Панель
-       * прижата к низу видимой части окна, то есть над клавиатурой, во всю ширину.
+       * Touch screens: the selection toolbar doesn't float next to the selection: the selection handles and
+       * the system "Copy/Paste" menu are there, and it would cover them (or they would cover it). The panel
+       * is pinned to the bottom of the visible part of the window, that is, above the keyboard, full width.
        */
       const dock = () => {
         const area = visibleArea();
@@ -127,7 +127,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
         positionFloating(container, rect, placement);
       };
 
-      // Кнопки не забирают фокус — иначе пропадёт выделение узла.
+      // Buttons don't take focus, otherwise the node selection disappears.
       container.addEventListener('mousedown', (event) => {
         if ((event.target as HTMLElement).closest('button')) event.preventDefault();
       });
@@ -154,13 +154,13 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
         if (!container.contains(next) && !view.hasFocus() && !editor.ui.overlayHost.contains(next))
           hide();
       });
-      // Позиция зависит от раскладки — обновляем при прокрутке и ресайзе окна.
+      // The position depends on the layout: updated on scroll and window resize.
       const reposition = () => {
         if (!container.hidden) update(view);
       };
       window.addEventListener('scroll', reposition, true);
       window.addEventListener('resize', reposition);
-      // Клавиатура телефона меняет видимую часть окна, не трогая окно.
+      // A phone keyboard changes the visible part of the window without touching the window.
       window.visualViewport?.addEventListener('resize', reposition);
       window.visualViewport?.addEventListener('scroll', reposition);
 
@@ -181,7 +181,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
   });
 }
 
-/** Фокус на контекстный тулбар (Ctrl+F9 — общепринятое сочетание). */
+/** Focus on the context toolbar (Ctrl+F9, the common shortcut). */
 export function focusContextToolbar(editor: Editor): boolean {
   const button = editor.ui.overlayHost.querySelector<HTMLButtonElement>(
     '.nova-context-toolbar:not([hidden]) button:not(:disabled)',

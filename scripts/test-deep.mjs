@@ -1,7 +1,7 @@
 /**
- * Глубокий прогон property-based тестов: в десятки раз больше случайных документов, чем в
- * обычном `pnpm test`. Запускается в CI по расписанию и перед релизом.
- *   node scripts/test-deep.mjs [число прогонов, по умолчанию 5000]
+ * A deep run of the property-based tests: tens of times more random documents than in the
+ * regular `pnpm test`. CI runs it on a schedule and before a release.
+ *   node scripts/test-deep.mjs [number of runs, 5000 by default]
  */
 import { spawnSync } from 'node:child_process';
 

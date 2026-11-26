@@ -14,8 +14,8 @@ import {
 import { pickLabels } from './shared';
 
 /**
- * Ленивая часть плагина suggestions: кнопка режима правок, меню «Проверка», принять и отклонить
- * правку под курсором. Отслеживание правок и их подсветка — в самом плагине (работают с первой буквы).
+ * The lazy part of the suggestions plugin: the suggesting mode button, the "Review" menu, accepting and rejecting
+ * the suggestion under the cursor. Tracking edits and highlighting them is in the plugin itself (it works from the first letter).
  */
 
 const ICON_TOGGLE = icons.suggest;

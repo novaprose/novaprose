@@ -6,12 +6,12 @@ import css from './tableofcontents.css?raw';
 import { pickLabels } from './shared';
 
 /**
- * Плагин tableofcontents: оглавление документа — блок со ссылками на заголовки (как у TinyMCE).
- * Обновляется само при правке заголовков; заголовкам выдаются устойчивые id (`toc-…`), пока
- * в документе есть оглавление. `plugins: ['tableofcontents']`.
+ * The tableofcontents plugin: the document's table of contents, a block with links to the headings (as in TinyMCE).
+ * It updates by itself when headings change; headings get stable ids (`toc-…`) while
+ * the document has a table of contents. `plugins: ['tableofcontents']`.
  *
- * Здесь — узел, его HTML и стили (видны с первой отрисовки); кнопки, обновление и переход по
- * ссылкам — ленивой частью tableofcontents-ui.ts.
+ * Here are the node, its HTML and styles (visible from the first render); buttons, updating and following
+ * links are in the lazy part, tableofcontents-ui.ts.
  */
 
 export const LABELS = {
@@ -44,7 +44,7 @@ export interface TocEntry {
 
 const CLASS_RE = /^[A-Za-z_][\w-]{0,63}$/;
 
-/** Настройки с проверкой: из конфига может прийти что угодно. */
+/** Settings with validation: the config can bring anything. */
 export function tocSettings(editor: Editor) {
   const options = (editor.options.pluginOptions?.tableofcontents ?? {}) as TableOfContentsOptions;
   const depth = Number(options.depth);
@@ -63,7 +63,7 @@ export function tocSettings(editor: Editor) {
   };
 }
 
-/** Пункты оглавления из атрибута (из JSON может прийти что угодно). */
+/** Table of contents items from the attribute (JSON can bring anything). */
 export function tocEntries(value: unknown): TocEntry[] {
   if (!Array.isArray(value)) return [];
   const out: TocEntry[] = [];
@@ -79,7 +79,7 @@ export function tocEntries(value: unknown): TocEntry[] {
   return out;
 }
 
-/** Вложенные списки по уровням заголовков. */
+/** Nested lists by heading level. */
 function nestedList(entries: TocEntry[], tag: string): DOMOutputSpec | null {
   if (!entries.length) return null;
   const root: unknown[] = [tag];
@@ -103,7 +103,7 @@ function nestedList(entries: TocEntry[], tag: string): DOMOutputSpec | null {
   return root as unknown as DOMOutputSpec;
 }
 
-/** Пункты из готового HTML (ссылки #id и глубина вложенности списков) — до первого обновления. */
+/** Items from ready-made HTML (#id links and the nesting depth of lists), until the first update. */
 function readEntries(nav: HTMLElement): TocEntry[] {
   const out: TocEntry[] = [];
   for (const link of nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')) {
@@ -129,7 +129,7 @@ function tocNodes(editor: Editor): Record<string, NodeSpec> {
       selectable: true,
       attrs: { entries: { default: [] }, title: { default: null } },
       parseDOM: [
-        // Свой формат, TinyMCE (div.mce-toc) и свой класс из настроек.
+        // Our own format, TinyMCE's (div.mce-toc) and a custom class from the settings.
         ...['nav[data-toc]', 'div.mce-toc', `.${settings.className}`].map((tag) => ({
           tag,
           getAttrs: (dom: HTMLElement) => {
@@ -157,7 +157,7 @@ function tocNodes(editor: Editor): Record<string, NodeSpec> {
 export default definePlugin({
   name: 'tableofcontents',
   nodes: tocNodes,
-  // Оглавление видно с первой отрисовки — его стили и подсказка нужны сразу, а не с ленивой частью.
+  // The table of contents is visible from the first render: its styles and hint are needed right away, not with the lazy part.
   setup(editor) {
     editor.ui.addStyles('nova-tableofcontents', css);
     const { empty } = pickLabels(editor, 'tableofcontents', LABELS);

@@ -38,7 +38,7 @@ function storage(): Storage | null {
   try {
     return typeof localStorage === 'undefined' ? null : localStorage;
   } catch {
-    // Доступ к localStorage запрещён (приватный режим, политика браузера) — работаем без черновиков.
+    // Access to localStorage is forbidden (private mode, browser policy): work without drafts.
     return null;
   }
 }
@@ -67,7 +67,7 @@ export default definePlugin({
       }
     };
 
-    // Черновик с прошлого раза запоминаем до первого сохранения нового.
+    // The draft from last time is kept until the first save of the new one.
     let pending = read();
     if (pending && pending.html === editor.getHTML()) pending = null;
     if (pending) editor.ui.notify({ text: labels.found, timeout: 8000 });
@@ -79,11 +79,11 @@ export default definePlugin({
         if (editor.isEmpty()) store?.removeItem(key);
         else store?.setItem(key, JSON.stringify({ html: editor.getHTML(), time: Date.now() }));
       } catch {
-        // Хранилище переполнено — не мешаем работе.
+        // The storage is full: don't get in the way of the work.
       }
     };
     const off = editor.on('change', () => {
-      // Первое изменение после открытия — старый черновик больше не восстанавливаем поверх.
+      // The first change after opening: the old draft is no longer restored on top.
       pending = null;
       clearTimeout(timer);
       timer = setTimeout(save, delay);
@@ -112,7 +112,7 @@ export default definePlugin({
 
     return () => {
       off();
-      // Изменения последней секунды не теряем.
+      // Changes from the last second aren't lost.
       if (timer !== undefined) {
         clearTimeout(timer);
         save();

@@ -46,15 +46,15 @@ export interface ColorPanelOptions {
   onPick: (color: string | null) => void;
 }
 
-/** Палитра цветов: сетка образцов (стрелки по сетке), «убрать цвет» и свой цвет. */
+/** The color palette: a grid of swatches (arrows across the grid), "remove color" and a custom color. */
 export function createColorPanel(options: ColorPanelOptions): HTMLElement {
   const COLUMNS = 8;
   const swatches: HTMLButtonElement[] = [];
   const current = options.current?.toLowerCase() ?? null;
 
   const grid = h('div', { className: 'nova-swatches', role: 'grid', 'aria-label': options.label });
-  // role=grid требует строк (role=row): иначе скринридер не может назвать строку и столбец.
-  // Строка — display: contents, раскладку по-прежнему задаёт CSS-сетка .nova-swatches.
+  // role=grid requires rows (role=row): otherwise a screen reader can't name the row and column.
+  // A row is display: contents; the .nova-swatches CSS grid still sets the layout.
   let row: HTMLElement | null = null;
   for (const color of options.colors) {
     const selected = current === color.toLowerCase();
@@ -117,7 +117,7 @@ export function createColorPanel(options: ColorPanelOptions): HTMLElement {
     'aria-label': options.customLabel,
     value: /^#[0-9a-f]{6}$/i.test(current ?? '') ? current : '#000000',
   });
-  // change (а не input) — чтобы не плодить шаги истории при перетаскивании ползунка.
+  // change (not input), so dragging the slider doesn't create a pile of history steps.
   custom.addEventListener('change', () => options.onPick(custom.value));
 
   return h(

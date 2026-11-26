@@ -2,11 +2,11 @@ import type { DOMOutputSpec, Fragment, Mark, MarkType, Node as PMNode } from 'pr
 import { safeAttr } from './safe-attr';
 
 /**
- * Строковый HTML-сериализатор по toDOM-спекам схемы.
+ * A string HTML serializer driven by the schema's toDOM specs.
  *
- * Зачем свой, а не DOMSerializer: тот выставляет style через CSSOM (dom.style.cssText),
- * и браузер переписывает значения (#3b82f6 → rgb(59, 130, 246)) — HTML зависит от движка.
- * Строковый вывод детерминирован, работает в Node без DOM (SSR, серверная обработка) и быстрее.
+ * Why our own instead of DOMSerializer: that one sets style through the CSSOM (dom.style.cssText),
+ * and the browser rewrites the values (#3b82f6 → rgb(59, 130, 246)), so the HTML depends on the engine.
+ * String output is deterministic, works in Node without a DOM (SSR, server processing) and is faster.
  */
 
 const VOID_ELEMENTS = new Set([
@@ -25,7 +25,7 @@ const VOID_ELEMENTS = new Set([
   'wbr',
 ]);
 
-/** Неразрывный пробел выводим как &nbsp;, иначе он неотличим от обычного в разметке. */
+/** A non-breaking space is output as &nbsp;, otherwise it is indistinguishable from a regular one in the markup. */
 const NBSP = new RegExp(String.fromCharCode(0xa0), 'g');
 
 export function escapeText(text: string): string {
@@ -39,21 +39,21 @@ export function escapeText(text: string): string {
 const NBSP_CHAR = '\u00a0';
 
 /**
- * Пробелы, которые браузер схлопнул бы при разборе HTML, заменяются на неразрывные.
- * В редакторе (white-space: pre-wrap) пользователь видит каждый пробел, а HTML-парсер выбрасывает
- * пробел в начале строки и после <br>, сжимает несколько подряд в один и теряет последний
- * в абзаце. Без этого отступы пробелами и двойные пробелы пропадали бы после сохранения.
- * Возвращает новый текст для текстовых узлов фрагмента (по индексу), если он изменился.
+ * Spaces that a browser would collapse when parsing the HTML are replaced with non-breaking ones.
+ * In the editor (white-space: pre-wrap) the user sees every space, but the HTML parser drops
+ * a space at the start of a line and after <br>, squeezes several in a row into one and loses the last one
+ * in a paragraph. Without this, indents made of spaces and double spaces would disappear after saving.
+ * Returns the new text for the fragment's text nodes (by index) when it changed.
  */
 function protectSpaces(fragment: Fragment): Map<number, string> | null {
   let result: Map<number, string> | null = null;
-  // «Схлопываемая» позиция: начало строки или сразу после обычного пробела.
+  // A "collapsible" position: the start of a line or right after a regular space.
   let collapsible = true;
   const count = fragment.childCount;
   for (let i = 0; i < count; i++) {
     const node = fragment.child(i);
     if (!node.isText) {
-      // Перенос строки (и блок) начинают новую строку, прочие инлайн-узлы — как обычный символ.
+      // A line break (and a block) starts a new line; other inline nodes count as a regular character.
       collapsible = node.type.name === 'hard_break' || !node.isInline;
       continue;
     }
@@ -93,11 +93,11 @@ export function escapeAttr(value: string): string {
 
 const TAG_RE = /^[a-z][a-z0-9-]*$/i;
 
-// ---------- защита вывода ----------
-// Встроенные узлы сами проверяют URL и CSS в toDOM. Узлы и марки плагинов — чужой код, поэтому
-// сериализатор проверяет любой вывод ещё раз: это последний рубеж перед HTML, который уйдёт на сервер.
+// ---------- output protection ----------
+// Built-in nodes check URLs and CSS in toDOM themselves. Plugin nodes and marks are someone else's code, so
+// the serializer checks all output once more: it is the last line of defense before HTML goes to the server.
 
-/** Элементы, которые никогда не выводим (их содержимое сохраняется). */
+/** Elements that are never output (their content is kept). */
 const FORBIDDEN_TAGS = new Set([
   'script',
   'style',
@@ -125,17 +125,17 @@ const ATTR_RE = /^[a-z_:][a-z0-9_.:-]*$/i;
 interface Rendered {
   open: string;
   close: string;
-  /** Есть ли «дыра» (0) для содержимого. */
+  /** Whether there is a "hole" (0) for the content. */
   hole: boolean;
-  /** Статический HTML, если спека без дыры. */
+  /** Static HTML when the spec has no hole. */
   html: string;
 }
 
-/** Рендер DOMOutputSpec в строку. Для узлов-листьев content не используется. */
+/** Renders a DOMOutputSpec into a string. Leaf nodes don't use content. */
 function renderSpec(spec: DOMOutputSpec): Rendered {
   if (typeof spec === 'string') return { open: '', close: '', hole: false, html: escapeText(spec) };
-  // Значения атрибутов из внешнего JSON (число, null) не должны ронять сохранение всего документа.
-  // Ноль сюда не попадает: в спеке это «дыра» для содержимого.
+  // Attribute values from external JSON (a number, null) must not break saving the whole document.
+  // Zero never gets here: in a spec it is the "hole" for the content.
   if (typeof spec === 'number' || typeof spec === 'boolean') {
     return { open: '', close: '', hole: false, html: escapeText(String(spec)) };
   }
@@ -144,7 +144,7 @@ function renderSpec(spec: DOMOutputSpec): Rendered {
     throw new Error('[nova] serializer supports only array/string toDOM specs');
   }
   const [rawTag, ...rest] = spec as unknown as [string, ...unknown[]];
-  // 'ns tag' — пространство имён (svg и т.п.); в HTML-строке достаточно имени тега.
+  // 'ns tag' is a namespace (svg and the like); the tag name is enough in an HTML string.
   const tag = rawTag.includes(' ') ? rawTag.split(' ')[1]! : rawTag;
   if (!TAG_RE.test(tag)) throw new Error(`[nova] invalid tag in toDOM: ${tag}`);
   const forbidden = FORBIDDEN_TAGS.has(tag.toLowerCase());
@@ -168,8 +168,8 @@ function renderSpec(spec: DOMOutputSpec): Rendered {
   const open = forbidden ? '' : `<${tag}${attrs}>`;
   if (VOID_ELEMENTS.has(tag.toLowerCase())) return { open, close: '', hole: false, html: open };
 
-  // Всё, что до «дыры» (0), идёт в open, после — в close.
-  // Дыра может быть вложенной: ['pre', ['code', 0]] — тогда содержимое внутри <code>.
+  // Everything before the "hole" (0) goes into open, everything after into close.
+  // The hole can be nested: ['pre', ['code', 0]] puts the content inside <code>.
   let before = '';
   let after = '';
   let hole = false;
@@ -192,7 +192,7 @@ function renderSpec(spec: DOMOutputSpec): Rendered {
     }
   }
   if (forbidden) {
-    // Ни сам тег, ни его статическое содержимое (текст скрипта, CSS) не выводим — только документ.
+    // Neither the tag nor its static content (script text, CSS) is output: only the document.
     return { open: '', close: '', hole, html: '' };
   }
   const close = `</${tag}>`;
@@ -225,8 +225,8 @@ export class HTMLSerializer {
         out += this.serializeNode(node);
         return;
       }
-      // Общий префикс уже открытых марок сохраняем, остальное закрываем и открываем заново —
-      // так соседние узлы с одинаковой разметкой не дробятся (<strong>a<em>b</em></strong>).
+      // The common prefix of already open marks is kept, the rest is closed and reopened,
+      // so neighboring nodes with the same markup don't fragment (<strong>a<em>b</em></strong>).
       let keep = 0;
       while (
         keep < active.length &&
@@ -257,7 +257,7 @@ export class HTMLSerializer {
     if (!toDOM) throw new Error(`[nova] node "${node.type.name}" has no toDOM`);
     const r = renderSpec(toDOM(node));
     if (!r.hole) return r.html;
-    // В коде (pre) пробелы сохраняются браузером как есть — защищать их не нужно.
+    // Inside code (pre) the browser keeps spaces as they are: no need to protect them.
     const pre = !!node.type.spec.code || node.type.spec.whitespace === 'pre';
     return r.open + this.serializeFragment(node.content, { pre }) + r.close;
   }

@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 /**
- * CDN-сборка: обычный <script> (IIFE с глобальным объектом) + ленивые части рядом.
+ * CDN build: a plain <script> (an IIFE with a global object) + lazy parts next to it.
  *
- * Основной файл содержит всё, что нужно при создании редактора, и сразу задаёт глобальный объект
- * (NovaProse / tinymce) — как раньше. Части, которые ядро и так грузит лениво (механика таблиц,
- * необязательные плагины, очистка вставки из Office, диалоги по описанию полей), собираются в
- * отдельные файлы <имя>-chunks/<часть>-<хеш>.js и подгружаются с того же адреса по требованию.
+ * The main file holds everything needed to create an editor and sets the global object right away
+ * (NovaProse / tinymce), as before. Parts that the core loads lazily anyway (table mechanics,
+ * optional plugins, Office paste cleanup, dialogs built from field descriptions) are built into
+ * separate files <name>-chunks/<part>-<hash>.js and loaded from the same address on demand.
  *
- * Части используют те же экземпляры модулей, что и основной файл (ProseMirror, ядро): иначе
- * ломались бы instanceof и общее состояние. Основной файл кладёт эти модули в свой реестр
- * (globalThis.__novaprose_<имя>), а в частях импорт такого модуля заменён чтением из реестра.
- * Имя файла части — хеш содержимого: старая часть из кэша не встретится с новым основным файлом.
+ * The parts use the same module instances as the main file (ProseMirror, the core): otherwise
+ * instanceof and shared state would break. The main file puts these modules into its registry
+ * (globalThis.__novaprose_<name>), and in the parts an import of such a module reads the registry.
+ * A part's file name is a hash of its content: an old cached part never meets a new main file.
  *
  *   node ../../scripts/build-cdn.mjs --entry src/cdn.ts --out dist/novaprose.global.js \
  *     --global NovaProse --css ../core/src/style.css
- *   (запускается из папки пакета; пути — относительно неё)
+ *   (run from the package folder; paths are relative to it)
  */
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
@@ -40,8 +40,8 @@ const registry = `__novaprose_${bundle.replace(/\W/g, '_')}`;
 const licensesFile = `${bundle}.licenses.txt`;
 const { version } = JSON.parse(readFileSync(path.join(pkgDir, 'package.json'), 'utf8'));
 
-// Заглушка адреса части с запасом длины: после сборки её заменяет настоящий адрес, дополненный
-// пробелами до той же длины, — карты исходников (позиции в строке) остаются верными.
+// A placeholder for a part's address, long enough: after the build the real address replaces it,
+// padded with spaces to the same length, so source maps (positions in the line) stay correct.
 const PLACEHOLDER = '__NOVA_CHUNK__:';
 const PAD = '_'.repeat(80);
 const PLACEHOLDER_RE = new RegExp(`(["'\`])${PLACEHOLDER}([\\w.-]+)#_+\\1`, 'g');
@@ -64,18 +64,18 @@ const common = {
   loader: { '.css': 'empty' },
 };
 
-/** Ключ модуля — путь от корня репозитория (одинаковый для основного файла и частей). */
+/** A module's key is its path from the repository root (the same for the main file and the parts). */
 const keyOf = (abs) => path.relative(root, abs).replaceAll('\\', '/');
 const js = (result) => result.outputFiles.find((f) => !f.path.endsWith('.map'));
 const map = (result) => result.outputFiles.find((f) => f.path.endsWith('.map'));
 
-// ---------- ленивые части: id ↔ файл ----------
+// ---------- lazy parts: id ↔ file ----------
 const lazy = new Map(); // abs path → id
 const queue = [];
 function lazyId(abs) {
   let id = lazy.get(abs);
   if (!id) {
-    // Имя без хеша сборки ядра (charmap-AB12CD34.js → charmap).
+    // The name without the core build hash (charmap-AB12CD34.js → charmap).
     const base = path
       .basename(abs)
       .replace(/\.[cm]?[jt]s$/, '')
@@ -88,7 +88,7 @@ function lazyId(abs) {
   return id;
 }
 
-/** import('…') ленивого модуля → внешняя ссылка-заглушка; настоящий адрес подставим после сборки. */
+/** import('…') of a lazy module → an external placeholder link; the real address is filled in after the build. */
 const splitDynamic = {
   name: 'nova-split-dynamic',
   setup(b) {
@@ -106,7 +106,7 @@ const splitDynamic = {
   },
 };
 
-// ---------- 1. основной файл: какие модули в нём есть ----------
+// ---------- 1. the main file: which modules it contains ----------
 const first = await build({
   ...common,
   entryPoints: [entry],
@@ -117,7 +117,7 @@ const first = await build({
 });
 const mainModules = new Set(Object.keys(first.metafile.inputs));
 
-// ---------- 2. части: общие модули — из реестра основного файла ----------
+// ---------- 2. parts: shared modules come from the main file's registry ----------
 const shared = new Set();
 const fromRegistry = {
   name: 'nova-shared',
@@ -138,7 +138,7 @@ const fromRegistry = {
       shared.add(key);
       return { path: key, namespace: 'nova-shared' };
     });
-    // Модуль из реестра: геттеры сохраняют «живые» привязки (значения, которые меняются позже).
+    // A module from the registry: getters keep "live" bindings (values that change later).
     b.onLoad({ filter: /.*/, namespace: 'nova-shared' }, (a) => ({
       contents: `var m = globalThis[${JSON.stringify(registry)}][${JSON.stringify(a.path)}];
 Object.defineProperty(exports, '__esModule', { value: true });
@@ -169,15 +169,15 @@ while (queue.length) {
   }
 }
 
-// Модуль, попавший в несколько частей (и не в основной файл), — свой экземпляр в каждой.
-// Для модулей с общим состоянием это ошибка: сообщаем, чтобы решение было осознанным.
+// A module that ended up in several parts (and not in the main file) gets its own instance in each.
+// For modules with shared state that is a bug: report it so the decision is deliberate.
 const duplicated = [...chunkModules].filter(([, ids]) => ids.length > 1);
 if (duplicated.length) {
   console.warn(`[build-cdn] ${bundle}: modules copied into several chunks:`);
   for (const [key, ids] of duplicated) console.warn(`  ${key} → ${ids.join(', ')}`);
 }
 
-// ---------- 3. имена частей по хешу (сначала те, от которых зависят другие) ----------
+// ---------- 3. part names by hash (first the ones others depend on) ----------
 const names = new Map();
 const finalText = new Map();
 const nameOf = (id, stack = []) => {
@@ -187,7 +187,7 @@ const nameOf = (id, stack = []) => {
   }
   const { text, deps } = chunks.get(id);
   for (const dep of deps) nameOf(dep, [...stack, id]);
-  // Внутри части относительный import() разрешается от адреса самой части (это ES-модуль).
+  // Inside a part, a relative import() resolves against the part's own address (it is an ES module).
   const resolved = text.replace(PLACEHOLDER_RE, (match, quote, dep) =>
     padTo(`${quote}./${names.get(dep)}${quote}`, match.length),
   );
@@ -198,7 +198,7 @@ const nameOf = (id, stack = []) => {
 };
 for (const id of chunks.keys()) nameOf(id);
 
-// ---------- 4. основной файл с реестром ----------
+// ---------- 4. the main file with the registry ----------
 const exposed = [...shared].sort();
 const wrapper = `export * from ${JSON.stringify(entry.replaceAll('\\', '/'))};
 ${exposed.map((key, i) => `import * as m${i} from ${JSON.stringify(path.join(root, key).replaceAll('\\', '/'))};`).join('\n')}
@@ -212,7 +212,7 @@ const main = await build({
   format: 'iife',
   globalName,
   plugins: [rawCss, splitDynamic],
-  // Адрес частей — от адреса самого скрипта (document.currentScript), а не страницы.
+  // The parts' address comes from the script's own address (document.currentScript), not the page.
   banner: {
     js:
       `/*! NovaProse ${version} | MIT | third-party licenses: ${licensesFile} */\n` +
@@ -225,7 +225,7 @@ const mainText = js(main).text.replace(PLACEHOLDER_RE, (match, _quote, id) =>
 );
 if (mainText.includes(PLACEHOLDER)) throw new Error('[build-cdn] unresolved chunk placeholder');
 
-// ---------- запись ----------
+// ---------- writing ----------
 rmSync(path.join(outDir, chunkDir), { recursive: true, force: true });
 mkdirSync(path.join(outDir, chunkDir), { recursive: true });
 const mapName = `${path.basename(outFile)}.map`;
@@ -238,9 +238,9 @@ for (const [id, text] of finalText) {
 }
 if (args.css) copyFileSync(path.resolve(pkgDir, args.css), path.join(outDir, 'novaprose.css'));
 
-// ---------- лицензии стороннего кода в сборке ----------
-// Сборка включает код пакетов (ProseMirror, highlight.js…), а их лицензии (MIT, BSD) требуют
-// прикладывать текст лицензии. Список — из того, что реально попало в основной файл и части.
+// ---------- licenses of third-party code in the build ----------
+// The build includes code from packages (ProseMirror, highlight.js…), and their licenses (MIT, BSD)
+// require shipping the license text. The list comes from what actually ended up in the main file and parts.
 const LICENSE_FILE = /^(licen[cs]e|copying)(\.(md|txt))?$/i;
 const packageDirs = new Set();
 for (const key of [...Object.keys(main.metafile.inputs), ...chunkModules.keys()]) {
@@ -261,7 +261,7 @@ const packages = [...packageDirs]
   })
   .sort((a, b) => a.title.localeCompare(b.title));
 const rule = '='.repeat(80);
-// Иконки Lucide — в исходниках ядра, их лицензия — в его THIRD_PARTY_NOTICES.md.
+// Lucide icons live in the core sources; their license is in its THIRD_PARTY_NOTICES.md.
 const icons = readFileSync(path.join(root, 'packages/core/THIRD_PARTY_NOTICES.md'), 'utf8')
   .replace(/^# .*\n+/, '')
   .replace(/```(text)?\n?/g, '')

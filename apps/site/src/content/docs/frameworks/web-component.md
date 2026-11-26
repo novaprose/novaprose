@@ -3,7 +3,7 @@ title: Web Component
 description: "The <novaprose-editor> custom element: a native form field for plain HTML, Svelte and server-rendered pages."
 ---
 
-<!-- Сгенерировано из packages/web-component/README.md: правьте README, затем pnpm --filter @novaprose/site sync-docs -->
+<!-- Generated from packages/web-component/README.md: edit the README, then run pnpm --filter @novaprose/site sync-docs -->
 
 The [NovaProse](/getting-started/) rich text editor as a standard HTML
 element, `<novaprose-editor>`. It needs no framework and behaves like a native form field. Use it

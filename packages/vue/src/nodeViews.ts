@@ -53,9 +53,9 @@ interface Item {
   props: NodeViewProps;
 }
 
-/** Виды узлов одного редактора, которые рисует хост. */
+/** The node views of one editor that the host renders. */
 export class NodeViewTeleports {
-  /** Хост отрисован (иначе виды не появятся — предупреждаем). */
+  /** The host is rendered (otherwise the views never appear, so we warn). */
   mounted = false;
   readonly items: ShallowRef<Item[]> = shallowRef([]);
   private readonly map = new Map<string, Item>();
@@ -71,10 +71,10 @@ export class NodeViewTeleports {
 }
 
 const hosts = new WeakMap<Editor, NodeViewTeleports>();
-/** Виды редактора, который создаётся прямо сейчас (виды узлов строятся внутри createEditor). */
+/** Views of the editor being created right now (node views are built inside createEditor). */
 let creating: NodeViewTeleports | null = null;
 
-/** Создать редактор так, чтобы его виды узлов рисовались хостом `teleports`. */
+/** Creates an editor whose node views are rendered by the `teleports` host. */
 export function createWithTeleports(teleports: NodeViewTeleports, create: () => Editor): Editor {
   creating = teleports;
   try {
@@ -95,7 +95,7 @@ export function useNodeView(): Readonly<ShallowRef<NodeViewProps>> {
   return props;
 }
 
-/** Только объявленные компонентом свойства: остальное ушло бы атрибутами в его корень. */
+/** Only the props the component declares: the rest would land as attributes on its root. */
 function declaredProps(component: Component, props: NodeViewProps): Record<string, unknown> {
   const declared = (component as { props?: string[] | Record<string, unknown> }).props;
   if (!declared) return {};
@@ -105,7 +105,7 @@ function declaredProps(component: Component, props: NodeViewProps): Record<strin
   );
 }
 
-/** Отдаёт свойства вида вложенным компонентам и рисует сам компонент. */
+/** Passes the view's props to nested components and renders the component itself. */
 const NodeViewProvider = defineComponent({
   name: 'NovaNodeView',
   props: {
@@ -125,7 +125,7 @@ const NodeViewProvider = defineComponent({
   },
 });
 
-/** Хост видов узлов: useEditor отдаёт его как `nodeViews`. */
+/** The node view host: useEditor returns it as `nodeViews`. */
 export const NodeViewHost = defineComponent({
   name: 'NovaNodeViews',
   props: { teleports: { type: Object as PropType<NodeViewTeleports>, required: true } },
@@ -183,7 +183,7 @@ export function vueNodeView(component: Component, options?: NodeViewOptions): No
         teleports.set({ key, dom, component: raw, props });
         return;
       }
-      // Редактор создан без обёртки NovaProse (createEditor напрямую) — свой корень Vue.
+      // The editor was created without a NovaProse wrapper (createEditor directly): its own Vue root.
       render(h(NodeViewProvider, { component: raw, view: props }), dom);
     };
 

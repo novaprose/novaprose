@@ -1,9 +1,9 @@
 /*
- * Диалоги по описанию (windowManager.open) слоя совместимости.
- * Подключается при первом открытии такого диалога через editor.ui.addStyles — не входит в style.css первой загрузки.
+ * Dialogs from a description (windowManager.open) of the compatibility layer.
+ * Attached through editor.ui.addStyles when such a dialog first opens; not part of the first-load style.css.
  */
 
-/* ---------- Диалоги по описанию (windowManager.open в @novaprose/tinymce-compat) ---------- */
+/* ---------- Dialogs from a description (windowManager.open in @novaprose/tinymce-compat) ---------- */
 
 .nova-compat-dialog {
   display: flex;

@@ -1,5 +1,5 @@
-// ng-packagr копирует package.json в dist как есть — с `workspace:^`. Публикуем пакет из dist,
-// поэтому подставляем настоящие версии зависимостей из воркспейса.
+// ng-packagr copies package.json into dist as is, with `workspace:^`. The package is published from dist,
+// so the real dependency versions from the workspace are filled in here.
 import { readFileSync, writeFileSync } from 'node:fs';
 
 const dist = new URL('../dist/package.json', import.meta.url);

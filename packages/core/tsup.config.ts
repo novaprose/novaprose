@@ -1,12 +1,12 @@
 import { readdirSync } from 'node:fs';
 import { defineConfig } from 'tsup';
-// @ts-expect-error — скрипт репозитория на JS без типов
+// @ts-expect-error: a repository script in JS without types
 import { rawCss } from '../../scripts/esbuild-raw-css.mjs';
 
 /**
- * Ядро + языковые пакеты отдельными точками входа: `@novaprose/core/i18n/de`.
- * Пакет — только данные (тип из ядра стирается), поэтому каждый клиент скачивает лишь свой язык,
- * а первая загрузка ядра от числа языков не растёт.
+ * The core + language packs as separate entry points: `@novaprose/core/i18n/de`.
+ * A pack is only data (the type from the core is erased), so each customer downloads only their language,
+ * and the first load of the core doesn't grow with the number of languages.
  */
 const packs = Object.fromEntries(
   readdirSync('src/i18n/packs')
@@ -18,9 +18,9 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     markdown: 'src/markdown.ts',
-    // Word (.docx): экспорт и импорт без сторонних библиотек, работает и на сервере.
+    // Word (.docx): export and import without third-party libraries, works on the server too.
     docx: 'src/docx/index.ts',
-    // Правила элементов и атрибутов (extendedValidElements…): ~3 КБ, нужны немногим.
+    // Element and attribute rules (extendedValidElements…): ~3 KB, needed by few.
     'html-rules': 'src/html-rules.ts',
     ...packs,
   },

@@ -26,7 +26,7 @@ export type TinyConfig = Record<string, unknown> & {
   init_instance_callback?: (editor: CompatEditor) => void;
 };
 
-/** Функции, которые в NovaProse встроены в ядро: такие плагины подключать не нужно. */
+/** Features built into the NovaProse core: such plugins don't need to be enabled. */
 const BUILT_IN = new Set([
   'lists',
   'link',
@@ -51,12 +51,12 @@ const BUILT_IN = new Set([
   'importcss',
 ]);
 
-/** Плагины с другим именем в NovaProse. */
+/** Plugins with a different name in NovaProse. */
 const RENAMED: Record<string, string> = {
   tinycomments: 'comments',
 };
 
-/** Опции, которые понятны, но в NovaProse не нужны (облако, скины, лицензия, iframe). */
+/** Options that are understood but not needed in NovaProse (cloud, skins, license, iframe). */
 const IGNORED = new Set([
   'selector',
   'target',
@@ -137,7 +137,7 @@ const IGNORED = new Set([
   'tableofcontents_header',
   'tableofcontents_orderedlist',
   'tableofcontents_includeheader',
-  // Подсветка — своя (highlight.js, лениво); Prism на странице сайта для неё не нужен.
+  // Highlighting is our own (highlight.js, lazy); Prism on the site's page isn't needed for it.
   'codesample_global_prismjs',
 ]);
 
@@ -157,7 +157,7 @@ function parseFormats(value: unknown): { label: string; value: string }[] | unde
     });
 }
 
-/** Объект «blobInfo» обработчика загрузки картинок — по описанию из документации. */
+/** The "blobInfo" object of the image upload handler, as described in the documentation. */
 function blobInfo(file: File) {
   let base64 = '';
   const ready = new Promise<void>((resolve) => {
@@ -200,7 +200,7 @@ const INLINES = new Set([
   'sup',
 ]);
 
-/** Формат TinyMCE (объект или массив вариантов) → описания NovaProse; неподдерживаемые пропускаются. */
+/** A TinyMCE format (an object or an array of variants) → NovaProse descriptions; unsupported ones are skipped. */
 export function toFormatSpecs(value: unknown): FormatSpec[] {
   const list = Array.isArray(value) ? value : [value];
   const out: FormatSpec[] = [];
@@ -219,7 +219,7 @@ export function toFormatSpecs(value: unknown): FormatSpec[] {
       spec.styles = Object.fromEntries(
         Object.entries(raw.styles as Record<string, unknown>)
           .filter(([, v]) => typeof v === 'string' && !v.includes('%'))
-          // TinyMCE допускает camelCase: textAlign → text-align.
+          // TinyMCE allows camelCase: textAlign → text-align.
           .map(([k, v]) => [k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`), v as string]),
       );
     if (spec.block || spec.inline || spec.selector) out.push(spec);
@@ -227,7 +227,7 @@ export function toFormatSpecs(value: unknown): FormatSpec[] {
   return out;
 }
 
-/** style_formats TinyMCE → styleFormats (та же форма: title, format, items, block/inline/selector). */
+/** TinyMCE style_formats → styleFormats (the same shape: title, format, items, block/inline/selector). */
 function toStyleFormats(value: unknown): StyleFormat[] {
   if (!Array.isArray(value)) return [];
   return value.flatMap((item): StyleFormat[] => {
@@ -263,7 +263,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
 
   const options: Omit<EditorOptions, 'element'> = { plugins };
 
-  // Тулбар: строка, массив строк (несколько рядов — объединяем) или false.
+  // Toolbar: a string, an array of strings (several rows are merged) or false.
   if (config.toolbar === false) options.toolbar = false;
   else if (Array.isArray(config.toolbar)) options.toolbar = config.toolbar.join(' | ');
   else if (typeof config.toolbar === 'string') options.toolbar = config.toolbar;
@@ -272,7 +272,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.placeholder === 'string') options.placeholder = config.placeholder;
   if (config.readonly === true) options.editable = false;
   if (typeof config.content_style === 'string') options.contentStyle = config.content_style;
-  // table_class_list / table_cell_class_list: [{ title, value }] (вложенные menu не поддерживаем).
+  // table_class_list / table_cell_class_list: [{ title, value }] (nested menus aren't supported).
   const classList = (value: unknown) =>
     Array.isArray(value)
       ? value
@@ -286,7 +286,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (tableClasses) options.tableClassList = tableClasses;
   const cellClasses = classList(config.table_cell_class_list);
   if (cellClasses) options.tableCellClassList = cellClasses;
-  // Форматы: formats — именованные, style_formats — меню «Стили».
+  // Formats: formats are named, style_formats is the "Styles" menu.
   if (config.formats && typeof config.formats === 'object') {
     options.formats = Object.fromEntries(
       Object.entries(config.formats as Record<string, unknown>)
@@ -298,14 +298,14 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     options.styleFormats = toStyleFormats(config.style_formats);
     if (config.style_formats_merge === true) options.styleFormatsMerge = true;
   }
-  // valid_classes: строка или объект по тегам; без неё TinyMCE сохраняет все классы — и мы тоже.
+  // valid_classes: a string or an object by tag; without it TinyMCE keeps every class, and so do we.
   if (typeof config.valid_classes === 'string') options.validClasses = list(config.valid_classes);
   else if (config.valid_classes && typeof config.valid_classes === 'object')
     options.validClasses = Object.values(config.valid_classes as Record<string, unknown>).flatMap(
       (v) => list(v),
     );
   else options.validClasses = true;
-  // content_css: адрес, список через запятую или массив; имена встроенных скинов TinyMCE пропускаем.
+  // content_css: an address, a comma-separated list or an array; names of built-in TinyMCE skins are skipped.
   if (config.content_css !== undefined && config.content_css !== false) {
     const skins = new Set(['default', 'dark', 'document', 'writer', 'tinymce-5', 'tinymce-5-dark']);
     const files = (
@@ -316,9 +316,9 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     if (files.length) options.contentCss = files;
   }
   if (config.disabled === true) options.disabled = true;
-  // resize: в TinyMCE по умолчанию true (по высоте), 'both' — и по ширине, false — без ручки.
+  // resize: true by default in TinyMCE (vertically), 'both' also horizontally, false means no handle.
   if (config.resize !== false) options.resize = config.resize === 'both' ? 'both' : true;
-  // block_formats: 'Абзац=p; Заголовок 1=h1; Код=pre'.
+  // block_formats: 'Paragraph=p; Heading 1=h1; Code=pre'.
   const blocks = parseFormats(config.block_formats);
   if (blocks) {
     const known = ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'pre'];
@@ -358,7 +358,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   const heights = parseFormats(config.line_height_formats);
   if (heights) options.lineHeights = heights.map((s) => s.value);
   if (Array.isArray(config.color_map)) {
-    // [цвет, подпись, цвет, подпись, …] — берём цвета.
+    // [color, label, color, label, …]: take the colors.
     options.colors = (config.color_map as string[])
       .filter((_, i) => i % 2 === 0)
       .map((c) => (c.startsWith('#') ? c : `#${c}`));
@@ -378,14 +378,14 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     options.uploadImage = upload;
   }
 
-  // file_picker_callback(callback, value, meta): свой менеджер файлов зовёт callback(url, { text, title, alt }).
+  // file_picker_callback(callback, value, meta): your own file manager calls callback(url, { text, title, alt }).
   if (typeof config.file_picker_callback === 'function') {
     const pick = config.file_picker_callback as (
       callback: (url: string, meta?: { text?: string; title?: string; alt?: string }) => void,
       value: string,
       meta: { filetype: string; fieldname: string },
     ) => void;
-    // file_picker_types: 'file image media' — для каких полей показывать кнопку (по умолчанию для всех).
+    // file_picker_types: 'file image media', the fields that show the button (all of them by default).
     if (typeof config.file_picker_types === 'string') {
       options.filePickerTypes = list(config.file_picker_types).filter(
         (type): type is FilePickType => type === 'file' || type === 'image' || type === 'media',
@@ -400,7 +400,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       );
   }
 
-  // Настройки плагинов под их опциями.
+  // Plugin settings under their options.
   const pluginOptions: Record<string, unknown> = {};
   if (config.autosave_interval || config.autosave_retention || config.autosave_prefix) {
     const seconds = (value: unknown) => parseInt(String(value), 10);
@@ -424,7 +424,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     };
   }
   if (typeof config.mentions_fetch === 'function') {
-    // mentions_fetch(query, success) с колбэком → Promise.
+    // mentions_fetch(query, success) with a callback → a Promise.
     const fetch = config.mentions_fetch as (
       query: { term: string },
       success: (users: { id: string; name: string; description?: string }[]) => void,
@@ -442,7 +442,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     };
   }
   if (Array.isArray(config.codesample_languages)) {
-    // [{ text: 'HTML/XML', value: 'markup' }] — значения Prism (markup, csharp…) понимает и подсветка.
+    // [{ text: 'HTML/XML', value: 'markup' }]: highlighting understands Prism values (markup, csharp…) too.
     const languages = (config.codesample_languages as unknown[]).flatMap((item) => {
       const { text, value } = (item ?? {}) as { text?: unknown; value?: unknown };
       return typeof value === 'string' && value
@@ -451,7 +451,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     });
     pluginOptions.codesample = { languages };
   }
-  // Раскрывающиеся блоки: состояние при загрузке и в HTML на выходе.
+  // Collapsible blocks: the state on load and in the output HTML.
   const detailsState = (value: unknown) =>
     value === 'inherited' || value === 'collapsed' || value === 'expanded' ? value : undefined;
   if (config.details_initial_state || config.details_serialized_state) {
@@ -464,8 +464,8 @@ export function mapOptions(config: TinyConfig): MappedOptions {
         : {}),
     };
   }
-  // Оглавление: по умолчанию как у TinyMCE (div → nav с классом mce-toc, подпись в h2) —
-  // стили сайта для .mce-toc продолжают работать.
+  // Table of contents: by default as in TinyMCE (div → nav with the mce-toc class, the title in h2),
+  // so the site's styles for .mce-toc keep working.
   if (list(config.plugins).includes('tableofcontents')) {
     pluginOptions.tableofcontents = {
       className:

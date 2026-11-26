@@ -1,6 +1,6 @@
 /*
- * Оглавление (плагин tableofcontents) в редакторе. Подключается вместе с ленивой частью плагина.
- * Селекторы — по data-toc: класс блока задаётся настройкой (nova-toc, mce-toc…).
+ * The table of contents (the tableofcontents plugin) in the editor. Attached together with the plugin's lazy part.
+ * Selectors use data-toc: the block's class comes from a setting (nova-toc, mce-toc…).
  */
 .nova-prosemirror nav[data-toc] {
   margin: 0 0 0.75em;
@@ -25,7 +25,7 @@
   padding-inline-start: 0;
 }
 
-/* Маркеры не нужны — уровень виден по отступу; у нумерованного оглавления номера остаются. */
+/* No markers needed: the level shows by the indent; a numbered table of contents keeps its numbers. */
 .nova-prosemirror nav[data-toc] ul {
   list-style: none;
 }
@@ -44,7 +44,7 @@
   text-decoration: underline;
 }
 
-/* Заголовков ещё нет — подсказка на языке интерфейса (текст в --nova-toc-empty). */
+/* No headings yet: a hint in the interface language (the text is in --nova-toc-empty). */
 .nova-prosemirror nav[data-toc]:not(:has(a))::after {
   content: var(--nova-toc-empty, '');
   color: var(--nova-muted);

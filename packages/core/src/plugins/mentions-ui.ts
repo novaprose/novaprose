@@ -2,7 +2,7 @@ import { definePlugin } from '../plugins';
 import { findMentionUsers, type MentionUser, type MentionsOptions } from './mentions';
 import { pickLabels } from './shared';
 
-/** Ленивая часть плагина mentions: список людей при вводе «@». */
+/** The lazy part of the mentions plugin: the list of people when typing "@". */
 
 export const LABELS = {
   en: { list: 'People', empty: 'No matches' },

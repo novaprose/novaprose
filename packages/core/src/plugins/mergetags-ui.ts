@@ -5,7 +5,7 @@ import type { MenuEntry } from '../ui/menu';
 import { flatList, isGroup, LABELS, optionsOf, type MergeTag } from './mergetags';
 import { pickLabels } from './shared';
 
-/** Ленивая часть плагина mergetags: кнопка-меню переменных и список при вводе `{{`. */
+/** The lazy part of the mergetags plugin: the variables menu button and the list when typing `{{`. */
 
 function insertTag(editor: Editor, tag: MergeTag, range?: { from: number; to: number }): void {
   const { state, dispatch } = editor.view;
@@ -47,7 +47,7 @@ export default definePlugin({
       },
     });
 
-    // {{ в тексте — список с поиском по подписи и ключу.
+    // {{ in the text: a list with search by label and key.
     editor.ui.registry.addAutocompleter('mergetags', {
       trigger: '{{',
       label: labels.search,

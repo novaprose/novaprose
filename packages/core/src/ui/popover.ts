@@ -8,9 +8,9 @@ const GAP = 6;
 const VIEWPORT_PADDING = 8;
 
 /**
- * Видимая часть окна в координатах getBoundingClientRect и position: fixed. На телефоне с открытой
- * клавиатурой она меньше окна и сдвинута при прокрутке (visualViewport); window.innerHeight там —
- * высота видимой части, а координаты — от всей страницы: смешивать их нельзя, панель уезжала.
+ * The visible part of the window in getBoundingClientRect and position: fixed coordinates. On a phone with the
+ * keyboard open it is smaller than the window and shifts with scrolling (visualViewport); window.innerHeight there is
+ * the height of the visible part, while coordinates are relative to the whole page: mixing them made the panel drift.
  */
 export function visibleArea(): { left: number; top: number; right: number; bottom: number } {
   const vv = window.visualViewport;
@@ -24,8 +24,8 @@ export function visibleArea(): { left: number; top: number; right: number; botto
 }
 
 /**
- * Позиционирует плавающий элемент (position: fixed) относительно якоря:
- * снизу, а если не помещается — сверху; по горизонтали прижимает к краям окна.
+ * Positions a floating element (position: fixed) relative to an anchor:
+ * below it, or above when it doesn't fit; horizontally it is kept within the window edges.
  */
 export function positionFloating(
   floating: HTMLElement,
@@ -33,8 +33,8 @@ export function positionFloating(
   placement: Placement,
 ): void {
   const area = visibleArea();
-  // Размер без трансформаций: панель появляется с анимацией (scale 0.98), и getBoundingClientRect
-  // в этот момент меньше настоящего — край, выровненный по правому краю кнопки, уезжал на 2%.
+  // The size without transforms: the panel appears with an animation (scale 0.98), and getBoundingClientRect
+  // is smaller than the real size at that moment, so an edge aligned with the button's right edge drifted by 2%.
   const width = floating.offsetWidth;
   const height = floating.offsetHeight;
 
@@ -46,7 +46,7 @@ export function positionFloating(
     : spaceBelow < height + GAP && spaceAbove > spaceBelow;
 
   let top = placeTop ? anchorRect.top - height - GAP : anchorRect.bottom + GAP;
-  // start/end — края начала и конца строки: справа налево «начало» — правый край.
+  // start/end are the edges of the start and end of the line: right to left, the "start" is the right edge.
   const rtl = isRtl(floating);
   const alignEnd = (placement === 'bottom-end' || placement === 'top-end') !== rtl;
   let left =
@@ -100,8 +100,8 @@ export class Popover {
     options.host.append(this.el);
 
     this.reposition();
-    // Escape ловим на документе: панель, открытая мышью, не забирает фокус у текста,
-    // но закрываться по Escape всё равно должна.
+    // Escape is caught on the document: a panel opened with the mouse doesn't take focus from the text,
+    // but it still has to close on Escape.
     this.unlisten = [
       listenDocument(this.el, 'keydown', this.onKeyDown),
       listenDocument(this.el, 'pointerdown', this.onPointerDown),
@@ -138,9 +138,9 @@ export class Popover {
 
   private onKeyDown = (event: KeyboardEvent, target: Node | null): void => {
     if (event.key !== 'Escape' || event.defaultPrevented) return;
-    // Вложенные панели («⋯» → меню): Escape закрывает только верхнюю.
+    // Nested panels ("⋯" → menu): Escape closes only the top one.
     if (openStack[openStack.length - 1] !== this) return;
-    // Если поверх открыт диалог — Escape принадлежит ему.
+    // If a dialog is open on top, Escape belongs to it.
     if ((target as Element | null)?.closest?.('.nova-dialog')) return;
     event.preventDefault();
     event.stopPropagation();

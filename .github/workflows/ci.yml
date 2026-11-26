@@ -8,17 +8,17 @@ on:
 permissions:
   contents: read
 
-# Новый пуш в ту же ветку/PR отменяет устаревший прогон.
+# A new push to the same branch or pull request cancels the outdated run.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# Действия закреплены по SHA коммита (защита цепочки поставок), версия — в комментарии.
-# Обновляет их Dependabot (.github/dependabot.yml).
+# Actions are pinned to a commit SHA (supply chain protection), the version is in a comment.
+# Dependabot updates them (.github/dependabot.yml).
 
 jobs:
   check:
-    name: Формат, линт, типы, юнит-тесты с покрытием
+    name: Format, lint, types, unit tests with coverage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -31,18 +31,18 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
-      # Пороги покрытия — в vitest.config.ts: упадёт, если покрытие снизилось.
+      # Coverage thresholds live in vitest.config.ts: this fails if coverage went down.
       - run: pnpm test:coverage
       - run: node apps/site/scripts/sync-docs.mjs --check
-      - name: Покрытие в сводку прогона
+      - name: Coverage in the run summary
         if: always()
         run: |
           node -e "const t=require('./coverage/coverage-summary.json').total;
           const row=(k)=>'| '+k+' | '+t[k].pct+'% |';
-          console.log(['### Покрытие тестами','| | |','|---|---|',row('lines'),row('branches'),row('functions')].join('\n'))" >> "$GITHUB_STEP_SUMMARY"
+          console.log(['### Test coverage','| | |','|---|---|',row('lines'),row('branches'),row('functions')].join('\n'))" >> "$GITHUB_STEP_SUMMARY"
 
   package:
-    name: Сборка, бюджет размера, проверка пакетов
+    name: Build, size budget, package checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -52,23 +52,23 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      # Сборка + архивы как для npm, бюджет размера (gzip), publint + проверка типов ESM/CJS.
+      # Build + archives as for npm, size budget (gzip), publint + ESM/CJS type checks.
       - run: pnpm verify:release
-      # Примеры (examples/) из этих архивов: сборка Vite (React, Vue), CDN-файл, Node; проверка в Chromium.
+      # Examples (examples/) from these archives: Vite build (React, Vue), the CDN file, Node; checked in Chromium.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify:examples
-      # Замеры скорости на этой же CDN-сборке (Chromium): пороги ловят поломки, таблица — в сводку.
+      # Speed measurements on the same CDN build (Chromium): limits catch regressions, the table goes to the summary.
       - run: pnpm perf
-      - name: Размер в сводку прогона
+      - name: Size in the run summary
         if: always()
         run: |
-          echo '### Размер (gzip)' >> "$GITHUB_STEP_SUMMARY"
+          echo '### Size (gzip)' >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           node scripts/size.mjs >> "$GITHUB_STEP_SUMMARY" || true
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
   e2e:
-    name: Браузерные тесты (Chromium, Firefox, WebKit, мобильный) + доступность
+    name: Browser tests (Chromium, Firefox, WebKit, mobile) + accessibility
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -79,7 +79,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
-      # CDN-сборка слоя совместимости — для e2e «замена tinymce.min.js».
+      # CDN build of the compatibility layer, for the "tinymce.min.js drop-in" e2e tests.
       - run: pnpm --filter "@novaprose/tinymce-compat..." build
       - run: pnpm e2e
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

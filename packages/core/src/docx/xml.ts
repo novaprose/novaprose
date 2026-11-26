@@ -1,7 +1,7 @@
 /**
- * Маленький разбор XML для .docx (без DOM — работает и на сервере). Документы Word — правильный
- * XML: здесь только то, что в них встречается: элементы с префиксами (w:p), атрибуты, текст,
- * CDATA, комментарии, объявления и сущности.
+ * A small XML parser for .docx (no DOM, so it works on the server too). Word documents are well-formed
+ * XML: only what occurs in them is here: prefixed elements (w:p), attributes, text,
+ * CDATA, comments, declarations and entities.
  */
 
 export interface XmlElement {
@@ -29,15 +29,15 @@ export function decodeEntities(text: string): string {
   });
 }
 
-/** Символ, который XML 1.0 запрещает (управляющие, кроме табуляции и переводов строк). */
+/** A character XML 1.0 forbids (control characters other than tab and line breaks). */
 function forbidden(code: number): boolean {
   return (code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) || code > 0xfffd;
 }
 
-/** Текст для XML: & < > и кавычки; запрещённые в XML 1.0 символы — прочь. */
+/** Text for XML: & < > and quotes; characters forbidden in XML 1.0 are dropped. */
 export function escapeXml(text: string): string {
   let clean = '';
-  // По кодовым единицам UTF-16: половинки суррогатных пар (эмодзи) проходят, 0xFFFE/0xFFFF — нет.
+  // By UTF-16 code units: halves of surrogate pairs (emoji) pass, 0xFFFE/0xFFFF don't.
   for (let i = 0; i < text.length; i++) if (!forbidden(text.charCodeAt(i))) clean += text[i];
   return clean
     .replace(/&/g, '&amp;')
@@ -48,7 +48,7 @@ export function escapeXml(text: string): string {
 
 const ATTR_RE = /([^\s=/]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 
-/** Корень (#document) с деревом элементов. Незакрытые элементы закрываются в конце. */
+/** The root (#document) with the element tree. Unclosed elements are closed at the end. */
 export function parseXml(source: string): XmlElement {
   const text = source.charCodeAt(0) === 0xfeff ? source.slice(1) : source;
   const root: XmlElement = { name: '#document', attrs: {}, children: [] };
@@ -75,12 +75,12 @@ export function parseXml(source: string): XmlElement {
     } else if (text[lt + 1] === '/') {
       const end = text.indexOf('>', lt);
       const name = text.slice(lt + 2, end < 0 ? text.length : end).trim();
-      // Закрываем до своего элемента (лишний закрывающий тег — пропускаем).
+      // Close up to our own element (an extra closing tag is skipped).
       const index = stack.map((el) => el.name).lastIndexOf(name);
       if (index > 0) stack.length = index;
       i = end < 0 ? text.length : end + 1;
     } else {
-      // Конец тега — первая > вне кавычек.
+      // The end of the tag is the first > outside quotes.
       let end = lt + 1;
       let quote = '';
       for (; end < text.length; end++) {
@@ -109,7 +109,7 @@ export function parseXml(source: string): XmlElement {
   return root;
 }
 
-/** Дочерние элементы с именем (или все). */
+/** Child elements with a name (or all of them). */
 export function elements(parent: XmlElement | undefined, name?: string): XmlElement[] {
   if (!parent) return [];
   return parent.children.filter(
@@ -123,14 +123,14 @@ export function element(parent: XmlElement | undefined, name: string): XmlElemen
   );
 }
 
-/** Элемент по пути имён: path(doc, 'w:document', 'w:body'). */
+/** An element by a path of names: path(doc, 'w:document', 'w:body'). */
 export function path(parent: XmlElement | undefined, ...names: string[]): XmlElement | undefined {
   let current = parent;
   for (const name of names) current = element(current, name);
   return current;
 }
 
-/** Весь текст элемента и потомков. */
+/** All the text of an element and its descendants. */
 export function textContent(node: XmlNode): string {
   return typeof node === 'string' ? node : node.children.map(textContent).join('');
 }

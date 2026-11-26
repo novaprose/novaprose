@@ -29,15 +29,15 @@ export interface CommandChain {
 }
 
 export interface ChainHost {
-  /** Представление редактора; null — редактор уничтожен. */
+  /** The editor view; null when the editor is destroyed. */
   view(): EditorView | null;
   resolve(name: CommandName): Command;
   insertContent(html: string): Command;
 }
 
 /**
- * Состояние для шага цепочки: документ, выделение и сохранённые марки — из общей транзакции,
- * `state.tr` — она сама. Остальное (схема, плагины, их состояния) — от исходного состояния.
+ * The state for a chain step: the document, the selection and stored marks come from the shared transaction,
+ * and `state.tr` is that transaction. The rest (schema, plugins, their states) comes from the original state.
  */
 function chainableState(state: EditorState, tr: Transaction): EditorState {
   let { selection, doc, storedMarks } = tr;
@@ -68,13 +68,13 @@ export function createChain(host: ChainHost): CommandChain {
     const tr = state.tr;
     for (const step of steps) {
       let foreign = false;
-      // Шаг меняет общую транзакцию (state.tr); dispatch здесь — только знак согласия.
+      // A step changes the shared transaction (state.tr); dispatch here is only a sign of consent.
       const dispatch = (dispatched: Transaction) => {
         if (dispatched !== tr) foreign = true;
       };
       if (!step(chainableState(state, tr), dispatch, view)) return false;
       if (foreign) {
-        // Своя транзакция (view.state.tr) не видит предыдущих шагов — смешать нельзя.
+        // Its own transaction (view.state.tr) doesn't see the previous steps: they can't be mixed.
         warn('a command dispatched its own transaction; build it from state.tr');
         return false;
       }

@@ -1,12 +1,12 @@
 /**
- * Сборка для подключения тегом <script> без сборщика: всё ядро + элемент, глобальный объект
- * `NovaProse`. Элемент <novaprose-editor> регистрируется сразу.
+ * The build for a <script> tag without a bundler: the whole core + the element, the global object
+ * `NovaProse`. The <novaprose-editor> element is registered right away.
  */
 import { registerLanguage } from '@novaprose/core';
 import { defineNovaProseEditor } from './element';
 
-// Языки — отдельные части рядом со скриптом: качается только выбранный. Элемент и tinymce.init ждут
-// его сами; перед createEditor — await loadLanguage('de'). Список — все пакеты core/src/i18n/packs.
+// Languages are separate parts next to the script: only the chosen one downloads. The element and tinymce.init
+// wait for it themselves; before createEditor, await loadLanguage('de'). The list is every pack in core/src/i18n/packs.
 registerLanguage('ru', () => import('@novaprose/core/i18n/ru'));
 registerLanguage('de', () => import('@novaprose/core/i18n/de'));
 registerLanguage('es', () => import('@novaprose/core/i18n/es'));

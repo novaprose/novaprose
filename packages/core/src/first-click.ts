@@ -1,7 +1,7 @@
 import { Plugin, Selection } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 
-/** Позиция курсора браузера в документе; null — выделение не в тексте редактора (или в теневом корне). */
+/** The browser's cursor position in the document; null when the selection isn't in the editor's text (or is in a shadow root). */
 function browserCaret(view: EditorView): number | null {
   const selection = view.dom.ownerDocument.getSelection();
   const node = selection?.focusNode;
@@ -14,11 +14,11 @@ function browserCaret(view: EditorView): number | null {
 }
 
 /**
- * Первый щелчок в редактор без фокуса — туда, куда щёлкнули. Щелчок не по тексту (справа от
- * последней строки, ниже неё) браузеры при фокусировке превращают в курсор в начале документа —
- * так в Chromium, WebKit и Firefox. Позиция щелчка, которую считает ProseMirror, верная: если
- * курсор браузера оказался в другом блоке, ставим его туда. Тот же блок — ничего не трогаем;
- * картинки, упоминания и другие узлы-атомы выделяет сам ProseMirror.
+ * The first click into an unfocused editor lands where you clicked. A click away from the text (to the right of
+ * the last line, below it) is turned by browsers into a cursor at the start of the document when they focus,
+ * in Chromium, WebKit and Firefox. The click position ProseMirror computes is correct: if
+ * the browser's cursor ended up in another block, it is put there. The same block is left alone;
+ * ProseMirror itself selects images, mentions and other atom nodes.
  */
 export function firstClickPlugin(): Plugin {
   let focusedOnMouseDown = true;
@@ -43,7 +43,7 @@ export function firstClickPlugin(): Plugin {
         const selection = Selection.near($pos);
         if (!view.state.selection.eq(selection))
           view.dispatch(view.state.tr.setSelection(selection).setMeta('pointer', true));
-        // Браузер уже поставил своё выделение — focus() записывает в DOM выделение редактора.
+        // The browser has already placed its selection: focus() writes the editor's selection into the DOM.
         view.focus();
         return true;
       },

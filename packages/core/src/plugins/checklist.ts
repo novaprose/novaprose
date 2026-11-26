@@ -13,17 +13,17 @@ import css from './checklist.css?raw';
 import { pickLabels } from './shared';
 
 /**
- * Плагин checklist: списки задач с галочками. `plugins: ['checklist']`, кнопка `checklist`
- * (как у TinyMCE). Сам чек-лист — маркированный список с флагом (схема ядра), поэтому Enter, Tab,
- * отступы, вставка и Markdown работают как у обычных списков; плагин добавляет галочки,
- * Ctrl/Cmd+Enter, ввод `[ ]` / `[x]` в начале строки и стили.
+ * The checklist plugin: task lists with checkboxes. `plugins: ['checklist']`, the `checklist` button
+ * (as in TinyMCE). The checklist itself is a bulleted list with a flag (the core schema), so Enter, Tab,
+ * indents, paste and Markdown work as with regular lists; the plugin adds the checkboxes,
+ * Ctrl/Cmd+Enter, typing `[ ]` / `[x]` at the start of a line, and the styles.
  */
 
 export const LABELS = { en: { checklist: 'Checklist', done: 'Done' } };
 
 const SHORTCUT = 'Mod-Enter';
 
-/** Пункт чек-листа под курсором. */
+/** The checklist item under the cursor. */
 function checklistItemAt(state: EditorState): { node: PMNode; pos: number } | null {
   const { $from } = state.selection;
   const nodes = nodesOf(state);
@@ -36,14 +36,14 @@ function checklistItemAt(state: EditorState): { node: PMNode; pos: number } | nu
   return null;
 }
 
-/** Курсор в чек-листе (для подсветки кнопки). */
+/** The cursor is in a checklist (to highlight the button). */
 export function isChecklistActive(state: EditorState): boolean {
   return findParentList(state)?.node.attrs.checklist === true;
 }
 
 /**
- * Кнопка «Чек-лист»: в чек-листе — снять список; в другом списке — сделать его чек-листом;
- * в тексте — обернуть в новый чек-лист.
+ * The "Checklist" button: inside a checklist it removes the list; in another list it turns it into a checklist;
+ * in text it wraps it into a new checklist.
  */
 export const toggleChecklist: Command = (state, dispatch) => {
   const nodes = nodesOf(state);
@@ -57,7 +57,7 @@ export const toggleChecklist: Command = (state, dispatch) => {
     state,
     dispatch &&
       ((tr) => {
-        // Новые пункты получают checked: false (по умолчанию у пункта списка null).
+        // New items get checked: false (a list item's default is null).
         const $pos = tr.doc.resolve(tr.mapping.map(state.selection.from));
         for (let depth = $pos.depth; depth > 0; depth--) {
           const node = $pos.node(depth);
@@ -71,7 +71,7 @@ export const toggleChecklist: Command = (state, dispatch) => {
   );
 };
 
-/** Отметить или снять отметку пункта под курсором (Ctrl/Cmd+Enter). */
+/** Checks or unchecks the item under the cursor (Ctrl/Cmd+Enter). */
 export const toggleChecklistItem: Command = (state, dispatch) => {
   const item = checklistItemAt(state);
   if (!item) return false;
@@ -84,7 +84,7 @@ export const toggleChecklistItem: Command = (state, dispatch) => {
   return true;
 };
 
-/** `[ ] ` или `[x] ` в начале строки — пункт чек-листа (в обычном списке — весь список им станет). */
+/** `[ ] ` or `[x] ` at the start of a line makes a checklist item (in a regular list the whole list becomes one). */
 function checklistInputRule(): InputRule {
   return new InputRule(/^\s*\[([ xX]?)\]\s$/, (state, match, start, end) => {
     const nodes = nodesOf(state);
@@ -93,7 +93,7 @@ function checklistInputRule(): InputRule {
     const $start = tr.doc.resolve(start);
     const itemDepth = $start.depth - 1;
     if (itemDepth > 0 && $start.node(itemDepth).type === nodes.list_item) {
-      // Только в первой строке пункта; список и пункт — уже в документе после удаления «[ ] ».
+      // Only in the item's first line; the list and the item are already in the document after "[ ] " is removed.
       if ($start.index(itemDepth) !== 0) return null;
       const list = { node: $start.node(itemDepth - 1), pos: $start.before(itemDepth - 1) };
       if (list.node.type !== nodes.bullet_list && list.node.type !== nodes.ordered_list)
@@ -109,7 +109,7 @@ function checklistInputRule(): InputRule {
     if (!range || !wrapping) return null;
     wrapping[1] = { type: nodes.list_item, attrs: { checked } };
     tr.wrap(range, wrapping);
-    // Сразу после другого чек-листа — продолжить его, а не начинать новый.
+    // Right after another checklist: continue it instead of starting a new one.
     const listPos = range.start;
     const before = tr.doc.resolve(listPos).nodeBefore;
     if (before?.type === nodes.bullet_list && before.attrs.checklist === true) tr.join(listPos);
@@ -117,7 +117,7 @@ function checklistInputRule(): InputRule {
   });
 }
 
-/** Галочки у пунктов чек-листа: виджет в начале пункта, отметка — по нажатию. */
+/** Checkboxes on checklist items: a widget at the start of the item, checked on click. */
 function checkboxes(editor: Editor, label: string): Plugin {
   const key = new PluginKey<DecorationSet>('nova-checklist');
   const build = (doc: PMNode): DecorationSet => {
@@ -146,8 +146,8 @@ function checkboxes(editor: Editor, label: string): Plugin {
     box.setAttribute('role', 'checkbox');
     box.setAttribute('aria-checked', String(checked));
     box.setAttribute('aria-label', label);
-    // По click, без preventDefault на mousedown: отмена нажатия сбивала WebKit — следующий щелчок
-    // в текст ставил курсор в начало документа (найдено e2e).
+    // On click, without preventDefault on mousedown: cancelling the press confused WebKit, and the next click
+    // in the text put the cursor at the start of the document (found by e2e).
     box.addEventListener('click', () => {
       if (!editor.isEditable()) return;
       const at = getPos();

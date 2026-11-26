@@ -16,21 +16,21 @@ export type PluginMessageKey = `${string}.${string}`;
  */
 export type LanguagePack = Partial<Messages> & { [key: PluginMessageKey]: string };
 
-/** Пакеты, переданные через registerLanguage: только то, что дал пользователь (без подмешанного en). */
+/** Packs passed through registerLanguage: only what the user gave (without en mixed in). */
 const userPacks: Record<string, LanguagePack> = {};
 /**
- * Встроен только английский (эталон). Остальные языки — пакеты @novaprose/core/i18n/<код>,
- * подключаются через registerLanguage: каждый клиент скачивает только свой язык.
+ * Only English is built in (the reference). Other languages are the @novaprose/core/i18n/<code> packs,
+ * attached through registerLanguage: each customer downloads only their language.
  */
 const builtin: Record<string, Messages> = { en };
 const warned = new Set<string>();
 
-/** Строки плагина на одном языке: строка или список строк (названия групп и т.п.). */
+/** A plugin's strings in one language: a string or a list of strings (group names and the like). */
 export type PluginLabels = Record<string, string | readonly string[]>;
-/** Словарь плагина по языкам; en — эталон и запасной вариант. */
+/** A plugin's dictionary by language; en is the reference and the fallback. */
 export type PluginDict = { en: PluginLabels } & Record<string, PluginLabels | undefined>;
 
-/** Встроенные строки плагинов в плоском виде: namespace → язык → 'key' | 'key.0' → строка. */
+/** Built-in plugin strings in flat form: namespace → language → 'key' | 'key.0' → string. */
 const pluginPacks: Record<string, Record<string, Record<string, string>>> = {};
 
 function flatten(labels: PluginLabels): Record<string, string> {
@@ -48,7 +48,7 @@ export type LanguageLoader = () => Promise<LanguagePack | { default: LanguagePac
 const loaders: Record<string, LanguageLoader> = {};
 const loading: Record<string, Promise<boolean> | undefined> = {};
 
-/** Строки пакета — в общий словарь языка: поверх прежних или под ними (загруженный пакет не затирает правки). */
+/** A pack's strings go into the language's shared dictionary: over the existing ones or under them (a loaded pack doesn't overwrite customizations). */
 function install(lang: string, messages: LanguagePack, below = false): void {
   userPacks[lang] = below
     ? { ...messages, ...userPacks[lang] }
@@ -84,7 +84,7 @@ export function loadLanguage(code: string): Promise<boolean> {
   if (!key) return Promise.resolve(hasLanguage(lang));
   return (loading[key] ??= loaders[key]!().then(
     (module) => {
-      // Модуль пакета (import()) или сам пакет.
+      // A pack module (import()) or the pack itself.
       install(
         key,
         (module as { default?: LanguagePack }).default ?? (module as LanguagePack),
@@ -99,7 +99,7 @@ export function loadLanguage(code: string): Promise<boolean> {
   ));
 }
 
-/** Строки плагина по языкам (en — эталон). Вызывается плагином при загрузке модуля. */
+/** A plugin's strings by language (en is the reference). The plugin calls it when its module loads. */
 export function registerPluginMessages(namespace: string, dict: PluginDict): void {
   const flat: Record<string, Record<string, string>> = {};
   for (const [lang, labels] of Object.entries(dict)) if (labels) flat[lang] = flatten(labels);
@@ -127,9 +127,9 @@ const interpolate = (template: string, params?: Record<string, string | number>)
     : template;
 
 /**
- * Переводчик для экземпляра редактора. Ищет точный код ('pt-br'), затем базовый язык ('pt'),
- * затем английский. overrides — точечная замена строк из конфига (и ядра, и плагинов).
- * Строки плагинов ищутся в момент вызова: ленивые плагины регистрируются позже создания редактора.
+ * The translator for an editor instance. Looks for the exact code ('pt-br'), then the base language ('pt'),
+ * then English. overrides are targeted replacements of strings from the config (core and plugins alike).
+ * Plugin strings are looked up at call time: lazy plugins register after the editor is created.
  */
 export function createTranslator(language = 'en', overrides: LanguagePack = {}): Translator {
   const code = language.toLowerCase();
@@ -152,7 +152,7 @@ export function createTranslator(language = 'en', overrides: LanguagePack = {}):
   return (key, params) => {
     const core = messages[key];
     if (core !== undefined) return interpolate(core, params);
-    // Строка плагина: конфиг → registerLanguage → встроенный перевод плагина → английский.
+    // A plugin string: config → registerLanguage → the plugin's built-in translation → English.
     const dot = key.indexOf('.');
     const dict = dot > 0 ? pluginPacks[key.slice(0, dot)] : undefined;
     const name = key.slice(dot + 1);

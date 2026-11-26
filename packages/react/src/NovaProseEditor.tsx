@@ -54,7 +54,7 @@ export const NovaProseEditor = forwardRef<Editor | null, NovaProseEditorProps>(
     const propsRef = useRef(props);
     propsRef.current = props;
     const inputRef = useRef<HTMLInputElement>(null);
-    // Пока применяем внешний value, onChange не зовём: иначе reset() формы вернулся бы «эхом».
+    // While an external value is being applied, onChange isn't called: otherwise a form reset() would echo back.
     const syncingRef = useRef(false);
 
     const initial = props;
@@ -78,7 +78,7 @@ export const NovaProseEditor = forwardRef<Editor | null, NovaProseEditorProps>(
 
     useImperativeHandle(ref, () => editor as Editor, [editor]);
 
-    // События подписываем отдельно: колбэки всегда свежие, редактор не пересоздаётся.
+    // Events are subscribed separately: callbacks are always fresh and the editor isn't recreated.
     useEffect(() => {
       if (!editor) return;
       const offs = [
@@ -93,7 +93,7 @@ export const NovaProseEditor = forwardRef<Editor | null, NovaProseEditorProps>(
       return () => offs.forEach((off) => off());
     }, [editor]);
 
-    // Controlled: синхронизируем внешний value, не засоряя историю undo.
+    // Controlled: sync the external value without cluttering the undo history.
     useEffect(() => {
       if (!editor || props.value === undefined) return;
       if (editor.getHTML() !== props.value) {

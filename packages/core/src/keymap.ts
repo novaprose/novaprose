@@ -12,8 +12,8 @@ const insertHardBreak: Command = chainCommands(exitCode, (state, dispatch) => {
   return true;
 });
 
-/** Горячие клавиши в духе Word / Google Docs. Mod = Cmd на macOS, Ctrl на остальных. */
-/** Команда по имени — с учётом переопределений плагинов (см. Editor.resolveCommand). */
+/** Keyboard shortcuts in the spirit of Word / Google Docs. Mod = Cmd on macOS, Ctrl elsewhere. */
+/** A command by name, with plugin overrides applied (see Editor.resolveCommand). */
 type Resolve = (name: CommandName) => Command;
 const byName =
   (resolve: Resolve, name: CommandName): Command =>
@@ -47,17 +47,17 @@ export function buildKeymap(resolve: Resolve = (name) => commands[name]): Plugin
     'Mod-\\': commands.clearFormatting,
     'Shift-Enter': insertHardBreak,
     Enter: chainCommands(exitImageCaption, (state, dispatch) => {
-      // Новый пункт чек-листа — неотмеченный (а не копия отмеченного и не обычный пункт).
+      // A new checklist item is unchecked (not a copy of a checked one and not a regular item).
       const item = parentListItem(state);
       const attrs = typeof item?.attrs.checked === 'boolean' ? { checked: false } : undefined;
       return splitListItem(nodesOf(state).list_item, attrs)(state, dispatch);
     }),
-    // Tab — только для списков (в абзаце остаётся переходом фокуса). Отступ абзаца — Mod-] / Mod-[.
+    // Tab is for lists only (in a paragraph it still moves focus). A paragraph indent is Mod-] / Mod-[.
     Tab: listIndent,
     'Shift-Tab': listOutdent,
     'Mod-]': commands.indent,
     'Mod-[': commands.outdent,
-    // Переместить блок (пункт списка, абзац, таблицу) — как в Word.
+    // Move a block (a list item, a paragraph, a table), as in Word.
     'Alt-Shift-ArrowUp': commands.moveBlockUp,
     'Alt-Shift-ArrowDown': commands.moveBlockDown,
   };
@@ -65,7 +65,7 @@ export function buildKeymap(resolve: Resolve = (name) => commands[name]): Plugin
   return [keymap(keys), keymap(baseKeymap)];
 }
 
-/** Ближайший пункт списка вокруг курсора. */
+/** The nearest list item around the cursor. */
 function parentListItem(state: EditorState) {
   const { $from } = state.selection;
   for (let depth = $from.depth; depth > 0; depth--) {

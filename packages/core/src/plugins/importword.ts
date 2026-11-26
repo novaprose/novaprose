@@ -4,9 +4,9 @@ import { WORD_ICON } from './exportword';
 import { pickLabels } from './shared';
 
 /**
- * Плагин importword: кнопка и пункт меню «Импорт из Word» — открыть файл .docx. По умолчанию
- * документ заменяет содержимое (Ctrl+Z вернёт прежнее); лист и поля — в режим страниц.
- * `plugins: ['importword']`. Разбор — @novaprose/core/docx, грузится при первом открытии.
+ * The importword plugin: the "Import from Word" button and menu item open a .docx file. By default
+ * the document replaces the content (Ctrl+Z brings the old one back); the sheet and margins go to page mode.
+ * `plugins: ['importword']`. Parsing is @novaprose/core/docx, loaded on the first open.
  */
 
 export const LABELS = {

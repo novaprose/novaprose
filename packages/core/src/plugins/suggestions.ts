@@ -79,16 +79,16 @@ export const LABELS = {
 
 export const suggestionsKey = new PluginKey<{ enabled: boolean }>('nova-suggestions');
 
-/** Метка транзакций самого плагина (принять/отклонить, переключить режим) — их не отслеживаем. */
+/** The marker of the plugin's own transactions (accept/reject, toggling the mode): they aren't tracked. */
 export const OWN = 'nova-suggestions-own';
 
 /**
- * Цвета авторов: текст правки этим цветом — контраст не ниже 6:1 и на белом фоне, и на подкрашенном
- * (вставка), и в тёмной теме (там цвет осветляется на 45%). Было ниже 4.5:1 — нашёл axe.
+ * Author colors: the text of an edit in this color has a contrast of at least 6:1 on white, on the tinted
+ * background (insertion) and in the dark theme (where the color is lightened by 45%). It was below 4.5:1 until axe caught it.
  */
 const PALETTE = ['#116329', '#6639ba', '#99286e', '#0550ae', '#953800', '#0e5b5e'];
 
-/** Цвет автора правок — один и тот же у одного человека. */
+/** The color of an edit's author: the same for the same person. */
 function colorFor(key: string): string {
   let hash = 0;
   for (const ch of String(key ?? '')) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
@@ -110,7 +110,7 @@ function markSpec(kind: 'insert' | 'delete'): MarkSpec {
     parseDOM: [
       {
         tag: `${tag}[data-suggestion]`,
-        // Раньше правила зачёркивания (<del> без data-suggestion — обычное зачёркивание).
+        // Before the strike-through rules (<del> without data-suggestion is a regular strike-through).
         priority: 60,
         getAttrs: (dom) => {
           const el = dom as HTMLElement;
@@ -144,21 +144,21 @@ const typesOf = (schema: EditorState['schema']) => ({
   delete: schema.marks.suggestion_delete as MarkType,
 });
 
-/** Транзакции, которые не должны становиться правками. */
+/** Transactions that must not become suggestions. */
 function isTracked(tr: Transaction): boolean {
   if (!tr.docChanged || tr.getMeta(OWN)) return false;
   if (tr.getMeta('addToHistory') === false) return false;
-  // Отмена/повтор (своя история и совместная) и правки других участников приходят готовыми.
+  // Undo/redo (own and shared history) and other participants' edits arrive ready-made.
   if (tr.getMeta('history$')) return false;
   const ySync = tr.getMeta('y-sync$') as { isChangeOrigin?: boolean } | undefined;
   if (ySync?.isChangeOrigin) return false;
-  // Отслеживаем вставку и удаление текста; структура (списки, обёртки, атрибуты) — напрямую.
+  // Inserted and deleted text is tracked; structure (lists, wrappers, attributes) changes directly.
   return tr.steps.every((step) => step instanceof ReplaceStep);
 }
 
 /**
- * Правка того же автора вплотную к позиции — продолжаем её той же меткой (id и время), иначе соседние
- * буквы стали бы отдельными правками.
+ * An edit by the same author right next to the position is continued with the same mark (id and time), otherwise
+ * neighboring letters would become separate suggestions.
  */
 function neighbourMark(doc: PMNode, pos: number, type: MarkType, authorId: string): Mark | null {
   const $pos = doc.resolve(pos);
@@ -184,8 +184,8 @@ function withMark(fragment: Fragment, mark: Mark, parent: PMNode['type'] | null)
 }
 
 /**
- * Превратить правку пользователя в предложение: удалённое — пометить, вставленное — пометить.
- * Своя ещё не принятая вставка удаляется по-настоящему (исправил опечатку в своём предложении).
+ * Turns a user's edit into a suggestion: what was deleted gets marked, what was inserted gets marked.
+ * Your own insertion that isn't accepted yet is deleted for real (fixing a typo in your own suggestion).
  */
 export function suggestTransaction(
   tr: Transaction,
@@ -196,10 +196,10 @@ export function suggestTransaction(
   const types = typesOf(state.schema);
   const out = state.tr;
   const time = Date.now();
-  // Позиция в документе исходной транзакции (после шага i) → позиция в out.
+  // A position in the document of the original transaction (after step i) → a position in out.
   let toOut = (pos: number) => pos;
   let forwardDeleteEnd: number | null = null;
-  // Конец вставленного (для обычного ввода): курсор — сразу за ним.
+  // The end of what was inserted (for regular typing): the cursor goes right after it.
   let insertEnd: number | null = null;
 
   tr.steps.forEach((rawStep) => {
@@ -209,7 +209,7 @@ export function suggestTransaction(
     let from = prev(step.from);
     let to = Math.max(from, prev(step.to));
 
-    // 1. Удаление: пометить; свои вставки — удалить по-настоящему.
+    // 1. Deletion: mark it; your own insertions are deleted for real.
     if (to > from) {
       const own: { from: number; to: number }[] = [];
       const plain: { from: number; to: number }[] = [];
@@ -237,7 +237,7 @@ export function suggestTransaction(
       const map = out.mapping.slice(outStart);
       from = map.map(from, 1);
       to = map.map(to, -1);
-      // Delete (вперёд) с курсором в начале — курсор перепрыгивает помеченное.
+      // Delete (forward) with the cursor at the start: the cursor jumps over the marked text.
       const sel = state.selection;
       if (
         tr.steps.length === 1 &&
@@ -250,8 +250,8 @@ export function suggestTransaction(
       }
     }
 
-    // 2. Вставка — после помеченного удалённого текста, с пометкой «вставлено». Если курсор стоит
-    // прямо перед удалённым (стёр слово Backspace и печатает) — тоже после него: «~~May~~ June».
+    // 2. Insertion goes after the marked deleted text, marked "inserted". If the cursor is
+    // right before the deleted text (a word erased with Backspace, then typing), it goes after it too: "~~May~~ June".
     if (step.slice.size > 0) {
       let at = to;
       if (!step.slice.openStart) {
@@ -278,7 +278,7 @@ export function suggestTransaction(
     toOut = (pos) => outMap.map(prev(inverse.map(pos, -1)), 1);
   });
 
-  // Выделение: куда пришёл бы курсор в исходной транзакции.
+  // Selection: where the cursor would have ended up in the original transaction.
   if (forwardDeleteEnd !== null) {
     out.setSelection(TextSelection.create(out.doc, forwardDeleteEnd));
   } else if (insertEnd !== null && tr.selection.empty) {
@@ -289,7 +289,7 @@ export function suggestTransaction(
     try {
       out.setSelection(TextSelection.create(out.doc, anchor, head));
     } catch {
-      // Позиция не в тексте (рядом картинка/таблица) — оставим выделение по умолчанию.
+      // The position isn't in text (an image/table nearby): keep the default selection.
     }
   }
   for (const key of ['addToHistory', 'uiEvent', 'paste', 'scrollIntoView'] as const) {
@@ -341,9 +341,9 @@ export function resolveSuggestions(
   const types = typesOf(state.schema);
   const tr = state.tr.setMeta(OWN, true);
   const chosen = listSuggestions(state.doc).filter((s) => !ids || ids.includes(s.id));
-  // Блоки, из которых убран текст (позиция перед блоком).
+  // Blocks whose text was removed (the position before the block).
   const emptied = new Set<number>();
-  // С конца — позиции впереди не сдвигаются.
+  // From the end, so positions ahead don't shift.
   for (const s of [...chosen].sort((a, b) => b.from - a.from)) {
     const remove = (s.kind === 'insert') === (action === 'reject');
     if (remove) {
@@ -351,16 +351,16 @@ export function resolveSuggestions(
       tr.delete(s.from, s.to);
     } else tr.removeMark(s.from, s.to, s.kind === 'insert' ? types.insert : types.delete);
   }
-  // Блок, весь текст которого был правкой, уходит вместе с ней: отклонили новый абзац или приняли
-  // удаление всего абзаца — пустой строки не остаётся (сам перенос абзаца правкой не отслеживается).
+  // A block whose whole text was a suggestion goes with it: a new paragraph was rejected or the deletion
+  // of a whole paragraph accepted, so no empty line is left (the paragraph break itself isn't tracked as a suggestion).
   for (const pos of [...emptied].sort((a, b) => b - a)) removeEmptyBlock(tr, tr.mapping.map(pos));
   return tr;
 }
 
 /**
- * Убрать пустой текстовый блок, если без него содержимое допустимо. Нельзя (единственный абзац
- * документа или ячейки) — подняться к родителю, который состоит только из этого блока (пункт
- * списка, цитата); ячейки и прочие изолирующие узлы не трогаем.
+ * Removes an empty text block if the content stays valid without it. If it can't (the only paragraph
+ * of the document or a cell), it moves up to a parent made only of this block (a list
+ * item, a quote); cells and other isolating nodes are left alone.
  */
 function removeEmptyBlock(tr: Transaction, pos: number): void {
   const block = tr.doc.nodeAt(pos);
@@ -447,7 +447,7 @@ export default definePlugin({
         },
       }),
       keymap({
-        // Ctrl/Cmd+Alt+Shift+E — переключить режим правок.
+        // Ctrl/Cmd+Alt+Shift+E toggles suggesting mode.
         'Mod-Alt-Shift-e': () => {
           if (options.force) return false;
           setSuggesting(editor, !isSuggesting(editor.view.state));

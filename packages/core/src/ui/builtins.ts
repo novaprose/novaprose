@@ -83,7 +83,7 @@ const SHORTCUTS: Partial<Record<CommandName, string>> = {
   h6: 'Mod-Alt-6',
 };
 
-/** Вычисленный стиль текста под курсором — чтобы показывать реальный шрифт, а не «по умолчанию». */
+/** The computed style of the text under the cursor, to show the real font instead of "default". */
 function computedAtCursor(editor: Editor): CSSStyleDeclaration | null {
   try {
     const { node } = editor.view.domAtPos(editor.view.state.selection.from);
@@ -104,26 +104,26 @@ const GENERIC_FONTS: Record<string, string> = {
 };
 
 function prettyFontName(family: string): string {
-  // Значение марки могло прийти из JSON не строкой.
+  // The mark value could come from JSON as something other than a string.
   const first = String(family).split(',')[0]!.trim().replace(/["']/g, '');
   return GENERIC_FONTS[first.toLowerCase()] ?? first;
 }
 
-/** px → pt с округлением до 0.5 (12pt, 10.5pt), как в текстовых процессорах. */
+/** px → pt rounded to 0.5 (12pt, 10.5pt), as in word processors. */
 function pxToPt(px: string): string | null {
   const value = parseFloat(px);
   if (!Number.isFinite(value) || value <= 0) return null;
   return `${Math.round(value * 0.75 * 2) / 2}pt`;
 }
 
-/** Сравнение значений шрифта без учёта кавычек и пробелов. */
+/** Compares font values ignoring quotes and spaces. */
 const sameFont = (a: string | null, b: string) =>
   typeof a === 'string' &&
   a.replace(/["'\s]/g, '').toLowerCase() === b.replace(/["'\s]/g, '').toLowerCase();
 
 /**
- * Регистрирует все встроенные контролы. Имена — как в привычных конфигах тулбара
- * (bold, bullist, forecolor…), чтобы перенос существующих конфигов был тривиальным.
+ * Registers every built-in control. The names are those of familiar toolbar configs
+ * (bold, bullist, forecolor…), so moving an existing config over is trivial.
  */
 export function registerBuiltins(editor: Editor): void {
   const { registry, t } = editor.ui;
@@ -197,7 +197,7 @@ export function registerBuiltins(editor: Editor): void {
       })),
   });
 
-  // ---------- стиль блока ----------
+  // ---------- block style ----------
   const blockItems: { command: CommandName; style: string }[] = [
     { command: 'paragraph', style: '' },
     { command: 'h1', style: 'font-size: 1.6em; font-weight: 700' },
@@ -214,7 +214,7 @@ export function registerBuiltins(editor: Editor): void {
     if (parent.type === editor.schema.nodes.code_block) return 'codeBlock';
     return 'paragraph';
   };
-  // Отдельные кнопки заголовков (h1…h6): повторное нажатие возвращает обычный абзац.
+  // Separate heading buttons (h1…h6): pressing again returns a regular paragraph.
   for (let level = 1; level <= 6; level++) {
     const command = `h${level}` as CommandName;
     registry.addToggleButton(command, {
@@ -227,7 +227,7 @@ export function registerBuiltins(editor: Editor): void {
     });
   }
 
-  // blockFormats: свой набор и порядок пунктов (block_formats в конфиге TinyMCE).
+  // blockFormats: a custom set and order of items (block_formats in a TinyMCE config).
   const BLOCK_COMMANDS: Record<string, CommandName> = {
     p: 'paragraph',
     h1: 'h1',
@@ -267,7 +267,7 @@ export function registerBuiltins(editor: Editor): void {
         })),
   });
 
-  // ---------- «Стили» (styles): форматы из styleFormats или стандартный набор ----------
+  // ---------- "Styles" (styles): formats from styleFormats or the standard set ----------
   const ALIGN_SELECTOR = 'p,h1,h2,h3,h4,h5,h6';
   const defaultStyleFormats = (): StyleFormat[] => [
     {
@@ -308,9 +308,9 @@ export function registerBuiltins(editor: Editor): void {
       })),
     },
   ];
-  /** Формат пункта: ссылка на именованный или само описание. */
+  /** An item's format: a reference to a named one or the description itself. */
   const formatOf = (item: StyleFormat): string | StyleFormat => item.format ?? item;
-  /** Превью в меню — только для того, что видно без CSS клиента. */
+  /** A preview in the menu, only for what shows without the customer's CSS. */
   const previewStyle = (item: StyleFormat): string => {
     const spec = item.format ? editor.formatter.get(item.format)?.[0] : item;
     const parts: string[] = [];
@@ -357,7 +357,7 @@ export function registerBuiltins(editor: Editor): void {
             label: item.title,
             labelStyle: previewStyle(item),
             active: e.formatter.match(formatOf(item)),
-            // Формат по селектору без подходящих элементов (картинка не выделена) — неактивен.
+            // A selector format without matching elements (no image selected) is inactive.
             disabled: !e.formatter.canApply(formatOf(item)),
             onSelect: () => e.formatter.toggle(formatOf(item)),
           });
@@ -368,7 +368,7 @@ export function registerBuiltins(editor: Editor): void {
     },
   });
 
-  // ---------- шрифт, размер, интервал ----------
+  // ---------- font, size, spacing ----------
   const families = editor.options.fontFamilies ?? defaultFontFamilies;
   registry.addMenuButton('fontfamily', {
     tooltip: t('fontFamily'),
@@ -451,7 +451,7 @@ export function registerBuiltins(editor: Editor): void {
     },
   });
 
-  // ---------- цвета ----------
+  // ---------- colors ----------
   const colorButton = (
     name: string,
     mark: 'color' | 'background',
@@ -478,7 +478,7 @@ export function registerBuiltins(editor: Editor): void {
   colorButton('forecolor', 'color', icons.textColor, 'textColor');
   colorButton('backcolor', 'background', icons.highlight, 'backgroundColor');
 
-  // ---------- «Ещё формат»: редкие марки, чтобы не раздувать тулбар (как в Google Docs) ----------
+  // ---------- "More formatting": rare marks, so the toolbar doesn't bloat (as in Google Docs) ----------
   const extraMarks: [CommandName, MarkName, string][] = [
     ['superscript', 'superscript', icons.superscript],
     ['subscript', 'subscript', icons.subscript],
@@ -535,7 +535,7 @@ export function registerBuiltins(editor: Editor): void {
     },
   });
 
-  // ---------- ссылки и картинки ----------
+  // ---------- links and images ----------
   registry.addButton('link', {
     icon: icons.link,
     tooltip: t('link'),
@@ -555,14 +555,14 @@ export function registerBuiltins(editor: Editor): void {
     onAction: (e) => openImageDialog(e),
   });
 
-  // ---------- контекстный тулбар картинки ----------
+  // ---------- the image context toolbar ----------
   const imageAlign = () => getSelectedImage(state())?.attrs.align ?? null;
   const imageAlignButton = (name: string, align: ImageAlign, svg: string, label: MessageKey) =>
     registry.addToggleButton(name, {
       icon: svg,
       tooltip: t(label),
       isActive: () => imageAlign() === align,
-      // Повторное нажатие снимает выравнивание — картинка снова «в строке».
+      // Pressing again removes the alignment: the image is "inline" again.
       onAction: (e) => e.exec(setImageAttrs({ align: imageAlign() === align ? null : align })),
     });
   imageAlignButton('imagealignleft', 'left', icons.imageLeft, 'image.alignLeft');
@@ -602,7 +602,7 @@ export function registerBuiltins(editor: Editor): void {
     tooltip: t('image.delete'),
     onAction: (e) =>
       e.exec((s, dispatch) => {
-        // По позиции, а не по выделению: курсор может стоять в подписи.
+        // By position, not by selection: the cursor may be in the caption.
         const image = getSelectedImage(s);
         if (!image) return false;
         dispatch?.(s.tr.delete(image.pos, image.pos + image.node.nodeSize).scrollIntoView());
@@ -611,7 +611,7 @@ export function registerBuiltins(editor: Editor): void {
   });
   registerTableUi(editor);
 
-  // ---------- поиск, режимы просмотра, справка ----------
+  // ---------- search, view modes, help ----------
   registry.addButton('searchreplace', {
     icon: icons.search,
     tooltip: t('search.title'),
@@ -647,7 +647,7 @@ export function registerBuiltins(editor: Editor): void {
     predicate: (e) => !!getSelectedImage(e.view.state),
     items:
       'imagealignleft imagealigncenter imagealignright | imagesize imagealt imagecaption | imagedelete',
-    // Над картинкой (и с подписью — над всей figure, даже когда курсор в подписи).
+    // Above the image (and with a caption, above the whole figure, even when the cursor is in the caption).
     anchor: (e) => {
       const image = getSelectedImage(e.view.state);
       const dom = image ? (e.view.nodeDOM(image.pos) as HTMLElement | null) : null;

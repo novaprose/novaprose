@@ -38,29 +38,29 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
   if (elementClass) return elementClass;
 
   class NovaProseEditor extends HTMLElement implements NovaProseEditorElement {
-    /** Участвует в формах как обычное поле: FormData, reset, disabled, required. */
+    /** Takes part in forms like a regular field: FormData, reset, disabled, required. */
     static formAssociated = true;
     static observedAttributes = [...OBSERVED];
 
     #internals: ElementInternals | null = null;
     #editor: Editor | null = null;
     #init: NovaProseElementInit = {};
-    /** Значение до подключения (свойство `value`, выставленное заранее). */
+    /** The value before connecting (the `value` property set in advance). */
     #pending: string | undefined;
-    /** Исходное значение — к нему возвращает reset формы. */
+    /** The initial value that a form reset returns to. */
     #default: string | null = null;
     #formDisabled = false;
     #syncing = false;
     #valueAtFocus = '';
-    /** Загрузка языка перед созданием редактора: ещё не начата, идёт, закончилась (успешно или нет). */
+    /** Loading the language before the editor is created: not started, running, finished (successfully or not). */
     #language: 'idle' | 'loading' | 'done' = 'idle';
 
     constructor() {
       super();
       this.#internals = typeof this.attachInternals === 'function' ? this.attachInternals() : null;
-      // Сам элемент не фокусируемый, и браузер не может перевести фокус на поле с ошибкой.
-      // Делаем это сами — до того, как браузер покажет подсказку: если ставить фокус в
-      // contenteditable при уже видимой подсказке, WebKit теряет ввод после первой буквы.
+      // The element itself isn't focusable, and the browser can't move focus to the invalid field.
+      // We do it ourselves, before the browser shows its hint: if focus moves into
+      // contenteditable while the hint is already visible, WebKit loses input after the first letter.
       this.addEventListener('invalid', () => {
         if (this.#isFirstInvalid()) this.#editor?.focus();
       });
@@ -89,8 +89,8 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
         this.#pending = html;
         return;
       }
-      // Тот же HTML — ничего не делаем: двусторонняя привязка (Svelte, Angular) пишет value обратно
-      // на каждый ввод, и setContent сбрасывал бы курсор.
+      // The same HTML: do nothing. Two-way binding (Svelte, Angular) writes value back
+      // on every keystroke, and setContent would reset the cursor.
       if (html === editor.getHTML()) return;
       this.#syncing = true;
       try {
@@ -127,10 +127,10 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
     }
 
     connectedCallback(): void {
-      // Перенос элемента в DOM (disconnect → connect) не пересоздаёт редактор: история сохраняется.
+      // Moving the element in the DOM (disconnect → connect) doesn't recreate the editor: the history is kept.
       if (this.#editor) return;
-      // Скрипт в <head>: элемент подключается до того, как парсер дошёл до вложенной разметки.
-      // Ждём конца разбора документа, иначе начальное содержимое потеряется.
+      // A script in <head>: the element connects before the parser reaches the markup inside it.
+      // Wait until the document is parsed, otherwise the initial content is lost.
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => this.#mount(), { once: true });
         return;
@@ -141,8 +141,8 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
     #mount(): void {
       if (this.#editor || !this.isConnected) return;
 
-      // Язык с загрузчиком (в CDN-сборке — все пакеты) грузим до создания редактора: строки интерфейса
-      // берутся при нём. Готовый язык — без задержки; не загрузился — английский, редактор работает.
+      // A language with a loader (every pack in the CDN build) loads before the editor is created: interface
+      // strings are read then. A ready language means no delay; if it fails to load, English is used and the editor works.
       const wanted = this.getAttribute('language') ?? this.#init.language;
       if (wanted && this.#language !== 'done' && !hasLanguage(wanted)) {
         if (this.#language === 'idle') {
@@ -157,7 +157,7 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
         return;
       }
 
-      // Прогрессивное улучшение: разметка внутри тега видна без JS и становится начальным содержимым.
+      // Progressive enhancement: the markup inside the tag shows without JS and becomes the initial content.
       const content = this.#pending ?? this.getAttribute('value') ?? this.innerHTML.trim();
       this.#pending = undefined;
       this.#default ??= content;
@@ -205,7 +205,7 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
     }
 
     disconnectedCallback(): void {
-      // Откладываем: если элемент просто переносят, он подключится обратно в этой же задаче.
+      // Deferred: if the element is only being moved, it connects back within the same task.
       queueMicrotask(() => {
         if (this.isConnected || !this.#editor) return;
         this.#pending = this.#editor.getHTML();
@@ -235,7 +235,7 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
       if (typeof state === 'string') this.value = state;
     }
 
-    /** Первое невалидное поле формы — его браузер выбрал бы для фокуса при отправке. */
+    /** The first invalid field of the form: the one the browser would focus on submit. */
     #isFirstInvalid(): boolean {
       const form = this.form;
       if (!form) return true;
@@ -263,8 +263,8 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
         internals.setValidity(
           { valueMissing: true },
           editor.ui.t('editor.required'),
-          // Якорь — сам элемент, а не contenteditable внутри: в WebKit пузырь подсказки,
-          // привязанный к contenteditable, съедает ввод после первой буквы.
+          // The anchor is the element itself, not the contenteditable inside: in WebKit the hint bubble
+          // anchored to contenteditable swallows input after the first letter.
           this,
         );
       } else {
@@ -283,7 +283,7 @@ export function getNovaProseEditorClass(): new () => NovaProseEditorElement {
  */
 export function defineNovaProseEditor(tagName: string = DEFAULT_TAG): void {
   if (typeof customElements === 'undefined' || customElements.get(tagName)) return;
-  // Свой тег требует своего подкласса: один конструктор нельзя регистрировать дважды.
+  // A custom tag needs its own subclass: one constructor can't be registered twice.
   const base = getNovaProseEditorClass();
   customElements.define(tagName, tagName === DEFAULT_TAG ? base : class extends base {});
 }

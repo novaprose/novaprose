@@ -37,7 +37,7 @@ interface AttrRule {
   values?: string[];
 }
 
-/** Элементы, которые не разрешаются никаким правилом. */
+/** Elements that no rule allows. */
 const NEVER = new Set(
   (
     'script,style,iframe,frame,frameset,object,embed,applet,base,link,meta,title,head,html,body,' +
@@ -46,7 +46,7 @@ const NEVER = new Set(
     'portal,dialog,param,xmp,plaintext,listing,noembed,noframes,image'
   ).split(','),
 );
-/** Атрибуты, которые не сохраняются никаким правилом (в т.ч. «*»). */
+/** Attributes that no rule keeps (including "*"). */
 const NEVER_ATTR =
   /^(on|xmlns)|^(srcdoc|formaction|action|contenteditable|autofocus|is|slot|nonce)$/;
 const ATTR_NAME = /^[a-z_:][a-z0-9_.:-]*$/;
@@ -58,7 +58,7 @@ export const BASE_TAGS = new Set(
     ',',
   ),
 );
-/** Встроенные синонимы: становятся отдельным элементом, только если у них есть разрешённые атрибуты. */
+/** Built-in synonyms: they become a separate element only when they have allowed attributes. */
 const SPLIT = new Set(['span', 'i', 'b', 'del', 'strike', 'mark']);
 const INLINE = new Set(
   'abbr,acronym,bdi,bdo,big,cite,data,dfn,ins,kbd,q,samp,small,time,tt,var,label,ruby,rt,rp,wbr'.split(
@@ -70,12 +70,12 @@ const BLOCK = new Set(
     ',',
   ),
 );
-/** Блочные элементы HTML: по ним универсальный блок выбирает «контейнер» или «текстовый блок». */
+/** HTML block elements: by them the generic block chooses "container" or "text block". */
 const BLOCK_LEVEL = new Set([
   ...BLOCK,
   ...'p,h1,h2,h3,h4,h5,h6,blockquote,pre,hr,ul,ol,li,table,figure'.split(','),
 ]);
-/** Без этих атрибутов встроенный элемент не работает — их список в [...] не снимает. */
+/** A built-in element doesn't work without these attributes, so the list in [...] doesn't remove them. */
 const ESSENTIAL: Record<string, string[]> = {
   a: ['href'],
   ul: ['data-type'],
@@ -173,12 +173,12 @@ export class HtmlRules implements HtmlRulesInstance {
           warn(tag, 'not allowed for security reasons (iframes and video: use the media plugin)');
           continue;
         }
-        // Правило элемента целиком заменяет прежнее (extended заменяет valid).
+        // An element's rule replaces the previous one entirely (extended replaces valid).
         this.elements.set(tag, attrs);
         const output = BASE_TAGS.has(tag) || SPLIT.has(tag) ? tag : main;
         if (BASE_TAGS.has(tag)) continue;
         if (SPLIT.has(tag)) {
-          // `em/i` — обычный синоним; `i[class]` — отдельный элемент (иконки), если есть атрибуты.
+          // `em/i` is a regular synonym; `i[class]` is a separate element (icons) when it has attributes.
           if (tag === main && attrs?.length) this.inlineTags.set(tag, tag);
           continue;
         }
@@ -189,7 +189,7 @@ export class HtmlRules implements HtmlRulesInstance {
       }
     };
 
-    // validElements: только список атрибутов (что разрешено из элементов — решает ContentRules).
+    // validElements: only the attribute list (which elements are allowed is decided by ContentRules).
     for (const raw of splitTopLevel(options.validElements ?? '')) {
       const { names, attrs } = parseRule(raw);
       if (attrs) declare(names, attrs);
@@ -199,7 +199,7 @@ export class HtmlRules implements HtmlRulesInstance {
       const { names, attrs } = parseRule(raw);
       declare(names, attrs);
     }
-    // Свои элементы без правила сохраняют все безопасные атрибуты.
+    // Custom elements without a rule keep every safe attribute.
     for (const tag of custom) {
       if (invalid.has(tag)) continue;
       if (!this.elements.has(tag)) this.elements.set(tag, [{ name: '*', required: false }]);
@@ -273,7 +273,7 @@ export class HtmlRules implements HtmlRulesInstance {
    * anything), then the element's list and the value rules.
    */
   outputAttrs(tag: string, builtIn: Attrs, extras: unknown): Attrs {
-    // Сначала встроенные, затем сохранённые — порядок не зависит от того, откуда пришло значение.
+    // Built-in first, then the kept ones: the order doesn't depend on where the value came from.
     const out: Attrs = { ...builtIn };
     if (extras && typeof extras === 'object' && !Array.isArray(extras)) {
       for (const [raw, value] of Object.entries(extras as Attrs)) {
@@ -301,7 +301,7 @@ export class HtmlRules implements HtmlRulesInstance {
         delete out[rule.name];
       }
     }
-    // Ссылка в новой вкладке — без доступа к странице-источнику (как у встроенной ссылки).
+    // A link in a new tab gets no access to the source page (as with the built-in link).
     if (tag === 'a' && out.target != null && out.rel == null) out.rel = 'noopener noreferrer';
     return out;
   }
@@ -351,7 +351,7 @@ export function createHtmlRules(options: HtmlRulesOptions): HtmlRules | null {
   return rules.active ? rules : null;
 }
 
-// ---------- схема ----------
+// ---------- schema ----------
 
 type Spec = NodeSpec | MarkSpec;
 interface SchemaRef {
@@ -361,7 +361,7 @@ interface SchemaRef {
 const tagOf = (selector: string): string =>
   (/^[a-z][a-z0-9-]*/i.exec(selector)?.[0] ?? '').toLowerCase();
 
-/** Имена атрибутов, которые встроенный toDOM (исходный, без правил) выводит сам для этих attrs. */
+/** Attribute names that the built-in toDOM (the original one, without rules) outputs itself for these attrs. */
 function producedNames(
   ref: SchemaRef,
   kind: 'node' | 'mark',
@@ -384,7 +384,7 @@ function producedNames(
   }
 }
 
-/** Встроенный узел/марка с правилами атрибутов. */
+/** A built-in node/mark with attribute rules. */
 function wrapBase<T extends Spec>(
   name: string,
   spec: T,
@@ -413,8 +413,8 @@ function wrapBase<T extends Spec>(
           if (!withExtras) return base;
           const extras = rules.readAttrs(tag, dom, ['class', 'style']);
           if (!extras) return base;
-          // Что встроенный узел выводит сам, в extras не дублируем — иначе устаревшее значение
-          // вернулось бы, когда пользователь его уберёт.
+          // What the built-in node outputs itself isn't duplicated in extras, otherwise an outdated value
+          // would come back after the user removes it.
           for (const produced of producedNames(ref, kind, name, { ...base }, toDOM)) {
             delete extras[produced];
           }
@@ -434,7 +434,7 @@ function hasBlockChild(dom: HTMLElement, rules: HtmlRules): boolean {
   });
 }
 
-/** Узлы и марки для новых элементов. */
+/** Nodes and marks for new elements. */
 function genericSpecs(rules: HtmlRules): {
   nodes: Record<string, NodeSpec>;
   marks: Record<string, MarkSpec>;
@@ -442,8 +442,8 @@ function genericSpecs(rules: HtmlRules): {
   const nodes: Record<string, NodeSpec> = {};
   const marks: Record<string, MarkSpec> = {};
   /**
-   * У синонимов встроенных элементов (span, i, mark…) style разбирают марки оформления — его не
-   * дублируем; class у непустого span — марка классов. Синоним без своих атрибутов — встроенный.
+   * For synonyms of built-in elements (span, i, mark…) the formatting marks parse style, so it isn't
+   * duplicated; class on a non-empty span is the class mark. A synonym without its own attributes is the built-in one.
    */
   const read = (output: string, dom: HTMLElement, mark: boolean) => {
     if (!rules.hasRequired(output, dom)) return false;
@@ -453,7 +453,7 @@ function genericSpecs(rules: HtmlRules): {
     if (split && !htmlAttrs) return false;
     return { tag: output, htmlAttrs };
   };
-  // Теги, чей style остаётся на самом элементе, а не превращается в марки (см. parser.ts).
+  // Tags whose style stays on the element itself instead of turning into marks (see parser.ts).
   const ownStyle = (tags: Map<string, string>) =>
     [...tags].filter(([, output]) => !SPLIT.has(output)).map(([input]) => input);
   const out = (allowed: Set<string>, fallback: string, attrs: Attrs) => {
@@ -503,7 +503,7 @@ function genericSpecs(rules: HtmlRules): {
     const allowed = new Set(rules.inlineTags.values());
     const fallback = allowed.has('span') ? 'span' : [...allowed][0]!;
     const attrs = { tag: { default: fallback }, htmlAttrs: { default: null } };
-    // Пустой элемент (иконка `<i class="fa fa-star"></i>`) — неделимый узел: марке нечего охватить.
+    // An empty element (an icon `<i class="fa fa-star"></i>`) is an atomic node: a mark would have nothing to wrap.
     nodes.html_inline_atom = {
       ownStyleTags: ownStyle(rules.inlineTags),
       group: 'inline',
@@ -512,7 +512,7 @@ function genericSpecs(rules: HtmlRules): {
       attrs,
       parseDOM: inline.map(([input, output]) => ({
         tag: input,
-        // Раньше марки того же тега (у неё 60) и встроенных марок (курсив для <i>).
+        // Before marks of the same tag (it has 60) and built-in marks (italic for <i>).
         priority: 65,
         getAttrs: (dom: HTMLElement) => (dom.firstChild ? false : read(output, dom, false)),
       })),
@@ -523,11 +523,11 @@ function genericSpecs(rules: HtmlRules): {
     };
     marks.html_inline = {
       attrs,
-      // Разные элементы (abbr внутри kbd) — экземпляры одной марки, они не должны вытеснять друг друга.
+      // Different elements (abbr inside kbd) are instances of one mark and must not push each other out.
       excludes: '',
       parseDOM: inline.map(([input, output]) => ({
         tag: input,
-        // span: после марок классов и узлов плагинов (они разбирают свои span раньше).
+        // span: after class marks and plugin nodes (they parse their own spans earlier).
         priority: output === 'span' ? 40 : 60,
         getAttrs: (dom: HTMLElement) => (dom.firstChild ? read(output, dom, true) : false),
       })),

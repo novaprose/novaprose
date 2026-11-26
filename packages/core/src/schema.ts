@@ -13,9 +13,9 @@ import { elementId } from './element-id';
 export const ALIGNMENTS = ['left', 'center', 'right', 'justify'] as const;
 export type TextAlign = (typeof ALIGNMENTS)[number];
 
-// ---------- валидация CSS-значений ----------
-// Значения стилей попадают в атрибут style, поэтому пропускаем только ожидаемые форматы:
-// это не даёт протащить через контент position:fixed, url(...) и прочие инъекции.
+// ---------- CSS value validation ----------
+// Style values end up in the style attribute, so only the expected formats get through:
+// content can't smuggle in position:fixed, url(...) or other injections.
 
 const COLOR_RE =
   /^(#[0-9a-f]{3,8}|rgba?\(\s*[\d.]+%?\s*,\s*[\d.]+%?\s*,\s*[\d.]+%?\s*(,\s*[\d.]+%?\s*)?\)|[a-z]{3,20})$/i;
@@ -23,7 +23,7 @@ const LENGTH_RE = /^\d{1,4}(\.\d{1,3})?(px|pt|em|rem|%)$/;
 const LINE_HEIGHT_RE = /^\d{1,2}(\.\d{1,3})?(px|em|%)?$/;
 const FONT_FAMILY_RE = /^[\w\s,'"-]{1,200}$/;
 
-/** Канонический вид цвета: #rrggbb в нижнем регистре; rgba с прозрачностью и имена — как есть. */
+/** The canonical form of a color: lowercase #rrggbb; rgba with transparency and names as they are. */
 function normalizeColor(value: string): string {
   const v = value.trim().toLowerCase();
   const rgb = v.match(
@@ -47,7 +47,7 @@ export const cssValue = {
   color: (v: unknown): string | null =>
     typeof v === 'string' &&
     COLOR_RE.test(v.trim()) &&
-    // Не цвета, а «по умолчанию»: transparent (Google Docs), windowtext и auto (Word).
+    // Not colors but "default": transparent (Google Docs), windowtext and auto (Word).
     !/^(inherit|initial|unset|currentcolor|transparent|windowtext|window|auto|none)$/i.test(
       v.trim(),
     )
@@ -63,7 +63,7 @@ export const cssValue = {
     typeof v === 'string' && FONT_FAMILY_RE.test(v.trim()) ? v.trim() : null,
 };
 
-// ---------- стили блоков: выравнивание, межстрочный интервал, направление текста ----------
+// ---------- block styles: alignment, line height, text direction ----------
 
 export type TextDirection = 'ltr' | 'rtl';
 
@@ -74,11 +74,11 @@ interface BlockStyle {
   indent: number;
 }
 
-/** Шаг отступа абзаца, px (как в привычных редакторах), и предел уровней. */
+/** The paragraph indent step in px (as in familiar editors) and the level limit. */
 export const INDENT_STEP = 40;
 export const MAX_INDENT = 10;
 
-/** Уровень отступа 0…MAX_INDENT из любого значения (JSON может прийти чем угодно). */
+/** Indent level 0…MAX_INDENT from any value (JSON can contain anything). */
 export function indentLevel(value: unknown): number {
   const level = Math.trunc(Number(value));
   return Number.isFinite(level) ? Math.min(MAX_INDENT, Math.max(0, level)) : 0;
@@ -87,9 +87,9 @@ export function indentLevel(value: unknown): number {
 const CSS_LENGTH = /^(\d+(?:\.\d+)?)(px|pt|em|rem)$/;
 const PX_PER: Record<string, number> = { px: 1, pt: 4 / 3, em: 16, rem: 16 };
 
-/** Отступ блока из margin/padding со стороны начала строки (для RTL — справа). */
+/** A block's indent from margin/padding on the line-start side (on the right for RTL). */
 function readIndent(dom: HTMLElement, dir: TextDirection | null): number {
-  // Отступ абзаца внутри пункта списка — это уровень списка, а не отступ абзаца.
+  // A paragraph indent inside a list item is the list level, not a paragraph indent.
   if (dom.parentElement?.tagName === 'LI') return 0;
   const style = dom.style;
   const raw =
@@ -104,8 +104,8 @@ function readDir(dom: HTMLElement): TextDirection | null {
 }
 
 /**
- * `rtl` — направление редактора по умолчанию (опция direction): у блока без своего dir отступ
- * со стороны начала строки, то есть справа.
+ * `rtl` is the editor's default direction (the direction option): a block without its own dir is indented
+ * on the line-start side, that is, on the right.
  */
 function readBlockStyle(dom: HTMLElement, rtl = false): BlockStyle {
   const align = dom.style.textAlign;
@@ -120,7 +120,7 @@ function readBlockStyle(dom: HTMLElement, rtl = false): BlockStyle {
 
 function blockStyleAttrs(attrs: Record<string, unknown>, rtl = false): Record<string, string> {
   const out: Record<string, string> = {};
-  // Направление — атрибутом dir (так его понимают и браузер, и экранные дикторы).
+  // Direction goes into the dir attribute (both the browser and screen readers understand it that way).
   if (attrs.dir === 'rtl' || attrs.dir === 'ltr') out.dir = attrs.dir;
   const end = attrs.dir === 'rtl' || (rtl && attrs.dir !== 'ltr');
   const parts: string[] = [];
@@ -130,7 +130,7 @@ function blockStyleAttrs(attrs: Record<string, unknown>, rtl = false): Record<st
   const lineHeight = cssValue.lineHeight(attrs.lineHeight);
   if (lineHeight) parts.push(`line-height: ${lineHeight};`);
   const indent = indentLevel(attrs.indent);
-  // Отступ — со стороны начала строки: для текста справа налево это правый край.
+  // The indent is on the line-start side: for right-to-left text that is the right edge.
   if (indent) {
     parts.push(`margin-${end ? 'right' : 'left'}: ${indent * INDENT_STEP}px;`);
   }
@@ -145,7 +145,7 @@ const blockStyleSpec = {
   indent: { default: 0 },
 };
 
-// ---------- стиль маркеров и нумерации списков (advlist) ----------
+// ---------- list marker and numbering styles (advlist) ----------
 
 export const BULLET_STYLES = ['disc', 'circle', 'square'] as const;
 export const ORDERED_STYLES = [
@@ -164,7 +164,7 @@ const OL_TYPE: Record<string, string> = {
   I: 'upper-roman',
 };
 
-/** Стиль списка из style или атрибута type; значение по умолчанию (disc / decimal) — null. */
+/** The list style from style or the type attribute; the default (disc / decimal) is null. */
 function readListStyle(
   dom: HTMLElement,
   allowed: readonly string[],
@@ -186,11 +186,11 @@ function listStyleAttrs(value: unknown, allowed: readonly string[]): Record<stri
     : {};
 }
 
-// ---------- картинки: размер и выравнивание ----------
+// ---------- images: size and alignment ----------
 
 export type ImageAlign = 'left' | 'center' | 'right';
 
-/** Выравнивание картинки — привычными стилями (float / центр блоком), как в TinyMCE-контенте. */
+/** Image alignment with familiar styles (float / a centered block), as in TinyMCE content. */
 export const IMAGE_ALIGN_STYLES: Record<ImageAlign, string> = {
   left: 'float: left; margin: 0 1em 1em 0;',
   right: 'float: right; margin: 0 0 1em 1em;',
@@ -210,7 +210,7 @@ function readImageAlign(el: HTMLElement): ImageAlign | null {
   return null;
 }
 
-/** Размер картинки в px: целое 1…10000, иначе null ('300', '300px', 300). */
+/** Image size in px: an integer 1…10000, otherwise null ('300', '300px', 300). */
 export function imageSize(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null;
   const match = String(value)
@@ -221,13 +221,13 @@ export function imageSize(value: unknown): number | null {
   return n >= 1 && n <= 10000 ? n : null;
 }
 
-// ---------- таблицы (prosemirror-tables) ----------
+// ---------- tables (prosemirror-tables) ----------
 
 export const CELL_VALIGN = ['top', 'middle', 'bottom'] as const;
 export type CellVAlign = (typeof CELL_VALIGN)[number];
 export type TableAlign = 'center' | 'right';
 
-/** style таблицы по атрибутам: ширина и выравнивание через margin (так его понимают все браузеры и почта). */
+/** The table's style from its attributes: width and alignment through margin (every browser and mail client understands it). */
 export function tableStyle(attrs: Record<string, unknown>): string {
   const parts: string[] = [];
   const width = cssValue.length(attrs.width);
@@ -239,13 +239,13 @@ export function tableStyle(attrs: Record<string, unknown>): string {
 
 const MAX_SPAN = 100;
 
-/** Узлы таблицы с защитой от вредных значений из вставки и шириной колонок в style. */
+/** Table nodes protected from harmful values in pasted content, with column widths in style. */
 function buildTableNodes(allow: ClassFilter) {
   const specs = tableNodes({
     tableGroup: 'block',
     cellContent: 'block+',
     cellAttributes: {
-      // Стиль ячейки из списка (tableCellClassList) — рамки, отступы задаёт CSS сайта.
+      // A cell style from the list (tableCellClassList): the site's CSS sets borders and padding.
       class: {
         default: null,
         getFromDOM: (dom) => readClass(dom as HTMLElement, allow),
@@ -256,7 +256,7 @@ function buildTableNodes(allow: ClassFilter) {
       },
       background: {
         default: null,
-        // Фон заранее перенесён в data-атрибут (parser.ts → preprocessDOM); style — запасной путь.
+        // The background was moved into a data attribute beforehand (parser.ts → preprocessDOM); style is the fallback.
         getFromDOM: (dom) =>
           cssValue.color(
             (dom as HTMLElement).getAttribute('data-nova-cell-bg') ??
@@ -283,11 +283,11 @@ function buildTableNodes(allow: ClassFilter) {
     },
   });
 
-  // Таблица: ширина (px или %) и выравнивание на странице (по центру / справа).
+  // Table: width (px or %) and alignment on the page (centered / right).
   specs.table.attrs = {
     width: { default: null },
     align: { default: null },
-    // Стиль таблицы из списка (tableClassList): «с рамками», «раскладка без рамок»…
+    // A table style from the list (tableClassList): "with borders", "layout without borders"…
     class: { default: null },
   };
   specs.table.parseDOM = [
@@ -320,7 +320,7 @@ function buildTableNodes(allow: ClassFilter) {
     rule.getAttrs = (dom) => {
       const attrs = getAttrs(dom as HTMLElement) as Record<string, unknown> | false | null;
       if (!attrs) return attrs;
-      // colspan="99999" из вставки раздул бы карту таблицы — ограничиваем.
+      // colspan="99999" from pasted content would inflate the table map: it is capped.
       const clamp = (n: unknown) =>
         Math.min(MAX_SPAN, Math.max(1, Number.isFinite(n) ? Math.floor(n as number) : 1));
       return { ...attrs, colspan: clamp(attrs.colspan), rowspan: clamp(attrs.rowspan) };
@@ -329,7 +329,7 @@ function buildTableNodes(allow: ClassFilter) {
     spec.toDOM = (node) => {
       const out = toDOM(node) as [string, Record<string, string>, 0];
       const widths = node.attrs.colwidth as number[] | null;
-      // Ширина в style — чтобы таблица выглядела так же вне редактора (data-colwidth знает только он).
+      // Width in style, so the table looks the same outside the editor (only the editor knows data-colwidth).
       if (widths?.every((w) => w > 0)) {
         const total = widths.reduce((a, b) => a + b, 0);
         const rest = out[1].style ? ` ${out[1].style}` : '';
@@ -341,7 +341,7 @@ function buildTableNodes(allow: ClassFilter) {
   return specs;
 }
 
-// ---------- классы (style_formats, validClasses) ----------
+// ---------- classes (style_formats, validClasses) ----------
 
 /** Which classes from HTML to keep. By default none: output without classes. */
 export type ClassFilter = (className: string) => boolean;
@@ -351,7 +351,7 @@ const CLASS_TOKEN = /^-?[_a-zA-Z][\w-]*$/;
 const LANGUAGE_CLASS = /(?:^|\s)lang(?:uage)?-(\S+)/;
 
 /**
- * Язык из разметки: class="language-x" у <code> (CommonMark, highlight.js, Prism, Tiptap) или у
+ * The language from the markup: class="language-x" on <code> (CommonMark, highlight.js, Prism, Tiptap) or on
  * <pre> (TinyMCE, Prism), «lang-x» (Prettify), data-language.
  */
 function readCodeLanguage(pre: HTMLElement): string | null {
@@ -365,7 +365,7 @@ function readCodeLanguage(pre: HTMLElement): string | null {
   return null;
 }
 
-/** Список-чек-лист в чужой разметке: Tiptap, TinyMCE (плагин checklist), GitHub/Markdown. */
+/** A checklist in someone else's markup: Tiptap, TinyMCE (the checklist plugin), GitHub/Markdown. */
 function isChecklistElement(dom: HTMLElement): boolean {
   return (
     dom.getAttribute('data-type') === 'taskList' ||
@@ -374,14 +374,14 @@ function isChecklistElement(dom: HTMLElement): boolean {
   );
 }
 
-/** Отмечен ли пункт чек-листа (null — обычный пункт списка). */
+/** Whether a checklist item is checked (null means a regular list item). */
 function readChecked(dom: HTMLElement): boolean | null {
   const list = dom.parentElement;
   if (!list || !isChecklistElement(list)) return null;
   const data = dom.getAttribute('data-checked');
   if (data === 'true' || data === 'false') return data === 'true';
   if (dom.classList.contains('tox-checklist--checked')) return true;
-  // Флажок в начале пункта (GitHub, Tiptap): сам <input> схема не сохраняет.
+  // A checkbox at the start of the item (GitHub, Tiptap): the schema doesn't keep the <input> itself.
   const box = [...dom.querySelectorAll('input[type="checkbox"]')].find(
     (el) => el.closest('li') === dom,
   );
@@ -389,19 +389,19 @@ function readChecked(dom: HTMLElement): boolean | null {
   return false;
 }
 
-/** Уровень заголовка 1–6 (значение могло прийти из JSON строкой, числом вне диапазона, null). */
+/** Heading level 1–6 (the value could come from JSON as a string, an out-of-range number, null). */
 function headingLevel(value: unknown): number {
   const level = Math.trunc(Number(value));
   return level >= 1 && level <= 6 ? level : 1;
 }
 
-/** Классы элемента, которые разрешены фильтром, или null. */
+/** The element's classes that the filter allows, or null. */
 function readClass(dom: HTMLElement, allow: ClassFilter): string | null {
   const kept = [...dom.classList].filter((c) => CLASS_TOKEN.test(c) && allow(c));
   return kept.length ? kept.join(' ') : null;
 }
 
-/** Атрибут class для вывода: только корректные имена (документ мог прийти из JSON). */
+/** The class attribute for output: only valid names (the document could come from JSON). */
 export function classAttr(value: unknown): { class?: string } {
   if (typeof value !== 'string') return {};
   const tokens = value.split(/\s+/).filter((c) => CLASS_TOKEN.test(c));
@@ -438,7 +438,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       group: 'block',
       content: 'inline*',
       defining: true,
-      // id — для ссылок на раздел (оглавление, #якорь); проверяется и при разборе, и при выводе.
+      // id is for links to a section (table of contents, #anchor); checked both when parsing and on output.
       attrs: { level: { default: 1 }, id: { default: null }, ...blockStyleSpec, ...classSpec },
       parseDOM: [1, 2, 3, 4, 5, 6].map((level) => ({
         tag: `h${level}`,
@@ -450,7 +450,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
         }),
       })),
       toDOM: (node): DOMOutputSpec => [
-        // Уровень мог прийти из JSON чем угодно — в имя тега попадает только 1–6.
+        // The level could come from JSON as anything: only 1–6 gets into the tag name.
         `h${headingLevel(node.attrs.level)}`,
         {
           ...(elementId(node.attrs.id) ? { id: node.attrs.id } : {}),
@@ -501,9 +501,9 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       },
     },
 
-    // Чек-лист — маркированный список с флагом checklist (пункты с checked): вся механика списков
-    // (Enter, Tab, отступы, вставка, Markdown) работает без второго типа списка. HTML — как у Tiptap
-    // (data-type="taskList"/"taskItem", data-checked); при разборе понимаем и TinyMCE, и GitHub.
+    // A checklist is a bulleted list with the checklist flag (items with checked): all the list mechanics
+    // (Enter, Tab, indents, paste, Markdown) work without a second list type. The HTML is Tiptap's
+    // (data-type="taskList"/"taskItem", data-checked); parsing understands TinyMCE and GitHub too.
     bullet_list: {
       group: 'block',
       content: 'list_item+',
@@ -557,7 +557,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
     list_item: {
       content: 'paragraph block*',
       defining: true,
-      // checked: null — обычный пункт; true/false — пункт чек-листа (отмечен / нет).
+      // checked: null is a regular item; true/false is a checklist item (checked / not).
       attrs: { checked: { default: null } },
       parseDOM: [{ tag: 'li', getAttrs: (dom) => ({ checked: readChecked(dom as HTMLElement) }) }],
       toDOM: (node): DOMOutputSpec =>
@@ -584,7 +584,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
           tag: 'figure',
           getAttrs: (dom) => {
             const el = dom as HTMLElement;
-            // Только «картинка + подпись»; прочие <figure> (с таблицей, цитатой) разбираются как обычно.
+            // Only "image + caption"; other <figure>s (with a table, a quote) are parsed as usual.
             const img = el.querySelector('img');
             if (!img || !isSafeImageUrl(img.getAttribute('src') ?? '')) return false;
             return { align: readImageAlign(el), class: readClass(el, allow) };
@@ -603,7 +603,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       atom: true,
       selectable: false,
       attrs: {
-        // Значение по умолчанию нужно ProseMirror, чтобы обязательный узел можно было достроить.
+        // ProseMirror needs a default value so that a required node can be filled in.
         src: { default: '' },
         alt: { default: null },
         title: { default: null },
@@ -630,7 +630,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       ],
       toDOM: (node): DOMOutputSpec => {
         const { alt, title } = node.attrs;
-        // Документ мог прийти из JSON в обход parseDOM — проверяем и на выходе.
+        // The document could come from JSON past parseDOM, so it is checked on output too.
         const src = isSafeImageUrl(node.attrs.src) ? node.attrs.src : '';
         const width = imageSize(node.attrs.width);
         const height = imageSize(node.attrs.height);
@@ -684,7 +684,7 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
       ],
       toDOM: (node): DOMOutputSpec => {
         const { alt, title } = node.attrs;
-        // Документ мог прийти из JSON в обход parseDOM — проверяем и на выходе.
+        // The document could come from JSON past parseDOM, so it is checked on output too.
         const src = isSafeImageUrl(node.attrs.src) ? node.attrs.src : '';
         const width = imageSize(node.attrs.width);
         const height = imageSize(node.attrs.height);
@@ -754,7 +754,7 @@ const buildMarks = (allow: ClassFilter) =>
     bold: {
       parseDOM: [
         { tag: 'strong' },
-        // <b style="font-weight: normal"> встречается при вставке из Google Docs — это не жирный.
+        // <b style="font-weight: normal"> shows up in content pasted from Google Docs: that is not bold.
         {
           tag: 'b',
           getAttrs: (dom) => (dom as HTMLElement).style?.fontWeight !== 'normal' && null,
@@ -794,7 +794,7 @@ const buildMarks = (allow: ClassFilter) =>
 
     subscript: {
       excludes: 'superscript',
-      // vertical-align — так нижний индекс передают Google Docs и Word.
+      // vertical-align: the way Google Docs and Word pass subscript.
       parseDOM: [{ tag: 'sub' }, { style: 'vertical-align=sub' }],
       toDOM: (): DOMOutputSpec => ['sub', 0],
     },
@@ -805,7 +805,7 @@ const buildMarks = (allow: ClassFilter) =>
       toDOM: (): DOMOutputSpec => ['sup', 0],
     },
 
-    // ---------- текстовые стили (PRD §4.2): <span style="…"> как у TinyMCE ----------
+    // ---------- text styles: <span style="…"> as in TinyMCE ----------
 
     color: {
       attrs: { value: {} },
@@ -848,7 +848,7 @@ const buildMarks = (allow: ClassFilter) =>
       parseDOM: [
         {
           tag: 'span[class]',
-          // Не «съедает» span: его style-атрибуты разбирают марки цвета и шрифта.
+          // Doesn't "consume" the span: the color and font marks parse its style attributes.
           consuming: false,
           getAttrs: (dom) => {
             const value = readClass(dom as HTMLElement, allow);
@@ -867,7 +867,7 @@ function styleAttr(value: string | null): { value: string } | false {
 }
 
 function styleSpan(property: string, value: string | null): DOMOutputSpec {
-  // Невалидное значение (например, из JSON) просто не выводится как стиль.
+  // An invalid value (from JSON, for example) is simply not output as a style.
   return value ? ['span', { style: `${property}: ${value};` }, 0] : ['span', 0];
 }
 

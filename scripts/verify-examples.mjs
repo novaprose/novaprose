@@ -1,13 +1,13 @@
 /**
- * Примеры (examples/*) — заодно чистые проекты для проверки архивов перед релизом (пункт 4
- * docs/RELEASING.md). Каждый пример копируется во временную папку, зависимости @novaprose/*
- * заменяются архивами из .release/ (pnpm release:pack), затем npm install и проверка:
- *   react, vue      — проверка типов (tsc, vue-tsc) и сборка Vite;
- *   server-render   — запуск в Node (ESM) и импорт ядра через require (CJS);
- *   cdn             — ссылки на CDN ведут на текущий минор (@X.Y).
+ * The examples (examples/*) double as clean projects for checking the archives before a release (step 4
+ * of docs/RELEASING.md). Each example is copied into a temporary folder, the @novaprose/* dependencies
+ * are replaced with archives from .release/ (pnpm release:pack), then npm install and the checks:
+ *   react, vue      type checks (tsc, vue-tsc) and a Vite build;
+ *   server-render   a run in Node (ESM) and importing the core through require (CJS);
+ *   cdn             CDN links point to the current minor (@X.Y).
  *
- * Запуск: pnpm verify:examples (после pnpm release:pack). --strict — диапазоны @novaprose/* в
- * примерах обязаны совпадать с версией пакетов (так в релизе); без него — предупреждение.
+ * Run: pnpm verify:examples (after pnpm release:pack). --strict: the @novaprose/* ranges in the
+ * examples must match the package version (as in a release); without it, a warning.
  */
 import { execSync, spawn } from 'node:child_process';
 import { cpSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
@@ -28,7 +28,7 @@ const tarballs = new Map(
     .map(([name, file]) => [`@novaprose/${name}`, join(release, file)]),
 );
 if (!tarballs.size) {
-  console.error('Нет архивов в .release/ — сначала pnpm release:pack');
+  console.error('No archives in .release/: run pnpm release:pack first');
   process.exit(1);
 }
 
@@ -43,17 +43,17 @@ function run(command, cwd) {
   }
 }
 
-/** Диапазоны @novaprose/* в примере — на текущий минор (^X.Y.0). */
+/** The @novaprose/* ranges in an example point to the current minor (^X.Y.0). */
 function checkRanges(name, pkg) {
   for (const deps of [pkg.dependencies, pkg.devDependencies])
     for (const [dep, range] of Object.entries(deps ?? {}))
       if (dep.startsWith('@novaprose/') && range !== `^${minor}.0`)
         (strict ? problems : warnings).push(
-          `${name}: ${dep} "${range}", а версия пакетов ${version}`,
+          `${name}: ${dep} "${range}", but the packages are at ${version}`,
         );
 }
 
-/** Копия примера, где @novaprose/* — архивы из .release/ (и для вложенных зависимостей тоже). */
+/** A copy of an example where @novaprose/* are archives from .release/ (nested dependencies too). */
 function prepare(name, extra = []) {
   const source = join(root, 'examples', name);
   const dir = mkdtempSync(join(tmpdir(), `nova-example-${name}-`));
@@ -78,9 +78,9 @@ function prepare(name, extra = []) {
   return { dir, pkg };
 }
 
-/** Поднять сервер примера и дождаться ответа по адресу. */
+/** Starts the example's server and waits for an answer at the address. */
 async function serve(command, cwd, port) {
-  // Своя группа процессов (не Windows): остановка гасит и оболочку, и сам сервер.
+  // Its own process group (not on Windows): stopping it kills both the shell and the server.
   const child = spawn(command, {
     cwd,
     shell: true,
@@ -90,16 +90,16 @@ async function serve(command, cwd, port) {
   const url = `http://localhost:${port}/`;
   for (let i = 0; i < 200; i++) {
     if (child.exitCode !== null)
-      throw new Error(`${command}: сервер завершился (${child.exitCode})`);
+      throw new Error(`${command}: the server exited (${child.exitCode})`);
     try {
       if ((await fetch(url)).ok) return { url, stop: () => stopTree(child) };
     } catch {
-      // ещё не слушает
+      // not listening yet
     }
     await new Promise((r) => setTimeout(r, 300));
   }
   stopTree(child);
-  throw new Error(`${command}: сервер не ответил на ${url}`);
+  throw new Error(`${command}: the server didn't answer at ${url}`);
 }
 
 function stopTree(child) {
@@ -108,11 +108,11 @@ function stopTree(child) {
       execSync(`taskkill /pid ${child.pid} /T /F`, { stdio: 'ignore' });
     else process.kill(-child.pid, 'SIGTERM');
   } catch {
-    // уже завершён
+    // already finished
   }
 }
 
-/** Открыть пример в Chromium и выполнить сценарий; ошибки страницы — провал. */
+/** Opens an example in Chromium and runs a scenario; page errors are a failure. */
 async function inBrowser(url, scenario) {
   const { chromium } = await import('@playwright/test');
   const browser = await chromium.launch();
@@ -127,13 +127,13 @@ async function inBrowser(url, scenario) {
     page.setDefaultTimeout(15_000);
     await page.goto(url);
     await scenario(page);
-    if (errors.length) throw new Error(`ошибки на странице:\n${errors.join('\n')}`);
+    if (errors.length) throw new Error(`errors on the page:\n${errors.join('\n')}`);
   } finally {
     await browser.close();
   }
 }
 
-/** React и Vue: собранное приложение — выноска (вид узла), смена тона, формула (ленивый чанк). */
+/** React and Vue: the built app: a callout (node view), changing the tone, a formula (lazy chunk). */
 async function appSmoke(dir, port) {
   run('npm run build', dir);
   const server = await serve(`npx vite preview --port ${port} --strictPort`, dir, port);
@@ -151,9 +151,9 @@ async function appSmoke(dir, port) {
 const checks = {
   react: (dir) => appSmoke(dir, 4310),
   vue: (dir) => appSmoke(dir, 4311),
-  /** Сборка для CDN из архива вместо jsDelivr: элемент, ввод, отправка формы. */
+  /** A CDN build from the archive instead of jsDelivr: the element, typing, submitting the form. */
   cdn: async (dir) => {
-    // Файлы dist — в public/: Vite отдаёт их как есть, как CDN.
+    // dist files go into public/: Vite serves them as is, like a CDN.
     cpSync(join(dir, 'node_modules/@novaprose/web-component/dist'), join(dir, 'public/novaprose'), {
       recursive: true,
     });
@@ -185,7 +185,8 @@ const checks = {
       'data-mention="u42"',
       '<a href="#">click me</a>',
     ])
-      if (!output.includes(expected)) throw new Error(`render.js: нет «${expected}» в выводе`);
+      if (!output.includes(expected))
+        throw new Error(`render.js: "${expected}" is missing from the output`);
     const cjs = run(
       `node -e "const { renderHTML } = require('@novaprose/core'); process.stdout.write(renderHTML({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'cjs' }] }] }))"`,
       dir,
@@ -202,14 +203,14 @@ for (const name of readdirSync(join(root, 'examples'), { withFileTypes: true })
   if (name === 'cdn') {
     const html = readFileSync(join(root, 'examples/cdn/index.html'), 'utf8');
     const versions = [...html.matchAll(/@novaprose\/web-component@([\d.]+)\//g)].map((m) => m[1]);
-    if (!versions.length) problems.push('cdn: нет ссылок на @novaprose/web-component');
+    if (!versions.length) problems.push('cdn: no links to @novaprose/web-component');
     for (const v of versions)
       if (v !== minor)
-        (strict ? problems : warnings).push(`cdn: CDN @${v}, а версия пакетов ${version}`);
+        (strict ? problems : warnings).push(`cdn: CDN @${v}, but the packages are at ${version}`);
   }
   const check = checks[name];
   if (!check) {
-    problems.push(`${name}: нет проверки в scripts/verify-examples.mjs`);
+    problems.push(`${name}: no check in scripts/verify-examples.mjs`);
     continue;
   }
   const { dir } = prepare(
@@ -219,7 +220,7 @@ for (const name of readdirSync(join(root, 'examples'), { withFileTypes: true })
   try {
     run('npm install --no-audit --no-fund --loglevel=error', dir);
     await check(dir);
-    console.log(`✓ ${name} (${Math.round((Date.now() - started) / 1000)} с)`);
+    console.log(`✓ ${name} (${Math.round((Date.now() - started) / 1000)} s)`);
   } catch (error) {
     problems.push(`${name}: ${error.message}`);
     console.log(`✗ ${name}`);
@@ -230,6 +231,6 @@ for (const name of readdirSync(join(root, 'examples'), { withFileTypes: true })
 
 for (const warning of warnings) console.warn(`! ${warning}`);
 if (problems.length) {
-  console.error(`\nПримеры не прошли проверку:\n\n${problems.join('\n\n')}`);
+  console.error(`\nThe examples failed the check:\n\n${problems.join('\n\n')}`);
   process.exit(1);
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Выгрузить лист ожидания NovaProse Cloud в CSV: bash deploy/sync/waitlist.sh root@HOST > waitlist.csv
+# Export the NovaProse Cloud waitlist as CSV: bash deploy/sync/waitlist.sh root@HOST > waitlist.csv
 set -euo pipefail
 HOST="${1:?usage: waitlist.sh user@host}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/novaprose_ed25519}"

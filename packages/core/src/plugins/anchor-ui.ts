@@ -6,7 +6,7 @@ import { h } from '../ui/dom';
 import { icons } from '../ui/icons';
 import { pickLabels } from './shared';
 
-/** Ленивая часть плагина anchor: диалог «Якорь», кнопка и пункт меню. */
+/** The lazy part of the anchor plugin: the "Anchor" dialog, the button and the menu item. */
 
 export const LABELS = {
   en: {

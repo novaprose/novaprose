@@ -30,8 +30,8 @@ export interface MenuHeading {
 export type MenuEntry = MenuItem | MenuSeparator | MenuHeading;
 
 /**
- * Меню с клавиатурной навигацией по WAI-ARIA: стрелки, Home/End, Enter/Пробел,
- * поиск по первой букве. Escape обрабатывает родительский Popover.
+ * A menu with keyboard navigation per WAI-ARIA: arrows, Home/End, Enter/Space,
+ * search by the first letter. The parent Popover handles Escape.
  */
 export function createMenu(entries: MenuEntry[], onDone: () => void, label: string): HTMLElement {
   const items: HTMLButtonElement[] = [];
@@ -127,7 +127,7 @@ export function createMenu(entries: MenuEntry[], onDone: () => void, label: stri
   return menu;
 }
 
-/** Сфокусировать отмеченный пункт или первый доступный. */
+/** Focuses the checked item or the first available one. */
 export function focusMenu(menu: HTMLElement): void {
   const target =
     menu.querySelector<HTMLButtonElement>('[aria-checked="true"]:not(:disabled)') ??

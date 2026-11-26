@@ -54,7 +54,7 @@ export type CommandName =
 export const nodesOf = (state: EditorState) => (state.schema as NovaSchema).nodes;
 export const marksOf = (state: EditorState) => (state.schema as NovaSchema).marks;
 
-/** Команда, параметризованная типом узла, который берётся из схемы состояния. */
+/** A command parameterized by a node type taken from the state's schema. */
 const withNode =
   (name: NodeName, make: (type: NodeType) => Command): Command =>
   (state, dispatch, view) =>
@@ -94,7 +94,7 @@ const unlink: Command = (state, dispatch) => {
   const { from, to, empty, $from } = state.selection;
   const marks = marksOf(state);
   if (empty) {
-    // Курсор внутри ссылки — снимаем ссылку целиком.
+    // The cursor is inside a link: remove the whole link.
     const range = markRange(state, marks.link, $from.pos);
     if (!range) return false;
     dispatch?.(state.tr.removeMark(range.from, range.to, marks.link));
@@ -120,12 +120,12 @@ const clearFormatting: Command = (state, dispatch) => {
 };
 
 /**
- * Как setBlockType из prosemirror-commands, но сохраняет выравнивание блока
- * (абзац по центру → заголовок по центру), как в Word и Google Docs.
+ * Like setBlockType from prosemirror-commands, but keeps the block's alignment
+ * (a centered paragraph → a centered heading), as in Word and Google Docs.
  */
 /**
- * Отступ абзацев и заголовков в выделении (не в списках — там уровень списка). delta: +1 / -1.
- * Возвращает false, если менять нечего (так кнопка «уменьшить отступ» гаснет на нулевом уровне).
+ * Indents paragraphs and headings in the selection (not in lists: there it is the list level). delta: +1 / -1.
+ * Returns false when there is nothing to change (so the "decrease indent" button goes dim at level zero).
  */
 function changeIndent(delta: number): Command {
   return (state, dispatch) => {
@@ -151,7 +151,7 @@ function changeIndent(delta: number): Command {
   };
 }
 
-/** Отступ: в списке — вложенность пункта, иначе — отступ абзаца. */
+/** Indent: in a list, the item's nesting; otherwise the paragraph indent. */
 const indentCommand: Command = (state, dispatch, view) =>
   sinkListItem(nodesOf(state).list_item)(state, dispatch, view) ||
   changeIndent(1)(state, dispatch, view);
@@ -160,7 +160,7 @@ const outdentCommand: Command = (state, dispatch, view) =>
   liftListItem(nodesOf(state).list_item)(state, dispatch, view) ||
   changeIndent(-1)(state, dispatch, view);
 
-/** Tab / Shift+Tab: только списки — в абзаце Tab остаётся переходом фокуса (без ловушки, WCAG 2.1.2). */
+/** Tab / Shift+Tab: lists only; in a paragraph Tab still moves the focus (no keyboard trap, WCAG 2.1.2). */
 export const listIndent: Command = (state, dispatch, view) =>
   sinkListItem(nodesOf(state).list_item)(state, dispatch, view);
 export const listOutdent: Command = (state, dispatch, view) =>
@@ -181,7 +181,7 @@ function setBlockKeepAlign(type: NodeType, attrs: Record<string, unknown> = {}):
             : {}),
           ...('dir' in type.spec.attrs! && old.attrs.dir ? { dir: old.attrs.dir } : {}),
           ...('indent' in type.spec.attrs! && old.attrs.indent ? { indent: old.attrs.indent } : {}),
-          // Смена уровня заголовка не ломает ссылки на раздел.
+          // Changing the heading level doesn't break links to the section.
           ...('id' in type.spec.attrs! && old.attrs.id ? { id: old.attrs.id } : {}),
         }));
       }
@@ -232,7 +232,7 @@ export const commands: Record<CommandName, Command> = {
   moveBlockDown: moveBlock(1),
 };
 
-/** Ближайший список вокруг курсора (маркированный, нумерованный, чек-лист) и его позиция. */
+/** The nearest list around the cursor (bulleted, numbered, checklist) and its position. */
 export function findParentList(state: EditorState): { node: PMNode; pos: number } | null {
   const nodes = nodesOf(state);
   const { $from } = state.selection;
@@ -246,8 +246,8 @@ export function findParentList(state: EditorState): { node: PMNode; pos: number 
 }
 
 /**
- * Сменить вид списка на месте: маркированный ↔ нумерованный ↔ чек-лист. Пункты получают checked по
- * виду списка (чек-лист — true/false, сохраняя отметки; иначе null).
+ * Changes the kind of a list in place: bulleted ↔ numbered ↔ checklist. Items get checked according
+ * to the list kind (a checklist keeps true/false and the existing checks; otherwise null).
  */
 export function convertList(
   tr: Transaction,
@@ -275,10 +275,10 @@ export function convertList(
 function toggleList(listType: NodeType): Command {
   return (state, dispatch) => {
     const nodes = nodesOf(state);
-    // Тот же вид списка — снять список. Чек-лист — не «маркированный»: кнопка маркеров его не снимает.
+    // The same kind of list removes the list. A checklist isn't "bulleted": the bullet button doesn't remove it.
     const plain = listType === nodes.bullet_list ? { checklist: false } : undefined;
     if (isNodeActive(state, listType, plain)) return liftListItem(nodes.list_item)(state, dispatch);
-    // Внутри другого вида списка — сменить вид (а не вкладывать новый список).
+    // Inside a different kind of list: change the kind (instead of nesting a new list).
     const list = findParentList(state);
     if (list) {
       if (dispatch) dispatch(convertList(state.tr, list, listType).scrollIntoView());
@@ -307,7 +307,7 @@ export function setLink(href: string, attrs: { title?: string; target?: string }
         );
         return true;
       }
-      // Пустое выделение без ссылки — вставляем сам адрес как текст ссылки.
+      // An empty selection without a link: insert the address itself as the link text.
       dispatch?.(state.tr.insert(from, state.schema.text(href, [mark])));
       return true;
     }
@@ -329,7 +329,7 @@ export function insertImage(src: string, alt?: string): Command {
   };
 }
 
-// ---------- запросы состояния (аналог queryCommandState) ----------
+// ---------- state queries (like queryCommandState) ----------
 
 export function isMarkActive(state: EditorState, type: MarkType): boolean {
   const { from, $from, to, empty } = state.selection;
@@ -424,8 +424,8 @@ export function markRange(
   type: MarkType,
   pos: number,
 ): { from: number; to: number } | null {
-  // Собираем непрерывные отрезки текста с этой маркой внутри родительского блока
-  // и возвращаем тот, что содержит pos.
+  // Collect the continuous runs of text with this mark inside the parent block
+  // and return the one that contains pos.
   const $pos = state.doc.resolve(pos);
   const base = $pos.start();
   const segments: { from: number; to: number }[] = [];

@@ -1,22 +1,22 @@
 /**
- * Проверка опубликуемых пакетов — то, что увидит пользователь после npm install:
- *  - publint: поля package.json, exports, файлы в архиве;
- *  - @arethetypeswrong/cli: типы TypeScript для ESM и CommonJS, для node16 и бандлеров.
- * Проверяются архивы из .release/ (сначала pnpm release:pack). Падает при любой ошибке.
- * CDN-сборки и CSS исключены: у них нет и не должно быть типов.
+ * Checks the packages to be published, as a user sees them after npm install:
+ *  - publint: package.json fields, exports, files in the archive;
+ *  - @arethetypeswrong/cli: TypeScript types for ESM and CommonJS, for node16 and bundlers.
+ * Checks the archives in .release/ (run pnpm release:pack first). Fails on any error.
+ * CDN builds and CSS are excluded: they have no types and shouldn't.
  */
 import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync } from 'node:fs';
 
 const tarballs = readdirSync('.release').filter((f) => f.endsWith('.tgz'));
 if (!tarballs.length) {
-  console.error('В .release/ нет архивов — сначала pnpm release:pack');
+  console.error('No archives in .release/: run pnpm release:pack first');
   process.exit(1);
 }
 
 const run = (cmd, args) => {
   try {
-    // Через pnpm exec — бинарники из node_modules/.bin на любой ОС.
+    // Through pnpm exec: binaries from node_modules/.bin on any OS.
     execFileSync('pnpm', ['exec', cmd, ...args], {
       stdio: 'pipe',
       encoding: 'utf8',
@@ -30,8 +30,8 @@ const run = (cmd, args) => {
 
 let failed = 0;
 
-// Стили ленивых частей (import css from './x.css?raw') — текстом в коде ядра. Был сбой: сборщик
-// подменял их пустым объектом и клал рядом лишние .css — плагины в npm-сборке оставались без стилей.
+// Styles of lazy parts (import css from './x.css?raw') are text inside the core code. There was a bug: the
+// bundler replaced them with an empty object and put stray .css files next to them, so plugins in the npm build had no styles.
 {
   const dist = 'packages/core/dist';
   const files = readdirSync(dist);
@@ -40,19 +40,19 @@ let failed = 0;
     .map((f) => readFileSync(`${dist}/${f}`, 'utf8'))
     .join('\n');
   const problems = [
-    ...files.filter((f) => f.endsWith('.css')).map((f) => `лишний файл стилей ${dist}/${f}`),
+    ...files.filter((f) => f.endsWith('.css')).map((f) => `stray style file ${dist}/${f}`),
     ...['--nova-page-margins', '.nova-details', '.nova-math']
       .filter((marker) => !code.includes(marker))
-      .map((marker) => `в коде нет стилей плагинов (${marker})`),
+      .map((marker) => `plugin styles missing from the code (${marker})`),
   ];
   if (problems.length) {
     failed++;
-    console.log(`✗ стили плагинов в @novaprose/core\n${problems.join('\n')}\n`);
-  } else console.log('✓ стили плагинов в коде @novaprose/core');
+    console.log(`✗ plugin styles in @novaprose/core\n${problems.join('\n')}\n`);
+  } else console.log('✓ plugin styles in the @novaprose/core code');
 }
 
-// Описания в типах (.d.ts) видны разработчикам в подсказках IDE — только по-английски. JSDoc у
-// экспортов и публичных полей пишется на английском; внутренние комментарии могут быть русскими.
+// Descriptions in the types (.d.ts) show up in developers' IDE hints, so they must be English. The whole
+// repository is English (scripts/check-english.mjs); this checks what actually ships in the archives.
 {
   const walk = (dir) =>
     readdirSync(dir, { withFileTypes: true }).flatMap((entry) =>
@@ -71,13 +71,15 @@ let failed = 0;
       readFileSync(f, 'utf8')
         .split('\n')
         .map((line, i) => ({ f, i, line }))
-        .filter(({ line }) => /[А-Яа-яЁё]/.test(line)),
+        .filter(({ line }) => /[Ѐ-ӿ]/.test(line)),
     );
   if (russian.length) {
     failed++;
     const sample = russian.slice(0, 10).map(({ f, i, line }) => `${f}:${i + 1}: ${line.trim()}`);
-    console.log(`✗ русский текст в типах (.d.ts): ${russian.length} строк\n${sample.join('\n')}\n`);
-  } else console.log('✓ описания в типах — на английском');
+    console.log(
+      `✗ Cyrillic text in the types (.d.ts): ${russian.length} lines\n${sample.join('\n')}\n`,
+    );
+  } else console.log('✓ descriptions in the types are in English');
 }
 
 for (const file of tarballs) {
@@ -94,7 +96,7 @@ for (const file of tarballs) {
     '--exclude-entrypoints',
     'style.css',
     'cdn',
-    // Angular Package Format — только ESM, так задумано Angular.
+    // Angular Package Format is ESM only, by Angular's design.
     ...(file.includes('angular') ? ['--ignore-rules', 'cjs-resolves-to-esm'] : []),
   ]);
   if (types) problems.push(`attw:\n${types}`);
@@ -106,6 +108,6 @@ for (const file of tarballs) {
   }
 }
 if (failed) {
-  console.error(`Проблем с пакетами: ${failed}`);
+  console.error(`Package problems: ${failed}`);
   process.exit(1);
 }

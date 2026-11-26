@@ -37,7 +37,7 @@ export interface HtmlRulesModule {
   create(options: HtmlRulesOptions): HtmlRulesInstance | null;
 }
 
-/** Служебный атрибут: сюда парсер переносит собственный style новых элементов (div, abbr…). */
+/** A service attribute: the parser moves the own style of new elements (div, abbr…) here. */
 export const OWN_STYLE = 'data-nova-own-style';
 
 let registered: HtmlRulesModule | null = null;
@@ -49,7 +49,7 @@ export function registerHtmlRules(module: HtmlRulesModule): void {
 
 let warned = false;
 
-/** Правила для опций редактора или null (опции не требуют правил / модуль не подключён). */
+/** Rules for the editor's options, or null (the options need no rules / the module isn't attached). */
 export function htmlRulesFor(options: HtmlRulesOptions): HtmlRulesInstance | null {
   const needed =
     !!options.extendedValidElements ||

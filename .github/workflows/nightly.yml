@@ -1,11 +1,11 @@
 name: Nightly
 
-# Долгие проверки, которым не место в каждом PR:
-#  - property-based тесты на 20 000 случайных документов (XSS, стабильность HTML, внешний JSON).
-# При падении fast-check печатает минимальный пример и seed — превратите его в обычный тест.
+# Long checks that don't belong in every pull request:
+#  - property-based tests on 20 000 random documents (XSS, stable HTML, external JSON).
+# When one fails, fast-check prints the minimal example and the seed: turn it into a regular test.
 on:
   schedule:
-    - cron: '17 2 * * *' # каждую ночь, 02:17 UTC
+    - cron: '17 2 * * *' # every night, 02:17 UTC
   workflow_dispatch:
 
 permissions:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   deep-properties:
-    name: Property-based тесты (20 000 прогонов)
+    name: Property-based tests (20 000 runs)
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

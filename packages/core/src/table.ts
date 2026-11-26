@@ -27,7 +27,7 @@ import { createTable, createTableGridPanel, insertTable, MAX_GRID, tableRect } f
 export { createTable, createTableGridPanel, insertTable, MAX_GRID, tableRect };
 import { classAttr, cssValue, type CellVAlign, type NovaSchema, type TableAlign } from './schema';
 
-/** Tab — следующая ячейка; в последней ячейке — новая строка (как в Word и TinyMCE). */
+/** Tab moves to the next cell; in the last cell it adds a new row (as in Word and TinyMCE). */
 const nextCellOrNewRow: Command = (state, dispatch, view) => {
   if (!isInTable(state)) return false;
   if (goToNextCell(1)(state, dispatch, view)) return true;
@@ -42,8 +42,8 @@ const nextCellOrNewRow: Command = (state, dispatch, view) => {
 
 export function tablePlugins(): Plugin[] {
   return [
-    // defaultCellMinWidth — минимум для столбцов без заданной ширины (по умолчанию 100px:
-    // таблица из 5+ столбцов раньше времени вылезала за край узкого редактора).
+    // defaultCellMinWidth is the minimum for columns without a set width (100px by default:
+    // a table of 5+ columns ran off the edge of a narrow editor too early).
     columnResizing({ cellMinWidth: 48, defaultCellMinWidth: 48, View: NovaTableView }),
     tableEditing(),
     keymap({
@@ -62,7 +62,7 @@ export const tableCommands = {
   deleteColumn,
   mergeCells,
   splitCell,
-  // Без устаревшей логики (та смотрит на угловую ячейку и путает строку/столбец заголовков).
+  // Without the outdated logic (it looks at the corner cell and confuses the header row and column).
   toggleHeaderRow: toggleHeader('row'),
   toggleHeaderColumn: toggleHeader('column'),
   deleteTable,
@@ -75,7 +75,7 @@ export function setCellBackground(color: string | null): Command {
   return setCellAttr('background', color);
 }
 
-/** Есть ли в текущей таблице строка-заголовок (первая строка из th). */
+/** Whether the current table has a header row (the first row made of th). */
 export function hasHeaderRow(state: EditorState): boolean {
   if (!isInTable(state)) return false;
   const firstRow = findTable(state.selection.$from)?.node.firstChild;
@@ -87,7 +87,7 @@ export function hasHeaderRow(state: EditorState): boolean {
   return all;
 }
 
-/** Есть ли столбец-заголовок (первая ячейка каждой строки — th). */
+/** Whether there is a header column (the first cell of every row is th). */
 export function hasHeaderColumn(state: EditorState): boolean {
   if (!isInTable(state)) return false;
   const table = findTable(state.selection.$from)?.node;
@@ -99,24 +99,24 @@ export function hasHeaderColumn(state: EditorState): boolean {
   return all;
 }
 
-/** Выделено ли несколько ячеек (для «объединить»). */
+/** Whether several cells are selected (for "merge"). */
 export function isCellSelection(state: EditorState): boolean {
   return state.selection instanceof CellSelection;
 }
 
 export { selectedRect };
 
-// ---------- сортировка по столбцу ----------
+// ---------- sorting by column ----------
 
 export type SortDirection = 'asc' | 'desc';
 
-/** Число из текста ячейки («1 200», «$45.00», «-3,5 %»), иначе null — тогда сравниваем как текст. */
+/** A number from the cell text ("1 200", "$45.00", "-3,5 %"), otherwise null and the text is compared instead. */
 function numericValue(text: string): number | null {
   const cleaned = text
     .replace(/\s/g, '')
-    .replace(/^[^\d+-]+|[^\d]+$/g, '') // валюта и единицы по краям
-    .replace(/,(?=\d{3}(?:\D|$))/g, '') // разделитель тысяч «1,200»
-    .replace(',', '.'); // десятичная запятая «3,5»
+    .replace(/^[^\d+-]+|[^\d]+$/g, '') // currency and units at the edges
+    .replace(/,(?=\d{3}(?:\D|$))/g, '') // the thousands separator in "1,200"
+    .replace(',', '.'); // the decimal comma in "3,5"
   if (!/^[+-]?\d+(\.\d+)?$/.test(cleaned)) return null;
   return Number(cleaned);
 }
@@ -125,7 +125,7 @@ interface SortTarget {
   pos: number;
   table: PMNode;
   column: number;
-  /** Число строк-заголовков сверху (их не сортируем). */
+  /** The number of header rows at the top (they aren't sorted). */
   headerRows: number;
 }
 
@@ -133,7 +133,7 @@ function sortTarget(state: EditorState): SortTarget | null {
   if (!isInTable(state)) return null;
   const rect = selectedRect(state);
   const table = rect.table;
-  // Объединённые ячейки ломают построчную перестановку — такие таблицы не сортируем.
+  // Merged cells break row-by-row reordering: such tables aren't sorted.
   let merged = false;
   table.descendants((node) => {
     if (node.attrs.colspan > 1 || node.attrs.rowspan > 1) merged = true;
@@ -156,7 +156,7 @@ function sortTarget(state: EditorState): SortTarget | null {
   return { pos: rect.tableStart - 1, table, column: rect.left, headerRows };
 }
 
-/** Отсортировать строки таблицы по столбцу с курсором. Строки-заголовки остаются сверху. */
+/** Sorts the table rows by the column with the cursor. Header rows stay at the top. */
 export function sortTable(direction: SortDirection, locale?: string): Command {
   return (state, dispatch) => {
     const target = sortTarget(state);
@@ -171,7 +171,7 @@ export function sortTable(direction: SortDirection, locale?: string): Command {
         column < row.childCount ? row.child(column).textContent.trim() : '',
       );
       const numbers = texts.map(numericValue);
-      // Числовая сортировка, только если числа во всех непустых ячейках столбца.
+      // Numeric sorting only if every non-empty cell of the column holds a number.
       const numeric = texts.every((t, i) => t === '' || numbers[i] !== null);
       const collator = new Intl.Collator(locale, { numeric: true, sensitivity: 'base' });
       const order = body
@@ -179,7 +179,7 @@ export function sortTable(direction: SortDirection, locale?: string): Command {
         .sort((a, b) => {
           const ta = texts[a.i]!;
           const tb = texts[b.i]!;
-          // Пустые ячейки — всегда в конце.
+          // Empty cells always go last.
           if (!ta || !tb) return ta ? -1 : tb ? 1 : a.i - b.i;
           const cmp = numeric ? numbers[a.i]! - numbers[b.i]! : collator.compare(ta, tb);
           return (direction === 'asc' ? cmp : -cmp) || a.i - b.i;
@@ -192,11 +192,11 @@ export function sortTable(direction: SortDirection, locale?: string): Command {
   };
 }
 
-// ---------- свойства таблицы и ячеек ----------
+// ---------- table and cell properties ----------
 
 /**
- * Представление таблицы в редакторе: поверх расчёта ширины столбцов (prosemirror-tables) применяет
- * заданную ширину и выравнивание таблицы, чтобы в редакторе было видно то же, что получится на сайте.
+ * The table view in the editor: on top of the column width calculation (prosemirror-tables) it applies
+ * the table's set width and alignment, so the editor shows what the site will show.
  */
 class NovaTableView extends TableView {
   constructor(node: PMNode, cellMinWidth: number) {
@@ -219,7 +219,7 @@ class NovaTableView extends TableView {
     const align = node.attrs.align as TableAlign | null;
     this.table.style.marginLeft = align ? 'auto' : '';
     this.table.style.marginRight = align === 'center' ? 'auto' : '';
-    // Стиль таблицы (класс) — чтобы CSS сайта (contentCss) показал рамки так же, как на печати.
+    // The table style (a class), so the site's CSS (contentCss) shows the borders as in print.
     const cls = classAttr(node.attrs.class).class;
     if (cls) this.table.setAttribute('class', cls);
     else this.table.removeAttribute('class');
@@ -229,7 +229,7 @@ class NovaTableView extends TableView {
 export interface TableProps {
   width: string | null;
   align: TableAlign | null;
-  /** Стиль таблицы (класс из tableClassList); null — без стиля. Не задан — не меняется. */
+  /** The table style (a class from tableClassList); null means no style. Not set means unchanged. */
   class?: string | null;
 }
 
@@ -244,7 +244,7 @@ export function getTableProps(state: EditorState): TableProps | null {
     : null;
 }
 
-/** Ширина (px или %, null — по содержимому) и выравнивание таблицы. */
+/** The table's width (px or %, null means by content) and alignment. */
 export function setTableProps(props: TableProps): Command {
   return (state, dispatch) => {
     const found = findTable(state.selection.$from);
@@ -263,15 +263,15 @@ export function setTableProps(props: TableProps): Command {
 
 export interface CellProps {
   valign?: CellVAlign | null;
-  /** true — ячейка-заголовок (th), false — обычная (td). */
+  /** true for a header cell (th), false for a regular one (td). */
   header?: boolean;
-  /** Ширина столбца(ов) выделения в px; null — по содержимому. */
+  /** Width of the selection's column(s) in px; null means by content. */
   width?: number | null;
-  /** Стиль ячейки (класс из tableCellClassList); null — без стиля. */
+  /** The cell style (a class from tableCellClassList); null means no style. */
   class?: string | null;
 }
 
-/** Позиции выделенных ячеек (или ячейки с курсором). */
+/** Positions of the selected cells (or of the cell with the cursor). */
 function selectedCells(state: EditorState): { pos: number; node: PMNode }[] {
   const out: { pos: number; node: PMNode }[] = [];
   if (state.selection instanceof CellSelection) {
@@ -302,7 +302,7 @@ export function getCellProps(state: EditorState): Required<CellProps> | null {
   };
 }
 
-/** Свойства выделенных ячеек: вертикальное выравнивание, тип (th/td), ширина столбца. */
+/** Properties of the selected cells: vertical alignment, kind (th/td), column width. */
 export function setCellProps(props: CellProps): Command {
   return (state, dispatch) => {
     const cells = selectedCells(state);
@@ -326,7 +326,7 @@ export function setCellProps(props: CellProps): Command {
       tr.setNodeMarkup(pos, type, attrs);
     }
     if (props.width !== undefined) {
-      // Ширина — у всех ячеек затронутых столбцов (colwidth хранится в каждой ячейке).
+      // The width goes to every cell of the affected columns (colwidth is stored in each cell).
       const rect = selectedRect(state);
       const map = rect.map;
       const seen = new Set<number>();

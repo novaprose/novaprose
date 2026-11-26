@@ -2,7 +2,7 @@ import { icons } from '../ui/icons';
 import { definePlugin } from '../plugins';
 import { insertText, openSymbolDialog, pickLabels, symbolPanel, type SymbolGroup } from './shared';
 
-/** Плагин charmap: таблица специальных символов с поиском. `plugins: ['charmap']`. */
+/** The charmap plugin: a table of special characters with search. `plugins: ['charmap']`. */
 
 const ICON = icons.charmap;
 
@@ -15,7 +15,7 @@ export const LABELS = {
   },
 };
 
-// Названия — английские: по ним работает поиск на любом языке интерфейса.
+// The names are English: search works by them in any interface language.
 const SYMBOLS: (readonly (readonly [string, string])[])[] = [
   [
     ['€', 'euro'],

@@ -14,8 +14,8 @@ export type ToolbarConfig = string | string[];
 /** What to do when the width runs out: wrap to a new line, or "⋯" with the remaining groups. */
 export type ToolbarMode = 'wrap' | 'sliding';
 
-// Порядок = приоритет: при нехватке места в «⋯» уходят группы с конца,
-// поэтому частые действия (стиль, B/I/U, цвет, ссылки) стоят первыми.
+// Order = priority: when space runs out, groups from the end move into "⋯",
+// so frequent actions (style, B/I/U, color, links) come first.
 export const defaultToolbar =
   'undo redo | blocks | bold italic underline strikethrough moreformats | forecolor backcolor | link image table | ' +
   'bullist numlist | align lineheight outdent indent | fontfamily fontsize | blockquote codeblock hr | removeformat | searchreplace preview code fullscreen help';
@@ -52,7 +52,7 @@ export function createToolbar(
 ): ToolbarHandle {
   const { ui } = editor;
   const t = ui.t;
-  // Все слушатели на host снимаются разом при destroy (тулбар перестраивается после загрузки плагинов).
+  // Every listener on host is removed at once on destroy (the toolbar is rebuilt after plugins load).
   const listeners = new AbortController();
   const { signal } = listeners;
   host.className = `nova-toolbar nova-toolbar-${mode}`;
@@ -65,7 +65,7 @@ export function createToolbar(
   for (const names of parseToolbar(config)) {
     const group = h('div', { className: 'nova-tb-group', role: 'group' });
     for (const name of names) {
-      // Запрещено ограничениями контента — кнопку не показываем.
+      // Forbidden by the content restrictions: the button isn't shown.
       if (!editor.isAllowed(name)) continue;
       const spec = ui.registry.get(name);
       if (!spec) {
@@ -82,7 +82,7 @@ export function createToolbar(
     }
   }
 
-  // ---------- переполнение (sliding) ----------
+  // ---------- overflow (sliding) ----------
   const overflowBox = h('div', { className: 'nova-toolbar nova-tb-overflow', role: 'group' });
   const moreButton = h(
     'button',
@@ -116,7 +116,7 @@ export function createToolbar(
       placement: 'bottom-end',
       content: overflowBox,
       className: 'nova-tb-overflow-popover',
-      // Клики по вложенным меню (они тоже в overlayHost) не закрывают панель.
+      // Clicks on nested menus (they are in overlayHost too) don't close the panel.
       ignore: [ui.overlayHost, moreButton],
       onClose: (reason) => {
         overflowPopover = null;
@@ -150,7 +150,7 @@ export function createToolbar(
     resetRoving();
   };
 
-  // Перераскладка только при изменении ширины — перенос групп сам по себе не должен её вызывать.
+  // Re-layout only when the width changes: moving groups around must not trigger it by itself.
   let lastWidth = -1;
   const resizeObserver =
     typeof ResizeObserver !== 'undefined' && mode === 'sliding'
@@ -162,7 +162,7 @@ export function createToolbar(
       : null;
   resizeObserver?.observe(host);
 
-  // ---------- клавиатура: roving tabindex по WAI-ARIA toolbar ----------
+  // ---------- keyboard: roving tabindex per the WAI-ARIA toolbar pattern ----------
   const focusables = (): HTMLButtonElement[] =>
     [...host.querySelectorAll<HTMLButtonElement>('button')].filter((b) => !b.disabled && !b.hidden);
 
@@ -210,14 +210,14 @@ export function createToolbar(
     { signal },
   );
 
-  // Не даём кнопкам забирать фокус у редактора мышью — иначе теряется выделение.
+  // Buttons don't take focus from the editor on mouse down, otherwise the selection is lost.
   const keepFocus = (event: MouseEvent) => {
     if ((event.target as HTMLElement).closest('button')) event.preventDefault();
   };
   host.addEventListener('mousedown', keepFocus, { signal });
   overflowBox.addEventListener('mousedown', keepFocus);
   overflowBox.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') return; // обработает Popover
+    if (event.key === 'Escape') return; // Popover handles it
     const list = [...overflowBox.querySelectorAll<HTMLButtonElement>('button')].filter(
       (b) => !b.disabled,
     );
@@ -299,7 +299,7 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
       spec.onAction(editor);
       return;
     }
-    // Повторный клик по открытой кнопке закрывает её поповер.
+    // A second click on an open button closes its popover.
     if (el.getAttribute('aria-expanded') === 'true') {
       ui.closePopover();
       return;
@@ -318,7 +318,7 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
       className: spec.type === 'menu' ? 'nova-popover-menu' : 'nova-popover-panel',
       onClose: (reason) => {
         el.setAttribute('aria-expanded', 'false');
-        // Фокус был в панели — возвращаем на кнопку; был в тексте — там и остаётся.
+        // Focus was in the panel: return it to the button; if it was in the text, it stays there.
         if (reason === 'escape' && popover.focusWasInside) el.focus();
       },
     });
@@ -326,7 +326,7 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
     else if (fromKeyboard) content.querySelector<HTMLElement>('button, input')?.focus();
   });
 
-  // Меню открывается и стрелкой вниз, как в нативных выпадающих списках.
+  // The menu also opens with the down arrow, as native drop-down lists do.
   if (spec.type !== 'button') {
     el.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowDown' && el.getAttribute('aria-expanded') !== 'true') {
@@ -347,8 +347,8 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
     if (label && spec.type === 'menu') {
       const text = spec.label?.(editor) ?? spec.text ?? '';
       label.textContent = text;
-      // WCAG 2.5.3: доступное имя начинается с видимого текста («Абзац, Блоки»),
-      // иначе голосовое управление («нажми Абзац») не найдёт кнопку.
+      // WCAG 2.5.3: the accessible name starts with the visible text ("Paragraph, Blocks"),
+      // otherwise voice control ("click Paragraph") can't find the button.
       el.setAttribute(
         'aria-label',
         text && text !== spec.tooltip ? `${text}, ${spec.tooltip}` : (spec.tooltip ?? text),
@@ -365,8 +365,8 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
 }
 
 /**
- * Составная кнопка = обычная кнопка (data-control=name) + кнопка-стрелка с меню вариантов.
- * В навигации стрелками это две остановки, как у составных кнопок в настольных редакторах.
+ * A split button = a regular button (data-control=name) + an arrow button with a menu of variants.
+ * In arrow navigation these are two stops, as with split buttons in desktop editors.
  */
 function renderSplit(editor: Editor, name: string, spec: SplitButtonSpec): RenderedControl {
   const main = renderControl(editor, name, {

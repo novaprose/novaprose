@@ -1,15 +1,15 @@
 import { definePlugin } from '../plugins';
 
 /**
- * Плагин autoresize: высота редактора следует за текстом в пределах minHeight…maxHeight;
- * дальше — прокрутка внутри редактора, а тулбар остаётся на месте.
+ * The autoresize plugin: the editor's height follows the text within minHeight…maxHeight;
+ * beyond that the editor scrolls inside and the toolbar stays in place.
  * `plugins: ['autoresize']`, `pluginOptions: { autoresize: { minHeight: 200, maxHeight: 600 } }`.
  */
 
 export interface AutoresizeOptions {
-  /** Минимальная высота области текста, px. */
+  /** The minimum height of the text area, px. */
   minHeight?: number;
-  /** Максимальная высота области текста, px (по умолчанию — без ограничения). */
+  /** The maximum height of the text area, px (no limit by default). */
   maxHeight?: number;
 }
 

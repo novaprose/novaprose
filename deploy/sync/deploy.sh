@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Выкатить сервер синхронизации: bash deploy/sync/deploy.sh root@HOST
-# Копирует исходники и конфиги в /opt/novaprose и пересобирает контейнеры. .env на сервере не трогает.
+# Deploy the sync server: bash deploy/sync/deploy.sh root@HOST
+# Copies the sources and configs into /opt/novaprose and rebuilds the containers. Leaves .env on the server alone.
 set -euo pipefail
 HOST="${1:?usage: deploy.sh user@host}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/novaprose_ed25519}"

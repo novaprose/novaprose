@@ -42,11 +42,11 @@ const NS = {
 const XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
 const TWIPS_PER_MM = 1440 / 25.4;
 const EMU_PER_PX = 9525;
-const INDENT_TWIPS = 600; // шаг отступа редактора — 40px
+const INDENT_TWIPS = 600; // the editor's indent step is 40px
 
 const twips = (mm: number) => Math.round(mm * TWIPS_PER_MM);
 
-// ---------- картинки ----------
+// ---------- images ----------
 
 function sniff(bytes: Uint8Array): DocxImage['type'] | null {
   if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
@@ -56,7 +56,7 @@ function sniff(bytes: Uint8Array): DocxImage['type'] | null {
   return null;
 }
 
-/** Размер в пикселях из заголовка файла (PNG, GIF, JPEG). */
+/** Size in pixels from the file header (PNG, GIF, JPEG). */
 export function imageSize(
   bytes: Uint8Array,
   type: DocxImage['type'],
@@ -74,7 +74,7 @@ export function imageSize(
       i += 2 + length;
     }
   } catch {
-    // обрезанный файл — размер неизвестен
+    // a truncated file: the size is unknown
   }
   return {};
 }
@@ -86,7 +86,7 @@ function base64(text: string): Uint8Array {
   return out;
 }
 
-/** Картинка по адресу: data: — из самого адреса, остальные — fetch (CORS может не пустить). */
+/** An image by address: data: from the address itself, the rest through fetch (CORS may block it). */
 export async function loadImage(src: string): Promise<DocxImage | null> {
   let bytes: Uint8Array;
   const data = /^data:[^,;]*(;base64)?,([\s\S]*)$/i.exec(src);
@@ -101,7 +101,7 @@ export async function loadImage(src: string): Promise<DocxImage | null> {
   return type ? { data: bytes, type, ...imageSize(bytes, type) } : null;
 }
 
-// ---------- цвета, шрифты, размеры ----------
+// ---------- colors, fonts, sizes ----------
 
 const NAMED: Record<string, string> = {
   black: '000000',
@@ -116,7 +116,7 @@ const NAMED: Record<string, string> = {
   grey: '808080',
 };
 
-/** CSS-цвет → RRGGBB для Word (или null: прозрачный, переменная, неизвестный). */
+/** A CSS color → RRGGBB for Word (or null: transparent, a variable, unknown). */
 export function hexColor(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const css = value.trim().toLowerCase();
@@ -168,7 +168,7 @@ function fontName(value: unknown): string | null {
   return GENERIC_FONTS[first.toLowerCase()] ?? first.slice(0, 64);
 }
 
-/** '14px' / '11pt' → половинки пункта (w:sz). */
+/** '14px' / '11pt' → half-points (w:sz). */
 function halfPoints(value: unknown): number | null {
   const m = typeof value === 'string' ? /^(\d+(?:\.\d+)?)(px|pt)$/.exec(value.trim()) : null;
   if (!m) return null;
@@ -176,7 +176,7 @@ function halfPoints(value: unknown): number | null {
   return pt > 0 && pt < 1000 ? Math.round(pt * 2) : null;
 }
 
-/** Имя закладки Word: буква в начале, буквы/цифры/_, не длиннее 40. */
+/** A Word bookmark name: a letter first, letters/digits/_, at most 40 long. */
 export function bookmarkName(id: string): string {
   const name = id.replace(/[^\p{L}\p{N}_]/gu, '_');
   return (/^\p{L}/u.test(name) ? name : `b_${name}`).slice(0, 40);
@@ -189,9 +189,9 @@ function dateOf(ms: unknown): string {
     .replace(/\.\d+Z$/, 'Z');
 }
 
-// ---------- запись документа ----------
+// ---------- writing the document ----------
 
-/** Своё оформление отрезка поверх меток: стиль, шрифт, курсив. */
+/** A run's own formatting on top of the marks: style, font, italic. */
 interface RunOptions {
   style?: string;
   font?: string;
@@ -201,13 +201,13 @@ interface RunOptions {
 const MATH: RunOptions = { font: 'Cambria Math', italic: true };
 
 interface Context {
-  /** Уровень вложенности списков (-1 — вне списка). */
+  /** List nesting level (-1 outside a list). */
   listLevel: number;
-  /** Отступ продолжения пункта списка (второй абзац пункта и т.п.), twips. */
+  /** The indent of a list item's continuation (the item's second paragraph and so on), twips. */
   continuation?: number;
-  /** Стиль абзацев внутри (цитата). */
+  /** The style of the paragraphs inside (quote). */
   style?: string;
-  /** Жирный текст (ячейки-заголовки, заголовок раскрывающегося блока). */
+  /** Bold text (header cells, the title of a collapsible block). */
   bold?: boolean;
 }
 
@@ -227,7 +227,7 @@ const BULLET_STYLES: Record<string, string> = { disc: '•', circle: '◦', squa
 
 class DocxWriter {
   private readonly rels: string[] = [];
-  private relCount = 2; // rId1 — стили, rId2 — нумерация
+  private relCount = 2; // rId1 is the styles, rId2 the numbering
   private readonly media: ZipEntry[] = [];
   private readonly imageRels = new Map<string, string>();
   private readonly abstracts = new Map<string, number>();
@@ -254,7 +254,7 @@ class DocxWriter {
     return id;
   }
 
-  // ----- текст -----
+  // ----- text -----
 
   private runProps(marks: readonly Mark[], ctx: Context, own: RunOptions = {}): string {
     let style = own.style ?? '';
@@ -303,7 +303,7 @@ class DocxWriter {
     return props ? `<w:rPr>${props}</w:rPr>` : '';
   }
 
-  /** Текст отрезками: перевод строки — w:br, табуляция — w:tab. */
+  /** Text as runs: a line break is w:br, a tab is w:tab. */
   private text(value: string, tag: 'w:t' | 'w:delText' = 'w:t'): string {
     let out = '';
     value.split('\n').forEach((line, index) => {
@@ -322,7 +322,7 @@ class DocxWriter {
     return this.tracked(body, marks);
   }
 
-  /** Предложенная правка — исправление Word (w:ins / w:del с автором и временем). */
+  /** A suggested edit becomes a Word revision (w:ins / w:del with author and time). */
   private tracked(body: string, marks: readonly Mark[]): string {
     const change = marks.find(
       (m) => m.type.name === 'suggestion_insert' || m.type.name === 'suggestion_delete',
@@ -390,7 +390,7 @@ class DocxWriter {
     return text ? this.run(text, node.marks, ctx) : '';
   }
 
-  /** Содержимое абзаца; соседние отрезки одной ссылки — одна w:hyperlink. */
+  /** Paragraph content; adjacent runs of the same link become one w:hyperlink. */
   private inline(node: PMNode, ctx: Context): string {
     let out = '';
     let open: string | null = null;
@@ -456,7 +456,7 @@ class DocxWriter {
     return `<w:p>${pPr ? `<w:pPr>${pPr}</w:pPr>` : ''}${options.prefix ?? ''}${content}</w:p>`;
   }
 
-  // ----- списки -----
+  // ----- lists -----
 
   private numbering(ordered: boolean, style: unknown, start: number): number {
     const key = `${ordered ? 'o' : 'b'}:${typeof style === 'string' ? style : ''}`;
@@ -484,7 +484,7 @@ class DocxWriter {
       );
     }
     const id = ++this.numCount;
-    // Каждый нумерованный список начинает счёт заново (со своего start).
+    // Every numbered list restarts its count (from its own start).
     const restart = ordered
       ? `<w:lvlOverride w:ilvl="0"><w:startOverride w:val="${Math.max(0, start)}"/></w:lvlOverride>`
       : '';
@@ -526,7 +526,7 @@ class DocxWriter {
     return out;
   }
 
-  // ----- таблицы -----
+  // ----- tables -----
 
   private table(node: PMNode, ctx: Context): string {
     interface Placed {
@@ -561,7 +561,7 @@ class DocxWriter {
     });
     if (!columns) return '';
 
-    // Ширины колонок: из colwidth ячеек (px), остальное — поровну до ширины текста.
+    // Column widths: from the cells' colwidth (px), the rest split evenly up to the text width.
     const widths: Array<number | null> = Array.from({ length: columns }, () => null);
     for (const placed of starts.values()) {
       const colwidth = placed.cell.attrs.colwidth;
@@ -606,7 +606,7 @@ class DocxWriter {
         const width = `<w:tcW w:w="${span(placed.col, placed.colspan)}" w:type="dxa"/>`;
         const gridSpan = placed.colspan > 1 ? `<w:gridSpan w:val="${placed.colspan}"/>` : '';
         if (placed.row !== r) {
-          // Продолжение объединения по вертикали.
+          // The continuation of a vertical merge.
           cells += `<w:tc><w:tcPr>${width}${gridSpan}<w:vMerge/></w:tcPr><w:p/></w:tc>`;
         } else {
           const { cell } = placed;
@@ -627,7 +627,7 @@ class DocxWriter {
             style: undefined,
             bold: ctx.bold || cell.type.name === 'table_header',
           });
-          // Ячейка Word заканчивается абзацем.
+          // A Word cell ends with a paragraph.
           if (!content.endsWith('</w:p>')) content += '<w:p/>';
           cells += `<w:tc><w:tcPr>${tcPr}</w:tcPr>${content}</w:tc>`;
         }
@@ -638,7 +638,7 @@ class DocxWriter {
     return `<w:tbl>${tblPr}${tblGrid}${body}</w:tbl>`;
   }
 
-  // ----- блоки -----
+  // ----- blocks -----
 
   blocks(parent: PMNode, ctx: Context): string {
     let out = '';
@@ -744,7 +744,7 @@ class DocxWriter {
     }
   }
 
-  // ----- части файла -----
+  // ----- parts of the file -----
 
   document(doc: PMNode): string {
     let body = this.blocks(doc, { listLevel: -1 });
@@ -809,7 +809,7 @@ function stylesXml(font: string, size: number): string {
   );
 }
 
-/** Адреса всех картинок документа. */
+/** The addresses of every image in the document. */
 function imageSources(doc: PMNode): string[] {
   const sources = new Set<string>();
   doc.descendants((node) => {

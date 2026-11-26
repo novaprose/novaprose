@@ -5,18 +5,18 @@ import { imageSize } from '../schema';
 import { h } from '../ui/dom';
 
 /**
- * Плагин media: видео YouTube и Vimeo, а также видеофайлы (mp4, webm, ogg) по https.
- * `plugins: ['media']`. Здесь — узел и его вид в редакторе; диалог и кнопка — в media-ui.ts.
+ * The media plugin: YouTube and Vimeo videos, and video files (mp4, webm, ogg) over https.
+ * `plugins: ['media']`. Here are the node and its view in the editor; the dialog and the button are in media-ui.ts.
  *
- * Безопасность: встраиваются только адреса из списка поставщиков. Любой другой <iframe> — из вставки,
- * setContent или JSON — отбрасывается и при разборе, и при выводе. YouTube — через youtube-nocookie.com.
+ * Security: only addresses from the list of providers are embedded. Any other <iframe>, from paste,
+ * setContent or JSON, is dropped both when parsing and on output. YouTube goes through youtube-nocookie.com.
  */
 
 export type MediaKind = 'youtube' | 'vimeo' | 'video';
 
 export interface MediaSource {
   kind: MediaKind;
-  /** Канонический адрес для встраивания. */
+  /** The canonical address for embedding. */
   src: string;
 }
 
@@ -25,9 +25,9 @@ const YOUTUBE =
 const VIMEO = /^https?:\/\/(?:www\.|player\.)?vimeo\.com\/(?:video\/)?(\d{1,12})(?:[/?#]|$)/i;
 const VIDEO_FILE = /^https:\/\/[^\s"'<>]+\.(?:mp4|webm|ogv|ogg)(?:\?[^\s"'<>#]*)?$/i;
 
-/** Распознать адрес видео; null — не поддерживается (и не будет встроен). */
+/** Recognizes a video address; null means not supported (and it won't be embedded). */
 export function parseMediaUrl(url: string): MediaSource | null {
-  if (typeof url !== 'string') return null; // из JSON может прийти что угодно
+  if (typeof url !== 'string') return null; // JSON can bring anything
   const value = url.trim();
   const youtube = value.match(YOUTUBE);
   if (youtube)
@@ -104,7 +104,7 @@ export default definePlugin({
         },
       ],
       toDOM: (node) => {
-        // Документ мог прийти из JSON — адрес проверяем заново и выводим только канонический.
+        // The document may come from JSON: the address is checked again and only the canonical one is output.
         const source = parseMediaUrl(node.attrs.src as string);
         const width = String(imageSize(node.attrs.width) ?? 560);
         const height = String(imageSize(node.attrs.height) ?? 315);
@@ -131,7 +131,7 @@ export default definePlugin({
     new Plugin({
       props: {
         nodeViews: {
-          // В редакторе плеер закрыт прозрачным слоем: клик выделяет блок, а не запускает видео.
+          // In the editor the player is covered by a transparent layer: a click selects the block instead of playing the video.
           media: (node) => {
             const player = renderMedia(node);
             const dom = h(

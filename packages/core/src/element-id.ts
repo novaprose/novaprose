@@ -1,10 +1,10 @@
 /**
- * Безопасный идентификатор элемента (id заголовка, якорь): латинская буква в начале, дальше буквы,
- * цифры, «_», «-», «.», до 64 символов. Без пробелов и кавычек — значение не выйдет из атрибута.
+ * A safe element identifier (a heading id, an anchor): a Latin letter first, then letters,
+ * digits, "_", "-", ".", up to 64 characters. No spaces or quotes, so the value can't escape the attribute.
  */
 export const ELEMENT_ID_RE = /^[A-Za-z][\w.-]{0,63}$/;
 
-/** Значение из HTML или JSON → идентификатор или null. */
+/** A value from HTML or JSON → an identifier, or null. */
 export function elementId(value: unknown): string | null {
   return typeof value === 'string' && ELEMENT_ID_RE.test(value) ? value : null;
 }

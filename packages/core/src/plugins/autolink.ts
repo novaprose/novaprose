@@ -6,14 +6,14 @@ import { definePlugin } from '../plugins';
 import { isSafeLinkUrl } from '../url';
 
 /**
- * Плагин autolink:
- * - адрес или e-mail становится ссылкой, когда после него набран пробел или нажат Enter;
- * - вставка адреса поверх выделенного текста делает этот текст ссылкой (как в Google Docs).
+ * The autolink plugin:
+ * - an address or an e-mail becomes a link when a space is typed after it or Enter is pressed;
+ * - pasting an address over selected text makes that text a link (as in Google Docs).
  * `plugins: ['autolink']`.
  */
 
-// Адрес в конце текста (группа 1) и завершающая пунктуация после него (группа 2): «см. https://x.com.» —
-// точка в ссылку не входит.
+// An address at the end of the text (group 1) and the trailing punctuation after it (group 2): in "see https://x.com."
+// the period isn't part of the link.
 const URL_AT_END =
   /(?:^|[\s(])((?:https?:\/\/|www\.)[^\s<>"]*[^\s<>".,;:!?)\]'"]|[\w.+-]+@[\w-]+(?:\.[\w-]+)+)([.,;:!?)\]'"]*)$/i;
 const SINGLE_URL = /^(?:https?:\/\/|www\.)\S+$|^mailto:\S+$/i;
@@ -24,7 +24,7 @@ function toHref(text: string): string {
   return text;
 }
 
-/** Сделать ссылкой адрес, заканчивающийся в позиции end (если он есть и ещё не ссылка). */
+/** Makes a link of the address ending at position end (if there is one and it isn't a link yet). */
 function linkifyBefore(state: EditorState, tr: Transaction, end: number): boolean {
   const $end = state.doc.resolve(end);
   if (!$end.parent.isTextblock || $end.parent.type.spec.code) return false;
@@ -47,7 +47,7 @@ export default definePlugin({
   prosemirrorPlugins: (editor) => [
     inputRules({
       rules: [
-        // Пробел после адреса: оформляем адрес ссылкой и вставляем сам пробел.
+        // A space after an address: the address becomes a link and the space itself is inserted.
         new InputRule(/\S\s$/, (state, match, start, end) => {
           if (!editor.isAllowed('link')) return null;
           const tr = state.tr;
@@ -59,14 +59,14 @@ export default definePlugin({
     }),
     new Plugin({
       /**
-       * Enter после адреса. Раскладка клавиш ядра обрабатывает Enter раньше плагинов, поэтому смотрим
-       * на результат: курсор в начале нового блока, а предыдущий блок заканчивается адресом.
+       * Enter after an address. The core keymap handles Enter before plugins, so we look
+       * at the result: the cursor is at the start of a new block, and the previous block ends with an address.
        */
       appendTransaction(transactions, _old, state) {
         if (!editor.isAllowed('link') || !transactions.some((tr) => tr.docChanged)) return null;
         const { $from, empty } = state.selection;
         if (!empty || $from.parentOffset !== 0 || $from.depth < 1) return null;
-        // Конец предыдущего текстового блока — в том числе в соседнем пункте списка или ячейке.
+        // The end of the previous text block, including in a neighboring list item or cell.
         const prev = Selection.findFrom(state.doc.resolve($from.before()), -1, true);
         if (!prev || !prev.empty || prev.$from.parentOffset !== prev.$from.parent.content.size)
           return null;

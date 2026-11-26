@@ -1,5 +1,5 @@
-# Автоматические PR с обновлениями зависимостей. Мелкие обновления сгруппированы, чтобы не
-# заваливать репозиторий: один PR в неделю на группу. Каждый PR проходит полный CI.
+# Automatic pull requests with dependency updates. Minor updates are grouped so they don't
+# flood the repository: one pull request a week per group. Each one goes through the full CI.
 version: 2
 updates:
   - package-ecosystem: npm
@@ -18,7 +18,7 @@ updates:
         dependency-type: development
         update-types: [minor, patch]
     ignore:
-      # Angular-пакет держит свой TypeScript (того требует Angular) — обновляем вручную.
+      # The Angular package keeps its own TypeScript (Angular requires it): updated by hand.
       - dependency-name: typescript
         update-types: [version-update:semver-major]
 

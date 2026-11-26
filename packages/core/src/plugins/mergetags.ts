@@ -43,9 +43,9 @@ export const LABELS = {
   },
 };
 
-/** Ключ без пробелов и кавычек — он уходит в атрибут и на ваш сервер. */
+/** A key without spaces and quotes: it goes into an attribute and to your server. */
 const KEY_RE = /^[\w.:-]{1,100}$/;
-/** Атрибут: только data-* (не даём назвать его onclick или href). */
+/** The attribute: only data-* (it can't be named onclick or href). */
 const ATTR_RE = /^data-[a-z0-9-]{1,40}$/;
 
 export function optionsOf(editor: Editor): MergeTagsOptions {
@@ -83,13 +83,13 @@ function buildNodes(editor: Editor): Record<string, NodeSpec> {
       atom: true,
       selectable: true,
       draggable: true,
-      // Свой style «фишки» (цвет, фон, жирность) — оформление, а не формат текста вокруг.
+      // The chip's own style (color, background, weight) is its look, not the formatting of the text around it.
       ignoreStyles: true,
       attrs: { key: {}, label: { default: '' } },
       parseDOM: [
         {
           tag: `span[${attribute}]`,
-          // Выше марок и стилей: переменная — целый узел, а не span с форматированием.
+          // Above marks and styles: a variable is a whole node, not a span with formatting.
           priority: 60,
           getAttrs: (dom) => {
             const el = dom as HTMLElement;
@@ -99,10 +99,10 @@ function buildNodes(editor: Editor): Record<string, NodeSpec> {
           },
         },
       ],
-      // Документ мог прийти из JSON — ключ проверяем и на выходе.
+      // The document may come from JSON: the key is checked on output too.
       toDOM: (node) => {
         const key = KEY_RE.test(node.attrs.key as string) ? (node.attrs.key as string) : '';
-        // JSON приходит снаружи: метка может быть числом или null — выводим как строку.
+        // JSON comes from outside: the label may be a number or null, it is output as a string.
         const label =
           node.attrs.label == null || node.attrs.label === '' ? key : String(node.attrs.label);
         return ['span', { [attribute]: key, contenteditable: 'false' }, label];
@@ -111,7 +111,7 @@ function buildNodes(editor: Editor): Record<string, NodeSpec> {
   };
 }
 
-/** Отображение в редакторе: «фишка» с подписью из списка (подпись в HTML могла устареть). */
+/** The view in the editor: a chip with the label from the list (the label in the HTML may be outdated). */
 class MergeTagView {
   readonly dom: HTMLElement;
 
@@ -132,7 +132,7 @@ class MergeTagView {
     this.dom.textContent = known ?? ((this.node.attrs.label as string) || key);
     this.dom.dataset.key = key;
     const list = optionsOf(this.editor).list;
-    // Ключа нет в списке — подсвечиваем, но не удаляем: шаблон не теряет данных.
+    // The key isn't in the list: highlighted but not removed, so the template loses no data.
     const unknown = !!list?.length && known === undefined;
     this.dom.classList.toggle('is-unknown', unknown);
     this.dom.title = unknown ? `${this.unknownTitle}: ${key}` : key;

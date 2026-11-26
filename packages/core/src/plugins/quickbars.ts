@@ -22,7 +22,7 @@ export interface QuickbarsOptions {
 export const DEFAULT_SELECTION = 'bold italic underline | quicklink h2 h3 blockquote';
 export const DEFAULT_INSERT = 'quickimage quicktable';
 
-/** Выделен непустой текст (не ячейки таблицы, не картинка), и не в блоке кода. */
+/** Non-empty text is selected (not table cells, not an image), and not in a code block. */
 export function hasTextSelection(editor: Editor): boolean {
   const { selection } = editor.view.state;
   if (!(selection instanceof TextSelection) || selection.empty) return false;
@@ -30,7 +30,7 @@ export function hasTextSelection(editor: Editor): boolean {
   return editor.view.state.doc.textBetween(selection.from, selection.to).trim().length > 0;
 }
 
-/** Курсор на пустой строке верхнего уровня (не в списке, таблице, цитате). */
+/** The cursor is on an empty top-level line (not in a list, a table, a quote). */
 export function isOnEmptyLine(editor: Editor): boolean {
   const { selection } = editor.view.state;
   if (!selection.empty) return false;
@@ -85,13 +85,13 @@ export default definePlugin({
         items: selection,
         position: 'selection',
         placement: 'top-start',
-        // Выделение текста в таблице: форматирование важнее панели таблицы.
+        // Text selected in a table: formatting matters more than the table toolbar.
         priority: 10,
       });
     }
 
-    // На сенсорном экране панель вставки не показываем: она выскакивала бы на каждой пустой строке
-    // (а на новой строке у самой клавиатуры закрывала бы её). Картинка и таблица — в тулбаре.
+    // On a touch screen the insert toolbar isn't shown: it would pop up on every empty line
+    // (and on a new line right by the keyboard it would cover it). Image and table are in the toolbar.
     const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
     const insert = options.insert === undefined ? DEFAULT_INSERT : options.insert;
     if (insert && !coarse) {

@@ -1,5 +1,5 @@
-/* Режим страниц (плагин pagelayout): лист точного размера с полями на «столе». Лист остаётся
-   бумажным и в тёмной теме — светлые токены задаёт style.css (.nova-pages .nova-prosemirror). */
+/* Page mode (the pagelayout plugin): a sheet of exact size with margins on a "desk". The sheet stays
+   paper even in the dark theme: style.css sets the light tokens (.nova-pages .nova-prosemirror). */
 .nova-pages {
   --nova-desk: #e6e9ed;
 }
@@ -24,7 +24,7 @@
   box-sizing: border-box;
   width: var(--nova-page-width);
   max-width: 100%;
-  /* Не меньше листа; при нескольких страницах — до конца последней (считает pagelayout-ui). */
+  /* At least one sheet; with several pages, to the end of the last one (pagelayout-ui computes it). */
   min-height: max(var(--nova-page-height), var(--nova-pages-height, 0px));
   margin: 0 auto;
   padding: var(--nova-page-margins);
@@ -35,7 +35,7 @@
     0 8px 24px rgb(0 0 0 / 0.08);
 }
 
-/* Телефон: лист шире экрана — обычное поле ввода без миллиметровых полей. */
+/* Phone: the sheet is wider than the screen, so a regular input area without millimetre margins. */
 @media (max-width: 600px) {
   .nova-pages .nova-content {
     padding: 0;

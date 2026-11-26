@@ -9,9 +9,9 @@ const MIN_WIDTH = 24;
 type Corner = 'nw' | 'ne' | 'sw' | 'se';
 
 /**
- * Отображение картинки в редакторе: обёртка + маркеры ресайза в углах (видны, когда картинка выделена).
- * Ресайз сохраняет пропорции; работает мышью и пальцем (Pointer Events). В HTML-вывод обёртка
- * не попадает — сериализация идёт по toDOM схемы.
+ * The image view in the editor: a wrapper + resize handles in the corners (visible while the image is selected).
+ * Resizing keeps the proportions and works with a mouse or a finger (Pointer Events). The wrapper doesn't
+ * reach the HTML output: serialization follows the schema's toDOM.
  */
 export class ImageView implements NodeView {
   readonly dom: HTMLSpanElement;
@@ -52,7 +52,7 @@ export class ImageView implements NodeView {
     const w = imageSize(width);
     const h = imageSize(height);
     this.img.style.width = w ? `${w}px` : '';
-    // Высоту не фиксируем: при max-width: 100% картинка должна ужиматься пропорционально.
+    // The height isn't fixed: with max-width: 100% the image must shrink proportionally.
     this.img.style.aspectRatio = w && h ? `${w} / ${h}` : '';
     this.dom.dataset.align = align ?? '';
   }
@@ -77,7 +77,7 @@ export class ImageView implements NodeView {
     this.dom.classList.remove('is-selected');
   }
 
-  /** Маркеры — наши; ProseMirror не должен обрабатывать события на них. */
+  /** The handles are ours; ProseMirror must not handle events on them. */
   stopEvent(event: Event): boolean {
     return (event.target as HTMLElement).classList?.contains('nova-image-handle') ?? false;
   }
@@ -128,7 +128,7 @@ export class ImageView implements NodeView {
         width,
         height: Math.round(width * ratio),
       });
-      // Картинка остаётся выделенной, чтобы можно было продолжить ресайз или открыть панель.
+      // The image stays selected, so you can keep resizing or open the toolbar.
       tr.setSelection(NodeSelection.create(tr.doc, pos));
       this.view.dispatch(tr);
     };
