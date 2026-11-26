@@ -1347,6 +1347,20 @@ html.nova-fullscreen-lock body {
   max-width: calc(100vw - 16px);
 }
 
+/* Сенсорный экран: панель у выделения — над клавиатурой во всю ширину (context-toolbar.ts). */
+.nova-context-toolbar-docked {
+  justify-content: center;
+  max-width: none;
+  border-width: 1px 0 0;
+  border-radius: 0;
+  animation: nova-fade-in 0.12s ease-out;
+}
+
+.nova-context-toolbar-docked .nova-context-items {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
 .nova-bubble-sep {
   width: 1px;
   height: 20px;

@@ -451,12 +451,36 @@ test.describe('quickbars', () => {
     expect(await html(page)).toBe('<h2>title</h2>');
   });
 
-  test('пустая строка: панель вставки → таблица', async ({ page }) => {
+  test('пустая строка: панель вставки → таблица', async ({ page, isMobile }) => {
+    test.skip(isMobile, 'на телефоне панели вставки нет — см. тест ниже');
     await open(page, '<p>text</p><p></p>');
     await expect(insertBar(page)).toBeVisible();
     await insertBar(page).getByRole('button', { name: 'Insert table' }).click();
     expect(await html(page)).toContain('<table>');
     await expect(insertBar(page)).toBeHidden();
+  });
+
+  test('телефон: панель форматирования — над клавиатурой во всю ширину, вставки на пустой строке нет', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'сенсорный экран');
+    // Рядом с выделением на телефоне — «ручки» и системное меню: панель прижата к низу видимой
+    // части окна (над клавиатурой) и не закрывает текст.
+    await open(page, '<p>title</p><p></p>');
+    await expect(insertBar(page)).toBeHidden();
+    await content(page).locator('p').first().click();
+    await page.keyboard.press('Home');
+    await page.keyboard.press('Shift+End');
+    const bar = selectionBar(page);
+    await expect(bar).toBeVisible();
+    const box = (await bar.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(Math.round(box.x)).toBe(0);
+    expect(Math.round(box.width)).toBe(viewport.width);
+    expect(Math.round(box.y + box.height)).toBe(viewport.height);
+    await bar.getByRole('button', { name: 'Bold' }).click();
+    expect(await html(page)).toBe('<p><strong>title</strong></p><p></p>');
   });
 
   test('выделение текста в таблице — панель форматирования, а не таблицы', async ({ page }) => {

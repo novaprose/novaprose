@@ -90,8 +90,11 @@ export default definePlugin({
       });
     }
 
+    // На сенсорном экране панель вставки не показываем: она выскакивала бы на каждой пустой строке
+    // (а на новой строке у самой клавиатуры закрывала бы её). Картинка и таблица — в тулбаре.
+    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
     const insert = options.insert === undefined ? DEFAULT_INSERT : options.insert;
-    if (insert) {
+    if (insert && !coarse) {
       registry.addContextToolbar('quickbars-insert', {
         label: t('quickbars.insert'),
         predicate: isOnEmptyLine,

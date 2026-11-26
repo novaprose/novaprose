@@ -79,11 +79,11 @@ Menu items use the same names as toolbar controls, including your own buttons re
 
 ## Modes
 
-| `mode`               | What you get                                                                       |
-| -------------------- | ---------------------------------------------------------------------------------- |
-| `'classic'`          | a framed editor with the toolbar on top (default)                                  |
-| `'inline'`           | no frame; the toolbar appears above the text while the editor has focus            |
-| `'distraction-free'` | no toolbar; formatting appears next to the selection (with the `quickbars` plugin) |
+| `mode`               | What you get                                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `'classic'`          | a framed editor with the toolbar on top (default)                                                                       |
+| `'inline'`           | no frame; the toolbar appears above the text while the editor has focus                                                 |
+| `'distraction-free'` | no toolbar; formatting appears next to the selection (with the `quickbars` plugin), above the keyboard on touch screens |
 
 ```ts
 createEditor({ element, mode: 'distraction-free', plugins: ['quickbars'] });

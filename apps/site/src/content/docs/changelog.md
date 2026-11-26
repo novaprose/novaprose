@@ -24,6 +24,13 @@ All packages in this repository are versioned together. The format follows
   text or as a stream shown while it is written; closing the dialog cancels it. The answer is
   inserted as text, never HTML. Guide with a server example:
   [AI assistant](https://novaprose.com/guides/ai-assistant/).
+- Phones and tablets: the quick formatting bar (`quickbars`) sits across the screen just above the
+  keyboard instead of next to the selection, where it covered the text, the selection handles and the
+  system Copy/Paste menu. **Changed:** on touch screens the quick insert bar (image, table) no longer
+  pops up on every empty line; those buttons are in the toolbar.
+- **Fixed:** with the keyboard open on a phone, menus, the link panel and other floating panels could
+  appear away from what they belong to, over the text: they are now placed within the visible part of
+  the screen.
 - **Fixed:** the first click into an editor without focus, beside the text rather than on it — to the
   right of the last line, or below it — put the cursor at the start of the document (Chromium, Safari
   and Firefox, with content loaded through `setContent`). The cursor now goes where you clicked.

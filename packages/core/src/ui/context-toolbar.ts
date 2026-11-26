@@ -2,7 +2,7 @@ import { NodeSelection, Plugin, PluginKey } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { Editor } from '../editor';
 import { activeElement, h, listenDocument, logicalKey } from './dom';
-import { positionFloating } from './popover';
+import { positionFloating, visibleArea } from './popover';
 import type { ContextToolbarSpec } from './registry';
 import { parseToolbar, renderControl, type RenderedControl } from './toolbar';
 
@@ -86,6 +86,19 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
 
       const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 
+      /**
+       * Сенсорный экран: панель у выделения не плавает рядом с ним — там «ручки» выделения и
+       * системное меню «Скопировать/Вставить», которые она закрывала бы (или они — её). Панель
+       * прижата к низу видимой части окна, то есть над клавиатурой, во всю ширину.
+       */
+      const dock = () => {
+        const area = visibleArea();
+        container.style.left = `${Math.round(area.left)}px`;
+        container.style.width = `${Math.round(area.right - area.left)}px`;
+        container.style.top = `${Math.round(area.bottom - container.offsetHeight)}px`;
+        container.dataset.side = 'docked';
+      };
+
       const update = (v: EditorView) => {
         const focused = v.hasFocus() || container.contains(activeElement(container));
         if (!focused || !editor.isEditable() || editor.ui.activeDialog || dragging) return hide();
@@ -104,11 +117,13 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
         const rect = spec.anchor ? spec.anchor(editor) : anchorRect(spec);
         if (!rect) return hide();
         container.hidden = false;
-        let placement =
+        const docked = coarse && spec.position === 'selection';
+        container.classList.toggle('nova-context-toolbar-docked', docked);
+        if (docked) return dock();
+        container.style.width = '';
+        const placement =
           (typeof spec.placement === 'function' ? spec.placement(editor) : spec.placement) ??
           (spec.position === 'selection' ? 'bottom-start' : 'top-start');
-        // На тач-устройствах над выделением — системное меню «Копировать/Вставить»: уходим вниз.
-        if (coarse && spec.position === 'selection') placement = 'bottom-start';
         positionFloating(container, rect, placement);
       };
 
@@ -145,6 +160,9 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
       };
       window.addEventListener('scroll', reposition, true);
       window.addEventListener('resize', reposition);
+      // Клавиатура телефона меняет видимую часть окна, не трогая окно.
+      window.visualViewport?.addEventListener('resize', reposition);
+      window.visualViewport?.addEventListener('scroll', reposition);
 
       return {
         update,
@@ -154,6 +172,8 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
           stopPointerUp();
           window.removeEventListener('scroll', reposition, true);
           window.removeEventListener('resize', reposition);
+          window.visualViewport?.removeEventListener('resize', reposition);
+          window.visualViewport?.removeEventListener('scroll', reposition);
           container.remove();
         },
       };

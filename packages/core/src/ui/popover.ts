@@ -8,6 +8,22 @@ const GAP = 6;
 const VIEWPORT_PADDING = 8;
 
 /**
+ * Видимая часть окна в координатах getBoundingClientRect и position: fixed. На телефоне с открытой
+ * клавиатурой она меньше окна и сдвинута при прокрутке (visualViewport); window.innerHeight там —
+ * высота видимой части, а координаты — от всей страницы: смешивать их нельзя, панель уезжала.
+ */
+export function visibleArea(): { left: number; top: number; right: number; bottom: number } {
+  const vv = window.visualViewport;
+  if (!vv) return { left: 0, top: 0, right: window.innerWidth, bottom: window.innerHeight };
+  return {
+    left: vv.offsetLeft,
+    top: vv.offsetTop,
+    right: vv.offsetLeft + vv.width,
+    bottom: vv.offsetTop + vv.height,
+  };
+}
+
+/**
  * Позиционирует плавающий элемент (position: fixed) относительно якоря:
  * снизу, а если не помещается — сверху; по горизонтали прижимает к краям окна.
  */
@@ -16,15 +32,14 @@ export function positionFloating(
   anchorRect: DOMRect,
   placement: Placement,
 ): void {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+  const area = visibleArea();
   // Размер без трансформаций: панель появляется с анимацией (scale 0.98), и getBoundingClientRect
   // в этот момент меньше настоящего — край, выровненный по правому краю кнопки, уезжал на 2%.
   const width = floating.offsetWidth;
   const height = floating.offsetHeight;
 
-  const spaceBelow = vh - anchorRect.bottom;
-  const spaceAbove = anchorRect.top;
+  const spaceBelow = area.bottom - anchorRect.bottom;
+  const spaceAbove = anchorRect.top - area.top;
   const preferTop = placement === 'top-start' || placement === 'top-end';
   const placeTop = preferTop
     ? spaceAbove >= height + GAP || spaceAbove > spaceBelow
@@ -41,8 +56,14 @@ export function positionFloating(
         ? anchorRect.right - width
         : anchorRect.left;
 
-  left = Math.max(VIEWPORT_PADDING, Math.min(left, vw - width - VIEWPORT_PADDING));
-  top = Math.max(VIEWPORT_PADDING, Math.min(top, vh - height - VIEWPORT_PADDING));
+  left = Math.max(
+    area.left + VIEWPORT_PADDING,
+    Math.min(left, area.right - width - VIEWPORT_PADDING),
+  );
+  top = Math.max(
+    area.top + VIEWPORT_PADDING,
+    Math.min(top, area.bottom - height - VIEWPORT_PADDING),
+  );
 
   floating.style.left = `${Math.round(left)}px`;
   floating.style.top = `${Math.round(top)}px`;
