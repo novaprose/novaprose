@@ -103,6 +103,8 @@ const ptBR: LanguagePack = {
   'image.caption': 'Legenda',
   'image.captionPlaceholder': 'Adicione uma legenda…',
   'status.words': 'Palavras: {count}',
+  'announce.on': 'Ativado: {name}',
+  'announce.off': 'Desativado: {name}',
   'status.resize': 'Redimensionar o editor',
   'dialog.browse': 'Procurar',
   'dialog.dropFiles': 'Arraste arquivos para cá ou',

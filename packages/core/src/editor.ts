@@ -25,6 +25,7 @@ import { commands, isCommandActive, type CommandName } from './commands';
 import { createTranslator, type LanguagePack } from './i18n';
 import { embeddedImageUploadPlugin, imageDropPastePlugin, type UploadImageHandler } from './image';
 import { firstClickPlugin } from './first-click';
+import { announcePlugin } from './announce';
 import { buildInputRules, codeFenceKeymap } from './inputrules';
 import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
@@ -452,6 +453,8 @@ export class Editor {
       // the next cell, not a list indent. See installTables().
       tablesAnchor,
       ...buildKeymap((name) => this.resolveCommand(name)),
+      // Screen readers hear what a formatting shortcut or a typed Markdown shortcut changed.
+      announcePlugin(this.ui.t, (text) => this.ui.announce(text)),
       ...(syncPlugins.some((plugin) => plugin.replaceHistory) ? [] : [history()]),
       dropCursor({ color: 'var(--nova-accent)', width: 2 }),
       gapCursor(),

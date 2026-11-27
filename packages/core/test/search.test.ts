@@ -182,12 +182,15 @@ describe('view modes', () => {
     );
   });
 
-  it('keyboard shortcuts help', async () => {
+  it('keyboard shortcuts help: a list per group, one line per shortcut, no table', async () => {
     const e = mount('<p>a</p>');
     (await import('../src/ui/views')).openHelp(e);
-    const rows = e.root.querySelectorAll('.nova-help-table tr');
-    expect(rows.length).toBeGreaterThan(20);
-    expect(e.root.querySelector('.nova-help')!.textContent).toContain('Bold');
+    const help = e.root.querySelector('.nova-help')!;
+    // A table made NVDA say "row 3, column 2" at every cell; a list line reads as "Bold Ctrl+B".
+    expect(help.querySelector('table')).toBeNull();
+    const items = help.querySelectorAll('ul.nova-help-list > li');
+    expect(items.length).toBeGreaterThan(20);
+    expect(items[0]!.textContent).toMatch(/^Bold \S/);
   });
 
   it('fullscreen turns on and off', () => {

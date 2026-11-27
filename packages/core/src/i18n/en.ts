@@ -105,6 +105,8 @@ export const en = {
   'image.captionPlaceholder': 'Add a caption…',
 
   'status.words': '{count} words',
+  'announce.on': '{name} on',
+  'announce.off': '{name} off',
   'status.resize': 'Resize editor',
   'dialog.browse': 'Browse',
   'dialog.dropFiles': 'Drop files here or',

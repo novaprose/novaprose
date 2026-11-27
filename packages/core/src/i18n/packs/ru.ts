@@ -104,6 +104,8 @@ const ru: LanguagePack = {
   'image.caption': 'Подпись',
   'image.captionPlaceholder': 'Добавьте подпись…',
   'status.words': 'Слов: {count}',
+  'announce.on': 'Включено: {name}',
+  'announce.off': 'Выключено: {name}',
   'status.resize': 'Изменить размер редактора',
   'dialog.browse': 'Обзор',
   'dialog.dropFiles': 'Перетащите файлы сюда или',

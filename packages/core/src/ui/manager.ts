@@ -27,6 +27,9 @@ export class UiManager {
   private readonly notifications: Notifications;
   private popover: Popover | null = null;
   private currentDialog: DialogHandle | null = null;
+  /** The hidden polite live region for announce(); it exists from the start, so screen readers watch it. */
+  private readonly liveRegion: HTMLElement;
+  private announceTimer: ReturnType<typeof setTimeout> | undefined;
 
   private readonly rootEl: HTMLElement;
 
@@ -43,6 +46,27 @@ export class UiManager {
     this.tooltip = new Tooltip(this.overlayHost);
     this.notifications = new Notifications(root, t('dialog.close'));
     this.sidebar = new Sidebars(editor);
+    this.liveRegion = h('div', {
+      className: 'nova-visually-hidden nova-announcer',
+      role: 'status',
+      'aria-live': 'polite',
+      'aria-atomic': 'true',
+    });
+    root.append(this.liveRegion);
+  }
+
+  /**
+   * Say a short message to screen readers without moving focus: what a shortcut or a typed Markdown
+   * shortcut changed ("Bold on", "Bulleted list"). Plugins can use it for their own changes.
+   */
+  announce(message: string): void {
+    const region = this.liveRegion;
+    // Clear first and fill a moment later: the same text twice in a row (bold on, off, on) is read again.
+    region.textContent = '';
+    clearTimeout(this.announceTimer);
+    this.announceTimer = setTimeout(() => {
+      region.textContent = message;
+    }, 50);
   }
 
   /**
@@ -166,5 +190,7 @@ export class UiManager {
     this.tooltip.destroy();
     this.notifications.destroy();
     this.overlayHost.remove();
+    clearTimeout(this.announceTimer);
+    this.liveRegion.remove();
   }
 }

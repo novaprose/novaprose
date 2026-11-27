@@ -928,18 +928,19 @@ html.nova-fullscreen-lock body {
   letter-spacing: 0.03em;
 }
 
-.nova-help-table {
-  width: 100%;
-  border-collapse: collapse;
+.nova-help-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.nova-help-table td {
+.nova-help-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
   padding: 5px 0;
   border-bottom: 1px solid var(--nova-border);
-}
-
-.nova-help-table td:last-child {
-  text-align: end;
 }
 
 .nova-help kbd {

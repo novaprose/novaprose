@@ -96,6 +96,7 @@ their own and are not accepted in a chain. A custom command in a chain must buil
 | `ui.dialog(spec)`                          | a dialog from a list of fields ([Plugins](/guides/custom-buttons-and-plugins/#a-dialog))                    |
 | `ui.sidebar`                               | `show(name)`, `hide()`, `toggle(name)`, `active` ([Plugins](/guides/custom-buttons-and-plugins/#a-sidebar)) |
 | `ui.notify(text \| options)`               | a notification, optionally with action buttons                                                              |
+| `ui.announce(text)`                        | say a short message to screen readers (a hidden polite live region), without moving focus                   |
 | `schema`                                   | this editor's document schema: built-in plus plugin nodes and marks                                         |
 | `view`                                     | the underlying ProseMirror `EditorView` (advanced use)                                                      |
 | `destroy()`                                | remove the editor and all its listeners                                                                     |

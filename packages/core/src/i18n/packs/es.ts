@@ -103,6 +103,8 @@ const es: LanguagePack = {
   'image.caption': 'Pie de foto',
   'image.captionPlaceholder': 'Añade un pie de foto…',
   'status.words': 'Palabras: {count}',
+  'announce.on': 'Activado: {name}',
+  'announce.off': 'Desactivado: {name}',
   'status.resize': 'Cambiar el tamaño del editor',
   'dialog.browse': 'Examinar',
   'dialog.dropFiles': 'Arrastra archivos aquí o',

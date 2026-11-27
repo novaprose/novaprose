@@ -103,6 +103,8 @@ const de: LanguagePack = {
   'image.caption': 'Bildunterschrift',
   'image.captionPlaceholder': 'Bildunterschrift hinzufügen…',
   'status.words': 'Wörter: {count}',
+  'announce.on': '{name} an',
+  'announce.off': '{name} aus',
   'status.resize': 'Editorgröße ändern',
   'dialog.browse': 'Durchsuchen',
   'dialog.dropFiles': 'Dateien hierher ziehen oder',

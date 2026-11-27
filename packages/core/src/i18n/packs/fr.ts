@@ -103,6 +103,8 @@ const fr: LanguagePack = {
   'image.caption': 'Légende',
   'image.captionPlaceholder': 'Ajouter une légende…',
   'status.words': 'Mots : {count}',
+  'announce.on': 'Activé : {name}',
+  'announce.off': 'Désactivé : {name}',
   'status.resize': "Redimensionner l'éditeur",
   'dialog.browse': 'Parcourir',
   'dialog.dropFiles': 'Déposez des fichiers ici ou',

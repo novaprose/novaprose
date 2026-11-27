@@ -103,6 +103,8 @@ const it: LanguagePack = {
   'image.caption': 'Didascalia',
   'image.captionPlaceholder': 'Aggiungi una didascalia…',
   'status.words': 'Parole: {count}',
+  'announce.on': 'Attivato: {name}',
+  'announce.off': 'Disattivato: {name}',
   'status.resize': "Ridimensiona l'editor",
   'dialog.browse': 'Sfoglia',
   'dialog.dropFiles': 'Trascina qui i file oppure',

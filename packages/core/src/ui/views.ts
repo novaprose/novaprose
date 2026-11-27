@@ -151,19 +151,18 @@ export function openHelp(editor: Editor): void {
         'section',
         {},
         h('h3', {}, t(group)),
+        // A list, not a table: a screen reader reads each line as "Bold Ctrl+B" instead of naming the
+        // row and column of every cell.
         h(
-          'table',
-          { className: 'nova-help-table' },
-          h(
-            'tbody',
-            {},
-            rows.map(({ label, keys }) =>
-              h(
-                'tr',
-                {},
-                h('td', {}, t(label)),
-                h('td', {}, h('kbd', {}, keys.length === 1 ? keys : formatShortcut(keys))),
-              ),
+          'ul',
+          { className: 'nova-help-list' },
+          rows.map(({ label, keys }) =>
+            h(
+              'li',
+              {},
+              h('span', {}, t(label)),
+              ' ',
+              h('kbd', {}, keys.length === 1 ? keys : formatShortcut(keys)),
             ),
           ),
         ),

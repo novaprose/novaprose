@@ -44,6 +44,14 @@ All packages in this repository are versioned together. The format follows
   document; it is now announced as the field's placeholder (`aria-placeholder`). In real-time
   collaboration, the names on other participants' cursors were read as part of the text; the
   cursors are now hidden from screen readers.
+- Screen readers hear what a shortcut changed: Ctrl+B says “Bold on” or “Bold off” (likewise italic,
+  underline, strikethrough, code, subscript, superscript and the list shortcuts), heading and paragraph
+  shortcuts name the block, alignment shortcuts name the alignment, and typing a Markdown shortcut such
+  as “- ”, “1. ”, “## ” or “> ” says “Bulleted list”, “Numbered list”, “Heading 2” or “Quote”. Before,
+  NVDA read only the typed characters. The messages go to a hidden polite live region, translated with
+  the editor; plugins can use it too: `editor.ui.announce(text)`.
+- The keyboard shortcuts help (Alt+0) lists each shortcut as one line, “Bold Ctrl+B”. It was a table,
+  and screen readers named the row and column of every cell.
 - Word documents: `plugins: ['importword', 'exportword']` open a `.docx` and save the document as
   `.docx` (buttons and File menu items, as in TinyMCE) — in the browser, with no conversion
   service. Headings, formatting, links and bookmarks, real Word lists, tables with merged cells,
