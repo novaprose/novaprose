@@ -31,7 +31,7 @@ const initial = `<h2>Try NovaProse</h2>
     element: host,
     content,
     placeholder: 'Start typing…',
-    plugins: ['insertdatetime', 'quickbars'],
+    plugins: ['insertdatetime', 'quickbars', 'casechange', 'formatpainter', 'permanentpen'],
     onChange: (e) => (output.textContent = e.getHTML()),
   });
   output.textContent = editor.getHTML();
