@@ -17,6 +17,19 @@ function page(html: string) {
   document.body.innerHTML = html;
 }
 
+/**
+ * The content CSS an editor attached: a constructed style sheet where the environment supports it (browsers,
+ * jsdom 31+), otherwise a <style> element in the container.
+ */
+function contentCssText(container: HTMLElement): string {
+  const root = container.getRootNode() as Document | ShadowRoot;
+  const adopted = (root.adoptedStyleSheets ?? []).flatMap((sheet) =>
+    [...sheet.cssRules].map((rule) => rule.cssText),
+  );
+  const styles = [...container.querySelectorAll('style')].map((style) => style.textContent ?? '');
+  return [...adopted, ...styles].join('\n');
+}
+
 describe('tinymce.init', () => {
   it('replaces <textarea>: initial content, a hidden textarea, getContent/setContent', async () => {
     page(
@@ -198,8 +211,8 @@ describe('tinymce.init', () => {
     expect(editor!.mode.get()).toBe('design');
     expect(editor!.getContainer().style.height).toBe('300px');
     expect(editor!.getBody().getAttribute('data-placeholder')).toBe('Type…');
-    expect(editor!.getContainer().querySelector('style')!.textContent).toContain(
-      '.nova-prosemirror{ font-family: Georgia; }',
+    expect(contentCssText(editor!.getContainer())).toMatch(
+      /\.nova-prosemirror\s*\{\s*font-family: Georgia;\s*\}/,
     );
     const upload = editor!.core.options.uploadImage!;
     await expect(upload(new File(['png'], 'a.png', { type: 'image/png' }), () => {})).resolves.toBe(
