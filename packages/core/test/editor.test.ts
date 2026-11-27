@@ -4,11 +4,18 @@ import { isSafeImageUrl, isSafeLinkUrl } from '../src/url';
 import { TextSelection } from 'prosemirror-state';
 
 let editor: Editor | null = null;
+/**
+ * Every editor a test made: all are destroyed after it. A test that mounts twice would otherwise
+ * leave the first one alive, and its parts that load in the background (tables, the find bar)
+ * would draw after the test environment is gone.
+ */
+const editors: Editor[] = [];
 
 function mount(content = '', options: Partial<Parameters<typeof createEditor>[0]> = {}) {
   const element = document.createElement('div');
   document.body.appendChild(element);
   editor = createEditor({ element, content, ...options });
+  editors.push(editor);
   return editor;
 }
 
@@ -18,7 +25,7 @@ function selectAll(e: Editor) {
 }
 
 afterEach(() => {
-  editor?.destroy();
+  for (const e of editors.splice(0)) e.destroy();
   editor = null;
   document.body.innerHTML = '';
 });
