@@ -1,0 +1,12 @@
+/* The word autocorrect has just changed, while Backspace can still put back what was typed. */
+.nova-autocorrected {
+  text-decoration: underline dotted var(--nova-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+@media (forced-colors: active) {
+  .nova-autocorrected {
+    text-decoration-color: Highlight;
+  }
+}

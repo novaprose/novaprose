@@ -796,6 +796,42 @@ describe('tinymce.init', () => {
     expect(Object.keys(editor!.plugins).sort()).toEqual(['inlinecss', 'lists']);
   });
 
+  it('autocorrect: the options, the Tools menu items and their Start/End events', async () => {
+    page('<textarea id="t"></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'autocorrect',
+      menubar: 'tools',
+      autocorrect_capitalize: true,
+      autocorrect_service_url: 'https://spelling.example.com/',
+    });
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('autocorrect');
+    const core = editor!.core;
+    const events: string[] = [];
+    editor!.on('AutocorrectStart AutocorrectEnd CapitalizeStart CapitalizeEnd', (event) =>
+      events.push(String(event.type)),
+    );
+    const item = (name: string) => core.ui.registry.getMenuItem(name)!;
+    expect(item('autocorrect').isActive!(core)).toBe(true);
+    expect(item('capitalization').isActive!(core)).toBe(true);
+    item('autocorrect').onAction(core);
+    item('capitalization').onAction(core);
+    item('autocorrect').onAction(core);
+    expect(events).toEqual(['autocorrectend', 'capitalizeend', 'autocorrectstart']);
+    // The Tools menu holds them, under TinyMCE's names.
+    const tools = core.root.querySelector<HTMLButtonElement>('[data-menu="tools"]')!;
+    tools.click();
+    const labels = [...document.querySelectorAll('.nova-popover-menu [role^="menuitem"]')].map(
+      (el) => el.textContent,
+    );
+    expect(labels).toEqual([
+      'Correct typos as you type',
+      'Capitalize the first letter of sentences',
+    ]);
+    localStorage.removeItem('novaprose-autocorrect');
+  });
+
   it('editor.plugins holds what your own plugin returns, as in TinyMCE', async () => {
     page('<textarea id="t"></textarea>');
     tinymce.PluginManager.add('greeter', () => ({ hello: () => 'hi' }));

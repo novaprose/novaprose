@@ -36,6 +36,11 @@ export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
       'inserttable | tableinsertrowbefore tableinsertrowafter tabledeleterow | ' +
       'tableinsertcolbefore tableinsertcolafter tabledeletecol | tablemergecells tablesplitcells | tabledelete',
   },
+  // Not in the default menu bar: its items come from plugins (spellchecker, autocorrect, a11ychecker).
+  tools: {
+    title: 'menu.tools',
+    items: 'spellchecker spellcheckdialog | autocorrect capitalization | a11ycheck',
+  },
   help: { title: 'menu.help', items: 'help' },
 };
 

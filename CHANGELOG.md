@@ -8,6 +8,22 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- `autocorrect` plugin: common typos are corrected as you type ("teh" → "the", "recieve" →
+  "receive", "i" → "I", TWo INitial CApitals), when the word ends, in the case it was typed in and
+  with its formatting. Backspace right after a correction puts back what was typed and leaves that
+  word alone; Ctrl+Z undoes a correction as a step of its own; screen readers hear each one. With
+  `capitalize: true`, sentences start with a capital letter (abbreviations such as "e.g." and
+  "Dr." are known, and more are learned when a capital is taken back). The built-in list is
+  English, about 430 typos that are never right as typed; `replacements` add your own in any
+  language, `ignore` keeps words as they are, `onCorrect` hears every correction. Code,
+  addresses, paths, handles and merge tags are left alone. Nothing is sent to a server. With
+  `tinymce.init`, `autocorrect_autocorrect`, `autocorrect_capitalize`, the `autocorrect` and
+  `capitalization` menu items and the `AutocorrectStart/End` and `CapitalizeStart/End` events
+  work. The plugin loads lazily.
+- A **Tools** menu for the menu bar (`menubar: '… tools …'`): spell check, autocorrect and the
+  accessibility checker, when those plugins are on.
+- **Fixed:** inside inline code, "--" became an em dash and "..." an ellipsis as you typed
+  (`npm --help` turned into `npm —help`); code is now left as typed.
 - `a11ychecker` plugin: the **Accessibility** panel (`a11ycheck`) lists what breaks WCAG 2.1 in the
   document — images without alternative text or with a file name for it, skipped heading levels,
   empty headings, paragraphs that are headings in all but name, lists typed by hand, links side by

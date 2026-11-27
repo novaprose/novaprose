@@ -232,6 +232,8 @@ const editor = createEditor({
       : []),
     // ?spell=1: the spell checker with an offline demo service (e2e/spellchecker.spec.ts).
     ...(new URLSearchParams(location.search).has('spell') ? ['spellchecker'] : []),
+    // ?autocorrect=1: typos corrected as you type (e2e/autocorrect.spec.ts).
+    ...(new URLSearchParams(location.search).has('autocorrect') ? ['autocorrect'] : []),
     // ?a11y=1: the accessibility checker (e2e/a11ychecker.spec.ts).
     ...(new URLSearchParams(location.search).has('a11y') ? ['a11ychecker'] : []),
     // ?email=1: Email preview, the content as an email (e2e/email.spec.ts).
@@ -243,6 +245,8 @@ const editor = createEditor({
       request: demoModel,
       autocomplete: new URLSearchParams(location.search).has('complete') ? { delay: 300 } : false,
     },
+    // The sample text is in English, while the page says lang="ru": the built-in list is English.
+    autocorrect: { language: 'en' },
     spellchecker: {
       check: demoSpellCheck,
       languages: [

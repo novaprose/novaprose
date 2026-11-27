@@ -259,6 +259,26 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'spell check bubble');
     });
 
+    test('autocorrect: a corrected word and the menu of the button', async ({ page }) => {
+      await open(page, theme, '&autocorrect=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as {
+            editor: { ready: Promise<void>; setContent(h: string): void; focus(): void };
+          }
+        ).editor;
+        await e.ready;
+        e.setContent('<p>A sentence</p>');
+        e.focus();
+      });
+      await page.keyboard.press('ControlOrMeta+End');
+      await page.keyboard.type(' and teh ');
+      await expect(page.locator('.nova-autocorrected')).toHaveText('the');
+      await control(page, 'autocorrect-options');
+      await expect(page.getByRole('menuitemcheckbox')).toHaveCount(2);
+      await audit(page, 'autocorrect menu');
+    });
+
     test('the suggestions panel with cards by two authors', async ({ page }) => {
       await open(page, theme, '&comments=1');
       await page.evaluate(async () => {

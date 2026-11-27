@@ -199,6 +199,13 @@ export function createTinymce(): TinyMCECompat {
     // The AI assistant's window opening and closing (the ai plugin signals them on its root).
     core.root.addEventListener('nova-ai-dialogopen', () => compat.fire('AIDialogOpen'));
     core.root.addEventListener('nova-ai-dialogclose', () => compat.fire('AIDialogClose'));
+    // Autocorrect and capitalization switched on or off from the menu.
+    core.root.addEventListener('nova-autocorrect-toggle', (event) => {
+      const { feature, on } = (event as CustomEvent<{ feature: string; on: boolean }>).detail;
+      compat.fire(
+        (feature === 'capitalize' ? 'Capitalize' : 'Autocorrect') + (on ? 'Start' : 'End'),
+      );
+    });
     // Submitting the form puts the content into the <textarea>, as TinyMCE does.
     const form = isTextarea ? target.form : target.closest('form');
     form?.addEventListener('submit', () => compat.save());

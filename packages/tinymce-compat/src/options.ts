@@ -181,6 +181,10 @@ const IGNORED = new Set([
   // inlinecss → the email plugin: the filters of what is put inline.
   'inlinecss_selector_filter',
   'inlinecss_file_filter',
+  // autocorrect: corrections run in the browser, so Tiny's service address isn't needed.
+  'autocorrect_autocorrect',
+  'autocorrect_capitalize',
+  'autocorrect_service_url',
   'template_replace_values',
   'template_preview_replace_values',
   'template_selected_content_classes',
@@ -692,6 +696,13 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   )
     email.fileFilter = config.inlinecss_file_filter;
   if (Object.keys(email).length) pluginOptions.email = email;
+  // autocorrect: typos as you type (on by default) and capitals at the start of sentences.
+  const autocorrect: Record<string, unknown> = {};
+  if (typeof config.autocorrect_autocorrect === 'boolean')
+    autocorrect.autocorrect = config.autocorrect_autocorrect;
+  if (typeof config.autocorrect_capitalize === 'boolean')
+    autocorrect.capitalize = config.autocorrect_capitalize;
+  if (Object.keys(autocorrect).length) pluginOptions.autocorrect = autocorrect;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };

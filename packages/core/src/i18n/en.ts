@@ -123,6 +123,7 @@ export const en = {
   'menu.insert': 'Insert',
   'menu.format': 'Format',
   'menu.table': 'Table',
+  'menu.tools': 'Tools',
   'menu.help': 'Help',
   selectAll: 'Select all',
   print: 'Print',

@@ -120,6 +120,27 @@ test('AI autocomplete: the suggestion is announced, Tab accepts it', async ({ pa
   await expect.poll(() => html(page)).toBe('<p>Start here and a little more.</p>');
 });
 
+// Autocorrect changes a word the person has already moved past: it is announced, and so is
+// Backspace putting the word back.
+test('autocorrect: the correction is announced; Backspace puts the word back', async ({
+  page,
+  nvda,
+}) => {
+  await openEditor(page, nvda, '<p>Start</p>', '&autocorrect=1');
+  await nvda.press('Control+End');
+  await heard(nvda, 'Ctrl+End');
+  await nvda.type(' teh ');
+  await expect.poll(() => html(page)).toBe('<p>Start the&nbsp;</p>');
+  await page.waitForTimeout(1000);
+  const corrected = await heard(nvda, 'typing " teh "');
+  expect(corrected, 'what NVDA said after the correction').toContain('teh changed to the');
+  await nvda.press('Backspace');
+  await expect.poll(() => html(page)).toBe('<p>Start teh&nbsp;</p>');
+  await page.waitForTimeout(1000);
+  const reverted = await heard(nvda, 'Backspace');
+  expect(reverted, 'what NVDA said after Backspace').toContain('teh put back');
+});
+
 test('Ctrl+K opens the link dialog: "Insert link"', async ({ page, nvda }) => {
   await openEditor(page, nvda, '<p>text</p>');
   await nvda.press('Control+k');
