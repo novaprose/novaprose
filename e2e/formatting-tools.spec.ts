@@ -15,8 +15,8 @@ declare global {
 const html = (page: Page) => page.evaluate(() => window.editor.getHTML());
 const content = (page: Page) => page.locator('.nova-prosemirror');
 
-async function open(page: Page, initial: string) {
-  await page.goto('/?lang=en&tools=1');
+async function open(page: Page, initial: string, query = '') {
+  await page.goto(`/?lang=en&tools=1${query}`);
   await page.evaluate(async (value) => {
     await window.editor.ready;
     window.editor.setContent(value, { addToHistory: false });
@@ -172,4 +172,13 @@ test('Markdown pasted as plain text becomes formatting; "Paste as text" undoes i
   );
   await page.getByRole('button', { name: 'Paste as text' }).click();
   await expect.poll(() => html(page)).toBe('<p>## Plan</p><p>- **first** step</p><p>- second</p>');
+});
+
+test('importcss: a class of the content CSS is a Styles item and styles the paragraph', async ({
+  page,
+}) => {
+  await open(page, '<p>text</p>', '&contentcss=1');
+  await clickControl(page, 'styles');
+  await page.locator('.nova-menu [role^="menuitem"]', { hasText: 'callout' }).click();
+  expect(await html(page)).toBe('<p class="callout">text</p>');
 });

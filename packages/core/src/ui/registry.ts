@@ -1,4 +1,5 @@
 import type { Editor } from '../editor';
+import type { StyleFormat } from '../formats';
 import type { AutocompleterSpec } from './autocompleter';
 import type { MenuEntry } from './menu';
 import { icons } from './icons';
@@ -121,6 +122,24 @@ export class Registry {
   }
 
   private readonly menuItems = new Map<string, MenuItemSpec>();
+
+  private styleFormats: { items: StyleFormat[]; replace: boolean } = { items: [], replace: false };
+
+  /**
+   * Items for the Styles menu from a plugin (importcss): after the menu's own items, or instead of
+   * them (`replace`).
+   */
+  addStyleFormats(items: StyleFormat[], { replace = false } = {}): void {
+    this.styleFormats = {
+      items: [...this.styleFormats.items, ...items],
+      replace: this.styleFormats.replace || replace,
+    };
+  }
+
+  /** What plugins added to the Styles menu. */
+  getStyleFormats(): { items: readonly StyleFormat[]; replace: boolean } {
+    return this.styleFormats;
+  }
 
   /** A menu bar item (like addMenuItem). */
   addMenuItem(name: string, spec: MenuItemSpec): void {

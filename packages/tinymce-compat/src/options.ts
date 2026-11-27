@@ -48,7 +48,6 @@ const BUILT_IN = new Set([
   'textpattern',
   'imagetools',
   'powerpaste',
-  'importcss',
 ]);
 
 /** Plugins with a different name in NovaProse. */
@@ -146,6 +145,12 @@ const IGNORED = new Set([
   'save_enablewhendirty',
   'save_onsavecallback',
   'save_oncancelcallback',
+  'importcss_append',
+  'importcss_file_filter',
+  'importcss_selector_filter',
+  'importcss_groups',
+  'importcss_exclusive',
+  'importcss_selector_converter',
 ]);
 
 const list = (value: unknown): string[] =>
@@ -495,6 +500,21 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     pluginOptions.permanentpen = { properties: { ...config.permanentpen_properties } };
   }
   if (config.visualchars_default_state === true) pluginOptions.visualchars = { default: true };
+  // importcss: the classes of content_css become Styles items (filters, groups and the converter
+  // as in TinyMCE; without importcss_append the menu keeps its own items too).
+  const importcss = Object.fromEntries(
+    (
+      [
+        ['append', config.importcss_append],
+        ['fileFilter', config.importcss_file_filter],
+        ['selectorFilter', config.importcss_selector_filter],
+        ['groups', config.importcss_groups],
+        ['exclusive', config.importcss_exclusive],
+        ['converter', config.importcss_selector_converter],
+      ] as const
+    ).filter(([, value]) => value !== undefined),
+  );
+  if (Object.keys(importcss).length) pluginOptions.importcss = importcss;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };

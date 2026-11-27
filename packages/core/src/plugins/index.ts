@@ -22,6 +22,7 @@ registerPlugin('permanentpen', () => import('./permanentpen'));
 registerPlugin('visualchars', () => import('./visualchars'));
 registerPlugin('save', () => import('./save'));
 registerPlugin('markdown', () => import('./markdown'));
+registerPlugin('importcss', () => import('./importcss'));
 registerPlugin('quickbars', () => import('./quickbars'));
 registerPlugin('charmap', () => import('./charmap'));
 registerPlugin('emoticons', () => import('./emoticons'));

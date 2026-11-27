@@ -331,10 +331,17 @@ export function registerBuiltins(editor: Editor): void {
   };
   const flatStyles = (items: StyleFormat[]): StyleFormat[] =>
     items.flatMap((item) => (item.items ? flatStyles(item.items) : [item]));
-  const styleFormats = () => {
+  const styleFormats = (): StyleFormat[] => {
     const custom = editor.options.styleFormats;
-    if (!custom) return defaultStyleFormats();
-    return editor.options.styleFormatsMerge ? [...defaultStyleFormats(), ...custom] : custom;
+    const own = !custom
+      ? defaultStyleFormats()
+      : editor.options.styleFormatsMerge
+        ? [...defaultStyleFormats(), ...custom]
+        : custom;
+    // Formats a plugin added (importcss): after these, or instead of them.
+    const added = registry.getStyleFormats();
+    if (!added.items.length) return own;
+    return added.replace ? [...added.items] : [...own, ...added.items];
   };
   registry.addMenuButton('styles', {
     tooltip: t('styles'),

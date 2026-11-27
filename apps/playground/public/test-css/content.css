@@ -8,3 +8,8 @@ body {
 h1 {
   color: rgb(0, 0, 128);
 }
+
+/* A class for the importcss plugin (e2e/formatting-tools.spec.ts): it becomes a Styles item. */
+p.callout {
+  border-left: 3px solid rgb(0, 0, 128);
+}

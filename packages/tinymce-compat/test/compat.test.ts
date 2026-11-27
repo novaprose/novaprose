@@ -527,6 +527,23 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/save|visualchars/);
   });
 
+  it('importcss: content_style classes in the Styles menu, importcss_selector_filter', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"><p>text</p></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'importcss',
+      toolbar: 'styles',
+      content_style: 'p.brand-lead { font-size: 20px } .other { color: red }',
+      importcss_selector_filter: '.brand-',
+    });
+    const { core } = editor!;
+    await vi.waitFor(() =>
+      expect(core.ui.registry.getStyleFormats().items.map((f) => f.title)).toEqual(['brand-lead']),
+    );
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/importcss/);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

@@ -25,6 +25,12 @@ All packages in this repository are versioned together. The format follows
   zero-width spaces as a dashed mark — without touching the text; screen readers read it as before
   (`pluginOptions.visualchars.default`, for TinyMCE `visualchars_default_state` and
   `mceVisualChars`). Only changed paragraphs are scanned again, so long documents stay fast.
+- `importcss` plugin: the classes of your content CSS (`contentCss` files and `contentStyle`) become
+  Styles items — `p.lead` styles a paragraph, `h2.fancy` a heading, `.badge` or `span.badge` text,
+  `img.round` an image; other selectors are left out. `pluginOptions.importcss`: `selectorFilter`,
+  `fileFilter`, `groups` (submenus), `exclusive`, `converter`, and `append: false` to keep only the
+  imported items. The `importcss_*` options of `tinymce.init` work. Plugins can add Styles items
+  themselves with `editor.ui.registry.addStyleFormats(items, { replace })`.
 - `markdown` plugin: Markdown pasted as plain text — from a text editor, a terminal, a chat, VS Code
   — becomes formatting (headings, lists and checklists, quotes, code, tables, links, bold, italic,
   strikethrough), and a notification offers **Paste as text** to undo it. Only text that looks like
