@@ -792,6 +792,8 @@ const buildMarks = (allow: ClassFilter) =>
     },
 
     code: {
+      // Code: typing rules (-- → —, ... → …) and autocorrect leave it as typed.
+      code: true,
       parseDOM: [{ tag: 'code' }],
       toDOM: (): DOMOutputSpec => ['code', 0],
     },
