@@ -1,0 +1,22 @@
+---
+/** The strip above the plans: what the free package already has, so nobody looks for add-ons. */
+import Icon from './Icon.astro';
+import { t } from '../../i18n/site';
+
+const { included } = t.pricing;
+---
+
+<div class="np-plan-included">
+  <p class="np-plan-included-label" id="plan-included-label">{included.label}</p>
+  <ul class="np-plan-included-list" aria-labelledby="plan-included-label">
+    {
+      included.items.map((item) => (
+        <li>
+          <Icon name="check" size={16} />
+          <span>{item}</span>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="np-plan-included-note">{included.note}</p>
+</div>

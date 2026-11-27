@@ -38,6 +38,7 @@ export default defineConfig({
       'packages/*/test/**/*.test.ts',
       'packages/*/test/**/*.test.tsx',
       'apps/sync-server/test/**/*.test.ts',
+      'apps/site/test/**/*.test.ts',
     ],
   },
 });

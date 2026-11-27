@@ -1,38 +1,68 @@
 ---
-/** Three plans: Open Source (free), Cloud (early access), Enterprise (on request). */
+/**
+ * The plans as two roads: run NovaProse yourself (free, available now) or let us run the server side
+ * (Cloud, planned), and Enterprise support under them. Subgrid lines up the rows of the two cards.
+ * `heading`: a hidden h2 above the cards, for pages where no section heading names them.
+ */
 import Icon from './Icon.astro';
 import { t } from '../../i18n/site';
+
+interface Props {
+  heading?: boolean;
+}
+const { heading = false } = Astro.props;
+const { self, cloud, enterprise } = t.pricing.plans;
+const roads = [
+  { plan: self, featured: true },
+  { plan: cloud, featured: false },
+];
 ---
 
 <div class="np-plans">
+{heading && <h2 class="np-sr-only">{t.pricing.plans.title}</h2>}
+<div class="np-roads">
   {
-    t.pricing.plans.map((plan) => (
-      <article
-        class:list={['np-plan', { 'is-featured': plan.id === 'cloud' }]}
-        aria-labelledby={`plan-${plan.id}`}
-      >
+    roads.map(({ plan, featured }) => (
+      <article class:list={['np-plan', { 'is-featured': featured }]} aria-labelledby={`plan-${plan.id}`}>
+        <p class="np-plan-where">{plan.where}</p>
         <h3 class="np-plan-name" id={`plan-${plan.id}`}>
           {plan.name}
+          {plan.badge ? <span class="np-plan-badge">{plan.badge}</span> : null}
         </h3>
-        <p class="np-plan-price">{plan.price}</p>
-        <p class="np-plan-period">{plan.period}</p>
+        <p class="np-plan-price">
+          <span class="np-plan-amount">{plan.price}</span>
+          <span class="np-plan-period">{plan.period}</span>
+        </p>
         <p class="np-plan-text">{plan.text}</p>
-        {'badge' in plan && plan.badge ? <p class="np-plan-badge">{plan.badge}</p> : null}
-        <ul>
-          {plan.features.map((feature) => (
+        <a class:list={['np-btn', featured ? 'np-btn-primary' : 'np-btn-ghost']} href={plan.href}>
+          {plan.cta}
+        </a>
+        <div class="np-plan-box">
+          <p class="np-plan-box-title">{plan.boxTitle}</p>
+          <ul class="np-plan-box-list">
+            {plan.box.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
+        <ul class="np-plan-list">
+          {plan.list.map((item) => (
             <li>
               <Icon name="check" size={18} />
-              <span>{feature}</span>
+              <span>{item}</span>
             </li>
           ))}
         </ul>
-        <a
-          class:list={['np-btn', plan.id === 'cloud' ? 'np-btn-primary' : 'np-btn-ghost']}
-          href={plan.href}
-        >
-          {plan.cta}
-        </a>
       </article>
     ))
   }
+</div>
+
+<div class="np-plan-band" role="group" aria-labelledby="plan-enterprise">
+  <div class="np-plan-band-copy">
+    <h3 class="np-plan-name" id="plan-enterprise">{enterprise.name}</h3>
+    <p>{enterprise.text}</p>
+  </div>
+  <a class="np-btn np-plan-btn-inverse" href={enterprise.href}>{enterprise.cta}</a>
+</div>
 </div>

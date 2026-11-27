@@ -1,17 +1,19 @@
 ---
 /**
- * The background of the product pages: a light purple dot grid with a slow swell of brightness
- * that makes room around the mouse pointer; a tap or click on empty space sends a ripple through
- * it. Decorative only. Dots fade out behind blocks of text so they never read as punctuation.
- * Draws a single still frame when the visitor prefers reduced motion, pauses while the tab is
- * hidden and redraws at a low rate while nobody interacts with it.
+ * The background of the product pages: a dot grid that makes room around the mouse pointer; a tap or
+ * click on empty space sends a ripple through it. In the light theme the dots are light purple with a
+ * slow swell of brightness. In the dark theme they become a starry sky: stars of different brightness
+ * twinkle at their own pace, the brightest have a soft glow, and a few shine as four-pointed sparkles
+ * like the one in the logo. Decorative only. Dots fade out behind blocks of text so they never read as
+ * punctuation. Draws a single still frame when the visitor prefers reduced motion, pauses while the tab
+ * is hidden and redraws at a low rate while nobody interacts with it.
  */
 ---
 
 <canvas class="np-dots" aria-hidden="true"></canvas>
 
 <script>
-  type Rgba = [number, number, number, number];
+  import { parseColor, type Rgba } from './dot-color';
 
   const TAU = Math.PI * 2;
   const RADIUS = 1.1; // dot radius at rest, CSS px
@@ -23,7 +25,11 @@
   const RIPPLE_WIDTH = 42;
   const SWELL_SPEED = 0.0007; // radians per ms: one swell crosses a point every ~9 s
   const LEVELS = 8; // brightness steps (one fill call per step)
-  const IDLE_FRAME = 1000 / 24; // the swell alone needs no more than 24 frames per second
+  const IDLE_FRAME = 1000 / 24; // the swell and the twinkling need no more than 24 frames per second
+  // The starry sky (dark theme).
+  const GLOWING = 0.035; // share of stars with a glow
+  const SPARKLING = 0.004; // share of stars drawn as four-pointed sparkles
+  const TWINKLING = 0.6; // share of stars that twinkle noticeably
   // The header and text blocks on the bare background: dots behind them almost disappear.
   const TEXT_BLOCKS =
     '.np-header, .np-hero-copy, .np-section-head, .np-split-copy, .np-after-note, .np-demo-label, .np-demo-output, .np-prose';
@@ -32,21 +38,30 @@
   // Pressing these shouldn't make waves.
   const QUIET = 'a, button, input, select, textarea, summary, label, .nova-editor, .np-code';
 
-  /** Reads `rgb(124 92 196 / 30%)` or `rgba(124, 92, 196, 0.3)`. */
-  function parseColor(value: string, fallback: Rgba): Rgba {
-    const parts = value.match(/[\d.]+%?/g);
-    if (!parts || parts.length < 3) return fallback;
-    const alpha = parts[3];
-    return [
-      Number.parseFloat(parts[0]!),
-      Number.parseFloat(parts[1]!),
-      Number.parseFloat(parts[2]!),
-      alpha === undefined
-        ? 1
-        : alpha.endsWith('%')
-          ? Number.parseFloat(alpha) / 100
-          : Number.parseFloat(alpha),
-    ];
+  /** A stable pseudo-random number in [0, 1) for a grid cell: a star keeps its looks from frame to frame. */
+  function noise(col: number, row: number, salt: number): number {
+    let h = Math.imul(col + 7919 * salt, 374761393) ^ Math.imul(row + 104729 * salt, 668265263);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  }
+
+  /** A soft round glow, drawn once and stamped around bright stars. */
+  function glowSprite([r, g, b]: Rgba): HTMLCanvasElement {
+    const size = 64;
+    const sprite = document.createElement('canvas');
+    sprite.width = size;
+    sprite.height = size;
+    const ctx = sprite.getContext('2d');
+    if (ctx) {
+      const gradient = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      gradient.addColorStop(0, `rgb(${r} ${g} ${b} / 0.6)`);
+      gradient.addColorStop(0.22, `rgb(${r} ${g} ${b} / 0.24)`);
+      gradient.addColorStop(1, `rgb(${r} ${g} ${b} / 0)`);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, size, size);
+    }
+    return sprite;
   }
 
   function start(canvas: HTMLCanvasElement) {
@@ -61,8 +76,20 @@
     let ratio = 1;
     let xs = new Float32Array(0);
     let ys = new Float32Array(0);
+    // Per star (used in the dark theme): an offset from the grid, brightness, twinkle phase, speed and
+    // depth, and its kind: 0 a plain star, 1 a star with a glow, 2 a sparkle.
+    let jx = new Float32Array(0);
+    let jy = new Float32Array(0);
+    let mags = new Float32Array(0);
+    let phases = new Float32Array(0);
+    let speeds = new Float32Array(0);
+    let depths = new Float32Array(0);
+    let kinds = new Uint8Array(0);
     let base: Rgba = [124, 92, 196, 0.26];
     let active: Rgba = [106, 71, 168, 0.9];
+    let sparkleColor: Rgba = [214, 219, 255, 1];
+    let stars = false;
+    let glow = glowSprite(active);
 
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0, strength: 0, target: 0 };
     const ripples: { x: number; y: number; born: number }[] = [];
@@ -76,6 +103,9 @@
       const style = getComputedStyle(document.documentElement);
       base = parseColor(style.getPropertyValue('--np-dot'), base);
       active = parseColor(style.getPropertyValue('--np-dot-active'), active);
+      sparkleColor = parseColor(style.getPropertyValue('--np-dot-sparkle'), sparkleColor);
+      stars = style.getPropertyValue('--np-dot-stars').trim() === '1';
+      glow = glowSprite(active);
     }
 
     /** Sizes the canvas to its CSS box; false when nothing changed. */
@@ -94,14 +124,32 @@
       const rowStep = step * 0.866;
       const cols = Math.ceil(width / step) + 2;
       const rows = Math.ceil(height / rowStep) + 2;
-      xs = new Float32Array(cols * rows);
-      ys = new Float32Array(cols * rows);
+      const count = cols * rows;
+      xs = new Float32Array(count);
+      ys = new Float32Array(count);
+      jx = new Float32Array(count);
+      jy = new Float32Array(count);
+      mags = new Float32Array(count);
+      phases = new Float32Array(count);
+      speeds = new Float32Array(count);
+      depths = new Float32Array(count);
+      kinds = new Uint8Array(count);
       let index = 0;
       for (let row = 0; row < rows; row++) {
         const shift = row % 2 ? step / 2 : 0;
         for (let col = 0; col < cols; col++) {
           xs[index] = col * step + shift - step / 2;
           ys[index] = row * rowStep - rowStep / 2;
+          // Stars sit off the grid, most are faint and a few are bright: the way a night sky looks.
+          jx[index] = (noise(col, row, 7) - 0.5) * step * 0.8;
+          jy[index] = (noise(col, row, 8) - 0.5) * rowStep * 0.8;
+          const rank = noise(col, row, 1);
+          const kind = rank > 1 - SPARKLING ? 2 : rank > 1 - SPARKLING - GLOWING ? 1 : 0;
+          kinds[index] = kind;
+          mags[index] = kind ? 1 : 0.28 + 0.72 * noise(col, row, 2) ** 1.8;
+          phases[index] = noise(col, row, 3) * TAU;
+          speeds[index] = 0.0007 + 0.0018 * noise(col, row, 4);
+          depths[index] = kind ? 0.5 : noise(col, row, 5) < TWINKLING ? 0.3 + 0.35 * noise(col, row, 6) : 0.08;
           index++;
         }
       }
@@ -134,6 +182,23 @@
       return fade;
     }
 
+    /** A four-pointed sparkle: two thin diamonds crossing at the star. */
+    function sparkle(x: number, y: number, arm: number) {
+      const waist = arm * 0.22;
+      ctx.beginPath();
+      ctx.moveTo(x, y - arm);
+      ctx.lineTo(x + waist, y);
+      ctx.lineTo(x, y + arm);
+      ctx.lineTo(x - waist, y);
+      ctx.closePath();
+      ctx.moveTo(x - arm, y);
+      ctx.lineTo(x, y + waist);
+      ctx.lineTo(x + arm, y);
+      ctx.lineTo(x, y - waist);
+      ctx.closePath();
+      ctx.fill();
+    }
+
     function draw(time: number) {
       const still = reduced.matches;
       const phase = still ? 0 : time * SWELL_SPEED;
@@ -143,10 +208,12 @@
       const boxes = visibleBlocks();
       const levels = Array.from({ length: LEVELS }, () => new Path2D());
       const lifted: number[] = [];
+      // Bright stars and sparkles of the starry sky: x, y, brightness, kind.
+      const shining: number[] = [];
 
       for (let i = 0; i < xs.length; i++) {
-        const x = xs[i]!;
-        const y = ys[i]!;
+        const x = stars ? xs[i]! + jx[i]! : xs[i]!;
+        const y = stars ? ys[i]! + jy[i]! : ys[i]!;
         const fade = boxes.length ? textFade(x, y, boxes) : 1;
         let lift = 0;
         let pushX = 0;
@@ -178,11 +245,25 @@
         }
         // Over text the pointer still shows, only quieter.
         lift *= 0.35 + 0.65 * fade;
+        // The swell: a soft diagonal band of brightness that drifts across the screen.
+        const swell = 0.5 + 0.5 * Math.sin(x * 0.0105 + y * 0.0065 - phase);
         if (lift > 0.03) {
           lifted.push(x + pushX, y + pushY, lift, fade);
+        } else if (stars) {
+          // Each star twinkles at its own pace; the swell only breathes underneath.
+          const twinkle = still
+            ? 1 - depths[i]! / 2
+            : 1 - depths[i]! * (0.5 + 0.5 * Math.sin(time * speeds[i]! + phases[i]!));
+          const brightness = mags[i]! * twinkle * (0.78 + 0.22 * swell) * fade;
+          if (kinds[i]) {
+            shining.push(x, y, brightness, kinds[i]!);
+          } else {
+            const radius = 0.7 + 0.6 * mags[i]!;
+            const path = levels[Math.min(LEVELS - 1, Math.floor(brightness * LEVELS))]!;
+            path.moveTo(x + radius, y);
+            path.arc(x, y, radius, 0, TAU);
+          }
         } else {
-          // The swell: a soft diagonal band of brightness that drifts across the screen.
-          const swell = 0.5 + 0.5 * Math.sin(x * 0.0105 + y * 0.0065 - phase);
           const brightness = (0.35 + 0.65 * swell) * fade;
           const path = levels[Math.min(LEVELS - 1, Math.floor(brightness * LEVELS))]!;
           path.moveTo(x + RADIUS, y);
@@ -197,14 +278,43 @@
         ctx.globalAlpha = (base[3] * (level + 0.5)) / LEVELS;
         ctx.fill(levels[level]!);
       }
+      // Bright stars: a glow and a white core; sparkles also get their four points.
+      for (let i = 0; i < shining.length; i += 4) {
+        const x = shining[i]!;
+        const y = shining[i + 1]!;
+        const brightness = shining[i + 2]!;
+        const isSparkle = shining[i + 3] === 2;
+        const size = isSparkle ? 20 : 13;
+        ctx.globalAlpha = brightness * (isSparkle ? 0.9 : 0.75);
+        ctx.drawImage(glow, x - size / 2, y - size / 2, size, size);
+        if (isSparkle) {
+          ctx.fillStyle = `rgb(${sparkleColor[0]} ${sparkleColor[1]} ${sparkleColor[2]})`;
+          ctx.globalAlpha = Math.min(1, brightness * 1.1);
+          sparkle(x, y, 2.6 + 2.4 * brightness);
+        }
+        ctx.fillStyle = `rgb(${active[0]} ${active[1]} ${active[2]})`;
+        ctx.globalAlpha = Math.min(1, brightness);
+        ctx.beginPath();
+        ctx.arc(x, y, isSparkle ? 1.1 : 1.35, 0, TAU);
+        ctx.fill();
+      }
       ctx.globalAlpha = 1;
       for (let i = 0; i < lifted.length; i += 4) {
+        const x = lifted[i]!;
+        const y = lifted[i + 1]!;
         const k = lifted[i + 2]!;
         const mix = (from: number, to: number) => from + (to - from) * k;
         const alpha = mix(base[3], active[3]) * (0.35 + 0.65 * lifted[i + 3]!);
+        if (stars && k > 0.2) {
+          // Next to the pointer the stars flare up.
+          const size = 6 + 16 * k;
+          ctx.globalAlpha = alpha * k;
+          ctx.drawImage(glow, x - size / 2, y - size / 2, size, size);
+          ctx.globalAlpha = 1;
+        }
         ctx.fillStyle = `rgb(${mix(base[0], active[0])} ${mix(base[1], active[1])} ${mix(base[2], active[2])} / ${alpha})`;
         ctx.beginPath();
-        ctx.arc(lifted[i]!, lifted[i + 1]!, RADIUS + GROW * k, 0, TAU);
+        ctx.arc(x, y, RADIUS + GROW * k, 0, TAU);
         ctx.fill();
       }
       lastDraw = time;
@@ -301,7 +411,7 @@
       }
     });
 
-    // The theme switch changes the dot colors; late web fonts move the text blocks.
+    // The theme switch changes the dot colors and the light or starry look; late web fonts move the text blocks.
     new MutationObserver(() => {
       readColors();
       drawSoon();

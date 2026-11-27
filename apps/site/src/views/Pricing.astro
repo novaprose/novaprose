@@ -1,6 +1,8 @@
 ---
 import Marketing from '../layouts/Marketing.astro';
 import Plans from '../components/site/Plans.astro';
+import PlansCompare from '../components/site/PlansCompare.astro';
+import PlansIncluded from '../components/site/PlansIncluded.astro';
 import Faq from '../components/site/Faq.astro';
 import { t } from '../i18n/site';
 ---
@@ -16,8 +18,10 @@ import { t } from '../i18n/site';
   </section>
 
   <section class="np-section np-section-tight">
-    <div class="np-container">
-      <Plans />
+    <div class="np-container np-pricing-stack">
+      <PlansIncluded />
+      <Plans heading />
+      <PlansCompare />
     </div>
   </section>
 

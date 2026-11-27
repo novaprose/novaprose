@@ -36,9 +36,20 @@
   --np-danger: #b42318;
   --np-danger-bg: #fef1f0;
 
-  --np-dot: rgb(124 92 196 / 30%);
-  --np-dot-active: rgb(106 71 168 / 90%);
+  /* Deep indigo dots on the light background; brand purple where the pointer is. */
+  --np-dot: rgb(24 15 70 / 100%);
+  --np-dot-active: rgb(91 62 164 / 100%);
+  /* 1 turns the dot field into a starry sky (DotField.astro): the dark theme. */
+  --np-dot-stars: 0;
+  --np-dot-sparkle: rgb(140 147 224 / 100%);
   --np-glow: rgb(160 130 236 / 22%);
+  /* The dark Enterprise band on the pricing: light text on deep purple in both themes. */
+  --np-ink: #2b2158;
+  --np-ink-2: #19142f;
+  --np-ink-border: transparent;
+  --np-on-ink: #f6f3ff;
+  --np-on-ink-2: #d6cff2;
+  --np-plan-highlight: color-mix(in srgb, var(--np-brand-soft) 70%, transparent);
 
   --np-shadow-sm: 0 1px 2px rgb(30 34 48 / 6%), 0 1px 1px rgb(91 62 164 / 4%);
   --np-shadow-md: 0 16px 40px -18px rgb(66 42 130 / 30%), 0 2px 6px rgb(30 34 48 / 6%);
@@ -82,9 +93,15 @@
   --np-danger: #ff8a80;
   --np-danger-bg: #3a1b1d;
 
-  --np-dot: rgb(170 145 245 / 42%);
-  --np-dot-active: rgb(198 180 250 / 95%);
+  --np-dot: rgb(226 219 255 / 78%);
+  --np-dot-active: rgb(253 252 255 / 100%);
+  --np-dot-stars: 1;
+  --np-dot-sparkle: rgb(214 219 255 / 100%);
   --np-glow: rgb(111 79 208 / 22%);
+  --np-ink: #2c2256;
+  --np-ink-2: #1c1736;
+  --np-ink-border: #3d3560;
+  --np-plan-highlight: color-mix(in srgb, var(--np-brand-soft) 80%, transparent);
 
   --np-shadow-sm: 0 1px 2px rgb(0 0 0 / 40%);
   --np-shadow-md: 0 16px 40px -18px rgb(0 0 0 / 70%), 0 2px 6px rgb(0 0 0 / 35%);
@@ -1091,102 +1108,393 @@ body.np-site::before {
 
 /* ======================= pricing ======================= */
 
+.np-pricing-stack {
+  display: grid;
+  gap: clamp(28px, 4vw, 44px);
+}
+
 .np-plans {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
   gap: 18px;
 }
 
-@media (max-width: 960px) {
-  .np-plans {
-    grid-template-columns: minmax(0, 1fr);
-    max-width: 520px;
-    margin-inline: auto;
-  }
-}
+/* What the free package has. */
 
-.np-plan {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 28px;
+.np-plan-included {
+  display: grid;
+  gap: 14px;
+  padding: 20px 22px;
   border: 1px solid var(--np-border);
   border-radius: var(--np-r-lg);
   background: var(--np-surface);
   box-shadow: var(--np-shadow-sm);
 }
 
-.np-plan.is-featured {
-  border-color: transparent;
-  background:
-    linear-gradient(var(--np-surface), var(--np-surface)) padding-box,
-    linear-gradient(135deg, var(--np-brand), var(--np-sparkle)) border-box;
-  border-width: 2px;
-  box-shadow: var(--np-shadow-md);
-}
-
-.np-plan-name {
+.np-plan-included-label {
   margin: 0;
   color: var(--np-text);
-  font-size: 1.0625rem;
+  font-size: 0.9375rem;
   font-weight: 700;
 }
 
-.np-plan-price {
+.np-plan-included-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
   margin: 0;
-  color: var(--np-text);
-  font-size: 2rem;
-  font-weight: 760;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-.np-plan-period,
-.np-plan-text {
-  margin: 0;
-  color: var(--np-muted);
-  font-size: 0.9375rem;
-}
-
-.np-plan-badge {
-  align-self: flex-start;
-  margin: 4px 0 0;
-  padding: 4px 10px;
-  border-radius: var(--np-r-pill);
-  background: var(--np-brand-soft);
-  color: var(--np-brand-text);
-  font-size: 0.8125rem;
-  font-weight: 650;
-}
-
-.np-plan ul {
-  display: grid;
-  flex: 1;
-  align-content: start;
-  gap: 10px;
-  margin: 12px 0 18px;
   padding: 0;
   list-style: none;
 }
 
-.np-plan li {
+.np-plan-included-list li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 10px;
+  border-radius: var(--np-r-pill);
+  background: var(--np-brand-soft);
+  color: var(--np-text);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.np-plan-included-list svg {
+  flex: none;
+  color: var(--np-brand-text);
+}
+
+.np-plan-included-note {
+  margin: 0;
+  color: var(--np-muted);
+  font-size: 0.875rem;
+}
+
+/* Two roads: seven rows per card, owned by the parent grid, so names, prices and buttons line up. */
+
+.np-roads {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 18px;
+}
+
+@media (max-width: 800px) {
+  .np-roads {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.np-plan {
+  display: grid;
+  grid-row: span 7;
+  grid-template-rows: subgrid;
+  row-gap: 12px;
+  padding: 30px 30px 32px;
+  border: 1px solid var(--np-border);
+  border-radius: var(--np-r-lg);
+  background: var(--np-surface);
+  box-shadow: var(--np-shadow-sm);
+  color: var(--np-text);
+}
+
+.np-plan > * {
+  margin: 0;
+}
+
+.np-plan.is-featured {
+  padding: 29px 29px 31px;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--np-surface), var(--np-surface)) padding-box,
+    linear-gradient(135deg, var(--np-brand), var(--np-sparkle)) border-box;
+  box-shadow: var(--np-shadow-md);
+}
+
+@media (max-width: 480px) {
+  .np-plan {
+    padding: 24px 20px 26px;
+  }
+
+  .np-plan.is-featured {
+    padding: 23px 19px 25px;
+  }
+}
+
+.np-plan-where {
+  color: var(--np-brand-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.np-plan-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  margin: 0;
+  color: inherit;
+  font-size: 1.375rem;
+  font-weight: 740;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.np-plan-badge {
+  padding: 3px 10px;
+  border-radius: var(--np-r-pill);
+  background: var(--np-brand-soft);
+  color: var(--np-brand-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* The amount and its period on separate lines, the same in both cards. */
+.np-plan-price {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.np-plan-amount {
+  font-size: 2.5rem;
+  font-weight: 780;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.np-plan-period {
+  color: var(--np-muted);
+  font-size: 0.875rem;
+}
+
+.np-plan-text {
+  color: var(--np-text-2);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  text-wrap: pretty;
+}
+
+.np-plan .np-btn {
+  width: 100%;
+}
+
+.np-plan-box {
+  padding: 14px 16px;
+  border: 1px solid var(--np-border);
+  border-radius: var(--np-r);
+  background: var(--np-bg);
+}
+
+.np-plan-box-title {
+  margin: 0 0 8px;
+  color: var(--np-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.np-plan-box-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--np-text-2);
+  font-size: 0.9375rem;
+}
+
+.np-plan-list {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 0;
+  list-style: none;
+}
+
+.np-plan-list li {
   display: flex;
   gap: 10px;
   align-items: flex-start;
   color: var(--np-text-2);
   font-size: 0.9375rem;
+  line-height: 1.45;
 }
 
-.np-plan li svg {
+.np-plan-list svg {
   flex: none;
-  margin-top: 2px;
+  margin-top: 1px;
   color: var(--np-brand-text);
 }
 
-.np-plan .np-btn {
+/* Enterprise: a dark band under the two roads. */
+
+.np-plan-band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 28px;
+  padding: 26px 30px;
+  border: 1px solid var(--np-ink-border);
+  border-radius: var(--np-r-lg);
+  background: linear-gradient(160deg, var(--np-ink), var(--np-ink-2));
+  color: var(--np-on-ink);
+  box-shadow: var(--np-shadow-md);
+}
+
+.np-plan-band-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.np-plan-band-copy > * {
+  margin: 0;
+}
+
+.np-plan-band p {
+  max-width: 62ch;
+  color: var(--np-on-ink-2);
+}
+
+.np-plan-btn-inverse {
+  border-color: transparent;
+  background: var(--np-on-ink);
+  color: var(--np-ink) !important;
+}
+
+.np-plan-btn-inverse:hover {
+  background: var(--np-on-ink-2);
+}
+
+.np-plan-btn-inverse:focus-visible {
+  outline: 2px solid var(--np-on-ink);
+  outline-offset: 3px;
+}
+
+/* Who does what. */
+
+.np-compare {
+  display: grid;
+  gap: 14px;
+  scroll-margin-top: 88px;
+}
+
+.np-compare-title {
+  margin: 0;
+  color: var(--np-text);
+  font-size: 1.375rem;
+  font-weight: 740;
+  letter-spacing: -0.015em;
+}
+
+/* On narrow screens a fade at the right edge shows that the table continues sideways. */
+.np-compare-frame {
+  position: relative;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  .np-compare-frame::after {
+    content: '';
+    position: absolute;
+    top: 1px;
+    right: 1px;
+    bottom: 1px;
+    width: 32px;
+    border-radius: 0 var(--np-r-lg) var(--np-r-lg) 0;
+    background: linear-gradient(to right, transparent, var(--np-surface));
+    pointer-events: none;
+  }
+}
+
+.np-compare-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--np-border);
+  border-radius: var(--np-r-lg);
+  background: var(--np-surface);
+  box-shadow: var(--np-shadow-sm);
+}
+
+.np-compare-scroll:focus-visible {
+  outline: none;
+  box-shadow: var(--np-ring);
+}
+
+.np-compare table {
   width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.np-compare th,
+.np-compare td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--np-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.np-compare thead th {
+  color: var(--np-text);
+  font-weight: 700;
+}
+
+.np-compare tbody th[scope='row'] {
+  position: sticky;
+  left: 0;
+  width: 30%;
+  background: var(--np-surface);
+  color: var(--np-text-2);
+  font-weight: 550;
+}
+
+.np-compare td {
+  color: var(--np-text);
+}
+
+.np-compare td svg {
+  color: var(--np-brand-text);
+  vertical-align: -3px;
+}
+
+.np-compare-group th {
+  padding-top: 20px;
+  color: var(--np-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.np-compare .is-highlight {
+  background: var(--np-plan-highlight);
+}
+
+.np-compare tbody:last-child tr:last-child > * {
+  border-bottom: 0;
+}
+
+/* Phones: narrower columns, so the next plan's column peeks in at the right edge. */
+@media (max-width: 760px) {
+  .np-compare table {
+    min-width: 0;
+  }
+
+  .np-compare tbody th[scope='row'] {
+    width: 8rem;
+    min-width: 8rem;
+  }
+
+  .np-compare thead th,
+  .np-compare td {
+    min-width: 8.5rem;
+  }
 }
 
 /* ======================= FAQ (disclosure) ======================= */

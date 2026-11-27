@@ -130,57 +130,106 @@ export const t = {
     lead: 'The editor is free and open source. Cloud will run the server side for teams that would rather not.',
     pageTitle: 'Pricing',
     pageLead:
-      'The whole editor is free, forever. Cloud is in early access for teams that want collaboration hosted for them.',
-    plans: [
-      {
+      'NovaProse is open source. The whole editor is free, with no limits on users, documents or editor loads. You run it on your own servers.',
+    included: {
+      label: 'All of this is in the free package',
+      items: [
+        'Real-time collaboration',
+        'Comments and mentions',
+        'Suggested edits',
+        'Version history',
+        'Word import and export',
+        'Pages and printing',
+        'AI assistant with your model',
+        'Paste from Office',
+      ],
+      note: 'No add-ons, no per-user fees, no limit on editor loads.',
+    },
+    plans: {
+      title: 'Plans',
+      // The two roads: you run the server side, or (later) we do.
+      self: {
         id: 'oss',
+        where: 'You run it',
         name: 'Open Source',
-        price: 'Free',
+        badge: 'Available now',
+        price: '$0',
         period: 'forever',
-        text: 'The complete editor and every plugin, self-hosted.',
-        features: [
-          'All editing features and plugins',
-          'Collaboration, comments, history, suggested edits',
-          'Open-source sync server (Docker)',
-          'React, Vue, Angular, web component',
-          'MIT license: commercial use allowed',
-        ],
+        text: 'Install the editor from npm. For real-time collaboration, run the open-source sync server in Docker.',
         cta: 'Get started',
         href: '/getting-started/',
-      },
-      {
-        id: 'cloud',
-        name: 'Cloud',
-        price: 'Early access',
-        period: 'prices published before launch',
-        text: 'The server side, hosted for you.',
-        features: [
-          'Hosted real-time sync server',
-          'Document and version storage',
-          'Image and file uploads',
-          'PDF export as a service',
-          'Hosting in the EU',
+        boxTitle: 'What you need',
+        box: ['Nothing extra for the editor itself', 'A server with Docker for collaboration'],
+        list: [
+          'Unlimited documents and users',
+          'Your servers and your data',
+          'MIT license, commercial use allowed',
+          'Community support on GitHub',
         ],
+      },
+      cloud: {
+        id: 'cloud',
+        where: 'We run it',
+        name: 'Cloud',
+        badge: '',
+        price: 'Planned',
+        period: 'not available yet',
+        text: 'The same editor, with the server side hosted, scaled and backed up by us in the EU.',
         cta: 'Join the waitlist',
         href: '/cloud/#waitlist',
-        badge: 'Founding members get a discount',
-      },
-      {
-        id: 'enterprise',
-        name: 'Enterprise',
-        price: 'Custom',
-        period: 'contact us',
-        text: 'For organizations with specific requirements.',
-        features: [
-          'Support with response times',
-          'Help with on-premise installation',
-          'Custom features and integrations',
-          'Help with security reviews',
+        boxTitle: 'What we will run for you',
+        box: [
+          'The sync server, scaled and updated',
+          'Storage, backups and file uploads',
+          'PDF export',
         ],
+        list: ['Hosting in the EU', 'Email support', 'A discount for founding members'],
+      },
+      enterprise: {
+        name: 'Enterprise',
+        text: 'Support with response times, help installing on your servers, custom features and help with security reviews.',
         cta: 'Contact us',
         href: 'mailto:hello@novaprose.com?subject=NovaProse%20Enterprise',
       },
-    ],
+    },
+    compare: {
+      title: 'Who does what',
+      columns: ['Open Source', 'Cloud (planned)', 'Enterprise'],
+      highlight: 0,
+      groups: [
+        {
+          title: 'The editor',
+          rows: [['Every feature and plugin', true, true, true]],
+        },
+        {
+          title: 'The server side',
+          rows: [
+            [
+              'Collaboration server',
+              'You run it in Docker',
+              'We run it',
+              'You run it, with our help',
+            ],
+            [
+              'Documents and backups',
+              'On your servers',
+              'Stored by us in the EU',
+              'On your servers',
+            ],
+            ['Images and files', 'Your storage', 'Included', 'Your storage'],
+            ['Updates and monitoring', 'You', 'Us', 'You, with our help'],
+          ],
+        },
+        {
+          title: 'Help',
+          rows: [
+            ['Support', 'Community, on GitHub', 'Email', 'Response times by agreement'],
+            ['Available', 'Now', 'Planned', 'Now'],
+            ['Price', '$0', 'Published before launch', 'By agreement'],
+          ],
+        },
+      ],
+    },
     faqTitle: 'Questions',
     faqMore: 'Something not covered here? Write to',
     faq: [
@@ -189,8 +238,12 @@ export const t = {
         a: 'Yes. The editor, every plugin and the collaboration server are open source under the MIT license. Use them in commercial products without paying or asking.',
       },
       {
+        q: 'Can I use your sync server in my app?',
+        a: 'No. The server behind the live demo serves only the demo rooms on novaprose.com: they are public, nothing in them is saved, and the number of rooms and people is limited. Run your own sync server with Docker; the collaboration guide shows how.',
+      },
+      {
         q: 'Then why would I need Cloud?',
-        a: 'Collaboration needs a server. You can run ours with Docker; Cloud is for teams that would rather not operate, scale and back it up.',
+        a: 'Cloud isn’t available yet. When it opens, it is for teams that would rather not run, update and back up the sync server themselves. Until then, the open-source server runs anywhere Docker does.',
       },
       {
         q: 'How much will Cloud cost?',

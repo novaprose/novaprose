@@ -1,0 +1,58 @@
+---
+/** "Who does what": the plans side by side. On phones the table scrolls sideways inside its own box. */
+import Icon from './Icon.astro';
+import { t } from '../../i18n/site';
+
+const table = t.pricing.compare;
+const span = table.columns.length + 1;
+---
+
+<div class="np-compare" id="compare">
+  <h2 class="np-compare-title" id="compare-title">{table.title}</h2>
+  <div class="np-compare-frame">
+    <div class="np-compare-scroll" role="region" aria-labelledby="compare-title" tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            <td></td>
+            {
+              table.columns.map((column, i) => (
+                <th scope="col" class:list={{ 'is-highlight': i === table.highlight }}>
+                  {column}
+                </th>
+              ))
+            }
+          </tr>
+        </thead>
+        {
+          table.groups.map((group) => (
+            <tbody>
+              <tr class="np-compare-group">
+                <th scope="rowgroup" colspan={span}>
+                  {group.title}
+                </th>
+              </tr>
+              {group.rows.map(([label, ...cells]) => (
+                <tr>
+                  <th scope="row">{label}</th>
+                  {cells.map((cell, i) => (
+                    <td class:list={{ 'is-highlight': i === table.highlight }}>
+                      {cell === true ? (
+                        <>
+                          <Icon name="check" size={18} />
+                          <span class="np-sr-only">Included</span>
+                        </>
+                      ) : (
+                        cell
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          ))
+        }
+      </table>
+    </div>
+  </div>
+</div>
