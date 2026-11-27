@@ -122,6 +122,8 @@ All packages in this repository are versioned together. The format follows
 - **Fixed:** a click on a dialog's title or anything else in it that takes no focus (in Safari, a
   button or a radio too) dropped focus out of the dialog, and Escape and Tab stopped working; a
   click inside now keeps focus in the dialog.
+- **Fixed:** the icons of the text color, highlight and table buttons sat 2 px above the rest of the
+  toolbar; every icon is on one line now, the color bar just under the letter.
 - AI assistant (`plugins: ['suggestions', 'ai']`, buttons `aidialog` and `aishortcuts`, as in
   TinyMCE): select text and pick **Improve writing**, **Fix spelling and grammar**, **Make
   shorter**, **Make longer**, **Simplify**, a formal or friendly tone, **Summarize**, or type your

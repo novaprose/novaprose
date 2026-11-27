@@ -395,10 +395,11 @@
   padding: 0 2px 0 5px;
 }
 
+/* The color under the letter: the letter stays on the line of the other icons, the bar just below it. */
 .nova-color-bar {
   position: absolute;
   inset-inline-start: 8px;
-  bottom: 4px;
+  bottom: 5px;
   width: 18px;
   height: 3px;
   border-radius: 2px;
@@ -407,10 +408,6 @@
 
 .nova-color-bar.is-empty {
   background: var(--nova-fg);
-}
-
-.nova-tb-panel .nova-icon:first-child svg {
-  transform: translateY(-2px);
 }
 
 /* ======================= editing area ======================= */
