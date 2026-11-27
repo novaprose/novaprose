@@ -210,12 +210,12 @@ describe('suggesting mode', () => {
     expect(editor.getHTML()).not.toContain('title');
   });
 
-  it('the text of a new paragraph rejected: no empty line is left (Enter directly, the text as a suggestion)', () => {
+  it('the text of a new paragraph rejected: no empty line is left (the break and the text are suggestions)', () => {
     const editor = mount('<p>One</p><p>Two</p>');
     cursor(editor, 4);
     editor.view.dispatch(editor.view.state.tr.split(4));
     type(editor, 'New');
-    expect(html(editor)).toBe('<p>One</p><p><ins>New</ins></p><p>Two</p>');
+    expect(html(editor)).toBe('<p>One</p><p data-change="split"><ins>New</ins></p><p>Two</p>');
     editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject'));
     expect(editor.getHTML()).toBe('<p>One</p><p>Two</p>');
   });

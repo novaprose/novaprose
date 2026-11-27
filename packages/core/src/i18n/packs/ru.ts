@@ -542,6 +542,8 @@ const ru: LanguagePack = {
   'suggestions.nonText': 'не текст (картинка или другое содержимое)',
   'suggestions.formatted': 'Форматирование: {name}',
   'suggestions.kindFormat': 'Отформатировано',
+  'suggestions.kindSplit': 'Новый абзац',
+  'suggestions.kindJoin': 'Абзацы объединены',
   'visualblocks.title': 'Показать блоки',
 };
 

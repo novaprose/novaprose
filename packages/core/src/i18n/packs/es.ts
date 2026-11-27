@@ -541,6 +541,8 @@ const es: LanguagePack = {
   'suggestions.nonText': 'no es texto (una imagen u otro contenido)',
   'suggestions.formatted': 'Formato cambiado por {name}',
   'suggestions.kindFormat': 'Formato cambiado',
+  'suggestions.kindSplit': 'Nuevo párrafo',
+  'suggestions.kindJoin': 'Párrafos unidos',
   'visualblocks.title': 'Mostrar bloques',
 };
 

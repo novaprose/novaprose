@@ -39,6 +39,8 @@ export const LABELS = {
     kindDelete: 'Deleted',
     kindReplace: 'Replaced',
     kindFormat: 'Formatted',
+    kindSplit: 'New paragraph',
+    kindJoin: 'Paragraphs joined',
     acceptShown: 'Accept shown',
     rejectShown: 'Reject shown',
     acceptSelection: 'Accept suggestions in selection',

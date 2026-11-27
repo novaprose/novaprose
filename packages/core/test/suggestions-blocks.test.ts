@@ -135,7 +135,7 @@ describe('block suggestions', () => {
       { id: 's1', before: { type: 'paragraph', attrs: { onclick: 'x', style: { a: 1 } } } },
     ]) {
       const clean = blockSuggestion(value);
-      if (clean) expect(Object.keys(clean.before.attrs)).not.toContain('style');
+      if (clean?.before) expect(Object.keys(clean.before.attrs)).not.toContain('style');
     }
     const e = await mount('<p></p>');
     e.setContent({
@@ -171,5 +171,99 @@ describe('block suggestions', () => {
     decide(e, 'reject');
     // A paragraph's attributes only (a class token is checked on output like any other); no handler.
     expect(e.getHTML()).toBe('<p class="x" style="text-align: center;">T</p>');
+  });
+});
+
+describe('paragraph breaks as suggestions', () => {
+  const press = (e: Editor, key: string) =>
+    e.view.dom.dispatchEvent(
+      new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }),
+    );
+  const at = (e: Editor, pos: number) =>
+    e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, pos)));
+  const kinds = (e: Editor) => listSuggestions(e.view.state.doc).map((s) => s.kind);
+
+  it('Enter makes a suggested paragraph break: reject joins the blocks, accept keeps them', async () => {
+    const rejected = await mount('<p>abcd</p>');
+    at(rejected, 3);
+    press(rejected, 'Enter');
+    expect(html(rejected)).toBe(
+      '<p>ab</p><p data-suggestion data-change="split" data-author="ann" data-name="Ann">cd</p>',
+    );
+    expect(kinds(rejected)).toEqual(['split']);
+    // The new block is marked (a pilcrow in the author's color in its margin).
+    expect(rejected.view.dom.querySelectorAll('p')[1]!.className).toContain('nova-sugg-split');
+    decide(rejected, 'reject');
+    expect(rejected.getHTML()).toBe('<p>abcd</p>');
+    const accepted = await mount('<p>abcd</p>');
+    at(accepted, 3);
+    press(accepted, 'Enter');
+    decide(accepted, 'accept');
+    expect(accepted.getHTML()).toBe('<p>ab</p><p>cd</p>');
+  });
+
+  it('Backspace at a block start marks the break deleted; accept joins, reject keeps both', async () => {
+    const e = await mount('<p>ab</p><p>cd</p>');
+    at(e, 5);
+    press(e, 'Backspace');
+    expect(html(e)).toBe(
+      '<p>ab</p><p data-suggestion data-change="join" data-author="ann" data-name="Ann">cd</p>',
+    );
+    expect(kinds(e)).toEqual(['join']);
+    // The cursor goes to the end of the block before, as a join would put it.
+    expect(e.view.state.selection.from).toBe(3);
+    expect(e.view.dom.querySelectorAll('p')[1]!.className).toContain('nova-sugg-join');
+    decide(e, 'accept');
+    expect(e.getHTML()).toBe('<p>abcd</p>');
+    const kept = await mount('<p>ab</p><p>cd</p>');
+    at(kept, 3);
+    press(kept, 'Delete');
+    expect(kinds(kept)).toEqual(['join']);
+    decide(kept, 'reject');
+    expect(kept.getHTML()).toBe('<p>ab</p><p>cd</p>');
+  });
+
+  it('your own new paragraph is deleted for real; typing in it, then reject all, leaves no trace', async () => {
+    const e = await mount('<p>ab</p>');
+    at(e, 3);
+    press(e, 'Enter');
+    press(e, 'Backspace');
+    expect(e.getHTML()).toBe('<p>ab</p>');
+    expect(kinds(e)).toEqual([]);
+    press(e, 'Enter');
+    e.view.dispatch(e.view.state.tr.insertText('new'));
+    expect(kinds(e)).toEqual(['split', 'insert']);
+    decide(e, 'reject');
+    expect(e.getHTML()).toBe('<p>ab</p>');
+  });
+
+  it('Backspace in an empty paragraph someone else wrote marks it to go', async () => {
+    const e = await mount('<p>ab</p><p></p><p>cd</p>');
+    at(e, 5);
+    press(e, 'Backspace');
+    expect(kinds(e)).toEqual(['join']);
+    expect(html(e)).toBe(
+      '<p>ab</p><p data-suggestion data-change="join" data-author="ann" data-name="Ann"></p><p>cd</p>',
+    );
+    decide(e, 'accept');
+    expect(e.getHTML()).toBe('<p>ab</p><p>cd</p>');
+  });
+
+  it('a new list item is a suggested break two levels deep', async () => {
+    const e = await mount('<ul><li><p>one</p></li></ul>');
+    at(e, 6);
+    press(e, 'Enter');
+    expect(kinds(e)).toEqual(['split']);
+    expect(listSuggestions(e.view.state.doc)[0]!.depth).toBe(2);
+    expect(e.getHTML()).toContain('data-depth="2"');
+    decide(e, 'reject');
+    expect(e.getHTML()).toBe('<ul><li><p>one</p></li></ul>');
+  });
+
+  it('a break suggestion in HTML loads and comes back the same', async () => {
+    const saved =
+      '<p>ab</p><p data-suggestion="s9" data-change="split" data-author="bob" data-name="Bob" data-time="1700000000000">cd</p>';
+    const e = await mount(saved);
+    expect(e.getHTML()).toBe(saved);
   });
 });

@@ -8,6 +8,13 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Suggested paragraph breaks: in suggesting mode, Enter makes a new paragraph (or list item) as a
+  suggestion, with a pilcrow in the author's color in its margin, and Backspace or Delete across a
+  break marks it deleted instead of joining the paragraphs. Rejecting a new break joins the
+  paragraphs again, accepting a deleted one joins them; your own new paragraph is deleted for real.
+  Cards: “New paragraph”, “Paragraphs joined”. In HTML: `data-change="split"` or `"join"` on the
+  block. **Fixed:** in suggesting mode, Backspace at the start of a paragraph and in an empty
+  paragraph did nothing.
 - Suggested block changes: in suggesting mode, a heading instead of a paragraph (or the other
   way round), a code block, alignment, indent, line height and direction are suggestions like
   text edits. The change shows at once with a bar in the author's color, the card in the

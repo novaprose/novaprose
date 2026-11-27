@@ -549,6 +549,8 @@ const fr: LanguagePack = {
   'suggestions.nonText': 'pas du texte (une image ou un autre contenu)',
   'suggestions.formatted': 'Mis en forme par {name}',
   'suggestions.kindFormat': 'Mis en forme',
+  'suggestions.kindSplit': 'Nouveau paragraphe',
+  'suggestions.kindJoin': 'Paragraphes fusionnés',
   'visualblocks.title': 'Afficher les blocs',
 };
 

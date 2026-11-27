@@ -14,6 +14,18 @@ const html = (page: Page) =>
   );
 const content = (page: Page) => page.locator('.nova-prosemirror');
 
+/** Just enough of ProseMirror's view to put the cursor somewhere from the page. */
+type CursorView = {
+  state: {
+    doc: unknown;
+    selection: { constructor: unknown };
+    tr: { setSelection(selection: unknown): unknown };
+  };
+  dispatch(tr: unknown): void;
+  focus(): void;
+};
+type CursorSelection = { create(doc: unknown, pos: number): unknown };
+
 async function clickControl(page: Page, name: string) {
   const control = page.locator(`.nova-toolbar [data-control="${name}"]`).first();
   if (await control.isVisible()) return control.click();
@@ -126,6 +138,34 @@ test('a heading instead of a paragraph is a suggestion; Reject makes it a paragr
   await expect(panel.locator('.nova-sugg-changes')).toHaveText('Paragraph → Heading 2');
   await panel.getByRole('button', { name: 'Reject', exact: true }).click();
   await expect.poll(() => html(page)).toBe('<p>Title</p><p>Text</p>');
+});
+
+test('Enter and Backspace across a paragraph break are suggestions too', async ({ page }) => {
+  await open(page, '<p>Ship it</p><p>Then rest</p>');
+  await page.keyboard.press('ControlOrMeta+Alt+Shift+e');
+  // Enter in the middle of the first paragraph, after "Ship": a new paragraph break, suggested.
+  // (The cursor is put there directly: arrow keys in the mobile emulation sometimes drop a press.)
+  await page.evaluate(() => {
+    const { view } = (window as unknown as { editor: { view: CursorView } }).editor;
+    const Selection = view.state.selection.constructor as unknown as CursorSelection;
+    view.dispatch(view.state.tr.setSelection(Selection.create(view.state.doc, 5)));
+    view.focus();
+  });
+  await page.keyboard.press('Enter');
+  await expect(content(page).locator('p.nova-sugg-split')).toHaveText(' it');
+  // Backspace at the start of the last paragraph: the break before it, suggested deleted.
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Backspace');
+  await expect(content(page).locator('p.nova-sugg-join')).toHaveText('Then rest');
+  await clickControl(page, 'reviewsuggestions');
+  await page.getByRole('menuitem', { name: 'Show all suggestions' }).click();
+  const panel = page.getByRole('complementary', { name: 'Suggestions' });
+  await expect(panel.locator('.nova-sugg-kind')).toHaveText(['New paragraph', 'Paragraphs joined']);
+  // Reject the new break, accept the join: one paragraph again, with both texts.
+  await panel.getByRole('button', { name: 'Reject', exact: true }).first().click();
+  await panel.getByRole('button', { name: 'Accept', exact: true }).first().click();
+  await expect.poll(() => html(page)).toBe('<p>Ship itThen rest</p>');
 });
 
 test('a suggestion is discussed on its card; accepting it resolves the discussion', async ({

@@ -542,6 +542,8 @@ const it: LanguagePack = {
   'suggestions.nonText': "non è testo (un'immagine o altro contenuto)",
   'suggestions.formatted': 'Formattato da {name}',
   'suggestions.kindFormat': 'Formattato',
+  'suggestions.kindSplit': 'Nuovo paragrafo',
+  'suggestions.kindJoin': 'Paragrafi uniti',
   'visualblocks.title': 'Mostra blocchi',
 };
 

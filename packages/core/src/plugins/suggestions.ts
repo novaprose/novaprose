@@ -13,7 +13,7 @@ import {
   type EditorState,
   type Transaction,
 } from 'prosemirror-state';
-import { AddMarkStep, RemoveMarkStep, ReplaceStep } from 'prosemirror-transform';
+import { AddMarkStep, canJoin, RemoveMarkStep, ReplaceStep } from 'prosemirror-transform';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { keymap } from 'prosemirror-keymap';
 import type { Editor } from '../editor';
@@ -54,8 +54,11 @@ export interface SuggestionsOptions {
 
 export interface Suggestion {
   id: string;
-  /** insert and delete: text; format: the text's formatting changed; block: a block's type or style. */
-  kind: 'insert' | 'delete' | 'format' | 'block';
+  /**
+   * insert and delete: text; format: the text's formatting changed; block: a block's type or style;
+   * split: a new paragraph break before the block; join: the paragraph break before it deleted.
+   */
+  kind: 'insert' | 'delete' | 'format' | 'block' | 'split' | 'join';
   author: SuggestionAuthor;
   time: number;
   from: number;
@@ -66,6 +69,8 @@ export interface Suggestion {
   removed?: string[];
   /** block: what the block was before: its type and attributes. */
   before?: BlockBefore;
+  /** split and join: how many levels the paragraph break is (a list item: 2). */
+  depth?: number;
 }
 
 export interface BlockBefore {
@@ -73,13 +78,18 @@ export interface BlockBefore {
   attrs: Record<string, string | number | boolean | null>;
 }
 
-/** A suggested change of a block's type or style, kept on the block (its `suggestion` attribute). */
+/** A suggested change of a block, kept on the block (its `suggestion` attribute). */
 export interface BlockSuggestion {
   id: string;
   author: string;
   name: string;
   time: number;
-  before: BlockBefore;
+  /** block: its type or style changed; split: a new paragraph break before it; join: that break deleted. */
+  change: 'block' | 'split' | 'join';
+  /** block: what it was before. */
+  before?: BlockBefore;
+  /** split: how many levels the break opened (a new list item: 2). */
+  depth?: number;
 }
 
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
@@ -213,6 +223,21 @@ function cleanAttrs(raw: unknown, max: number): BlockBefore['attrs'] {
 export function blockSuggestion(value: unknown): BlockSuggestion | null {
   if (!value || typeof value !== 'object') return null;
   const raw = value as Record<string, unknown>;
+  if (typeof raw.id !== 'string' || !ID_RE.test(raw.id)) return null;
+  const author = String(raw.author ?? '');
+  const base = {
+    id: raw.id,
+    author: USER_ID_RE.test(author) ? author : '',
+    name: String(raw.name ?? '').slice(0, 80),
+    time: Number(raw.time) || 0,
+  };
+  if (raw.change === 'split' || raw.change === 'join') {
+    return {
+      ...base,
+      change: raw.change,
+      depth: Math.min(4, Math.max(1, Math.trunc(Number(raw.depth)) || 1)),
+    };
+  }
   let before = raw.before;
   try {
     if (typeof before === 'string') before = JSON.parse(before);
@@ -220,14 +245,10 @@ export function blockSuggestion(value: unknown): BlockSuggestion | null {
     return null;
   }
   const type = (before as { type?: unknown } | null)?.type;
-  if (typeof raw.id !== 'string' || !ID_RE.test(raw.id)) return null;
   if (typeof type !== 'string' || !/^[a-z][a-z0-9_]{0,39}$/.test(type)) return null;
-  const author = String(raw.author ?? '');
   return {
-    id: raw.id,
-    author: USER_ID_RE.test(author) ? author : '',
-    name: String(raw.name ?? '').slice(0, 80),
-    time: Number(raw.time) || 0,
+    ...base,
+    change: 'block',
     before: { type, attrs: cleanAttrs((before as { attrs?: unknown }).attrs, 12) },
   };
 }
@@ -237,22 +258,24 @@ const blockAttribute: NodeAttribute = {
   nodes: 'textblock',
   default: null,
   parse: (dom) =>
-    dom.hasAttribute('data-before')
+    dom.hasAttribute('data-before') || dom.hasAttribute('data-change')
       ? blockSuggestion({
           id: dom.getAttribute('data-suggestion'),
           author: dom.getAttribute('data-author'),
           name: dom.getAttribute('data-name'),
           time: dom.getAttribute('data-time'),
           before: dom.getAttribute('data-before'),
+          change: dom.getAttribute('data-change'),
+          depth: dom.getAttribute('data-depth'),
         })
       : null,
   render(value) {
     const s = blockSuggestion(value);
     if (!s) return {};
-    const out: Record<string, string> = {
-      'data-suggestion': s.id,
-      'data-before': JSON.stringify(s.before),
-    };
+    const out: Record<string, string> = { 'data-suggestion': s.id };
+    if (s.before) out['data-before'] = JSON.stringify(s.before);
+    else out['data-change'] = s.change;
+    if ((s.depth ?? 1) > 1) out['data-depth'] = String(s.depth);
     if (s.author) out['data-author'] = s.author;
     if (s.name) out['data-name'] = s.name;
     if (s.time) out['data-time'] = String(s.time);
@@ -604,13 +627,14 @@ export function listSuggestions(doc: PMNode): Suggestion[] {
       if (block) {
         result.push({
           id: block.id,
-          kind: 'block',
+          kind: block.change,
           author: { id: block.author, name: block.name },
           time: block.time,
           from: pos + 1,
           to: pos + node.nodeSize - 1,
           text: node.textContent,
-          before: block.before,
+          ...(block.before ? { before: block.before } : {}),
+          ...(block.depth ? { depth: block.depth } : {}),
         });
       }
       return true;
@@ -716,11 +740,20 @@ export function resolveSuggestions(
   // Formats first: they don't move text, and the text they are on may go next.
   for (const s of chosen) if (s.kind === 'format') resolveFormat(tr, s, action);
   for (const s of chosen) if (s.kind === 'block') resolveBlock(tr, s, action);
+  // Paragraph breaks: a rejected new one and an accepted deletion join two blocks, after the text
+  // is done (joining moves what comes after it); the others just forget the suggestion.
+  const joins: Suggestion[] = [];
+  for (const s of chosen) {
+    if (s.kind !== 'split' && s.kind !== 'join') continue;
+    if ((s.kind === 'split') === (action === 'reject')) joins.push(s);
+    else tr.setNodeAttribute(s.from - 1, 'suggestion', null);
+  }
+  const textStart = tr.steps.length;
   // Blocks whose text was removed (the position before the block).
   const emptied = new Set<number>();
   // From the end, so positions ahead don't shift.
   for (const s of [...chosen].sort((a, b) => b.from - a.from)) {
-    if (s.kind === 'format' || s.kind === 'block') continue;
+    if (s.kind !== 'insert' && s.kind !== 'delete') continue;
     const remove = (s.kind === 'insert') === (action === 'reject');
     if (remove) {
       emptied.add(state.doc.resolve(s.from).before());
@@ -730,6 +763,13 @@ export function resolveSuggestions(
   // A block whose whole text was a suggestion goes with it: a new paragraph was rejected or the deletion
   // of a whole paragraph accepted, so no empty line is left (the paragraph break itself isn't tracked as a suggestion).
   for (const pos of [...emptied].sort((a, b) => b - a)) removeEmptyBlock(tr, tr.mapping.map(pos));
+  for (const s of joins.sort((a, b) => b.from - a.from)) {
+    const block = tr.mapping.slice(textStart).mapResult(s.from - 1);
+    if (block.deleted) continue;
+    const boundary = block.pos - ((s.depth ?? 1) - 1);
+    if (canJoin(tr.doc, boundary)) tr.join(boundary, s.depth ?? 1);
+    else tr.setNodeAttribute(block.pos, 'suggestion', null);
+  }
   return tr;
 }
 
@@ -812,11 +852,13 @@ export default definePlugin({
             const set = DecorationSet.create(
               state.doc,
               listSuggestions(state.doc).map((s) =>
-                (s.kind === 'block' ? blockDecoration : Decoration.inline)(s.from, s.to, {
+                (s.kind === 'insert' || s.kind === 'delete' || s.kind === 'format'
+                  ? Decoration.inline
+                  : blockDecoration)(s.from, s.to, {
                   title:
-                    (s.kind === 'insert'
+                    (s.kind === 'insert' || s.kind === 'split'
                       ? labels.inserted
-                      : s.kind === 'delete'
+                      : s.kind === 'delete' || s.kind === 'join'
                         ? labels.deleted
                         : labels.formatted
                     ).replace('{name}', s.author.name || labels.guest) +

@@ -542,6 +542,8 @@ const ptBR: LanguagePack = {
   'suggestions.nonText': 'não é texto (uma imagem ou outro conteúdo)',
   'suggestions.formatted': 'Formatado por {name}',
   'suggestions.kindFormat': 'Formatado',
+  'suggestions.kindSplit': 'Novo parágrafo',
+  'suggestions.kindJoin': 'Parágrafos unidos',
   'visualblocks.title': 'Mostrar blocos',
 };
 

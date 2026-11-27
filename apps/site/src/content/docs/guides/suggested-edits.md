@@ -114,8 +114,18 @@ Change it back yourself and the suggestion goes. In HTML the block remembers wha
 <h2 data-suggestion="s3" data-before='{"type":"paragraph","attrs":{}}' data-author="u42">Plan</h2>
 ```
 
-Other structural changes — new paragraphs, lists, tables — are applied directly even in
-suggesting mode.
+Paragraph breaks are suggestions as well. <kbd>Enter</kbd> makes a new paragraph (or list item)
+with a pilcrow ¶ in the author's color in its margin, and <kbd>Backspace</kbd> or <kbd>Delete</kbd>
+across a break marks it deleted, with a struck pilcrow, instead of joining the paragraphs at once.
+Rejecting a new break joins the paragraphs again; accepting a deleted one joins them. Your own new
+paragraph is deleted for real, like your own inserted text. In HTML:
+
+```html
+<p data-suggestion="s4" data-change="split" data-author="u42">A new paragraph</p>
+<p data-suggestion="s5" data-change="join" data-author="u42">Joined to the one above</p>
+```
+
+Other structural changes — lists, tables, images — are applied directly even in suggesting mode.
 
 A paragraph whose whole text was a suggestion goes with it: reject a new paragraph's text, or
 accept the deletion of a paragraph's text, and no empty line is left.

@@ -2131,6 +2131,33 @@ html.nova-fullscreen-lock body {
       white var(--nova-suggestion-lift)
     );
 }
+/* A suggested paragraph break before a block: a pilcrow in the margin, underlined if new, struck if deleted. */
+.nova-sugg-split,
+.nova-sugg-join {
+  position: relative;
+}
+.nova-sugg-split::before,
+.nova-sugg-join::before {
+  content: '¶';
+  position: absolute;
+  inset-inline-start: -16px;
+  color: color-mix(
+    in srgb,
+    var(--nova-suggestion, var(--nova-success)),
+    white var(--nova-suggestion-lift)
+  );
+  text-decoration: underline 2px;
+  user-select: none;
+  pointer-events: none;
+}
+.nova-sugg-join::before {
+  text-decoration: line-through 2px;
+}
+/* In a list item, past the bullet. */
+li > .nova-sugg-split::before,
+li > .nova-sugg-join::before {
+  inset-inline-start: -34px;
+}
 /* In suggesting mode the cursor takes the suggestion color: a visible sign that typing becomes a suggestion. */
 .nova-prosemirror.nova-suggesting {
   caret-color: var(--nova-success);

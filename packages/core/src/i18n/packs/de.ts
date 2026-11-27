@@ -551,6 +551,8 @@ const de: LanguagePack = {
   'suggestions.nonText': 'kein Text (ein Bild oder anderer Inhalt)',
   'suggestions.formatted': 'Formatiert von {name}',
   'suggestions.kindFormat': 'Formatiert',
+  'suggestions.kindSplit': 'Neuer Absatz',
+  'suggestions.kindJoin': 'Absätze zusammengeführt',
   'visualblocks.title': 'Blöcke anzeigen',
 };
 

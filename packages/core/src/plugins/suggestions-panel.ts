@@ -26,7 +26,7 @@ import {
 export interface SuggestionCard {
   /** Ids of the suggestions on the card (a replacement has two: the deletion and the insertion). */
   ids: string[];
-  kind: 'insert' | 'delete' | 'replace' | 'format' | 'block';
+  kind: 'insert' | 'delete' | 'replace' | 'format' | 'block' | 'split' | 'join';
   author: SuggestionAuthor;
   time: number;
   /** Where the card's text starts and ends in the document. */
@@ -49,6 +49,8 @@ export interface SuggestionsPanelLabels {
   kindDelete: string;
   kindReplace: string;
   kindFormat: string;
+  kindSplit: string;
+  kindJoin: string;
   accept: string;
   reject: string;
   acceptShown: string;
@@ -325,6 +327,8 @@ export function createSuggestionsPanel(
       replace: labels.kindReplace,
       format: labels.kindFormat,
       block: labels.kindFormat,
+      split: labels.kindSplit,
+      join: labels.kindJoin,
     }[card.kind];
     const text = (value: string, tag: 'ins' | 'del' | 'span') =>
       value.trim()
@@ -357,7 +361,12 @@ export function createSuggestionsPanel(
       h('span', { className: 'nova-sugg-kind' }, kind),
       card.kind === 'delete' || card.kind === 'replace' ? text(card.removed, 'del') : null,
       card.kind === 'insert' || card.kind === 'replace' ? text(card.added, 'ins') : null,
-      card.kind === 'format' || card.kind === 'block' ? text(card.added, 'span') : null,
+      card.kind === 'format' ||
+        card.kind === 'block' ||
+        card.kind === 'split' ||
+        card.kind === 'join'
+        ? text(card.added, 'span')
+        : null,
       changes,
     );
     const editable = editor.isEditable();
