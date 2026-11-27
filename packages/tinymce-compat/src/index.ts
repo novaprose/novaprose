@@ -1,5 +1,6 @@
-import { createEditor, loadLanguage, registerHtmlRules } from '@novaprose/core';
+import { createEditor, loadLanguage, registerHtmlRules, type AiRequest } from '@novaprose/core';
 import { htmlRules } from '@novaprose/core/html-rules';
+import type { TinyAiHandler } from './ai';
 import { CompatEditor } from './editor';
 import { mapOptions, type TinyConfig } from './options';
 
@@ -113,9 +114,29 @@ export function createTinymce(): TinyMCECompat {
         ? { onCancel: () => (onCancel as (editor: CompatEditor) => void)(compat) }
         : {}),
     };
+    // ai_request: TinyMCE's request and respondWith; AIRequest, AIResponse and AIError go to this
+    // editor. The adapter loads with the first request (a separate chunk: the main file stays smaller).
+    const aiRequest = config.ai_request;
+    const ai =
+      typeof aiRequest === 'function'
+        ? {
+            ...(options.pluginOptions?.ai as Record<string, unknown> | undefined),
+            async *request(request: AiRequest) {
+              const { tinyAiRequest } = await import('./ai');
+              yield* tinyAiRequest(aiRequest as TinyAiHandler, (name, event) =>
+                compat?.fire(name, event),
+              )(request);
+            },
+          }
+        : null;
+    const pluginOptions = {
+      ...options.pluginOptions,
+      ...(Object.keys(save).length ? { save } : {}),
+      ...(ai ? { ai } : {}),
+    };
     const core = createEditor({
       ...options,
-      ...(Object.keys(save).length ? { pluginOptions: { ...options.pluginOptions, save } } : {}),
+      ...(Object.keys(pluginOptions).length ? { pluginOptions } : {}),
       element: host,
       content: initial,
       setup: (editor) => {
@@ -172,6 +193,9 @@ export function createTinymce(): TinyMCECompat {
     ]) {
       core.view.dom.addEventListener(name, (event) => compat.fireNative(name, event));
     }
+    // The AI assistant's window opening and closing (the ai plugin signals them on its root).
+    core.root.addEventListener('nova-ai-dialogopen', () => compat.fire('AIDialogOpen'));
+    core.root.addEventListener('nova-ai-dialogclose', () => compat.fire('AIDialogClose'));
     // Submitting the form puts the content into the <textarea>, as TinyMCE does.
     const form = isTextarea ? target.form : target.closest('form');
     form?.addEventListener('submit', () => compat.save());

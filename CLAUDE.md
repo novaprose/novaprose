@@ -182,7 +182,7 @@ Conventional Commits.
   (`registerLanguage(code, () => import(…))`; a new pack goes there too, a test checks it); the element and
   tinymce.init wait for `loadLanguage` themselves; before `NovaProse.createEditor`, `await loadLanguage`. CDN
   builds are a main file + lazy parts next to it (scripts/build-cdn.mjs): web component 146.6 KB of 150,
-  compatibility 157.0 KB of 160 (November 2026).
+  compatibility 157.4 KB of 160 (November 2026).
 - **Optional functionality is a plugin** in `src/plugins/` (`definePlugin`, lazy registration in
   `src/plugins/index.ts`). The core holds only what an editor can't be an editor without.
 - **New buttons go through `editor.ui.registry`** (like a plugin); names follow the public TinyMCE documentation.

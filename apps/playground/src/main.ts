@@ -53,15 +53,33 @@ async function* demoModel(request: AiRequest): AsyncGenerator<string> {
     improve: (t) => t.replace(/\bgood\b/g, 'excellent'),
     formal: (t) => t.replace(/\bhi\b/gi, 'Hello'),
   };
+  const edit = /spelling/i.test(request.instruction)
+    ? rewrite.fix!
+    : /formal/i.test(request.instruction)
+      ? rewrite.formal!
+      : rewrite.improve!;
   const result =
     request.action === 'continue'
       ? 'This sentence was written by the demo model.'
       : request.action === 'summarize'
         ? 'A short summary from the demo model.'
-        : request.action === 'custom' && !request.text
-          ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
-            'Once upon a time, the demo model told a story. '.repeat(40)
-          : (rewrite[request.action] ?? ((t: string) => t))(request.text);
+        : request.action === 'complete'
+          ? // Autocomplete: a short continuation of the text at the cursor.
+            `${/\s$/.test(request.before) ? '' : ' '}and a little more.`
+          : request.action === 'chat'
+            ? /title/i.test(request.instruction)
+              ? 'A Demo Title'
+              : `The document has ${request.document.split(/\s+/).filter(Boolean).length} words.`
+            : request.action === 'edit'
+              ? // Edits of the document: only the blocks that change, in the editor's block format.
+                [...request.text.matchAll(/<block id="(\d+)">([\s\S]*?)<\/block>/g)]
+                  .filter(([, , text]) => edit(text!) !== text)
+                  .map(([, id, text]) => `<block id="${id}">${edit(text!)}</block>\n`)
+                  .join('') || 'NO CHANGES'
+              : request.action === 'custom' && !request.text
+                ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
+                  'Once upon a time, the demo model told a story. '.repeat(40)
+                : (rewrite[request.action] ?? ((t: string) => t))(request.text);
   for (const word of result.split(/(?<= )/)) {
     await new Promise((resolve) => setTimeout(resolve, 15));
     if (request.signal.aborted) return;
@@ -216,7 +234,11 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('a11y') ? ['a11ychecker'] : []),
   ],
   pluginOptions: {
-    ai: { request: demoModel },
+    // &complete=1 turns on autocomplete (e2e/ai.spec.ts).
+    ai: {
+      request: demoModel,
+      autocomplete: new URLSearchParams(location.search).has('complete') ? { delay: 300 } : false,
+    },
     spellchecker: {
       check: demoSpellCheck,
       languages: [

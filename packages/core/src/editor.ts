@@ -4,7 +4,7 @@ import type { PageLayoutOptions } from './plugins/pagelayout';
 import type { ExportPdfOptions } from './plugins/exportpdf';
 import type { ExportWordOptions } from './plugins/exportword';
 import type { ImportWordOptions } from './plugins/importword';
-import type { AiOptions } from './plugins/ai';
+import type { AiOptions } from './plugins/ai-core';
 import type { SpellCheckerOptions } from './plugins/spellchecker';
 import type { A11yCheckerOptions } from './plugins/a11ychecker';
 import type { AutosaveOptions } from './plugins/autosave';

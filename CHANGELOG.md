@@ -106,10 +106,26 @@ All packages in this repository are versioned together. The format follows
   The answer arrives as suggested edits from “AI”: the rewrite is compared word by word, so only
   changed words are marked, kept words keep their formatting, and each change is accepted or
   rejected like a colleague's. The model is yours: `pluginOptions.ai.request` sends the request
-  (instruction, selected text, the text around it) through your server and returns the answer as
-  text or as a stream shown while it is written; closing the dialog cancels it. The answer is
-  inserted as text, never HTML. Guide with a server example:
-  [AI assistant](https://novaprose.com/guides/ai-assistant/).
+  through your server and returns the answer as text or as a stream shown while it is written;
+  closing the window cancels it. Each request carries a ready `prompt` (the text in tags, the
+  rules for the answer), so a server only passes it on. The answer is inserted as text, never
+  HTML. `shortcuts` replaces the quick actions with your own (groups too).
+  - **AI chat** (`aichat`): a panel next to the text. **Ask** answers questions about the
+    document (and the selection), keeps the conversation, and **Insert** or **Replace
+    selection** puts an answer into the text as suggestions. **Edit** changes the whole
+    document, or the selected paragraphs, as you ask: the model gets the paragraphs numbered,
+    sends back only the ones it changed, and each appears as suggestions as soon as it arrives;
+    **Accept all** and **Reject all** in the panel resolve that edit. A paragraph someone changes
+    while the model writes is left alone. The selection stays highlighted while focus is in the
+    panel.
+  - **Autocomplete** (`autocomplete: true`): after a pause at the end of a paragraph, the
+    model's continuation shows in grey after the cursor; Tab or a tap accepts it, Esc dismisses
+    it, typing its letters keeps the rest, and screen readers announce it. The `aiautocomplete`
+    toggle turns it off.
+  - With `tinymce.init`, `ai_request` (`respondWith.string` and `respondWith.stream`),
+    `ai_shortcuts`, `mceAiDialog`, `mceAiDialogClose` and the `AIRequest`, `AIResponse`,
+    `AIError`, `AIDialogOpen`, `AIDialogClose` events work; an HTML answer becomes text.
+    Guide with a server example: [AI assistant](https://novaprose.com/guides/ai-assistant/).
 - Phones and tablets: the quick formatting bar (`quickbars`) sits across the screen just above the
   keyboard instead of next to the selection, where it covered the text, the selection handles and the
   system Copy/Paste menu. **Changed:** on touch screens the quick insert bar (image, table) no longer

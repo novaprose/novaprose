@@ -657,6 +657,135 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/a11ychecker/);
   });
 
+  it('ai: ai_request with respondWith.string, the AI events, mceAiDialog; edits as suggestions', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"><p>The quick brown fox</p></textarea>');
+    const seen: Array<Record<string, unknown>> = [];
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'ai',
+      toolbar: 'aidialog aishortcuts',
+      ai_request: (
+        request: Record<string, unknown>,
+        respondWith: { string: (cb: (signal: AbortSignal) => Promise<string>) => void },
+      ) => {
+        seen.push(request);
+        respondWith.string(async (signal) => {
+          expect(signal).toBeInstanceOf(AbortSignal);
+          return 'The quick red fox';
+        });
+      },
+    });
+    const { core } = editor!;
+    const events: string[] = [];
+    editor!.on('AIRequest AIResponse AIError AIDialogOpen AIDialogClose', (event) => {
+      events.push(String(event.type));
+    });
+    // The suggestions plugin comes along: the assistant's edits are suggestions.
+    expect(core.hasPlugin('suggestions')).toBe(true);
+    expect(editor!.queryCommandSupported('mceAiDialog')).toBe(true);
+    core.view.dispatch(
+      core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, 1, 20)),
+    );
+    editor!.execCommand('mceAiDialog', false, { prompt: 'Change the color', generate: true });
+    await vi.waitFor(() => expect(events).toContain('aidialogclose'));
+    expect(events).toEqual(['aidialogopen', 'airequest', 'airesponse', 'aidialogclose']);
+    expect(seen[0]).toMatchObject({
+      query: 'Change the color',
+      context: 'The quick brown fox',
+      thread: [],
+    });
+    expect(String(seen[0]!.prompt)).toContain('Instruction: Change the color');
+    expect((seen[0]!.system as string[]).length).toBeGreaterThan(2);
+    expect(editor!.getContent()).toContain('<del');
+    expect(editor!.getContent()).toContain('>red</ins>');
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/ai_request|ai_shortcuts/);
+  });
+
+  it('ai: respondWith.stream pieces, an HTML answer becomes text, a failure fires AIError', async () => {
+    page('<textarea id="t"><p>Start.</p></textarea>');
+    let mode: 'stream' | 'html' | 'fail' = 'stream';
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'ai',
+      ai_shortcuts: [
+        { title: 'Continue', prompt: 'Continue the text' },
+        {
+          title: 'Tone',
+          subprompts: [{ title: 'Formal', prompt: 'Make it formal', selection: true }],
+        },
+      ],
+      ai_request: (
+        _request: unknown,
+        respondWith: {
+          stream: (
+            cb: (signal: AbortSignal, message: (text: string) => void) => Promise<void>,
+          ) => void;
+        },
+      ) =>
+        respondWith.stream(async (_signal, message) => {
+          if (mode === 'fail') throw new Error('Quota exceeded');
+          if (mode === 'html') {
+            message('<p>One more ');
+            message('line.</p>');
+            return;
+          }
+          message(' Next');
+          message(' words.');
+        }),
+    });
+    const { core } = editor!;
+    const errors: unknown[] = [];
+    editor!.on('AIError', (event) => errors.push(event.error));
+    core.view.dispatch(core.view.state.tr.setSelection(TextSelection.atEnd(core.view.state.doc)));
+    const menu = core.ui.registry.get('aishortcuts');
+    if (menu?.type !== 'menu') throw new Error('no aishortcuts');
+    const labels = menu
+      .items(core)
+      .map((e) => (e.type === 'heading' ? `# ${e.label}` : 'label' in e ? e.label : '-'));
+    expect(labels).toEqual(['Continue', '-', '# Tone', 'Formal']);
+    const run = async () => {
+      const item = menu.items(core)[0]!;
+      if (item.type === 'separator' || item.type === 'heading') throw new Error();
+      item.onSelect();
+      await vi.waitFor(() => expect(core.root.querySelector('.nova-dialog')).toBeNull());
+    };
+    await run();
+    expect(editor!.getContent({ format: 'text' })).toBe('Start. Next words.');
+    mode = 'html';
+    core.setContent('<p>Start.</p>');
+    core.view.dispatch(core.view.state.tr.setSelection(TextSelection.atEnd(core.view.state.doc)));
+    await run();
+    expect(editor!.getContent({ format: 'text' })).toBe('Start. One more line.');
+    mode = 'fail';
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const item = menu.items(core)[0]!;
+    if (item.type === 'separator' || item.type === 'heading') throw new Error();
+    item.onSelect();
+    await vi.waitFor(() => expect(errors).toHaveLength(1));
+    expect(String(errors[0])).toContain('Quota exceeded');
+    await vi.waitFor(() =>
+      expect(core.root.querySelector('.nova-dialog-error')?.textContent).toBe(
+        'The AI request failed.',
+      ),
+    );
+    expect(error).toHaveBeenCalled();
+    editor!.execCommand('mceAiDialogClose');
+    expect(core.root.querySelector('.nova-dialog')).toBeNull();
+  });
+
+  it('ai_shortcuts: false hides the shortcuts', async () => {
+    page('<textarea id="t"></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'ai',
+      ai_shortcuts: false,
+      ai_request: () => undefined,
+    });
+    expect(editor!.core.ui.registry.has('aishortcuts')).toBe(false);
+    expect(editor!.core.ui.registry.has('aidialog')).toBe(true);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

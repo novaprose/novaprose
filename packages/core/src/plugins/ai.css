@@ -1,4 +1,9 @@
-/* The AI assistant (the ai plugin): your own request, quick actions, the answer as it is written. */
+/*
+ * The ai plugin: the assistant window, the chat panel, autocomplete. Attached when the plugin loads,
+ * through editor.ui.addStyles; not part of the first-load style.css.
+ */
+
+/* ---------- the assistant window ---------- */
 .nova-ai {
   display: grid;
   gap: 12px;
@@ -8,6 +13,25 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
+}
+
+.nova-ai-actions[hidden] {
+  display: none;
+}
+
+.nova-ai-actions-group {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nova-ai-actions-title {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  color: var(--nova-muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .nova-ai-action {
@@ -28,6 +52,251 @@
   white-space: pre-wrap;
 }
 
-.nova-ai-preview[hidden] {
+.nova-ai-preview[hidden],
+.nova-ai .nova-input[hidden] {
   display: none;
+}
+
+/* ---------- the chat panel (the aichat sidebar) ---------- */
+
+/* The panel fills the sidebar: the conversation scrolls, the message box stays at the bottom. */
+.nova-sidebar[data-sidebar='aichat'] > .nova-sidebar-body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.nova-ai-chat {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  font-size: 13px;
+}
+
+.nova-ai-modes {
+  display: inline-flex;
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-toolbar-bg);
+}
+
+.nova-ai-mode {
+  position: relative;
+  display: inline-flex;
+}
+
+/* The radio stays in the page (keyboard, screen readers); its label is the visible segment. */
+.nova-ai-mode-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.nova-ai-mode span {
+  padding: 3px 12px;
+  border-radius: 4px;
+  color: var(--nova-muted);
+  font-weight: 600;
+}
+
+.nova-ai-mode-input:checked + span {
+  background: var(--nova-surface);
+  box-shadow: 0 0 0 1px var(--nova-border);
+  color: var(--nova-fg);
+}
+
+.nova-ai-mode-input:focus-visible + span {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 1px;
+}
+
+.nova-ai-mode-input:disabled + span {
+  opacity: 0.5;
+}
+
+.nova-ai-mode-input:disabled {
+  cursor: default;
+}
+
+.nova-ai-scope {
+  margin: 0;
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+
+.nova-ai-log {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 80px;
+  overflow: auto;
+}
+
+.nova-ai-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nova-ai-empty[hidden] {
+  display: none;
+}
+
+.nova-ai-hint {
+  margin: 0;
+  color: var(--nova-muted);
+  line-height: 1.45;
+}
+
+.nova-ai-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nova-ai-chip {
+  min-height: 28px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.nova-ai-msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius);
+  background: var(--nova-surface);
+}
+
+.nova-ai-msg-user {
+  margin-inline-start: 24px;
+  border-color: transparent;
+  background: var(--nova-active);
+}
+
+.nova-ai-msg p {
+  margin: 0;
+}
+
+.nova-ai-who {
+  color: var(--nova-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.nova-ai-text {
+  color: var(--nova-fg);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.nova-ai-pending {
+  color: var(--nova-muted);
+}
+
+.nova-ai-note {
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+
+.nova-ai-error {
+  color: var(--nova-danger);
+}
+
+.nova-ai-msg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.nova-ai-msg-action {
+  min-height: 28px;
+  font-size: 12px;
+}
+
+.nova-ai-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nova-ai-input {
+  width: 100%;
+  min-height: 56px;
+  max-height: 160px;
+  resize: vertical;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.nova-ai-composer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nova-ai-new {
+  margin-inline-end: auto;
+}
+
+.nova-ai-composer-row [hidden] {
+  display: none;
+}
+
+/* Below the text on a narrow screen: the conversation doesn't grow past half the screen. */
+@container (max-width: 640px) {
+  .nova-ai-log {
+    max-height: 50vh;
+  }
+}
+
+/* The text's selection, kept visible while focus is in the panel. */
+.nova-prosemirror .nova-ai-context {
+  background: var(--nova-selection);
+}
+
+/* ---------- autocomplete: the suggestion after the cursor ---------- */
+.nova-ai-ghost {
+  color: var(--nova-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.nova-ai-ghost-end {
+  white-space: nowrap;
+}
+
+.nova-ai-ghost-key {
+  display: inline-block;
+  margin-inline-start: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--nova-border);
+  border-radius: 4px;
+  background: var(--nova-toolbar-bg);
+  color: var(--nova-muted);
+  font-family: var(--nova-font);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 16px;
+  vertical-align: 2px;
+}
+
+/* No Tab key on a touch screen: a tap on the suggestion accepts it. */
+@media (pointer: coarse) {
+  .nova-ai-ghost-key {
+    display: none;
+  }
 }

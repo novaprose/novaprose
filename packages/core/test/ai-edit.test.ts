@@ -1,7 +1,18 @@
 import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, type Editor } from '../src';
-import { paragraphs, rangeText, suggestInsert, suggestRewrite } from '../src/plugins/ai-edit';
+import {
+  blockEditsTransaction,
+  blocksText,
+  blockText,
+  currentBlock,
+  editableBlocks,
+  paragraphs,
+  rangeText,
+  readBlocks,
+  suggestInsert,
+  suggestRewrite,
+} from '../src/plugins/ai-edit';
 import { listSuggestions, suggestionsResult } from '../src/plugins/suggestions';
 
 /**
@@ -112,5 +123,62 @@ describe('AI edits as suggestions', () => {
   it("the model's answer → paragraphs", () => {
     expect(paragraphs('  a\nb \r\n\r\n c  ')).toEqual(['a b', 'c']);
     expect(paragraphs('')).toEqual(['']);
+  });
+});
+
+describe('edits block by block', () => {
+  it('whole blocks of the range; code blocks and empty paragraphs are left out', () => {
+    const e = mount(
+      '<h2>Title</h2><p></p><pre><code>let x</code></pre><ul><li><p>Item</p></li></ul>',
+    );
+    const { doc } = e.view.state;
+    const all = editableBlocks(doc, 0, doc.content.size);
+    expect(all.map((b) => b.text)).toEqual(['Title', 'Item']);
+    expect(blocksText(all)).toBe('<block id="1">Title</block>\n<block id="2">Item</block>');
+    // A selection inside a block takes the whole block.
+    expect(editableBlocks(doc, 3, 4).map((b) => b.text)).toEqual(['Title']);
+  });
+
+  it('reads complete blocks as they stream in, from where it stopped', () => {
+    const first = readBlocks('<block id="2">New two</block>\n<block id="5">Fi');
+    expect(first.blocks).toEqual([[2, 'New two']]);
+    const answer = '<block id="2">New two</block>\n<block id="5">Five < six</block>';
+    const next = readBlocks(answer, first.end);
+    expect(next.blocks).toEqual([[5, 'Five < six']]);
+    expect(next.end).toBe(answer.length);
+    // An unclosed block doesn't swallow the next one; quotes around the id are optional.
+    expect(readBlocks("<block id=1>a <block id='3'>c</block>").blocks).toEqual([[3, 'c']]);
+    expect(readBlocks('NO CHANGES').blocks).toEqual([]);
+  });
+
+  it("a block's new text: no paragraph breaks, edges like the original's", () => {
+    expect(blockText('Hello world', '\nHello there\n')).toBe('Hello there');
+    expect(blockText('A b', 'A\r\n\r\nb')).toBe('A b');
+    expect(blockText('one\ntwo', 'one\ntoo')).toBe('one\ntoo');
+  });
+
+  it('only the changed words of a block change; its line break stays a line break', () => {
+    const e = mount('<p>Line one<br>line two</p><p>Other</p>');
+    const { state } = e.view;
+    const [block] = editableBlocks(state.doc, 0, state.doc.content.size);
+    expect(block!.text).toBe('Line one\nline two');
+    e.view.dispatch(blockEditsTransaction(state, [{ segment: block!, text: 'Line 1\nline two' }]));
+    expect(e.getHTML()).toBe('<p>Line 1<br>line two</p><p>Other</p>');
+    // A new line break in the answer becomes a line break, not a newline inside the text.
+    const [again] = editableBlocks(e.view.state.doc, 0, 3);
+    e.view.dispatch(
+      blockEditsTransaction(e.view.state, [{ segment: again!, text: 'Line\n1\nline two' }]),
+    );
+    expect(e.getHTML()).toBe('<p>Line<br>1<br>line two</p><p>Other</p>');
+  });
+
+  it('a block changed since it was sent is not found again', () => {
+    const e = mount('<p>Alpha</p><p>Beta</p>');
+    const { doc } = e.view.state;
+    const [, beta] = editableBlocks(doc, 0, doc.content.size);
+    expect(currentBlock(doc, beta!.from, 'Beta')?.text).toBe('Beta');
+    expect(currentBlock(doc, beta!.from, 'Gamma')).toBeNull();
+    expect(currentBlock(doc, beta!.from + 1, 'Beta')).toBeNull();
+    expect(currentBlock(doc, 999, 'Beta')).toBeNull();
   });
 });

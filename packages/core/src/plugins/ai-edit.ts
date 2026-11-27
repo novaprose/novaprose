@@ -1,4 +1,4 @@
-import type { Node as PMNode } from 'prosemirror-model';
+import { Mark, type Node as PMNode } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
 import { lcs, tokenize } from './history-diff';
 import { OWN, suggestTransaction, type SuggestionAuthor } from './suggestions';
@@ -71,6 +71,33 @@ export function paragraphs(text: string): string[] {
     .filter((p, index, all) => p || all.length === 1);
 }
 
+/**
+ * Replaces [from, to) with text. A line break in the text (an edit block by block keeps the block's
+ * line breaks) becomes a line break node, not a newline character inside the text.
+ */
+function replaceText(tr: Transaction, text: string, from: number, to: number): void {
+  const br = tr.doc.type.schema.nodes.hard_break;
+  if (!text.includes('\n') || !br) {
+    if (text) tr.insertText(text, from, to);
+    else if (to > from) tr.delete(from, to);
+    return;
+  }
+  const $from = tr.doc.resolve(from);
+  const marks = to > from ? ($from.marksAcross(tr.doc.resolve(to)) ?? Mark.none) : $from.marks();
+  const nodes = text
+    .split('\n')
+    .flatMap((part, index) => [
+      ...(index ? [br.create(null, null, marks)] : []),
+      ...(part ? [tr.doc.type.schema.text(part, marks)] : []),
+    ]);
+  try {
+    tr.replaceWith(from, to, nodes);
+  } catch {
+    // The block doesn't take line breaks: spaces instead.
+    tr.insertText(text.replace(/\n/g, ' '), from, to);
+  }
+}
+
 /** Replacements of the changed words of one block, from the end, so the start positions stay correct. */
 function rewriteSegment(tr: Transaction, segment: TextSegment, next: string): void {
   const before = tokenize(segment.text);
@@ -93,10 +120,101 @@ function rewriteSegment(tr: Transaction, segment: TextSegment, next: string): vo
     const text = after.slice(j0, j1).join('');
     const from = start < segment.chars.length ? segment.chars[start]! : segment.to;
     const to = end > start ? segment.chars[end - 1]! + 1 : from;
-    if (to > from && text) tr.insertText(text, from, to);
-    else if (to > from) tr.delete(from, to);
-    else if (text) tr.insertText(text, from);
+    if (to > from || text) replaceText(tr, text, from, to);
   }
+}
+
+// ---------- edits block by block (the chat panel's Edit mode) ----------
+//
+// A whole document can't go through rewriteTransaction: one paragraph more or less in the answer
+// would shift every paragraph after it. Instead each block (a paragraph, a heading, a list item, a
+// cell) goes to the model with a number, <block id="N">text</block>, and the model sends back only the
+// blocks it changed. Unchanged blocks cost nothing to write back, and a missing or extra block can't
+// shift the others.
+
+/**
+ * Whole text blocks that the range touches, for edits block by block. Code blocks (a spelling fix
+ * would break the code) and empty blocks are left out.
+ */
+export function editableBlocks(doc: PMNode, from: number, to: number): TextSegment[] {
+  const blocks: TextSegment[] = [];
+  doc.nodesBetween(from, Math.max(from, to), (node, pos) => {
+    if (!node.isTextblock) return true;
+    if (!node.type.spec.code) {
+      const [segment] = textSegments(doc, pos + 1, pos + node.nodeSize - 1);
+      if (segment?.text.trim()) blocks.push(segment);
+    }
+    return false;
+  });
+  return blocks;
+}
+
+/** The blocks for the model: `<block id="N">text</block>`, one per line, numbered from 1. */
+export function blocksText(blocks: readonly TextSegment[]): string {
+  return blocks.map((block, index) => `<block id="${index + 1}">${block.text}</block>`).join('\n');
+}
+
+// A block's text can hold "<" (a < b), but not another <block> tag: a block the model left unclosed
+// isn't read together with the next one.
+const BLOCK_RE = /<block\s+id=["']?(\d+)["']?\s*>((?:[^<]|<(?!\/?block\b))*)<\/block>/g;
+
+/**
+ * The complete blocks of an answer, read from `start` (an answer is read again as it streams in);
+ * `end` is where the reading stopped, the start for the next time.
+ */
+export function readBlocks(
+  answer: string,
+  start = 0,
+): { blocks: Array<[id: number, text: string]>; end: number } {
+  const re = new RegExp(BLOCK_RE.source, 'g');
+  re.lastIndex = start;
+  const blocks: Array<[number, string]> = [];
+  let end = start;
+  for (let match = re.exec(answer); match; match = re.exec(answer)) {
+    blocks.push([Number(match[1]), match[2]!]);
+    end = re.lastIndex;
+  }
+  return { blocks, end };
+}
+
+/**
+ * A block's new text from the answer: line ends as \n, no paragraph breaks (a block stays one block:
+ * an empty line becomes a space), and spaces at the edges only where the original had them.
+ */
+export function blockText(original: string, next: string): string {
+  let text = next.replace(/\r\n?/g, '\n').replace(/\n[^\S\n]*\n\s*/g, ' ');
+  if (!/^\s/.test(original)) text = text.replace(/^\s+/, '');
+  if (!/\s$/.test(original)) text = text.replace(/\s+$/, '');
+  return text;
+}
+
+/**
+ * The block that started at `pos` when the request was sent (pos mapped through the changes since),
+ * if it is still there with the same text. A block someone changed while the model was writing is
+ * left alone: the model's version of it would undo their edit.
+ */
+export function currentBlock(doc: PMNode, pos: number, text: string): TextSegment | null {
+  if (pos < 0 || pos > doc.content.size) return null;
+  const $pos = doc.resolve(pos);
+  if (!$pos.parent.isTextblock || pos !== $pos.start()) return null;
+  const [segment] = textSegments(doc, pos, $pos.end());
+  return segment && segment.text === text ? segment : null;
+}
+
+export interface BlockEdit {
+  segment: TextSegment;
+  text: string;
+}
+
+/** Edits of whole blocks in one transaction: in each block only the changed words change. */
+export function blockEditsTransaction(
+  state: EditorState,
+  edits: readonly BlockEdit[],
+): Transaction {
+  const tr = state.tr;
+  for (const { segment, text } of [...edits].sort((a, b) => b.segment.from - a.segment.from))
+    rewriteSegment(tr, segment, text);
+  return tr;
 }
 
 /**

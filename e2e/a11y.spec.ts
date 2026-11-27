@@ -363,7 +363,39 @@ for (const theme of ['light', 'dark'] as const) {
         .click();
       await expect(page.locator('.nova-dialog')).toBeHidden();
       await expect(page.locator('.nova-prosemirror del[data-suggestion]')).toBeVisible();
+      // The notification fades in: its colors are checked once the animation is over.
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
       await audit(page, 'AI edits in the text');
+    });
+
+    test('the AI chat: an answer, document edits, the selection kept visible; autocomplete', async ({
+      page,
+    }) => {
+      await open(page, theme, '&ai=1&complete=1');
+      await page.evaluate(() => window.editor.setContent('<p>This is good.</p><p>Hi there.</p>'));
+      await page.locator('.nova-prosemirror p').first().click();
+      await control(page, 'aichat');
+      const panel = page.locator('.nova-sidebar[data-sidebar="aichat"]');
+      await expect(panel.locator('.nova-ai-chip').first()).toBeVisible();
+      await audit(page, 'AI chat, empty');
+      await panel.getByRole('textbox', { name: 'Message to AI' }).fill('Suggest a title');
+      await panel.getByRole('textbox', { name: 'Message to AI' }).press('Enter');
+      await expect(panel.getByRole('button', { name: 'Insert' })).toBeVisible();
+      await panel.getByRole('radio', { name: 'Edit' }).check();
+      await panel.getByRole('textbox', { name: 'Message to AI' }).fill('Make it formal');
+      await panel.getByRole('textbox', { name: 'Message to AI' }).press('Enter');
+      await expect(panel.getByRole('button', { name: 'Accept all' })).toBeVisible();
+      // The selection stays visible while focus is in the panel.
+      await page.locator('.nova-prosemirror p').first().dblclick();
+      await panel.getByRole('textbox', { name: 'Message to AI' }).focus();
+      await expect(page.locator('.nova-prosemirror .nova-ai-context')).toBeVisible();
+      await audit(page, 'AI chat with an answer and edits');
+      // Autocomplete: the grey suggestion after the cursor.
+      await page.locator('.nova-prosemirror p').first().click();
+      await page.keyboard.press('End');
+      await page.keyboard.type(' Very');
+      await expect(page.locator('.nova-ai-ghost')).toBeVisible();
+      await audit(page, 'AI autocomplete suggestion');
     });
 
     test('the block handle and its menu', async ({ page }) => {

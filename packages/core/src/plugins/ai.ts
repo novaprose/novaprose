@@ -1,19 +1,42 @@
 import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
+import type { DialogHandle } from '../ui/dialog';
 import { h } from '../ui/dom';
 import type { MenuEntry } from '../ui/menu';
 import css from './ai.css?raw';
+import { contextPlugin, createChatPanel } from './ai-chat';
+import { autocompletePlugin, stopAutocomplete } from './ai-complete';
+import {
+  aiOptions,
+  around,
+  askModel,
+  failureKind,
+  INSTRUCTIONS,
+  NEEDS_SELECTION,
+  type AiAction,
+  type AiShortcut,
+  type QuickAction,
+} from './ai-core';
 import { rangeText, suggestInsert, suggestRewrite } from './ai-edit';
 import { pickLabels } from './shared';
+import type { SuggestionAuthor } from './suggestions';
+
+export type { AiAction, AiMessage, AiOptions, AiRequest, AiShortcut } from './ai-core';
+export { INSTRUCTIONS } from './ai-core';
 
 /**
- * The ai plugin: an AI assistant whose edits arrive as suggestions, like a co-author's. Select text →
- * "Improve", "Shorter", your own request → the changed words appear as suggestions, each of which can be accepted
- * or rejected (the suggestions plugin). Without a selection, text at the cursor ("Continue").
+ * The ai plugin: an AI assistant whose edits arrive as suggestions, like a co-author's.
  *
- * The model is yours: `pluginOptions.ai.request` sends the request to your server (an API key must never
- * live in the browser) and returns text or a stream of text chunks. `plugins: ['suggestions', 'ai']`.
- * Buttons as in TinyMCE: aidialog (the window) and aishortcuts (quick actions).
+ * - The assistant window (aidialog) and quick actions (aishortcuts): select text → "Improve",
+ *   "Shorter", your own request → the changed words appear as suggestions, each accepted or rejected
+ *   on its own. Without a selection, text at the cursor ("Continue").
+ * - The chat panel (aichat): questions about the document; in Edit mode the model changes the whole
+ *   document (or the selected paragraphs), again as suggestions.
+ * - Autocomplete (the autocomplete option): grey text after the cursor, Tab accepts it.
+ *
+ * The model is yours: `pluginOptions.ai.request` sends the request to your server (an API key must
+ * never live in the browser) and returns text or a stream of text pieces. `plugins: ['suggestions', 'ai']`.
+ * Button names as in TinyMCE: aidialog and aishortcuts.
  */
 
 export const LABELS = {
@@ -39,81 +62,117 @@ export const LABELS = {
     summarize: 'Summarize',
     continue: 'Continue writing',
     author: 'AI',
+    chat: 'AI chat',
+    mode: 'Mode',
+    modeAsk: 'Ask',
+    modeEdit: 'Edit',
+    scopeDocument: 'Context: the whole document',
+    scopeSelection: 'Context: the selected text',
+    editScopeDocument: 'Changes: the whole document',
+    editScopeSelection: 'Changes: the selected paragraphs',
+    askPlaceholder: 'Ask about the document',
+    editPlaceholder: 'What should change? For example: make it more formal',
+    askHint:
+      'AI reads the document and answers here. Put an answer into the text with Insert or Replace selection.',
+    editHint: 'AI changes the document as suggestions: you accept or reject each change.',
+    examples: 'Examples',
+    askSummarize: 'Summarize the document',
+    askKeyPoints: 'List the key points',
+    askTitle: 'Suggest a title',
+    askUnclear: 'Find unclear sentences',
+    conversation: 'Conversation',
+    message: 'Message to AI',
+    you: 'You',
+    stop: 'Stop',
+    stopped: 'Stopped.',
+    newChat: 'New chat',
+    answered: 'AI answered.',
+    insert: 'Insert',
+    replace: 'Replace selection',
+    copy: 'Copy',
+    copied: 'Copied.',
+    editing: 'AI is editing the document…',
+    editProgress: 'Paragraphs changed so far: {count}',
+    editDone: 'Paragraphs with suggested changes: {count}',
+    editNothing: 'AI found nothing to change.',
+    editSkipped: 'Left as they are (changed while AI was writing): {count}',
+    editUnmatched: "AI's answer didn't match the document. Try again.",
+    tooLong: 'The document is too long for one request: select a part of it.',
+    show: 'Show in the text',
+    acceptAll: 'Accept all',
+    rejectAll: 'Reject all',
+    accepted: 'Changes accepted: {count}',
+    rejected: 'Changes rejected: {count}',
+    reviewed: 'All changes reviewed.',
+    autocomplete: 'AI autocomplete',
+    completion: 'Suggestion: {text}. Press Tab to accept.',
+    completionHint: 'Tab or a click accepts, Esc dismisses',
   },
 };
 
-export type AiAction =
-  | 'improve'
-  | 'fix'
-  | 'shorter'
-  | 'longer'
-  | 'simplify'
-  | 'formal'
-  | 'friendly'
-  | 'summarize'
-  | 'continue'
-  | 'custom';
-
-export interface AiRequest {
-  /** What to do — text for the model (for quick actions, a ready instruction in English). */
-  instruction: string;
-  /** The quick action, or custom for the user's own request. */
-  action: AiAction;
-  /** The selected text (paragraphs separated by a blank line); empty — the model writes at the cursor. */
-  text: string;
-  /** Text before and after the selection (up to 1,500 characters), for context. */
-  before: string;
-  after: string;
-  /** The editor's UI language (for example, en). */
-  language: string;
-  /** Cancellation: the user closed the dialog. */
-  signal: AbortSignal;
-}
-
-export interface AiOptions {
-  /**
-   * The request to the model through your server. Return the answer's text, or a stream of pieces
-   * (AsyncIterable) to show it as it is written. The answer is plain text: paragraphs separated by a blank line.
-   */
-  request?: (request: AiRequest) => Promise<string> | AsyncIterable<string>;
-  /** Author name on the suggestions ("AI" in the UI language by default). */
-  name?: string;
-}
-
-/** Instructions of the quick actions for the model. */
-export const INSTRUCTIONS: Record<Exclude<AiAction, 'custom'>, string> = {
-  improve:
-    'Improve the writing: make it clearer and more natural. Keep the meaning and the language.',
-  fix: 'Fix spelling, grammar and punctuation. Change nothing else.',
-  shorter: 'Make the text shorter. Keep the key points and the language.',
-  longer: 'Make the text longer with relevant detail. Keep the style and the language.',
-  simplify: 'Rewrite the text in plain, simple words. Keep the meaning and the language.',
-  formal: 'Rewrite the text in a formal, professional tone. Keep the language.',
-  friendly: 'Rewrite the text in a friendly, conversational tone. Keep the language.',
-  summarize: 'Summarize the text in two or three sentences, in the same language.',
-  continue:
-    'Continue the text from where it ends: one or two paragraphs in the same style and language.',
-};
-
-/** Actions that need a selection (rewrite or summarize what is selected). */
-const NEEDS_SELECTION: AiAction[] = [
-  'improve',
-  'fix',
-  'shorter',
-  'longer',
-  'simplify',
-  'formal',
-  'friendly',
-  'summarize',
-];
+type Labels = (typeof LABELS)['en'];
 
 const ICON =
   '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.94 14.06 4 20"/><path d="m15 4 1.2 2.8L19 8l-2.8 1.2L15 12l-1.2-2.8L11 8l2.8-1.2z"/><path d="M5 3v4"/><path d="M3 5h4"/><path d="M19 15v4"/><path d="M17 17h4"/></svg>';
+const CHAT_ICON =
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 20.5l1.6-5A8.5 8.5 0 1 1 21 11.5z"/><path d="m12.5 8 .9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9z"/></svg>';
+const COMPLETE_ICON =
+  '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h7"/><path d="M4 12h4"/><path d="M11 5v14"/><path d="M15 12h1"/><path d="M19 12h1"/></svg>';
 
-const CONTEXT = 1500;
+export const CHAT = 'aichat';
 
-function isIterable(value: unknown): value is AsyncIterable<string> {
-  return !!value && typeof (value as AsyncIterable<string>)[Symbol.asyncIterator] === 'function';
+/** A quick action of the menu and the window: built in, or one of yours (custom). */
+interface QuickItem {
+  label: string;
+  action: AiAction;
+  instruction: string;
+  /** true: needs a selection; false: only without one; undefined: always. */
+  selection?: boolean;
+  /** The title of its group, for your own grouped shortcuts. */
+  group?: string;
+}
+
+/** The quick actions: yours (pluginOptions.ai.shortcuts, groups flattened) or the built-in ones; null: none. */
+export function quickActions(editor: Editor, labels: Labels): QuickItem[] | null {
+  const { shortcuts } = aiOptions(editor);
+  if (shortcuts === false) return null;
+  if (!Array.isArray(shortcuts)) {
+    return (Object.keys(INSTRUCTIONS) as QuickAction[]).map((id) => ({
+      label: labels[id],
+      action: id,
+      instruction: INSTRUCTIONS[id],
+      ...(NEEDS_SELECTION.includes(id) ? { selection: true } : {}),
+    }));
+  }
+  const out: QuickItem[] = [];
+  const walk = (items: readonly unknown[], group?: string) => {
+    for (const raw of items) {
+      if (!raw || typeof raw !== 'object') continue;
+      const item = raw as AiShortcut;
+      const title = typeof item.title === 'string' ? item.title.trim() : '';
+      if (!title) continue;
+      if (Array.isArray(item.items)) walk(item.items, group ? `${group} › ${title}` : title);
+      else if (typeof item.prompt === 'string' && item.prompt.trim()) {
+        out.push({
+          label: title,
+          action: 'custom',
+          instruction: item.prompt,
+          ...(typeof item.selection === 'boolean' ? { selection: item.selection } : {}),
+          ...(group ? { group } : {}),
+        });
+      }
+    }
+  };
+  walk(shortcuts);
+  // An empty list hides the menu, like false.
+  return out.length ? out : null;
+}
+
+const available = (item: QuickItem, empty: boolean) =>
+  item.selection === undefined || item.selection === !empty;
+
+export function aiAuthor(editor: Editor, labels: Labels): SuggestionAuthor {
+  return { id: 'ai', name: String(aiOptions(editor).name || labels.author).slice(0, 80) };
 }
 
 /** Runs the request and applies the answer as suggestions; errors and cancelling leave the text unchanged. */
@@ -124,10 +183,7 @@ async function runAi(
   signal: AbortSignal,
   onText: (text: string) => void,
 ): Promise<'done' | 'nothing'> {
-  const options = (editor.options.pluginOptions?.ai ?? {}) as AiOptions;
-  if (!options.request) throw new Error('not-configured');
-  const labels = pickLabels(editor, 'ai', LABELS);
-  const author = { id: 'ai', name: String(options.name || labels.author).slice(0, 80) };
+  const author = aiAuthor(editor, pickLabels(editor, 'ai', LABELS));
   const { state } = editor.view;
   const { from: start, to: end, empty } = state.selection;
   // Selection positions are mapped through edits that arrive while the model writes (co-authors, autosave).
@@ -139,26 +195,17 @@ async function runAi(
   });
   try {
     const doc = state.doc;
-    const result = options.request({
-      instruction,
-      action,
-      text: empty ? '' : rangeText(doc, start, end),
-      before: doc.textBetween(Math.max(0, start - CONTEXT), start, '\n\n', ' '),
-      after: doc.textBetween(end, Math.min(doc.content.size, end + CONTEXT), '\n\n', ' '),
-      language: editor.options.language ?? 'en',
+    const text = await askModel(
+      editor,
+      {
+        action,
+        instruction,
+        text: empty ? '' : rangeText(doc, start, end),
+        ...around(doc, start, end),
+      },
       signal,
-    });
-    let text = '';
-    if (isIterable(result)) {
-      for await (const chunk of result) {
-        if (signal.aborted) break;
-        text += String(chunk);
-        onText(text);
-      }
-    } else {
-      text = String((await result) ?? '');
-      onText(text);
-    }
+      onText,
+    );
     if (signal.aborted || !text.trim()) return 'nothing';
     const now = editor.view.state;
     let tr;
@@ -178,11 +225,24 @@ async function runAi(
   }
 }
 
+export interface AiDialogOptions {
+  /** Run this quick action right away. */
+  preset?: QuickItem;
+  /** Text for the request field. */
+  prompt?: string;
+  /** Send `prompt` right away. */
+  generate?: boolean;
+  /** false: no request field and quick actions, only the answer as it is written. */
+  display?: boolean;
+  onClose?: () => void;
+}
+
 /** The assistant window: your own request, quick actions, the answer as it is written. */
-function openAiDialog(editor: Editor, preset?: AiAction): void {
+function openAiDialog(editor: Editor, options: AiDialogOptions = {}): DialogHandle {
   const labels = pickLabels(editor, 'ai', LABELS);
   const empty = editor.view.state.selection.empty;
   const controller = new AbortController();
+  const show = options.display !== false;
   let running = false;
 
   const input = h('input', {
@@ -191,36 +251,52 @@ function openAiDialog(editor: Editor, preset?: AiAction): void {
     placeholder: labels.placeholder,
     'aria-label': labels.prompt,
   });
+  input.value = options.prompt ?? '';
+  input.hidden = !show;
   const preview = h('output', {
     className: 'nova-ai-preview',
     'aria-live': 'polite',
   });
   preview.hidden = true;
+  const items = quickActions(editor, labels) ?? [];
+  const buttons: Array<[HTMLButtonElement, QuickItem]> = [];
   const actions = h('div', {
     className: 'nova-ai-actions',
     role: 'group',
     'aria-label': labels.actions,
   });
-  const ids = Object.keys(INSTRUCTIONS) as Array<Exclude<AiAction, 'custom'>>;
-  const available = (id: AiAction) => !(empty && NEEDS_SELECTION.includes(id));
-  const buttons = ids.map((id) => {
+  let group: HTMLElement = actions;
+  let groupName: string | undefined;
+  for (const item of items) {
+    if (item.group !== groupName) {
+      groupName = item.group;
+      group = groupName
+        ? h(
+            'div',
+            { className: 'nova-ai-actions-group', role: 'group', 'aria-label': groupName },
+            h('p', { className: 'nova-ai-actions-title', 'aria-hidden': 'true' }, groupName),
+          )
+        : actions;
+      if (group !== actions) actions.append(group);
+    }
     const button = h(
       'button',
       { type: 'button', className: 'nova-button nova-ai-action' },
-      labels[id],
+      item.label,
     );
-    button.disabled = !available(id);
-    button.addEventListener('click', () => void run(id, INSTRUCTIONS[id]));
-    actions.append(button);
-    return button;
-  });
+    button.disabled = !available(item, empty);
+    button.addEventListener('click', () => void run(item.action, item.instruction));
+    group.append(button);
+    buttons.push([button, item]);
+  }
+  actions.hidden = !show || !items.length;
 
-  const run = async (action: AiAction, instruction: string): Promise<boolean | string> => {
+  const run = async (action: AiAction, instruction: string): Promise<boolean> => {
     if (running || !instruction.trim()) return false;
     running = true;
     handle.setBusy(true);
     handle.setError(null);
-    for (const button of buttons) button.disabled = true;
+    for (const [button] of buttons) button.disabled = true;
     preview.hidden = false;
     preview.textContent = labels.writing;
     try {
@@ -234,20 +310,16 @@ function openAiDialog(editor: Editor, preset?: AiAction): void {
       return true;
     } catch (error) {
       if (controller.signal.aborted) return false;
-      const message =
-        error instanceof Error && error.message === 'not-configured'
-          ? labels.notConfigured
-          : labels.failed;
-      if (!(error instanceof Error && error.message === 'not-configured'))
-        console.error('[nova] ai:', error);
-      handle.setError(message);
+      const kind = failureKind(error);
+      if (kind === 'failed') console.error('[nova] ai:', error);
+      handle.setError(labels[kind]);
       preview.hidden = true;
       return false;
     } finally {
       running = false;
       if (!controller.signal.aborted) {
         handle.setBusy(false);
-        buttons.forEach((button, index) => (button.disabled = !available(ids[index]!)));
+        for (const [button, item] of buttons) button.disabled = !available(item, empty);
       }
     }
   };
@@ -256,50 +328,177 @@ function openAiDialog(editor: Editor, preset?: AiAction): void {
   const handle = editor.ui.openDialog({
     title: labels.dialog,
     body,
-    submitLabel: labels.send,
-    initialFocus: input,
+    ...(show ? { submitLabel: labels.send } : {}),
+    initialFocus: show ? input : undefined,
     onSubmit: () => {
       void run('custom', input.value);
       return false;
     },
-    onClose: () => controller.abort(),
+    onClose: () => {
+      controller.abort();
+      options.onClose?.();
+    },
   });
-  if (preset) void run(preset, INSTRUCTIONS[preset as Exclude<AiAction, 'custom'>]);
+  if (options.preset) void run(options.preset.action, options.preset.instruction);
+  else if (options.generate && input.value.trim()) void run('custom', input.value);
+  return handle;
+}
+
+/** Per editor: whether autocomplete is on (the aiautocomplete toggle). */
+const autocompleteOn = new WeakMap<Editor, boolean>();
+
+function autocompleteDelay(editor: Editor): number | null {
+  const setting = aiOptions(editor).autocomplete;
+  if (!setting) return null;
+  const delay = typeof setting === 'object' ? Number(setting.delay) : NaN;
+  return Number.isFinite(delay) ? Math.max(200, delay) : 700;
 }
 
 export default definePlugin({
   name: 'ai',
   requires: ['suggestions'],
-  toolbar: 'aidialog',
+  toolbar: 'aidialog aichat',
+  prosemirrorPlugins: (editor) => {
+    const delay = autocompleteDelay(editor);
+    if (delay !== null) autocompleteOn.set(editor, true);
+    return [
+      contextPlugin(),
+      ...(delay === null
+        ? []
+        : [
+            autocompletePlugin(editor, {
+              delay,
+              enabled: () => autocompleteOn.get(editor) === true,
+              announcement: (text) =>
+                pickLabels(editor, 'ai', LABELS).completion.replace('{text}', text),
+              hint: () => pickLabels(editor, 'ai', LABELS).completionHint,
+            }),
+          ]),
+    ];
+  },
   setup(editor) {
     editor.ui.addStyles('nova-ai', css);
     const labels = pickLabels(editor, 'ai', LABELS);
     const enabled = (e: Editor) => e.isEditable();
+
+    // ---------- the assistant window ----------
+    let dialog: DialogHandle | null = null;
+    const signal = (name: string) => editor.root.dispatchEvent(new CustomEvent(name));
+    const open = (options: AiDialogOptions = {}) => {
+      if (dialog || !editor.isEditable()) return;
+      signal('nova-ai-dialogopen');
+      dialog = openAiDialog(editor, {
+        ...options,
+        onClose: () => {
+          dialog = null;
+          signal('nova-ai-dialogclose');
+        },
+      });
+    };
     editor.ui.registry.addButton('aidialog', {
       icon: ICON,
       tooltip: labels.dialog,
       isEnabled: enabled,
-      onAction: () => openAiDialog(editor),
+      onAction: () => open(),
     });
     editor.ui.registry.addMenuItem('aidialog', {
       icon: ICON,
       text: labels.dialog,
       isEnabled: enabled,
-      onAction: () => openAiDialog(editor),
+      onAction: () => open(),
     });
-    editor.ui.registry.addMenuButton('aishortcuts', {
-      text: labels.shortcuts,
-      tooltip: labels.shortcuts,
-      isEnabled: enabled,
-      items: (): MenuEntry[] => {
-        const empty = editor.view.state.selection.empty;
-        return (Object.keys(INSTRUCTIONS) as Array<Exclude<AiAction, 'custom'>>).map((id) => ({
-          id,
-          label: labels[id],
-          disabled: empty && NEEDS_SELECTION.includes(id),
-          onSelect: () => openAiDialog(editor, id),
-        }));
+    if (quickActions(editor, labels)) {
+      editor.ui.registry.addMenuButton('aishortcuts', {
+        text: labels.shortcuts,
+        tooltip: labels.shortcuts,
+        isEnabled: enabled,
+        items: (): MenuEntry[] => {
+          const empty = editor.view.state.selection.empty;
+          const entries: MenuEntry[] = [];
+          let group: string | undefined;
+          (quickActions(editor, labels) ?? []).forEach((item, index) => {
+            if (item.group !== group) {
+              group = item.group;
+              if (entries.length) entries.push({ type: 'separator' });
+              if (group) entries.push({ type: 'heading', label: group });
+            }
+            entries.push({
+              id: `ai-${index}`,
+              label: item.label,
+              disabled: !available(item, empty),
+              onSelect: () => open({ preset: item }),
+            });
+          });
+          return entries;
+        },
+      });
+    }
+    // The TinyMCE compatibility layer opens and closes the window (mceAiDialog, mceAiDialogClose).
+    const onOpen = (event: Event) => open((event as CustomEvent<AiDialogOptions>).detail ?? {});
+    const onClose = () => dialog?.close();
+    editor.root.addEventListener('nova-ai-dialog', onOpen);
+    editor.root.addEventListener('nova-ai-dialog-close', onClose);
+
+    // ---------- the chat panel ----------
+    let panel: ReturnType<typeof createChatPanel> | null = null;
+    editor.ui.registry.addSidebar(CHAT, {
+      title: labels.chat,
+      button: false,
+      render: (container) => {
+        panel = createChatPanel(editor, labels, () => aiAuthor(editor, labels));
+        container.append(panel.el);
+        return () => panel?.destroy();
       },
+      onShow: () => panel?.refresh(),
     });
+    const toggleChat = () => {
+      const opening = !editor.ui.sidebar.isOpen(CHAT);
+      void editor.ui.sidebar.toggle(CHAT).then(() => {
+        if (opening && editor.ui.sidebar.isOpen(CHAT)) panel?.focus();
+      });
+    };
+    editor.ui.registry.addToggleButton(CHAT, {
+      icon: CHAT_ICON,
+      tooltip: labels.chat,
+      isActive: (e) => e.ui.sidebar.isOpen(CHAT),
+      onAction: toggleChat,
+    });
+    editor.ui.registry.addMenuItem(CHAT, {
+      icon: CHAT_ICON,
+      text: labels.chat,
+      onAction: toggleChat,
+    });
+
+    // ---------- autocomplete ----------
+    if (autocompleteOn.has(editor)) {
+      const toggle = () => {
+        const on = !autocompleteOn.get(editor);
+        autocompleteOn.set(editor, on);
+        if (!on) stopAutocomplete(editor.view);
+        editor.ui.announce(
+          editor.ui.t(on ? 'announce.on' : 'announce.off').replace('{name}', labels.autocomplete),
+        );
+        editor.updateUI();
+      };
+      const isActive = () => autocompleteOn.get(editor) === true;
+      editor.ui.registry.addToggleButton('aiautocomplete', {
+        icon: COMPLETE_ICON,
+        tooltip: labels.autocomplete,
+        isActive,
+        onAction: toggle,
+      });
+      editor.ui.registry.addMenuItem('aiautocomplete', {
+        icon: COMPLETE_ICON,
+        text: labels.autocomplete,
+        isActive,
+        onAction: toggle,
+      });
+    }
+
+    return () => {
+      editor.root.removeEventListener('nova-ai-dialog', onOpen);
+      editor.root.removeEventListener('nova-ai-dialog-close', onClose);
+      dialog?.close();
+    };
   },
 });

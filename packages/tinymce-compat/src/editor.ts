@@ -403,6 +403,23 @@ export class CompatEditor {
       // A sidebar from ui.registry.addSidebar (value is its name).
       void this.core.ui.sidebar.toggle(String(value ?? ''));
       done = true;
+    } else if (
+      (name === 'mceaidialog' || name === 'mceaidialogclose') &&
+      this.core.hasPlugin('ai')
+    ) {
+      // The AI assistant's window: { prompt, generate, display } as in TinyMCE, or close it.
+      const options = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+      const detail = {
+        ...(typeof options.prompt === 'string' ? { prompt: options.prompt } : {}),
+        ...(options.generate === true ? { generate: true } : {}),
+        ...(options.display === false ? { display: false } : {}),
+      };
+      this.core.root.dispatchEvent(
+        name === 'mceaidialog'
+          ? new CustomEvent('nova-ai-dialog', { detail })
+          : new CustomEvent('nova-ai-dialog-close'),
+      );
+      done = true;
     } else if (name === 'mcesetcontent') {
       this.setContent(String(value ?? ''));
       done = true;
@@ -549,6 +566,7 @@ export class CompatEditor {
       (name in PLUGIN_COMMANDS && !!this.core.ui.registry.getMenuItem(PLUGIN_COMMANDS[name]!)) ||
       (name === 'mcetogglestickyformatpainter' && this.core.ui.registry.has('formatpainter')) ||
       (SPELLCHECK_COMMANDS.has(name) && this.core.hasPlugin('spellchecker')) ||
+      ((name === 'mceaidialog' || name === 'mceaidialogclose') && this.core.hasPlugin('ai')) ||
       this.commands.has(name)
     );
   }

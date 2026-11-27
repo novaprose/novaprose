@@ -173,6 +173,10 @@ const IGNORED = new Set([
   'a11ychecker_filter_issue',
   'a11ychecker_html_version',
   'a11ychecker_issue_url_callback',
+  // ai: ai_request is wired in index.ts (its events go to the TinyMCE-style editor); ai_shortcuts
+  // becomes the quick actions.
+  'ai_request',
+  'ai_shortcuts',
   'template_replace_values',
   'template_preview_replace_values',
   'template_selected_content_classes',
@@ -283,6 +287,32 @@ function toStyleFormats(value: unknown): StyleFormat[] {
   });
 }
 
+interface AiShortcutSpec {
+  title: string;
+  prompt?: string;
+  selection?: boolean;
+  items?: AiShortcutSpec[];
+}
+
+/** TinyMCE's ai_shortcuts ({ title, prompt, selection } or a group with subprompts) → ours. */
+function toAiShortcuts(value: unknown[]): AiShortcutSpec[] {
+  return value.flatMap((item): AiShortcutSpec[] => {
+    if (!item || typeof item !== 'object') return [];
+    const raw = item as Record<string, unknown>;
+    const title = typeof raw.title === 'string' ? raw.title : '';
+    if (!title) return [];
+    if (Array.isArray(raw.subprompts)) return [{ title, items: toAiShortcuts(raw.subprompts) }];
+    if (typeof raw.prompt !== 'string') return [];
+    return [
+      {
+        title,
+        prompt: raw.prompt,
+        ...(typeof raw.selection === 'boolean' ? { selection: raw.selection } : {}),
+      },
+    ];
+  });
+}
+
 export interface MappedOptions {
   options: Omit<EditorOptions, 'element'>;
   /** Options NovaProse doesn't understand yet (for the warning). */
@@ -300,6 +330,10 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     if (BUILT_IN.has(name)) continue;
     if (isPluginRegistered(target)) plugins.push(target);
     else missingPlugins.push(name);
+  }
+  // The AI assistant's edits arrive as suggestions: the ai plugin needs the suggestions plugin.
+  if (plugins.includes('ai') && !plugins.includes('suggestions')) {
+    plugins.splice(plugins.indexOf('ai'), 0, 'suggestions');
   }
 
   const options: Omit<EditorOptions, 'element'> = { plugins };
@@ -628,6 +662,13 @@ export function mapOptions(config: TinyConfig): MappedOptions {
         }) !== false;
     }
     pluginOptions.a11ychecker = a11y;
+  }
+  // ai_shortcuts: false or [] hides the menu; { title, prompt, selection, subprompts } → our shortcuts.
+  const aiShortcuts = config.ai_shortcuts;
+  if (aiShortcuts === false || (Array.isArray(aiShortcuts) && !aiShortcuts.length)) {
+    pluginOptions.ai = { shortcuts: false };
+  } else if (Array.isArray(aiShortcuts)) {
+    pluginOptions.ai = { shortcuts: toAiShortcuts(aiShortcuts) };
   }
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
