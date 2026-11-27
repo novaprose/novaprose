@@ -70,6 +70,9 @@ apps/playground     Vite playground (from sources). ?lang=en|ru, ?upload=slow|fa
 apps/site           the novaprose.com website (Astro + Starlight, English). Framework pages and the changelog
                     are generated from README/CHANGELOG: edit the source and run sync-docs
 e2e/                Playwright: Chromium, Firefox, WebKit, mobile Chrome
+screen-reader/      NVDA reads the playground (guidepup, Windows runner): what is said after Ctrl+B, "- ",
+                    Alt+0, Ctrl+K... Each test writes what NVDA said to spoken.txt; the workflow prints them
+                    as notices on the run, readable without a screen reader
 perf/               speed measurements (pnpm perf) on the CDN build in Chromium: 100 pages, typing, paste,
                     leaks; limits are ~5× a developer machine. Keystroke time is keydown→keyup: Chrome defers
                     timers while keys stream in (measuring with setTimeout gave "500 ms")
@@ -100,6 +103,8 @@ pnpm lint           # eslint
 pnpm format         # prettier
 pnpm build          # build the packages (tsup → dist/)
 pnpm e2e            # Playwright browser tests (the playground starts by itself)
+pnpm sr             # NVDA tests: Windows only, NVDA takes over the keyboard and speaks (CI: screen-reader.yml;
+                    # locally first npx --ignore-scripts @guidepup/setup install nvda)
 pnpm check          # format, lint, types, unit tests, English-only check: before a commit (the pre-push hook runs it)
 pnpm test:coverage  # unit tests + coverage; thresholds (a ratchet) in vitest.config.ts: raise them as coverage grows
 pnpm test:deep [N]  # property-based tests on N random documents (5000 by default; 20 000 nightly in CI)
@@ -111,7 +116,8 @@ pnpm verify:examples # examples from the .release/ archives: Vite build, run in 
 ```
 
 CI (`.github/workflows`): ci.yml: check with coverage, build/size/packages/speed, e2e in all browsers + a11y;
-nightly.yml: deep property tests; codeql.yml: static security analysis; dependabot.yml: dependency updates.
+nightly.yml: deep property tests; codeql.yml: static security analysis; dependabot.yml: dependency updates;
+screen-reader.yml: NVDA on a Windows runner (main and `night/**` pushes).
 Actions are pinned to a commit SHA (version in a comment): add new ones the same way.
 Git hooks (simple-git-hooks, installed by `pnpm install`): pre-push runs `pnpm check`, commit-msg enforces
 Conventional Commits.

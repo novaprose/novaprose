@@ -17,6 +17,12 @@ importers:
       '@eslint/js':
         specifier: ^9.17.0
         version: 9.39.5
+      '@guidepup/guidepup':
+        specifier: ^0.40.0
+        version: 0.40.0
+      '@guidepup/playwright':
+        specifier: ^0.21.0
+        version: 0.21.0(@guidepup/guidepup@0.40.0)(@playwright/test@1.65.1)
       '@playwright/test':
         specifier: ^1.49
         version: 1.65.1
@@ -1159,6 +1165,15 @@ packages:
   '@fontsource-variable/plus-jakarta-sans@5.3.0':
     resolution: {integrity: sha512-/l/4r0yyWK9JzAlmA0LiYgGgmJe/Gswt4jTJEzr5QhJfwMbvJZDmYWyW0M4X7yCK69BajMVlV/Lx8g7WDc1+sw==}
 
+  '@guidepup/guidepup@0.40.0':
+    resolution: {integrity: sha512-Rnrs6FCOa+v9q2jMyXeBTOHNIaMv3lCcE8Uq1HN8JIymbqpx59wct3VRyvhQYIStqW7uhmSjHiFE8ERCV3cc0w==}
+
+  '@guidepup/playwright@0.21.0':
+    resolution: {integrity: sha512-1sXOcSgfTz8pNEfGWcpeihmc6I+jr9CTbBnwypLlFHlHxDA5im3dJk6QJp8GBhh31K/VOtiwZ3/ZZy6hDYxi5w==}
+    peerDependencies:
+      '@guidepup/guidepup': '>=0.38.0'
+      '@playwright/test': '>=1.62.1'
+
   '@hocuspocus/common@4.9.0':
     resolution: {integrity: sha512-lrp5gtT8kvLt9/MuRRQPKaveihv5emSsP9+sMCq2rx8xVGn33PZIv0haSGyb37CbAIlVaHb/yG22VKKMx+clYg==}
 
@@ -2146,6 +2161,10 @@ packages:
       '@vue/server-renderer':
         optional: true
 
+  '@xmldom/xmldom@0.9.12':
+    resolution: {integrity: sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A==}
+    engines: {node: '>=14.6'}
+
   '@yuku-toolchain/darwin-arm64@0.28.1':
     resolution: {integrity: sha512-xMtZUwiGvJH90ogLjRrnG5+YEhinKti8qMPF18bd5z0ahSoaHWyBoe16evT7cSUxid0JEaZvh6H3daDPwDw4+g==}
     cpu: [arm64]
@@ -2525,6 +2544,11 @@ packages:
   data-urls@8.0.0:
     resolution: {integrity: sha512-JQUCCK+/CAGbGGx618PlFZMXH81Jtj7t73CHv9dd/zVWvxgGT2zLFRjnKb+Ng46GIwcy+f7f88qd4duqllK+WQ==}
     engines: {node: ^22.14.0 || >=24.0.0}
+
+  dbus-native@0.15.2:
+    resolution: {integrity: sha512-J1IBi4LmbqrFhroN66Dj1tCCTP6TVbZgUKhWQZf3uS6t93yRWEcRRDjOZV9N6boGRhOp/BOjLliFm9vWu1QZOA==}
+    engines: {node: '>=22.12.0'}
+    hasBin: true
 
   debug@3.2.7:
     resolution: {integrity: sha512-CFjzYYAi4ThfiQvizrFQevTTXHtnCqWfe7x1AhgEscTz6ZbLbfoLRLPugTQyBth6f8ZERVUSyWHFD/7Wu4t1XQ==}
@@ -3680,6 +3704,10 @@ packages:
     engines: {node: '>=20'}
     hasBin: true
 
+  plist@4.0.0:
+    resolution: {integrity: sha512-4dOqNo0Y2NpfSf9q4+zr4bh7pzNWeckIam34Z0KYJhg8qtNNfh59VbD+Yna5SjwcxawVvLKx5w5FtuCijpEF4Q==}
+    engines: {node: '>=18'}
+
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
     engines: {node: '>= 18'}
@@ -4650,6 +4678,18 @@ packages:
     resolution: {integrity: sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg==}
     engines: {node: '>=18'}
 
+  xml2js@0.6.2:
+    resolution: {integrity: sha512-T4rieHaC1EXcES0Kxxj4JWgaUQHDk+qwHcYOCFHfiwKz7tOVPLq7Hjq9dM1WCMhylqMEfP7hMcOIChvotiZegA==}
+    engines: {node: '>=4.0.0'}
+
+  xmlbuilder@11.0.1:
+    resolution: {integrity: sha512-fDlsI/kFEx7gLvbecc0/ohLG50fugQp8ryHzMTuW9vSa1GJ0XYWKnhsUx7oie3G98+r56aTQIUB4kht42R3JvA==}
+    engines: {node: '>=4.0'}
+
+  xmlbuilder@15.1.1:
+    resolution: {integrity: sha512-yMqGBqtXyeN1e3TGYvgNgDVZ3j84W4cwkOXQswghol6APgZWaff9lnbvN7MHYJOiXsvGPXtjTYJEiC9J2wv9Eg==}
+    engines: {node: '>=8.0'}
+
   xmlchars@2.2.0:
     resolution: {integrity: sha512-JZnDKK8B0RCDw84FNdDAIpZK+JuJw+s7Lz8nksI7SIuU3UXJJslUthsi+uWBUYOwPFwW7W7PRLRfUKpxjtjFCw==}
 
@@ -5431,6 +5471,19 @@ snapshots:
       '@expressive-code/core': 0.44.4
 
   '@fontsource-variable/plus-jakarta-sans@5.3.0': {}
+
+  '@guidepup/guidepup@0.40.0':
+    dependencies:
+      dbus-native: 0.15.2
+      debug: 4.4.3
+      plist: 4.0.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@guidepup/playwright@0.21.0(@guidepup/guidepup@0.40.0)(@playwright/test@1.65.1)':
+    dependencies:
+      '@guidepup/guidepup': 0.40.0
+      '@playwright/test': 1.65.1
 
   '@hocuspocus/common@4.9.0':
     dependencies:
@@ -6321,6 +6374,8 @@ snapshots:
     optionalDependencies:
       '@vue/server-renderer': 3.5.46
 
+  '@xmldom/xmldom@0.9.12': {}
+
   '@yuku-toolchain/darwin-arm64@0.28.1':
     optional: true
 
@@ -6724,6 +6779,10 @@ snapshots:
       whatwg-url: 17.3.0
     transitivePeerDependencies:
       - '@noble/hashes'
+
+  dbus-native@0.15.2:
+    dependencies:
+      xml2js: 0.6.2
 
   debug@3.2.7:
     dependencies:
@@ -8049,6 +8108,11 @@ snapshots:
     dependencies:
       playwright-core: 1.65.1
 
+  plist@4.0.0:
+    dependencies:
+      '@xmldom/xmldom': 0.9.12
+      xmlbuilder: 15.1.1
+
   postcss-load-config@6.0.1(postcss@8.5.33)(yaml@2.9.1):
     dependencies:
       lilconfig: 3.1.5
@@ -9034,6 +9098,15 @@ snapshots:
   xhr2@0.2.1: {}
 
   xml-name-validator@5.0.0: {}
+
+  xml2js@0.6.2:
+    dependencies:
+      sax: 1.6.1
+      xmlbuilder: 11.0.1
+
+  xmlbuilder@11.0.1: {}
+
+  xmlbuilder@15.1.1: {}
 
   xmlchars@2.2.0: {}
 

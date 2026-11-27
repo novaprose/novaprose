@@ -11,6 +11,7 @@ export default tseslint.config(
       'scripts/**/*.mjs',
       'packages/*/scripts/**/*.mjs',
       'apps/*/scripts/**/*.mjs',
+      'screen-reader/**/*.mjs',
       'examples/server-render/**/*.js',
     ],
     languageOptions: {
