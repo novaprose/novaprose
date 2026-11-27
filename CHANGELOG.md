@@ -144,6 +144,8 @@ All packages in this repository are versioned together. The format follows
 - Languages on demand: `registerLanguage('de', () => import('@novaprose/core/i18n/de'))` registers
   a pack that is downloaded only when needed; `await loadLanguage('de')` loads it before the editor
   is created, and `hasLanguage(code)` tells whether a language is ready.
+- The `SchemaSpecs` type is exported. The types of `@novaprose/core/html-rules` used it without a
+  public name, so a type inferred from them could fail with TS2742 in your project.
 
 ### Plugins API
 

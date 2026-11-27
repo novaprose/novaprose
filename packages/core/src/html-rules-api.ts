@@ -20,6 +20,7 @@ export interface HtmlRulesOptions {
   customElements?: string;
 }
 
+/** The node and mark specs the document schema is built from; HTML rules change them before that. */
 export interface SchemaSpecs {
   nodes: Record<string, NodeSpec>;
   marks: Record<string, MarkSpec>;

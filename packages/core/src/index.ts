@@ -96,6 +96,7 @@ export {
   type HtmlRulesModule,
   type HtmlRulesOptions,
   type HtmlRulesInstance,
+  type SchemaSpecs,
 } from './html-rules-api';
 export { defaultToolbar, type ToolbarConfig, type ToolbarMode } from './ui/toolbar';
 export {
