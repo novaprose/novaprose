@@ -10,10 +10,11 @@ import { crc32, unzip, zip } from '../src/docx/zip';
  * (styles, numbering, fields, merged cells, footnotes, revisions), the round trip.
  */
 
-let editor: Editor | null = null;
+// Every editor a test makes is destroyed after it: one left alive keeps loading its lazy parts after
+// the test file ends, and vitest reports that as errors after the environment was torn down.
+const editors: Editor[] = [];
 afterEach(() => {
-  editor?.destroy();
-  editor = null;
+  editors.splice(0).forEach((e) => e.destroy());
   document.body.innerHTML = '';
   vi.restoreAllMocks();
 });
@@ -21,7 +22,8 @@ afterEach(() => {
 function mount(content: string, options: Record<string, unknown> = {}): Editor {
   const element = document.createElement('div');
   document.body.append(element);
-  editor = createEditor({ element, content, ...options });
+  const editor = createEditor({ element, content, ...options });
+  editors.push(editor);
   return editor;
 }
 
