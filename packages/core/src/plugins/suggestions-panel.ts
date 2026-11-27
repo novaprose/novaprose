@@ -2,7 +2,9 @@ import type { Node as PMNode } from 'prosemirror-model';
 import { TextSelection } from 'prosemirror-state';
 import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
+import { COMMENT_MAX_LENGTH, newCommentId, type CommentThread } from '../comments';
 import { activeElement, h, uniqueId } from '../ui/dom';
+import { getComments } from './comments';
 import css from './suggestions-panel.css?raw';
 import {
   listSuggestions,
@@ -14,8 +16,10 @@ import {
 /**
  * The suggestions panel (loads on first open): every suggestion as a card — who, when, what — with
  * Accept and Reject; a filter by author, and "Accept shown" / "Reject shown" for what the filter shows
- * (all of one person's suggestions at once). User data goes only through textContent (h()), never
- * innerHTML: other people write the suggestions.
+ * (all of one person's suggestions at once). With the comments plugin, a suggestion is discussed on
+ * its card: the replies are a comment thread linked to the suggestion, and it is resolved when the
+ * suggestion is accepted or rejected. User data goes only through textContent (h()), never
+ * innerHTML: other people write the suggestions and the replies.
  */
 
 export interface SuggestionCard {
@@ -150,6 +154,11 @@ export function createSuggestionsPanel(
   let shownAuthor = '';
   const names = new Map<string, string>();
   let cards: SuggestionCard[] = [];
+  // Discussions (the comments plugin): open reply boxes and what was typed in them, by card, kept
+  // across redraws (a collaborator's edit redraws the panel while you type).
+  const comments = getComments(editor);
+  const drafts = new Map<string, { text: string; start: number; end: number }>();
+  const offThreads = comments?.store.subscribe(() => render()) ?? (() => {});
 
   const select = h('select', { className: 'nova-input nova-sugg-select', id: selectId });
   select.addEventListener('change', () => {
@@ -310,12 +319,191 @@ export function createSuggestionsPanel(
         when(card.time),
       ),
       summary,
+      discussion(card, key, summaryId),
       canReview
         ? h('div', { className: 'nova-sugg-actions' }, action('accept'), action('reject'))
         : null,
     );
     item.style.setProperty('--nova-suggestion', suggestionColor(authorKey(card.author)));
     return item;
+  }
+
+  /** The comment thread about a card's suggestion (a replacement has two ids: either one). */
+  function threadOf(card: SuggestionCard): CommentThread | undefined {
+    return comments?.store
+      .threads()
+      .find((thread) => thread.suggestion !== undefined && card.ids.includes(thread.suggestion));
+  }
+
+  /** Focus a control of a card after a redraw (compared as strings: ids from JSON can be anything). */
+  function focusControl(key: string, action: string): void {
+    [...list.querySelectorAll<HTMLElement>('[data-action]')]
+      .find((el) => el.getAttribute('data-key') === key && el.dataset.action === action)
+      ?.focus();
+  }
+
+  /** The replies about a suggestion and a box to add one (with the comments plugin). */
+  function discussion(card: SuggestionCard, key: string, summaryId: string): HTMLElement | null {
+    const c = comments;
+    if (!c) return null;
+    const thread = threadOf(card);
+    const replies = thread?.comments ?? [];
+    const replyList = replies.length
+      ? h(
+          'ul',
+          { className: 'nova-sugg-replies' },
+          ...replies.map((comment) => {
+            const textId = uniqueId('nova-sugg-reply');
+            return h(
+              'li',
+              { className: 'nova-sugg-reply' },
+              h(
+                'div',
+                { className: 'nova-sugg-reply-head' },
+                h(
+                  'span',
+                  { className: 'nova-sugg-reply-author' },
+                  comment.author.name || labels.guest,
+                ),
+                when(comment.createdAt),
+                thread && c.canEdit(comment)
+                  ? h(
+                      'button',
+                      {
+                        type: 'button',
+                        className: 'nova-sugg-reply-delete',
+                        'data-key': key + ':' + comment.id,
+                        'data-action': 'delete-reply',
+                        'aria-describedby': textId,
+                        onClick: () => {
+                          if (thread.comments.length > 1)
+                            c.store.deleteComment(thread.id, comment.id);
+                          else c.store.deleteThread(thread.id);
+                          focusControl(key, 'reply');
+                        },
+                      },
+                      c.labels.remove,
+                    )
+                  : null,
+              ),
+              h('p', { className: 'nova-sugg-reply-text', id: textId }, comment.text),
+            );
+          }),
+        )
+      : null;
+    const label = thread ? c.labels.reply : c.labels.comment;
+    const draft = drafts.get(key);
+    if (!draft) {
+      return h(
+        'div',
+        { className: 'nova-sugg-discussion' },
+        replyList,
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'nova-button nova-sugg-reply-open',
+            'data-key': key,
+            'data-action': 'reply',
+            'aria-describedby': summaryId,
+            onClick: () => {
+              drafts.set(key, { text: '', start: 0, end: 0 });
+              render();
+              focusControl(key, 'draft');
+            },
+          },
+          label,
+        ),
+      );
+    }
+    const placeholder = thread ? c.labels.replyPlaceholder : c.labels.placeholder;
+    const input = h('textarea', {
+      className: 'nova-input nova-sugg-reply-input',
+      rows: 2,
+      maxLength: COMMENT_MAX_LENGTH,
+      placeholder,
+      'aria-label': placeholder,
+      'aria-describedby': summaryId,
+      'data-key': key,
+      'data-action': 'draft',
+    }) as HTMLTextAreaElement;
+    input.value = draft.text;
+    const remember = () =>
+      drafts.set(key, { text: input.value, start: input.selectionStart, end: input.selectionEnd });
+    input.addEventListener('input', remember);
+    input.addEventListener('select', remember);
+    input.addEventListener('keyup', remember);
+    const cancel = () => {
+      drafts.delete(key);
+      render();
+      focusControl(key, 'reply');
+    };
+    const send = () => {
+      const text = input.value.trim().slice(0, COMMENT_MAX_LENGTH);
+      if (!text) return input.focus();
+      drafts.delete(key);
+      const current = threadOf(card);
+      if (current) c.reply(current.id, text);
+      else {
+        const now = Date.now();
+        c.store.createThread({
+          id: newCommentId('t'),
+          createdAt: now,
+          resolved: null,
+          suggestion: key,
+          comments: [{ id: newCommentId(), author: c.author, text, createdAt: now }],
+        });
+      }
+      render();
+      focusControl(key, 'reply');
+    };
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        send();
+      } else if (event.key === 'Escape') {
+        // The reply box closes, not the panel.
+        event.preventDefault();
+        event.stopPropagation();
+        cancel();
+      }
+    });
+    return h(
+      'div',
+      { className: 'nova-sugg-discussion' },
+      replyList,
+      h(
+        'div',
+        { className: 'nova-sugg-reply-box' },
+        input,
+        h(
+          'div',
+          { className: 'nova-sugg-reply-actions' },
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'nova-button',
+              'data-key': key,
+              'data-action': 'cancel',
+              onClick: cancel,
+            },
+            c.labels.cancel,
+          ),
+          h(
+            'button',
+            {
+              type: 'button',
+              className: 'nova-button nova-button-primary',
+              'data-key': key,
+              'data-action': 'send',
+              onClick: send,
+            },
+            label,
+          ),
+        ),
+      ),
+    );
   }
 
   function renderFilter(): void {
@@ -379,8 +567,12 @@ export function createSuggestionsPanel(
       const same = [...list.querySelectorAll<HTMLElement>('[data-action]')].find(
         (b) => b.getAttribute('data-key') === focusKey && b.dataset.action === focusAction,
       );
-      if (same && !(same as HTMLButtonElement).disabled) same.focus();
-      else {
+      if (same && !(same as HTMLButtonElement).disabled) {
+        same.focus();
+        // A reply box: the caret where it was.
+        const draft = focusAction === 'draft' ? drafts.get(focusKey) : undefined;
+        if (draft) (same as HTMLTextAreaElement).setSelectionRange(draft.start, draft.end);
+      } else {
         // The card went (accepted or rejected): the card that took its place, or the last one.
         const index = oldKeys.indexOf(focusKey);
         const buttons = [...list.querySelectorAll<HTMLElement>('[data-action="go"]')];
@@ -412,6 +604,7 @@ export function createSuggestionsPanel(
       offChange();
       offSelection();
       offEditable();
+      offThreads();
     },
   };
 }

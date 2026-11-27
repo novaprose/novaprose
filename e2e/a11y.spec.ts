@@ -298,6 +298,13 @@ for (const theme of ['light', 'dark'] as const) {
       // The active card (the cursor in a suggestion) has its own look: check it too.
       await page.locator('.nova-sugg-summary').first().click();
       await audit(page, 'suggestions panel');
+      // A discussion on a card: a reply, and the box for the next one.
+      const card = page.locator('.nova-sugg-card').first();
+      await card.getByRole('button', { name: 'Comment' }).click();
+      await page.keyboard.type('Why June?');
+      await page.keyboard.press('ControlOrMeta+Enter');
+      await card.getByRole('button', { name: 'Reply' }).click();
+      await audit(page, 'suggestion discussion');
     });
 
     test('footnotes: numbers in the text, the notes at the end', async ({ page }) => {

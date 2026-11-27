@@ -158,3 +158,75 @@ span.nova-sugg-text:not(.is-object) {
   color: var(--nova-muted);
   font-size: 12px;
 }
+/* The discussion of a suggestion (with the comments plugin): the replies and a box for one more. */
+.nova-sugg-discussion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nova-sugg-replies {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0 0 0 8px;
+  border-inline-start: 2px solid var(--nova-border);
+  list-style: none;
+}
+.nova-sugg-reply-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+.nova-sugg-reply-author {
+  color: var(--nova-fg);
+  font-weight: 600;
+}
+.nova-sugg-reply-text {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  line-height: 1.45;
+}
+.nova-sugg-reply-delete {
+  margin-inline-start: auto;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--nova-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.nova-sugg-reply-delete:hover {
+  background: var(--nova-hover);
+  color: var(--nova-fg);
+}
+.nova-sugg-reply-delete:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 1px;
+}
+.nova-sugg-reply-open {
+  align-self: flex-start;
+}
+.nova-sugg-reply-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.nova-sugg-reply-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  resize: vertical;
+  font: inherit;
+}
+.nova-sugg-reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}

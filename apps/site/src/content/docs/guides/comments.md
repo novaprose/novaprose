@@ -39,7 +39,9 @@ createEditor({
 
 Threads are plain JSON (`CommentThread[]`): an `id`, the `comments` (author, text, time) and
 `resolved`. Data that comes back from your API is validated before it is shown, and every name
-and comment is rendered as text, never as HTML.
+and comment is rendered as text, never as HTML. A thread with a `suggestion` field is a
+discussion of a [suggested edit](/guides/suggested-edits/#discussing-a-suggestion): it shows on
+the suggestion's card, not in the comments panel.
 
 By default people can edit and delete only their own comments. Change it with `canEdit`:
 

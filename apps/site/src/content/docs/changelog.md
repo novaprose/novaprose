@@ -13,6 +13,12 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Discussing a suggested edit: with the `comments` plugin, every card in the **Suggestions** panel
+  has a **Comment** button, and replies follow one another on the card (Ctrl+Enter sends, Esc
+  closes the box, your own replies can be deleted). Accepting or rejecting the suggestion resolves
+  its discussion. A discussion is a comment thread with a `suggestion` field: it is saved, passed
+  to `onChange` and synced in real-time collaboration like any other thread, and it stays out of
+  the comments panel. `resolveSuggestions` marks its transaction with what it decided.
 - `autocorrect` plugin: common typos are corrected as you type ("teh" → "the", "recieve" →
   "receive", "i" → "I", TWo INitial CApitals), when the word ends, in the case it was typed in and
   with its formatting. Backspace right after a correction puts back what was typed and leaves that

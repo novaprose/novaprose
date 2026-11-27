@@ -485,10 +485,13 @@ export function createCommentsPanel(controller: CommentsController) {
     const focused = list.contains(active)
       ? (active as HTMLElement).getAttribute('data-draft')
       : null;
-    const threads = [...store.threads()].sort(
-      (a, b) =>
-        controller.positionOf(a.id) - controller.positionOf(b.id) || a.createdAt - b.createdAt,
-    );
+    // Discussions of suggested edits are on the suggestions' cards, not here.
+    const threads = [...store.threads()]
+      .filter((t) => !t.suggestion)
+      .sort(
+        (a, b) =>
+          controller.positionOf(a.id) - controller.positionOf(b.id) || a.createdAt - b.createdAt,
+      );
     const open = threads.filter((t) => !t.resolved);
     const visible = showResolved ? threads : open;
     countEl.textContent = open.length ? String(open.length) : '';

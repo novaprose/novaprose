@@ -102,4 +102,16 @@ describe('comments in real-time collaboration', () => {
     expect(texts).toEqual(['A', 'B', 'Q']);
     expect(storeB.threads()[0]!.comments).toHaveLength(1);
   });
+
+  it('a discussion of a suggestion reaches the other side linked to that suggestion', () => {
+    const [docA, docB] = linkedDocs();
+    const author = { id: 'u', name: 'U' };
+    yCommentStore(docA).createThread({
+      id: 't2',
+      createdAt: 1,
+      suggestion: 's1',
+      comments: [{ id: 'c0', author, text: 'Why?', createdAt: 1 }],
+    });
+    expect(yCommentStore(docB).threads()).toMatchObject([{ id: 't2', suggestion: 's1' }]);
+  });
 });

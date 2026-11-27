@@ -110,6 +110,33 @@ test("the panel: every suggestion as a card; one author's at once with the filte
   await expect.poll(() => html(page)).toBe('<p>Ship in June.</p><p>A good plan.</p>');
 });
 
+test('a suggestion is discussed on its card; accepting it resolves the discussion', async ({
+  page,
+}) => {
+  await open(page, BY_TWO);
+  await clickControl(page, 'reviewsuggestions');
+  await page.getByRole('menuitem', { name: 'Show all suggestions' }).click();
+  const panel = page.getByRole('complementary', { name: 'Suggestions' });
+  const card = panel.locator('.nova-sugg-card').first();
+  await card.getByRole('button', { name: 'Comment' }).click();
+  const box = card.getByRole('textbox', { name: 'Add a comment…' });
+  await expect(box).toBeFocused();
+  await page.keyboard.type('Why June?');
+  await page.keyboard.press('ControlOrMeta+Enter');
+  await expect(card.locator('.nova-sugg-reply-text')).toHaveText(['Why June?']);
+  await card.getByRole('button', { name: 'Reply' }).click();
+  await page.keyboard.type('The launch moved.');
+  await card.getByRole('button', { name: 'Reply' }).click();
+  await expect(card.locator('.nova-sugg-reply-text')).toHaveText([
+    'Why June?',
+    'The launch moved.',
+  ]);
+  // Accepted: the card and its discussion go (the thread is resolved; see the unit tests).
+  await card.getByRole('button', { name: 'Accept' }).click();
+  await expect(panel.locator('.nova-sugg-card')).toHaveCount(2);
+  await expect(panel.locator('.nova-sugg-reply')).toHaveCount(0);
+});
+
 test('Ctrl+B in suggesting mode suggests the format; Reject takes the bold away', async ({
   page,
 }) => {

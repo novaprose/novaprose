@@ -31,6 +31,11 @@ export interface CommentThread {
   comments: Comment[];
   /** The thread is resolved: its highlight in the text is hidden, the discussion stays in the history. */
   resolved?: { by: CommentAuthor; at: number } | null;
+  /**
+   * A discussion of a suggested edit (the suggestion's id) rather than of a piece of text: it shows
+   * on the suggestion's card and is resolved when the suggestion is accepted or rejected.
+   */
+  suggestion?: string;
 }
 
 /** A store of threads. Its methods are synchronous: the UI updates at once, saving is up to you. */
@@ -68,7 +73,7 @@ export function sanitizeThread(value: unknown): CommentThread | null {
     ? raw.comments.map(sanitizeComment).filter((c): c is Comment => c !== null)
     : [];
   const resolved = raw.resolved as Record<string, unknown> | null | undefined;
-  return {
+  const thread: CommentThread = {
     id: raw.id,
     createdAt: Number(raw.createdAt) || 0,
     comments,
@@ -77,6 +82,9 @@ export function sanitizeThread(value: unknown): CommentThread | null {
         ? { by: sanitizeAuthor(resolved.by), at: Number(resolved.at) || 0 }
         : null,
   };
+  if (typeof raw.suggestion === 'string' && COMMENT_ID_RE.test(raw.suggestion))
+    thread.suggestion = raw.suggestion;
+  return thread;
 }
 
 function sanitizeAuthor(value: unknown): CommentAuthor {

@@ -20,6 +20,7 @@ export function yCommentStore(ydoc: Y.Doc, name = 'comments'): CommentStore {
         id: thread.get('id'),
         createdAt: thread.get('createdAt'),
         resolved: thread.get('resolved'),
+        suggestion: thread.get('suggestion'),
         comments: comments instanceof Y.Array ? comments.toArray() : [],
       });
       if (clean) threads.push(clean);
@@ -53,6 +54,7 @@ export function yCommentStore(ydoc: Y.Doc, name = 'comments'): CommentStore {
         map.set('id', clean.id);
         map.set('createdAt', clean.createdAt);
         map.set('resolved', clean.resolved ?? null);
+        if (clean.suggestion) map.set('suggestion', clean.suggestion);
         const comments = new Y.Array<unknown>();
         comments.push(clean.comments);
         map.set('comments', comments);

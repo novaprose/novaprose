@@ -90,6 +90,9 @@ export const suggestionsKey = new PluginKey<{ enabled: boolean }>('nova-suggesti
 /** The marker of the plugin's own transactions (accept/reject, toggling the mode): they aren't tracked. */
 export const OWN = 'nova-suggestions-own';
 
+/** On a transaction that accepts or rejects suggestions: `{ action, ids }`. */
+export const RESOLVED = 'nova-suggestions-resolved';
+
 /**
  * Author colors: the text of an edit in this color has a contrast of at least 6:1 on white, on the tinted
  * background (insertion) and in the dark theme (where the color is lightened by 45%). It was below 4.5:1 until axe caught it.
@@ -580,6 +583,7 @@ export function resolveSuggestions(
   const types = typesOf(state.schema);
   const tr = state.tr.setMeta(OWN, true);
   const chosen = listSuggestions(state.doc).filter((s) => !ids || ids.includes(s.id));
+  tr.setMeta(RESOLVED, { action, ids: [...new Set(chosen.map((s) => s.id))] });
   // Formats first: they don't move text, and the text they are on may go next.
   for (const s of chosen) if (s.kind === 'format') resolveFormat(tr, s, action);
   // Blocks whose text was removed (the position before the block).

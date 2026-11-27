@@ -8,12 +8,14 @@ import {
   LABELS as BASE_LABELS,
   listSuggestions,
   resolveSuggestions,
+  RESOLVED,
   setSuggesting,
   suggestionsResult,
   type Suggestion,
   type SuggestionsOptions,
 } from './suggestions';
 import type { createSuggestionsPanel } from './suggestions-panel';
+import { getComments } from './comments';
 import { pickLabels } from './shared';
 
 /**
@@ -219,6 +221,20 @@ export default definePlugin({
       onAction: (e) => setSuggesting(e, !isSuggesting(e.view.state)),
     });
 
+    // A suggestion accepted or rejected: its discussion (the comments plugin) is resolved with it,
+    // by whoever decided. Only here, where it was decided: a collaborator gets the thread resolved
+    // through the shared store.
+    const offResolved = editor.on('change', (_editor, { transaction }) => {
+      const done = transaction.getMeta(RESOLVED) as { ids: string[] } | undefined;
+      const comments = done?.ids.length ? getComments(editor) : undefined;
+      if (!done || !comments) return;
+      const at = Date.now();
+      for (const thread of comments.store.threads()) {
+        if (thread.suggestion && !thread.resolved && done.ids.includes(thread.suggestion))
+          comments.store.setResolved(thread.id, { by: comments.author, at });
+      }
+    });
+
     // The panel: every suggestion with its author and time, a filter by author, accept and reject.
     let panel: ReturnType<typeof createSuggestionsPanel> | null = null;
     editor.ui.registry.addSidebar(PANEL, {
@@ -241,5 +257,6 @@ export default definePlugin({
       },
       onShow: () => panel?.render(),
     });
+    return offResolved;
   },
 });

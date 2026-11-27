@@ -50,6 +50,28 @@ The **Review suggestions** menu also has:
 Toolbar names: `suggestions` (the mode), `reviewsuggestions` (the menu), `suggestionspanel` (the
 panel), `acceptsuggestion` and `rejectsuggestion` (for your own toolbars).
 
+## Discussing a suggestion
+
+With the [comments](/guides/comments/) plugin as well, every card has a **Comment** button: ask
+why, agree, propose something else. Replies follow one another on the card (<kbd>Ctrl</kbd>+<kbd>Enter</kbd>
+sends, <kbd>Esc</kbd> closes the box), and your own can be deleted. When the suggestion is
+accepted or rejected, its discussion is resolved by whoever decided.
+
+```ts
+createEditor({
+  element,
+  plugins: ['suggestions', 'comments'],
+  pluginOptions: {
+    suggestions: { author },
+    comments: { author, threads: saved.threads, onChange: (threads) => save(threads) },
+  },
+});
+```
+
+A discussion is a comment thread with a `suggestion` field, the id of the suggestion it is about:
+it is saved, synced in [real-time collaboration](/guides/collaboration/) and passed to `onChange`
+like any other thread, and it shows on the suggestion's card rather than in the comments panel.
+
 ## How suggestions are stored
 
 Suggestions are part of the content, so they are saved with your HTML and sync in
