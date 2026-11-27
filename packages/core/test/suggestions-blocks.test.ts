@@ -267,3 +267,17 @@ describe('paragraph breaks as suggestions', () => {
     expect(e.getHTML()).toBe(saved);
   });
 });
+
+describe("edits that are not the user's own are never turned into block suggestions", () => {
+  it("a collaborator's join, an undo-free change and an API change apply as they are", async () => {
+    for (const meta of [
+      ['y-sync$', { isChangeOrigin: true }],
+      ['addToHistory', false],
+    ] as const) {
+      const e = await mount('<p>ab</p><p>cd</p>');
+      e.view.dispatch(e.view.state.tr.join(4).setMeta(meta[0], meta[1]));
+      expect(e.getHTML(), String(meta[0])).toBe('<p>abcd</p>');
+      expect(listSuggestions(e.view.state.doc), String(meta[0])).toEqual([]);
+    }
+  });
+});

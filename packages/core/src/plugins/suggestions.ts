@@ -373,8 +373,12 @@ export function formatMarks(schema: EditorState['schema'], before: unknown): Mar
 const sameMarks = (a: readonly Mark[], b: readonly Mark[]) =>
   a.length === b.length && a.every((mark) => mark.isInSet(b));
 
-/** Transactions that must not become suggestions. */
-function isTracked(tr: Transaction): boolean {
+/**
+ * This user's own edit: not the plugin's own (accept, reject), not a document being loaded, not
+ * undo or redo, not a collaborator's change, not one kept out of the history. Only these become
+ * suggestions.
+ */
+function isUserEdit(tr: Transaction): boolean {
   if (!tr.docChanged || tr.getMeta(OWN)) return false;
   if (tr.getMeta('addToHistory') === false) return false;
   // setContent loads a document: that is not an edit to suggest.
@@ -382,9 +386,13 @@ function isTracked(tr: Transaction): boolean {
   // Undo/redo (own and shared history) and other participants' edits arrive ready-made.
   if (tr.getMeta('history$')) return false;
   const ySync = tr.getMeta('y-sync$') as { isChangeOrigin?: boolean } | undefined;
-  if (ySync?.isChangeOrigin) return false;
-  // Inserted and deleted text and text formatting are tracked; structure (lists, wrappers, block
-  // attributes) changes directly.
+  return !ySync?.isChangeOrigin;
+}
+
+/** Edits tracked as text: inserted and deleted text and text formatting. */
+function isTracked(tr: Transaction): boolean {
+  // Structure (lists, wrappers) changes directly; block types and styles and paragraph breaks are
+  // the block tracker's.
   return tr.steps.every(
     (step) =>
       step instanceof ReplaceStep || step instanceof AddMarkStep || step instanceof RemoveMarkStep,
@@ -482,8 +490,9 @@ export function suggestTransaction(
   state: EditorState,
   author: SuggestionAuthor,
 ): Transaction {
-  // A change of a block's type or style: the block remembers what it was.
-  const blocks = tr.docChanged && !tr.getMeta(OWN) ? trackBlocks?.(tr, state, author) : null;
+  if (!isUserEdit(tr)) return tr;
+  // A change of a block's type or style, a paragraph break: the block remembers it.
+  const blocks = trackBlocks?.(tr, state, author);
   if (blocks) return blocks;
   if (!isTracked(tr)) return tr;
   const types = typesOf(state.schema);

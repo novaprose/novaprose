@@ -8,6 +8,9 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- **Fixed:** in suggesting mode, a collaborator's change (or one kept out of the undo history) that
+  looked like a paragraph break or a block style change could be turned into a suggestion on your
+  side instead of being applied as it was; only your own edits become suggestions.
 - `typography` plugin: the **Enhance typography** button gives the selection (or the whole
   text) the typography of its language — typographic quotes as the language writes them (“ ”,
   „ “, « », ‘ ’ nested), apostrophes, dashes, an ellipsis, ©, ®, ™, arrows, ≤ ≥ ≠ ±, ½ ¼ ¾, ×,
