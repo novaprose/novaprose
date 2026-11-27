@@ -237,7 +237,6 @@ export default definePlugin({
           canReview,
         );
         container.append(panel.el);
-        panel.render();
         return () => panel?.destroy();
       },
       onShow: () => panel?.render(),

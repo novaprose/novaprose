@@ -626,6 +626,37 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/spellchecker/);
   });
 
+  it('a11ychecker: the a11ycheck button and the a11ychecker_* options', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page(
+      '<textarea id="t"><h2>A</h2><h4>B</h4><p><img src="https://example.com/x.png" alt=""></p></textarea>',
+    );
+    const filtered: string[] = [];
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'a11ychecker',
+      toolbar: 'a11ycheck',
+      a11ychecker_level: 'AA',
+      a11ychecker_ignored_rules: 'D1, N1',
+      a11ychecker_filter_issue: (issue: { id: string; contentID: string }) => {
+        filtered.push(`${issue.id}:${issue.contentID}`);
+        return true;
+      },
+    });
+    const { core } = editor!;
+    expect(core.ui.registry.has('a11ycheck')).toBe(true);
+    await core.ui.sidebar.show('a11ychecker');
+    const panel = await vi.waitFor(() => {
+      const el = core.root.querySelector<HTMLElement>('.nova-a11y-panel');
+      if (!el) throw new Error('no panel');
+      return el;
+    });
+    // As in TinyMCE, alt="" is flagged (I1) unless decorative images are allowed.
+    expect(filtered).toEqual(['D2:B', 'I1:x.png']);
+    expect(panel.querySelectorAll('.nova-a11y-card')).toHaveLength(2);
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/a11ychecker/);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

@@ -203,6 +203,57 @@ const de: LanguagePack = {
   'advlist.lower-roman': 'Römisch klein (i, ii, iii)',
   'advlist.upper-roman': 'Römisch groß (I, II, III)',
   'advlist.lower-greek': 'Griechisch (α, β, γ)',
+  'a11ychecker.button': 'Barrierefreiheit prüfen',
+  'a11ychecker.panel': 'Barrierefreiheit',
+  'a11ychecker.checkAgain': 'Erneut prüfen',
+  'a11ychecker.summary': 'Fehler: {errors}. Warnungen: {warnings}.',
+  'a11ychecker.none': 'Keine Probleme mit der Barrierefreiheit gefunden.',
+  'a11ychecker.error': 'Fehler',
+  'a11ychecker.warning': 'Warnung',
+  'a11ychecker.wcag': 'WCAG {level}',
+  'a11ychecker.show': 'Im Text zeigen',
+  'a11ychecker.ignore': 'Ignorieren',
+  'a11ychecker.altText': 'Alternativtext',
+  'a11ychecker.save': 'Speichern',
+  'a11ychecker.decorative': 'Dekoratives Bild',
+  'a11ychecker.fixed': 'Behoben.',
+  'a11ychecker.ruleI1':
+    'Ein dekoratives Bild: beschreiben Sie, was es zeigt, falls es etwas aussagt.',
+  'a11ychecker.ruleI2':
+    'Ein Bild ohne Alternativtext: Screenreader können nicht sagen, was es zeigt.',
+  'a11ychecker.ruleI3':
+    'Der Alternativtext ist ein Dateiname: beschreiben Sie, was das Bild zeigt.',
+  'a11ychecker.ruleI4':
+    'Der Alternativtext ist sehr lang: halten Sie ihn kurz, Details gehören in den Text.',
+  'a11ychecker.ruleD1':
+    'Dieser Absatz sieht wie eine Überschrift aus: machen Sie eine daraus, damit man die Struktur durchgehen kann.',
+  'a11ychecker.ruleD2':
+    'Eine Überschriftenebene wird übersprungen: Überschriften gehen eine Ebene nach der anderen nach unten.',
+  'a11ychecker.ruleD3':
+    'Zwei benachbarte Links führen zur selben Adresse: machen Sie einen Link daraus.',
+  'a11ychecker.ruleD4U':
+    'Eine mit Aufzählungszeichen getippte Liste: machen Sie eine echte Liste daraus.',
+  'a11ychecker.ruleD4O':
+    'Eine mit Zahlen getippte Liste: machen Sie eine echte nummerierte Liste daraus.',
+  'a11ychecker.ruleD5':
+    'Der Text hat zu wenig Kontrast zum Hintergrund ({ratio}:1, nötig sind {required}:1).',
+  'a11ychecker.ruleH93':
+    'Dieselbe ID wird zweimal verwendet: Links darauf können die Stellen nicht unterscheiden.',
+  'a11ychecker.ruleT4B':
+    'Eine Tabelle ohne Kopfzellen: Screenreader können nicht sagen, was die Zellen bedeuten.',
+  'a11ychecker.ruleN1': 'Der Linktext sagt nicht, wohin er führt („hier klicken“, „mehr lesen“).',
+  'a11ychecker.ruleN2': 'Eine leere Überschrift.',
+  'a11ychecker.ruleN3': 'Ein Link ohne Text.',
+  'a11ychecker.fixHeading': 'Zu Überschrift {level} machen',
+  'a11ychecker.fixLevel': 'In Überschrift {level} ändern',
+  'a11ychecker.fixRemoveHeading': 'Überschrift entfernen',
+  'a11ychecker.fixJoin': 'Links zusammenfassen',
+  'a11ychecker.fixList': 'Zu einer Liste machen',
+  'a11ychecker.fixColor': 'Farben entfernen',
+  'a11ychecker.fixId': 'ID eindeutig machen',
+  'a11ychecker.fixHeader': 'Erste Zeile zur Kopfzeile machen',
+  'a11ychecker.fixUnlink': 'Link entfernen',
+  'a11ychecker.fixEditLink': 'Link bearbeiten',
   'anchor.title': 'Anker',
   'anchor.id': 'ID',
   'anchor.hint':

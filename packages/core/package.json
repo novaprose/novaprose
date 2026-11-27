@@ -64,6 +64,16 @@
         "default": "./dist/docx.cjs"
       }
     },
+    "./a11y": {
+      "import": {
+        "types": "./dist/a11y.d.ts",
+        "default": "./dist/a11y.js"
+      },
+      "require": {
+        "types": "./dist/a11y.d.cts",
+        "default": "./dist/a11y.cjs"
+      }
+    },
     "./html-rules": {
       "import": {
         "types": "./dist/html-rules.d.ts",

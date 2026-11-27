@@ -203,6 +203,53 @@ const ptBR: LanguagePack = {
   'advlist.lower-roman': 'Romanos minúsculos (i, ii, iii)',
   'advlist.upper-roman': 'Romanos maiúsculos (I, II, III)',
   'advlist.lower-greek': 'Grego (α, β, γ)',
+  'a11ychecker.button': 'Verificar a acessibilidade',
+  'a11ychecker.panel': 'Acessibilidade',
+  'a11ychecker.checkAgain': 'Verificar de novo',
+  'a11ychecker.summary': 'Erros: {errors}. Avisos: {warnings}.',
+  'a11ychecker.none': 'Nenhum problema de acessibilidade encontrado.',
+  'a11ychecker.error': 'Erro',
+  'a11ychecker.warning': 'Aviso',
+  'a11ychecker.wcag': 'WCAG {level}',
+  'a11ychecker.show': 'Mostrar no texto',
+  'a11ychecker.ignore': 'Ignorar',
+  'a11ychecker.altText': 'Texto alternativo',
+  'a11ychecker.save': 'Salvar',
+  'a11ychecker.decorative': 'Imagem decorativa',
+  'a11ychecker.fixed': 'Corrigido.',
+  'a11ychecker.ruleI1': 'Uma imagem decorativa: descreva o que ela mostra, se ela transmite algo.',
+  'a11ychecker.ruleI2':
+    'Uma imagem sem texto alternativo: leitores de tela não conseguem dizer o que ela mostra.',
+  'a11ychecker.ruleI3': 'O texto alternativo é um nome de arquivo: descreva o que a imagem mostra.',
+  'a11ychecker.ruleI4':
+    'O texto alternativo é muito longo: mantenha-o curto, os detalhes ficam no texto.',
+  'a11ychecker.ruleD1':
+    'Este parágrafo parece um título: transforme-o em título, para que a estrutura possa ser navegada.',
+  'a11ychecker.ruleD2': 'Um nível de título foi pulado: os títulos descem um nível de cada vez.',
+  'a11ychecker.ruleD3': 'Dois links vizinhos levam ao mesmo endereço: junte-os em um só link.',
+  'a11ychecker.ruleD4U':
+    'Uma lista digitada com marcadores à mão: transforme-a em uma lista de verdade.',
+  'a11ychecker.ruleD4O':
+    'Uma lista digitada com números à mão: transforme-a em uma lista numerada de verdade.',
+  'a11ychecker.ruleD5':
+    'O texto tem pouco contraste com o fundo ({ratio}:1, precisa de {required}:1).',
+  'a11ychecker.ruleH93':
+    'O mesmo id é usado duas vezes: links para ele não distinguem esses lugares.',
+  'a11ychecker.ruleT4B':
+    'Uma tabela sem células de cabeçalho: leitores de tela não conseguem dizer o que as células significam.',
+  'a11ychecker.ruleN1': 'O texto do link não diz para onde ele leva ("clique aqui", "leia mais").',
+  'a11ychecker.ruleN2': 'Um título vazio.',
+  'a11ychecker.ruleN3': 'Um link sem texto.',
+  'a11ychecker.fixHeading': 'Transformar em título {level}',
+  'a11ychecker.fixLevel': 'Mudar para título {level}',
+  'a11ychecker.fixRemoveHeading': 'Remover o título',
+  'a11ychecker.fixJoin': 'Juntar os links',
+  'a11ychecker.fixList': 'Transformar em lista',
+  'a11ychecker.fixColor': 'Remover as cores',
+  'a11ychecker.fixId': 'Tornar o id único',
+  'a11ychecker.fixHeader': 'Transformar a primeira linha em cabeçalho',
+  'a11ychecker.fixUnlink': 'Remover o link',
+  'a11ychecker.fixEditLink': 'Editar o link',
   'anchor.title': 'Âncora',
   'anchor.id': 'ID',
   'anchor.hint':

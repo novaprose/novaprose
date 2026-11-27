@@ -163,6 +163,16 @@ const IGNORED = new Set([
   'content_language',
   'spellchecker_languagetool_url',
   'spellchecker_check',
+  // a11ychecker: the level, ignored rules, decorative images, the alt length, a filter. HTML 5 is
+  // always checked, and there is no "more info" link.
+  'a11ychecker_level',
+  'a11ychecker_ignored_rules',
+  'a11ychecker_allow_decorative_images',
+  'a11y_advanced_options',
+  'a11ychecker_alt_text_max_length',
+  'a11ychecker_filter_issue',
+  'a11ychecker_html_version',
+  'a11ychecker_issue_url_callback',
   'template_replace_values',
   'template_preview_replace_values',
   'template_selected_content_classes',
@@ -589,6 +599,36 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.spellchecker_languagetool_url === 'string')
     spellchecker.languageTool = { url: config.spellchecker_languagetool_url };
   if (Object.keys(spellchecker).length) pluginOptions.spellchecker = spellchecker;
+  // a11ychecker: as in TinyMCE, an image with alt="" is flagged unless decorative images are allowed.
+  if (list(config.plugins).includes('a11ychecker')) {
+    const a11y: Record<string, unknown> = {
+      allowDecorativeImages:
+        (config.a11ychecker_allow_decorative_images ?? config.a11y_advanced_options) === true,
+    };
+    if (typeof config.a11ychecker_level === 'string') {
+      a11y.level = config.a11ychecker_level.toLowerCase();
+    }
+    if (typeof config.a11ychecker_ignored_rules === 'string') {
+      a11y.ignoredRules = config.a11ychecker_ignored_rules
+        .split(',')
+        .map((rule) => rule.trim())
+        .filter(Boolean);
+    }
+    if (typeof config.a11ychecker_alt_text_max_length === 'number') {
+      a11y.altTextMaxLength = config.a11ychecker_alt_text_max_length;
+    }
+    const filter = config.a11ychecker_filter_issue;
+    if (typeof filter === 'function') {
+      // Issues as TinyMCE describes them (id, severity, contentID), with ours alongside.
+      a11y.filterIssue = (issue: { rule: string; severity: string; text: string }) =>
+        (filter as (issue: unknown) => unknown)({
+          ...issue,
+          id: issue.rule,
+          contentID: issue.text,
+        }) !== false;
+    }
+    pluginOptions.a11ychecker = a11y;
+  }
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };

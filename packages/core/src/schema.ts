@@ -638,7 +638,9 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
           'img',
           {
             src,
-            ...(alt ? { alt } : {}),
+            // alt="" (a decorative image) is kept: screen readers skip such an image instead of
+            // reading its file name. No alt at all means it was never given.
+            ...(alt === null || alt === undefined ? {} : { alt: String(alt) }),
             ...(title ? { title } : {}),
             ...(width ? { width: String(width) } : {}),
             ...(height ? { height: String(height) } : {}),
@@ -694,7 +696,9 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
           {
             src,
             ...classAttr(node.attrs.class),
-            ...(alt ? { alt } : {}),
+            // alt="" (a decorative image) is kept: screen readers skip such an image instead of
+            // reading its file name. No alt at all means it was never given.
+            ...(alt === null || alt === undefined ? {} : { alt: String(alt) }),
             ...(title ? { title } : {}),
             ...(width ? { width: String(width) } : {}),
             ...(height ? { height: String(height) } : {}),

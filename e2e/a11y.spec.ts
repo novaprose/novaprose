@@ -224,6 +224,26 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'template dialog');
     });
 
+    test('the Accessibility panel with errors and a warning', async ({ page }) => {
+      await open(page, theme, '&a11y=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        // Problems axe itself doesn't count in the text (an image without alt would be one).
+        e.setContent(
+          '<h2>A</h2><h4>B</h4><p>• one</p><p>• two</p>' +
+            '<p>See <a href="https://example.com">click here</a>.</p>',
+        );
+      });
+      await control(page, 'a11ycheck');
+      await expect(page.locator('.nova-a11y-card')).toHaveCount(3);
+      // The outline of a problem in the text is part of what is checked.
+      await page.locator('.nova-a11y-card').first().hover();
+      await audit(page, 'accessibility panel');
+    });
+
     test('spell check: underlined problems and the bubble with corrections', async ({ page }) => {
       await open(page, theme, '&spell=1');
       await page.evaluate(async () => {

@@ -203,6 +203,56 @@ const fr: LanguagePack = {
   'advlist.lower-roman': 'Chiffres romains minuscules (i, ii, iii)',
   'advlist.upper-roman': 'Chiffres romains majuscules (I, II, III)',
   'advlist.lower-greek': 'Grec (α, β, γ)',
+  'a11ychecker.button': "Vérifier l'accessibilité",
+  'a11ychecker.panel': 'Accessibilité',
+  'a11ychecker.checkAgain': 'Vérifier à nouveau',
+  'a11ychecker.summary': 'Erreurs : {errors}. Avertissements : {warnings}.',
+  'a11ychecker.none': "Aucun problème d'accessibilité trouvé.",
+  'a11ychecker.error': 'Erreur',
+  'a11ychecker.warning': 'Avertissement',
+  'a11ychecker.wcag': 'WCAG {level}',
+  'a11ychecker.show': 'Afficher dans le texte',
+  'a11ychecker.ignore': 'Ignorer',
+  'a11ychecker.altText': 'Texte alternatif',
+  'a11ychecker.save': 'Enregistrer',
+  'a11ychecker.decorative': 'Image décorative',
+  'a11ychecker.fixed': 'Corrigé.',
+  'a11ychecker.ruleI1':
+    "Une image décorative : décrivez ce qu'elle montre, si elle apporte quelque chose.",
+  'a11ychecker.ruleI2':
+    "Une image sans texte alternatif : les lecteurs d'écran ne peuvent pas dire ce qu'elle montre.",
+  'a11ychecker.ruleI3':
+    "Le texte alternatif est un nom de fichier : décrivez ce que montre l'image.",
+  'a11ychecker.ruleI4':
+    'Le texte alternatif est très long : gardez-le court, les détails vont dans le texte.',
+  'a11ychecker.ruleD1':
+    'Ce paragraphe ressemble à un titre : faites-en un, pour pouvoir parcourir la structure.',
+  'a11ychecker.ruleD2':
+    "Un niveau de titre est sauté : les titres descendent d'un niveau à la fois.",
+  'a11ychecker.ruleD3': 'Deux liens voisins mènent à la même adresse : faites-en un seul lien.',
+  'a11ychecker.ruleD4U': 'Une liste tapée avec des puces à la main : faites-en une vraie liste.',
+  'a11ychecker.ruleD4O':
+    'Une liste tapée avec des numéros à la main : faites-en une vraie liste numérotée.',
+  'a11ychecker.ruleD5':
+    'Le texte manque de contraste avec son fond ({ratio}:1, il faut {required}:1).',
+  'a11ychecker.ruleH93':
+    'Le même id est utilisé deux fois : les liens ne peuvent pas distinguer ces endroits.',
+  'a11ychecker.ruleT4B':
+    "Un tableau sans cellules d'en-tête : les lecteurs d'écran ne peuvent pas dire ce que signifient les cellules.",
+  'a11ychecker.ruleN1':
+    'Le texte du lien ne dit pas où il mène (« cliquez ici », « en savoir plus »).',
+  'a11ychecker.ruleN2': 'Un titre vide.',
+  'a11ychecker.ruleN3': 'Un lien sans texte.',
+  'a11ychecker.fixHeading': 'En faire un titre {level}',
+  'a11ychecker.fixLevel': 'Passer au titre {level}',
+  'a11ychecker.fixRemoveHeading': 'Supprimer le titre',
+  'a11ychecker.fixJoin': 'Réunir les liens',
+  'a11ychecker.fixList': 'En faire une liste',
+  'a11ychecker.fixColor': 'Retirer les couleurs',
+  'a11ychecker.fixId': "Rendre l'id unique",
+  'a11ychecker.fixHeader': 'Faire de la première ligne un en-tête',
+  'a11ychecker.fixUnlink': 'Retirer le lien',
+  'a11ychecker.fixEditLink': 'Modifier le lien',
   'anchor.title': 'Ancre',
   'anchor.id': 'ID',
   'anchor.hint':

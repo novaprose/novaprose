@@ -67,6 +67,14 @@ describe('HTML in and out', () => {
     e2.setContent(json);
     expect(e2.getHTML()).toBe('<h1>Hello</h1><p>world</p>');
   });
+
+  it('a decorative image keeps alt="" (screen readers skip it); without alt, none is written', () => {
+    const decorative = '<p><img src="https://example.com/line.png" alt=""></p>';
+    expect(mount(decorative).getHTML()).toBe(decorative);
+    expect(mount('<p><img src="https://example.com/cat.png"></p>').getHTML()).toBe(
+      '<p><img src="https://example.com/cat.png"></p>',
+    );
+  });
 });
 
 describe('security', () => {

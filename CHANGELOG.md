@@ -8,6 +8,17 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- `a11ychecker` plugin: the **Accessibility** panel (`a11ycheck`) lists what breaks WCAG 2.1 in the
+  document — images without alternative text or with a file name for it, skipped heading levels,
+  empty headings, paragraphs that are headings in all but name, lists typed by hand, links side by
+  side to one address, vague or empty links, low text contrast (AA, AAA), duplicate ids, tables
+  without header cells — each with a fix where one is clear (the alternative text typed in the
+  card, Change to Heading 3, Make it a list…), Show in the text with an outline, and Ignore. It
+  checks again as the document changes. The rules don't need a browser: `checkAccessibility` from
+  `@novaprose/core/a11y` checks stored content on a server. Rule ids are TinyMCE's where the check
+  is the same; with `tinymce.init`, the `a11ychecker_*` options work. The plugin loads lazily.
+- **Fixed:** a decorative image lost its `alt=""` on output, and screen readers then read its file
+  name; an image without alternative text is still written without `alt`.
 - `spellchecker` plugin: spelling and grammar checked as you type by your own service, the way the
   AI assistant uses your model — a LanguageTool server (`languageTool: { url }`, open source and
   self-hostable) or a `check` function. Problems are underlined (spelling red, grammar blue) with

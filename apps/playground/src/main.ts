@@ -212,6 +212,8 @@ const editor = createEditor({
       : []),
     // ?spell=1: the spell checker with an offline demo service (e2e/spellchecker.spec.ts).
     ...(new URLSearchParams(location.search).has('spell') ? ['spellchecker'] : []),
+    // ?a11y=1: the accessibility checker (e2e/a11ychecker.spec.ts).
+    ...(new URLSearchParams(location.search).has('a11y') ? ['a11ychecker'] : []),
   ],
   pluginOptions: {
     ai: { request: demoModel },

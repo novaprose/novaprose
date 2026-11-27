@@ -22,6 +22,8 @@ export default defineConfig({
     docx: 'src/docx/index.ts',
     // Element and attribute rules (extendedValidElements…): ~3 KB, needed by few.
     'html-rules': 'src/html-rules.ts',
+    // Accessibility checks of a document (the a11ychecker plugin's rules): on a server too.
+    a11y: 'src/a11y.ts',
     ...packs,
   },
   format: ['esm', 'cjs'],
