@@ -93,8 +93,29 @@ export function createTinymce(): TinyMCECompat {
     }
 
     let compat!: CompatEditor;
+    // The save plugin: the callbacks get the TinyMCE-style editor; before saving, the content goes
+    // into the <textarea>, as in TinyMCE.
+    const onSave = config.save_onsavecallback;
+    const onCancel = config.save_oncancelcallback;
+    const save = {
+      ...(config.save_enablewhendirty !== undefined
+        ? { enableWhenDirty: config.save_enablewhendirty !== false }
+        : {}),
+      ...(typeof onSave === 'function'
+        ? {
+            onSave: () => {
+              compat.save();
+              return (onSave as (editor: CompatEditor) => void | Promise<void>)(compat);
+            },
+          }
+        : {}),
+      ...(typeof onCancel === 'function'
+        ? { onCancel: () => (onCancel as (editor: CompatEditor) => void)(compat) }
+        : {}),
+    };
     const core = createEditor({
       ...options,
+      ...(Object.keys(save).length ? { pluginOptions: { ...options.pluginOptions, save } } : {}),
       element: host,
       content: initial,
       setup: (editor) => {

@@ -94,7 +94,7 @@ export function copyFormat(state: EditorState): CopiedFormat {
 function wordAt(state: EditorState): { from: number; to: number } | null {
   const { $from } = state.selection;
   if (!$from.parent.isTextblock) return null;
-  const text = $from.parent.textBetween(0, $from.parent.content.size, undefined, '￼');
+  const text = $from.parent.textBetween(0, $from.parent.content.size, undefined, '\ufffc');
   const word = /[\p{L}\p{N}\p{M}'’]/u;
   let start = $from.parentOffset;
   let end = start;

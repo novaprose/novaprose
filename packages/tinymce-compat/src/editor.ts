@@ -114,6 +114,9 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mcetoggleformatpainter: 'formatpainter',
   mcetogglepermanentpen: 'permanentpen',
   mceconfigurepermanentpen: 'configurepermanentpen',
+  mcevisualchars: 'visualchars',
+  mcesave: 'save',
+  mcecancel: 'cancel',
 };
 
 /** Commands of collapsible blocks (the accordion plugin), as in the TinyMCE documentation. */
@@ -484,7 +487,8 @@ export class CompatEditor {
       return true;
     }
     const item = registry.getMenuItem(PLUGIN_COMMANDS[name]!);
-    if (!item || item.isEnabled?.(this.core) === false) return false;
+    // mceSave saves even without changes; the rest act only when their control could.
+    if (!item || (name !== 'mcesave' && item.isEnabled?.(this.core) === false)) return false;
     item.onAction(this.core);
     return true;
   }

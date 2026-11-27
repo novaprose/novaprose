@@ -154,9 +154,10 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('comments')
       ? ['comments', 'mentions', 'revisionhistory', 'suggestions']
       : []),
-    // ?tools=1: change case, format painter, permanent pen (e2e/formatting-tools.spec.ts).
+    // ?tools=1: change case, format painter, permanent pen, invisible characters, save
+    // (e2e/formatting-tools.spec.ts).
     ...(new URLSearchParams(location.search).has('tools')
-      ? ['casechange', 'formatpainter', 'permanentpen']
+      ? ['casechange', 'formatpainter', 'permanentpen', 'visualchars', 'save']
       : []),
     // ?ai=1: the AI assistant with an offline demo model (e2e/ai.spec.ts); edits arrive as suggestions.
     ...(new URLSearchParams(location.search).has('ai')
@@ -165,6 +166,12 @@ const editor = createEditor({
   ],
   pluginOptions: {
     ai: { request: demoModel },
+    // Saving in the playground keeps the HTML on the page (e2e/formatting-tools.spec.ts reads it).
+    save: {
+      onSave: (e: Editor) => {
+        (window as unknown as { lastSaved?: string }).lastSaved = e.getHTML();
+      },
+    },
     mergetags: {
       list: [
         {

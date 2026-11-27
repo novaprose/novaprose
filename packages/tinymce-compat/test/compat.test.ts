@@ -493,6 +493,40 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/casechange|permanentpen/);
   });
 
+  it('save and visualchars: save_* callbacks with the TinyMCE editor, mceSave/mceCancel, mceVisualChars', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"><p>start</p></textarea>');
+    const saved: string[] = [];
+    let canceledBy: unknown = null;
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'save visualchars',
+      toolbar: 'save cancel visualchars',
+      visualchars_default_state: true,
+      save_onsavecallback: (e: CompatEditor) => {
+        // The content is already in the <textarea>, as in TinyMCE.
+        saved.push((document.getElementById('t') as HTMLTextAreaElement).value);
+        expect(e).toBe(editor);
+      },
+      save_oncancelcallback: (e: CompatEditor) => (canceledBy = e),
+    });
+    const { core } = editor!;
+    core.view.dispatch(core.view.state.tr.insertText('new ', 1));
+    expect(editor!.execCommand('mceSave')).toBe(true);
+    await vi.waitFor(() => expect(saved).toEqual(['<p>new start</p>']));
+    core.view.dispatch(core.view.state.tr.insertText('more ', 1));
+    expect(editor!.execCommand('mceCancel')).toBe(true);
+    expect(editor!.getContent()).toBe('<p>new start</p>');
+    expect(canceledBy).toBe(editor);
+
+    expect(core.view.dom.querySelectorAll('.nova-visualchar')).toHaveLength(0);
+    core.view.dispatch(core.view.state.tr.insertText(String.fromCharCode(0xa0), 4, 5));
+    expect(core.view.dom.querySelectorAll('.nova-visualchar')).toHaveLength(1);
+    expect(editor!.execCommand('mceVisualChars')).toBe(true);
+    expect(core.view.dom.querySelectorAll('.nova-visualchar')).toHaveLength(0);
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/save|visualchars/);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

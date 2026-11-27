@@ -128,6 +128,8 @@ const editor = {
   caseChange: 'case-sensitive',
   formatPainter: 'paintbrush',
   permanentPen: 'highlighter',
+  visualChars: 'pilcrow-square',
+  cancelChanges: 'rotate-ccw',
 };
 
 const entries = Object.entries(editor).map(([key, value]) => {

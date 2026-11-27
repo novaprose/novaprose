@@ -129,7 +129,7 @@ function targetRange(state: EditorState): { from: number; to: number } | null {
   if (!selection.empty) return { from: selection.from, to: selection.to };
   const { $from } = selection;
   if (!$from.parent.isTextblock) return null;
-  const text = $from.parent.textBetween(0, $from.parent.content.size, undefined, '￼');
+  const text = $from.parent.textBetween(0, $from.parent.content.size, undefined, '\ufffc');
   let start = $from.parentOffset;
   let end = start;
   while (start > 0 && WORD_CHAR.test(text[start - 1]!)) start--;

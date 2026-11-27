@@ -1,0 +1,20 @@
+/* Invisible characters (the visualchars plugin): marks drawn as backgrounds and empty boxes, never as
+   text, so the document and what screen readers read stay the same. */
+.nova-prosemirror .nova-visualchar {
+  border-radius: 2px;
+  background-color: var(--nova-diff-added-bg);
+}
+.nova-prosemirror .nova-visualchar[data-char='nbsp'] {
+  background-image: radial-gradient(circle, var(--nova-accent) 0 1.5px, transparent 2px);
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.nova-prosemirror .nova-visualchar[data-char='shy']::after,
+.nova-prosemirror .nova-visualchar[data-char='zwsp']::after {
+  content: '';
+  display: inline-block;
+  width: 0.3em;
+  height: 0.9em;
+  vertical-align: -0.1em;
+  border-inline-start: 1px dashed var(--nova-accent);
+}

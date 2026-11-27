@@ -141,6 +141,11 @@ const IGNORED = new Set([
   'codesample_global_prismjs',
   'casechange_title_case_minors',
   'permanentpen_properties',
+  'visualchars_default_state',
+  // save_* are wired in index.ts: the callbacks get the TinyMCE-style editor.
+  'save_enablewhendirty',
+  'save_onsavecallback',
+  'save_oncancelcallback',
 ]);
 
 const list = (value: unknown): string[] =>
@@ -489,6 +494,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (config.permanentpen_properties && typeof config.permanentpen_properties === 'object') {
     pluginOptions.permanentpen = { properties: { ...config.permanentpen_properties } };
   }
+  if (config.visualchars_default_state === true) pluginOptions.visualchars = { default: true };
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };

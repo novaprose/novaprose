@@ -13,9 +13,12 @@ export interface MenuDefinition {
 
 /** The standard menus. Item names come from the registry of menu items or toolbar buttons. */
 export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
-  file: { title: 'menu.file', items: 'importword exportword exportpdf | preview | print' },
+  file: {
+    title: 'menu.file',
+    items: 'save cancel | importword exportword exportpdf | preview | print',
+  },
   edit: { title: 'menu.edit', items: 'undo redo | selectall | searchreplace pastetext' },
-  view: { title: 'menu.view', items: 'code preview | fullscreen' },
+  view: { title: 'menu.view', items: 'code preview | fullscreen | visualblocks visualchars' },
   insert: { title: 'menu.insert', items: 'image link inserttable hr | insertdatetime' },
   format: {
     title: 'menu.format',

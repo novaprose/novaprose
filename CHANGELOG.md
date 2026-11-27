@@ -21,6 +21,15 @@ All packages in this repository are versioned together. The format follows
   `permanentpen_properties` and the `mceLowerCase`, `mceUpperCase`, `mceTitleCase`,
   `mceToggleFormatPainter`, `mceToggleStickyFormatPainter`, `mceTogglePermanentPen` and
   `mceConfigurePermanentPen` commands work.
+- `visualchars` plugin: shows invisible characters — no-break spaces as a dot, soft hyphens and
+  zero-width spaces as a dashed mark — without touching the text; screen readers read it as before
+  (`pluginOptions.visualchars.default`, for TinyMCE `visualchars_default_state` and
+  `mceVisualChars`). Only changed paragraphs are scanned again, so long documents stay fast.
+- `save` plugin: the Save button and Ctrl/Cmd+S call `pluginOptions.save.onSave(editor)` or submit
+  the form around the editor; Save is enabled only with unsaved changes (`enableWhenDirty: false` —
+  always), and Cancel brings back the text of the last save. With `tinymce.init`,
+  `save_onsavecallback` and `save_oncancelcallback` get the editor (the content is already in the
+  `<textarea>`), and `save_enablewhendirty`, `mceSave` and `mceCancel` work.
 
 - AI assistant (`plugins: ['suggestions', 'ai']`, buttons `aidialog` and `aishortcuts`, as in
   TinyMCE): select text and pick **Improve writing**, **Fix spelling and grammar**, **Make

@@ -126,3 +126,28 @@ test('permanent pen: everything typed gets the pen, after Enter too; off stops i
   await page.keyboard.type(' plain');
   expect(await html(page)).toBe(`<p>text${pen(' note')}</p><p>${pen('more')} plain</p>`);
 });
+
+test('invisible characters: a no-break space shows a mark, the HTML stays the same', async ({
+  page,
+}) => {
+  await open(page, '<p>one two</p>');
+  await clickControl(page, 'visualchars');
+  await page.evaluate(() => {
+    const editor = window.editor as unknown as { insertContent(html: string): void };
+    editor.insertContent('&nbsp;');
+  });
+  await expect(content(page).locator('.nova-visualchar[data-char="nbsp"]')).toHaveCount(1);
+  expect(await html(page)).toBe('<p>one two&nbsp;</p>');
+  await clickControl(page, 'visualchars');
+  await expect(content(page).locator('.nova-visualchar')).toHaveCount(0);
+});
+
+test('save: Ctrl/Cmd+S saves (and never opens the browser save dialog)', async ({ page }) => {
+  await open(page, '<p>text</p>');
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.type(' more');
+  await page.keyboard.press('ControlOrMeta+s');
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { lastSaved?: string }).lastSaved))
+    .toBe('<p>text more</p>');
+});

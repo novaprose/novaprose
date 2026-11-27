@@ -269,6 +269,12 @@ export const icons = {
   permanentPen: svg(
     '<path d="m9 11-6 6v3h9l3-3" /><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />',
   ),
+  visualChars: svg(
+    '<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M12 12H9.5a2.5 2.5 0 0 1 0-5H17" /><path d="M12 7v10" /><path d="M16 7v10" />',
+  ),
+  cancelChanges: svg(
+    '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />',
+  ),
 };
 
 export type IconName = keyof typeof icons;
