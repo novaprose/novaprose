@@ -21,7 +21,8 @@ export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
     title: 'menu.format',
     items:
       'bold italic underline strikethrough superscript subscript inlinecode | ' +
-      'paragraph h1 h2 h3 blockquote codeblock | alignleft aligncenter alignright alignjustify | removeformat',
+      'paragraph h1 h2 h3 blockquote codeblock | alignleft aligncenter alignright alignjustify | ' +
+      'lowercase uppercase titlecase | formatpainter permanentpen configurepermanentpen | removeformat',
   },
   table: {
     title: 'menu.table',

@@ -13,6 +13,20 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Three formatting tools, as plugins named as in TinyMCE. `casechange`: lowercase, UPPERCASE and
+  Title Case for the selection or the word at the cursor; formatting stays letter by letter, code is
+  left alone, Title Case keeps English minor words (a, the, of…) small except the first and last
+  (`pluginOptions.casechange.titleCaseMinors`), and the button repeats the case used last.
+  `formatpainter`: copy the formatting at the cursor and apply it to the next mouse selection (a
+  double click keeps it on until Escape), or Ctrl+Alt+C and Ctrl+Alt+V from the keyboard (⌘⌥C, ⌘⌥V
+  on a Mac); it carries text formatting and the block's kind and layout, never links, comments or
+  suggestions. `permanentpen`: while it is on, everything typed gets the pen's formatting (dark red
+  and bold by default); `configurepermanentpen` sets its font, size, styles and colors
+  (`pluginOptions.permanentpen.properties`). With `tinymce.init`, `casechange_title_case_minors`,
+  `permanentpen_properties` and the `mceLowerCase`, `mceUpperCase`, `mceTitleCase`,
+  `mceToggleFormatPainter`, `mceToggleStickyFormatPainter`, `mceTogglePermanentPen` and
+  `mceConfigurePermanentPen` commands work.
+
 - AI assistant (`plugins: ['suggestions', 'ai']`, buttons `aidialog` and `aishortcuts`, as in
   TinyMCE): select text and pick **Improve writing**, **Fix spelling and grammar**, **Make
   shorter**, **Make longer**, **Simplify**, a formal or friendly tone, **Summarize**, or type your

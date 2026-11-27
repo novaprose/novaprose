@@ -103,6 +103,19 @@ const COMMANDS: Record<string, CommandName> = {
   mceblockquote: 'blockquote',
 };
 
+/**
+ * Commands of the casechange, formatpainter and permanentpen plugins (as in the TinyMCE
+ * documentation) → the menu item or button of the same action.
+ */
+const PLUGIN_COMMANDS: Record<string, string> = {
+  mcelowercase: 'lowercase',
+  mceuppercase: 'uppercase',
+  mcetitlecase: 'titlecase',
+  mcetoggleformatpainter: 'formatpainter',
+  mcetogglepermanentpen: 'permanentpen',
+  mceconfigurepermanentpen: 'configurepermanentpen',
+};
+
 /** Commands of collapsible blocks (the accordion plugin), as in the TinyMCE documentation. */
 const ACCORDION_COMMANDS = new Set([
   'insertaccordion',
@@ -386,6 +399,8 @@ export class CompatEditor {
       }
     } else if (ACCORDION_COMMANDS.has(name)) {
       done = this.accordionCommand(name, value);
+    } else if (PLUGIN_COMMANDS[name] || name === 'mcetogglestickyformatpainter') {
+      done = this.pluginCommand(name);
     } else if (name === 'codesample') {
       // The "Code sample" dialog (the codesample plugin), like pressing its button.
       const button = this.core.ui.registry.get('codesample');
@@ -450,9 +465,39 @@ export class CompatEditor {
     return true;
   }
 
+  /**
+   * A command of casechange, formatpainter or permanentpen: like its menu item or button.
+   * mceToggleStickyFormatPainter turns the painter on to stay (a double click on the button), or off.
+   */
+  private pluginCommand(name: string): boolean {
+    const { registry } = this.core.ui;
+    if (name === 'mcetogglestickyformatpainter') {
+      const painter = registry.get('formatpainter');
+      const item = registry.getMenuItem('formatpainter');
+      if (painter?.type !== 'button' || !item) return false;
+      // On: off, like the menu item. Off: two presses of the button, a double click.
+      if (item.isActive?.(this.core)) item.onAction(this.core);
+      else {
+        painter.onAction(this.core);
+        painter.onAction(this.core);
+      }
+      return true;
+    }
+    const item = registry.getMenuItem(PLUGIN_COMMANDS[name]!);
+    if (!item || item.isEnabled?.(this.core) === false) return false;
+    item.onAction(this.core);
+    return true;
+  }
+
   queryCommandState(command: string): boolean {
-    const name = COMMANDS[command.toLowerCase()];
-    return name ? this.core.isActive(name) : false;
+    const lower = command.toLowerCase();
+    const name = COMMANDS[lower];
+    if (name) return this.core.isActive(name);
+    // The painter and the pen are on or off, like their buttons.
+    if (lower === 'mcetoggleformatpainter' || lower === 'mcetogglepermanentpen') {
+      return !!this.core.ui.registry.getMenuItem(PLUGIN_COMMANDS[lower]!)?.isActive?.(this.core);
+    }
+    return false;
   }
 
   queryCommandSupported(command: string): boolean {
@@ -460,6 +505,8 @@ export class CompatEditor {
     return (
       name in COMMANDS ||
       ['formatblock', 'mceinsertcontent', 'mcesetcontent'].includes(name) ||
+      (name in PLUGIN_COMMANDS && !!this.core.ui.registry.getMenuItem(PLUGIN_COMMANDS[name]!)) ||
+      (name === 'mcetogglestickyformatpainter' && this.core.ui.registry.has('formatpainter')) ||
       this.commands.has(name)
     );
   }

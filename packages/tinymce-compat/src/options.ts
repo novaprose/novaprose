@@ -139,6 +139,8 @@ const IGNORED = new Set([
   'tableofcontents_includeheader',
   // Highlighting is our own (highlight.js, lazy); Prism on the site's page isn't needed for it.
   'codesample_global_prismjs',
+  'casechange_title_case_minors',
+  'permanentpen_properties',
 ]);
 
 const list = (value: unknown): string[] =>
@@ -478,6 +480,14 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       ...(config.tableofcontents_orderedlist ? { orderedList: true } : {}),
       ...(config.tableofcontents_includeheader === false ? { title: '' } : {}),
     };
+  }
+  if (Array.isArray(config.casechange_title_case_minors)) {
+    pluginOptions.casechange = {
+      titleCaseMinors: (config.casechange_title_case_minors as unknown[]).map(String),
+    };
+  }
+  if (config.permanentpen_properties && typeof config.permanentpen_properties === 'object') {
+    pluginOptions.permanentpen = { properties: { ...config.permanentpen_properties } };
   }
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 

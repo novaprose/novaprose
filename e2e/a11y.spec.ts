@@ -201,6 +201,22 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'code sample dialog');
     });
 
+    test('the "Permanent pen properties" dialog and the pressed pen and painter', async ({
+      page,
+    }) => {
+      await open(page, theme, '&tools=1');
+      await control(page, 'permanentpen');
+      await control(page, 'formatpainter');
+      await page.evaluate(() => {
+        const editor = window.editor as unknown as {
+          ui: { registry: { getMenuItem(name: string): { onAction(e: unknown): void } } };
+        };
+        editor.ui.registry.getMenuItem('configurepermanentpen').onAction(editor);
+      });
+      await expect(page.getByRole('dialog', { name: 'Permanent pen properties' })).toBeVisible();
+      await audit(page, 'permanent pen dialog');
+    });
+
     test('collapsible blocks: expanded, collapsed, empty title', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.evaluate(async () => {

@@ -16,6 +16,9 @@ import pagelayout from './pagelayout';
  * and loads lazily, as a separate chunk, without growing the core.
  */
 registerPlugin('insertdatetime', () => import('./insertdatetime'));
+registerPlugin('casechange', () => import('./casechange'));
+registerPlugin('formatpainter', () => import('./formatpainter'));
+registerPlugin('permanentpen', () => import('./permanentpen'));
 registerPlugin('quickbars', () => import('./quickbars'));
 registerPlugin('charmap', () => import('./charmap'));
 registerPlugin('emoticons', () => import('./emoticons'));

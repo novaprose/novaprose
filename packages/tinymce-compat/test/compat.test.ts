@@ -459,6 +459,40 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/tableofcontents/);
   });
 
+  it('casechange, formatpainter, permanentpen: their options and mce* commands', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"><p>the lord of the rings</p></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'casechange formatpainter permanentpen',
+      toolbar: 'casechange formatpainter permanentpen',
+      casechange_title_case_minors: ['of'],
+      permanentpen_properties: { italic: true },
+    });
+    const { core } = editor!;
+    const { state } = core.view;
+    core.view.dispatch(
+      state.tr.setSelection(TextSelection.create(state.doc, 1, state.doc.content.size - 1)),
+    );
+    expect(editor!.queryCommandSupported('mceTitleCase')).toBe(true);
+    expect(editor!.execCommand('mceTitleCase')).toBe(true);
+    expect(editor!.getContent()).toBe('<p>The Lord of The Rings</p>');
+    expect(editor!.execCommand('mceUpperCase')).toBe(true);
+    expect(editor!.getContent()).toBe('<p>THE LORD OF THE RINGS</p>');
+
+    expect(editor!.execCommand('mceToggleFormatPainter')).toBe(true);
+    expect(editor!.queryCommandState('mceToggleFormatPainter')).toBe(true);
+    expect(editor!.execCommand('mceToggleFormatPainter')).toBe(true);
+    expect(editor!.queryCommandState('mceToggleFormatPainter')).toBe(false);
+
+    core.view.dispatch(core.view.state.tr.setSelection(TextSelection.atEnd(core.view.state.doc)));
+    expect(editor!.execCommand('mceTogglePermanentPen')).toBe(true);
+    expect(editor!.queryCommandState('mceTogglePermanentPen')).toBe(true);
+    core.view.dispatch(core.view.state.tr.insertText('!'));
+    expect(editor!.getContent()).toBe('<p>THE LORD OF THE RINGS<em>!</em></p>');
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/casechange|permanentpen/);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

@@ -125,6 +125,9 @@ const editor = {
   visualBlocks: 'square-dashed',
   ltr: 'pilcrow-right',
   rtl: 'pilcrow-left',
+  caseChange: 'case-sensitive',
+  formatPainter: 'paintbrush',
+  permanentPen: 'highlighter',
 };
 
 const entries = Object.entries(editor).map(([key, value]) => {
