@@ -36,12 +36,13 @@
   --np-danger: #b42318;
   --np-danger-bg: #fef1f0;
 
-  /* Deep indigo dots on the light background; brand purple where the pointer is. */
-  --np-dot: rgb(24 15 70 / 100%);
+  /* The starry sky (DotField.astro) on the light background: dark, faded stars, brand purple where
+     the pointer is, and barely any glow (--np-dot-glow: its strength, 1 in the dark theme). */
+  --np-dot: rgb(36 24 92 / 58%);
   --np-dot-active: rgb(91 62 164 / 100%);
-  /* 1 turns the dot field into a starry sky (DotField.astro): the dark theme. */
-  --np-dot-stars: 0;
-  --np-dot-sparkle: rgb(140 147 224 / 100%);
+  --np-dot-stars: 1;
+  --np-dot-sparkle: rgb(110 88 200 / 100%);
+  --np-dot-glow: 0.3;
   --np-glow: rgb(160 130 236 / 22%);
   /* The dark Enterprise band on the pricing: light text on deep purple in both themes. */
   --np-ink: #2b2158;
@@ -97,6 +98,7 @@
   --np-dot-active: rgb(253 252 255 / 100%);
   --np-dot-stars: 1;
   --np-dot-sparkle: rgb(214 219 255 / 100%);
+  --np-dot-glow: 1;
   --np-glow: rgb(111 79 208 / 22%);
   --np-ink: #2c2256;
   --np-ink-2: #1c1736;
@@ -108,6 +110,32 @@
   --np-shadow-lg: 0 30px 70px -30px rgb(0 0 0 / 80%), 0 4px 14px rgb(0 0 0 / 40%);
 
   color-scheme: dark;
+}
+
+/* ======================= theme switch ======================= */
+
+/* A theme switch fades the colors instead of flashing from light to dark. np-theme-fade is on <html>
+   for the switch only (Marketing.astro), so hovers keep their quick transitions the rest of the time.
+   --np-glow is registered as a color so the glow gradient behind the page fades with the rest. */
+@property --np-glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: transparent;
+}
+
+:root.np-theme-fade,
+:root.np-theme-fade *,
+:root.np-theme-fade *::before,
+:root.np-theme-fade *::after {
+  transition:
+    background-color 450ms ease,
+    color 450ms ease,
+    border-color 450ms ease,
+    outline-color 450ms ease,
+    fill 450ms ease,
+    stroke 450ms ease,
+    box-shadow 450ms ease,
+    --np-glow 450ms ease !important;
 }
 
 /* ======================= base ======================= */

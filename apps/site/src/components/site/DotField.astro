@@ -1,10 +1,11 @@
 ---
 /**
- * The background of the product pages: a dot grid that makes room around the mouse pointer; a tap or
- * click on empty space sends a ripple through it. In the light theme the dots are light purple with a
- * slow swell of brightness. In the dark theme they become a starry sky: stars of different brightness
- * twinkle at their own pace, the brightest have a soft glow, and a few shine as four-pointed sparkles
- * like the one in the logo. Decorative only. Dots fade out behind blocks of text so they never read as
+ * The background of the product pages: a starry sky that makes room around the mouse pointer; a tap or
+ * click on empty space sends a ripple through it. Stars of different brightness twinkle at their own
+ * pace, the brightest have a soft glow, and a few shine as four-pointed sparkles like the one in the
+ * logo. In the dark theme the stars are light; in the light theme the same sky has dark, faded stars
+ * and barely any glow (--np-dot-glow). A theme switch re-tints the stars over the same half second as
+ * the page's colors. Decorative only. Stars fade out behind blocks of text so they never read as
  * punctuation. Draws a single still frame when the visitor prefers reduced motion, pauses while the tab
  * is hidden and redraws at a low rate while nobody interacts with it.
  */
@@ -26,6 +27,7 @@
   const SWELL_SPEED = 0.0007; // radians per ms: one swell crosses a point every ~9 s
   const LEVELS = 8; // brightness steps (one fill call per step)
   const IDLE_FRAME = 1000 / 24; // the swell and the twinkling need no more than 24 frames per second
+  const RETINT = 450; // ms: a theme switch re-tints the stars as long as the page's colors fade
   // The starry sky (dark theme).
   const GLOWING = 0.035; // share of stars with a glow
   const SPARKLING = 0.004; // share of stars drawn as four-pointed sparkles
@@ -88,8 +90,13 @@
     let base: Rgba = [124, 92, 196, 0.26];
     let active: Rgba = [106, 71, 168, 0.9];
     let sparkleColor: Rgba = [214, 219, 255, 1];
+    let glowStrength = 1;
     let stars = false;
     let glow = glowSprite(active);
+    // A theme switch: the colors the stars had and the ones they are heading to.
+    type Palette = { base: Rgba; active: Rgba; sparkle: Rgba; glow: number };
+    let retint: { from: Palette; to: Palette; start: number } | null = null;
+    let colorsRead = false;
 
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0, strength: 0, target: 0 };
     const ripples: { x: number; y: number; born: number }[] = [];
@@ -101,11 +108,52 @@
 
     function readColors() {
       const style = getComputedStyle(document.documentElement);
-      base = parseColor(style.getPropertyValue('--np-dot'), base);
-      active = parseColor(style.getPropertyValue('--np-dot-active'), active);
-      sparkleColor = parseColor(style.getPropertyValue('--np-dot-sparkle'), sparkleColor);
+      const strength = Number.parseFloat(style.getPropertyValue('--np-dot-glow'));
+      const next: Palette = {
+        base: parseColor(style.getPropertyValue('--np-dot'), base),
+        active: parseColor(style.getPropertyValue('--np-dot-active'), active),
+        sparkle: parseColor(style.getPropertyValue('--np-dot-sparkle'), sparkleColor),
+        glow: Number.isFinite(strength) ? strength : 1,
+      };
       stars = style.getPropertyValue('--np-dot-stars').trim() === '1';
-      glow = glowSprite(active);
+      if (colorsRead && !reduced.matches) {
+        // From the colors on screen now (a switch may come in the middle of another).
+        const from: Palette = { base, active, sparkle: sparkleColor, glow: glowStrength };
+        retint = { from, to: next, start: performance.now() };
+      } else {
+        applyPalette(next);
+      }
+      colorsRead = true;
+    }
+
+    function applyPalette(palette: Palette) {
+      const changed = palette.active.some((value, i) => value !== active[i]);
+      base = palette.base;
+      active = palette.active;
+      sparkleColor = palette.sparkle;
+      glowStrength = palette.glow;
+      if (changed || !colorsRead) glow = glowSprite(active);
+    }
+
+    /** The colors part of the way from one theme to the other (t from 0 to 1, eased). */
+    function retintStep(time: number) {
+      if (!retint) return;
+      const t = Math.min(1, Math.max(0, (time - retint.start) / RETINT));
+      const k = t * t * (3 - 2 * t);
+      const mix = (a: Rgba, b: Rgba): Rgba => [
+        a[0] + (b[0] - a[0]) * k,
+        a[1] + (b[1] - a[1]) * k,
+        a[2] + (b[2] - a[2]) * k,
+        a[3] + (b[3] - a[3]) * k,
+      ];
+      const { from, to } = retint;
+      applyPalette({
+        base: mix(from.base, to.base),
+        active: mix(from.active, to.active),
+        sparkle: mix(from.sparkle, to.sparkle),
+        glow: from.glow + (to.glow - from.glow) * k,
+      });
+      if (t >= 1) retint = null;
     }
 
     /** Sizes the canvas to its CSS box; false when nothing changed. */
@@ -200,6 +248,7 @@
     }
 
     function draw(time: number) {
+      retintStep(time);
       const still = reduced.matches;
       const phase = still ? 0 : time * SWELL_SPEED;
       const strength = still ? 0 : pointer.strength;
@@ -285,7 +334,7 @@
         const brightness = shining[i + 2]!;
         const isSparkle = shining[i + 3] === 2;
         const size = isSparkle ? 20 : 13;
-        ctx.globalAlpha = brightness * (isSparkle ? 0.9 : 0.75);
+        ctx.globalAlpha = brightness * (isSparkle ? 0.9 : 0.75) * glowStrength;
         ctx.drawImage(glow, x - size / 2, y - size / 2, size, size);
         if (isSparkle) {
           ctx.fillStyle = `rgb(${sparkleColor[0]} ${sparkleColor[1]} ${sparkleColor[2]})`;
@@ -308,7 +357,7 @@
         if (stars && k > 0.2) {
           // Next to the pointer the stars flare up.
           const size = 6 + 16 * k;
-          ctx.globalAlpha = alpha * k;
+          ctx.globalAlpha = alpha * k * glowStrength;
           ctx.drawImage(glow, x - size / 2, y - size / 2, size, size);
           ctx.globalAlpha = 1;
         }
@@ -332,7 +381,9 @@
         Math.abs(pointer.targetX - pointer.x) > 0.3 ||
         Math.abs(pointer.targetY - pointer.y) > 0.3 ||
         Math.abs(pointer.target - pointer.strength) > 0.01;
-      if (dirty || moving || ripples.length > 0 || time - lastDraw >= IDLE_FRAME) draw(time);
+      // A re-tint runs at full frame rate: it is short, and steps in color would show.
+      if (retint || dirty || moving || ripples.length > 0 || time - lastDraw >= IDLE_FRAME)
+        draw(time);
     }
 
     function play() {

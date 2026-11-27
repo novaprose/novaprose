@@ -3,6 +3,25 @@
  * for links and accents, Plus Jakarta Sans for text. Editor colors stay the --nova-* tokens of
  * @novaprose/core; the demos below only swap the accent.
  */
+
+/* A theme switch fades the colors instead of flashing: np-theme-fade is on <html> for the switch
+   only (the head script in astro.config.mjs), as on the product pages. */
+@media (prefers-reduced-motion: no-preference) {
+  :root.np-theme-fade,
+  :root.np-theme-fade *,
+  :root.np-theme-fade *::before,
+  :root.np-theme-fade *::after {
+    transition:
+      background-color 450ms ease,
+      color 450ms ease,
+      border-color 450ms ease,
+      outline-color 450ms ease,
+      fill 450ms ease,
+      stroke 450ms ease,
+      box-shadow 450ms ease !important;
+  }
+}
+
 :root {
   --sl-font:
     'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto,

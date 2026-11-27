@@ -217,9 +217,23 @@ const nav = [
         themeBtn?.setAttribute('aria-label', label);
       };
       show();
+      // The colors fade into the other theme (np-theme-fade in marketing.css). The class goes on before
+      // the switch: the star field reads the new colors at once, and a transition starts only when the
+      // style already has it at that moment.
+      let fadeTimer = 0;
+      const fadeColors = () => {
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        document.documentElement.classList.add('np-theme-fade');
+        window.clearTimeout(fadeTimer);
+        fadeTimer = window.setTimeout(
+          () => document.documentElement.classList.remove('np-theme-fade'),
+          500,
+        );
+      };
       themeBtn?.addEventListener('click', () => {
         const next = resolved() === 'dark' ? 'light' : 'dark';
         localStorage.setItem('starlight-theme', next);
+        fadeColors();
         document.documentElement.dataset.theme = next;
         show();
       });

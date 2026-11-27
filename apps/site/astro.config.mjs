@@ -22,6 +22,19 @@ export default defineConfig({
         { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
         { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
         { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+        // A theme switch fades the colors (np-theme-fade in site.css), as on the product pages. A
+        // capture listener runs before the theme select's own, so the class is on before the switch.
+        {
+          tag: 'script',
+          content: `document.addEventListener('change', (event) => {
+  if (!event.target?.closest?.('starlight-theme-select')) return;
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const root = document.documentElement;
+  root.classList.add('np-theme-fade');
+  clearTimeout(window.npThemeFade);
+  window.npThemeFade = setTimeout(() => root.classList.remove('np-theme-fade'), 500);
+}, true);`,
+        },
       ],
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/novaprose/novaprose' },
