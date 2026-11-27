@@ -19,15 +19,19 @@ import { gzipSync } from 'node:zlib';
 const KB = 1024;
 const gz = (buf) => gzipSync(buf, { level: 9 }).length;
 
-/** Budgets in KB gzip. Raise them only deliberately, with a CHANGELOG entry. */
+/**
+ * Budgets in KB gzip. Raise them only deliberately, with a CHANGELOG entry. A budget is a tripwire
+ * against growth nobody meant, not a target: quality comes first.
+ */
 const BUDGET = {
-  // November 2026: 135.4 KB as one file (before the counting method changed: 150 by the sum of chunks, that is 142.5).
-  coreFirstLoad: 145,
+  // Counted as one file since November 2026 (135.4 KB then). Raised from 145 to 175 on 28 November 2026
+  // at 144.8 KB (the owner's decision): room to grow without trading quality for size.
+  coreFirstLoad: 175,
   coreCss: 12,
-  // CDN: the main file (lazy parts are separate files next to it, scripts/build-cdn.mjs). November 2026:
-  // 140.5 and 151.0 KB after moving the parts out (it was 168.1 and 178.6 as one file).
-  webComponentCdn: 150,
-  tinymceCompatCdn: 160,
+  // CDN: the main file (lazy parts are separate files next to it, scripts/build-cdn.mjs). Each embeds the
+  // core, so they move with it (148.2 and 159.8 KB on 28 November 2026).
+  webComponentCdn: 180,
+  tinymceCompatCdn: 190,
 };
 
 async function measureEntry(entry, names) {

@@ -382,6 +382,9 @@ All packages in this repository are versioned together. The format follows
 
 ### Distribution
 
+- The size limit CI checks: the core's first load, ProseMirror included, may take up to 175 KB gzip
+  (it was 145; it is 144.8 now), the CDN main files up to 180 KB (web component) and 190 KB
+  (`tinymce.init`). Optional plugins keep loading lazily, outside these numbers.
 - Every ready-made language (Russian, German, Spanish, French, Italian, Portuguese) works in the
   CDN builds: each is a separate file next to the script. `<novaprose-editor language="de">` and
   `tinymce.init({ language: 'de' })` load it before the editor appears. **Changed:** Russian is no

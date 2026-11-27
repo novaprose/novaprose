@@ -8,11 +8,11 @@ published to npm.
 
 | Check            | What it covers                                                                                                                                                                                       |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit tests       | about 860 tests: the document model, HTML and JSON round trips, commands, plugins, the framework wrappers and the compatibility layer                                                                |
-| Browser tests    | about 600 runs in Chromium, Firefox, WebKit and an emulated Android phone: real typing, selection, paste, shortcuts, toolbar layout, two editors editing one document together                       |
+| Unit tests       | about 1,250 tests: the document model, HTML and JSON round trips, commands, plugins, the framework wrappers and the compatibility layer                                                              |
+| Browser tests    | about 750 runs in Chromium, Firefox, WebKit and an emulated Android phone: real typing, selection, paste, shortcuts, toolbar layout, two editors editing one document together                       |
 | Random documents | generated and hostile documents: the output never contains a way to run a script, HTML survives a round trip, server rendering matches the editor — 300 per property on every change, 20,000 nightly |
 | Accessibility    | axe-core (WCAG 2.1 A and AA) on the editor, menus, dialogs and panels, in light and dark themes; text contrast at least 4.5:1                                                                        |
-| Size             | the core's first load, ProseMirror included, stays under 145 KB gzip; the CDN files stay under their own limits                                                                                      |
+| Size             | the core's first load, ProseMirror included, stays under 175 KB gzip; the CDN files stay under their own limits                                                                                      |
 | Speed            | the measurements below, each with a limit                                                                                                                                                            |
 | Security         | CodeQL static analysis, dependency updates, CI actions pinned to exact commits, npm packages published from CI with trusted publishing                                                               |
 

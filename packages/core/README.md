@@ -18,8 +18,8 @@ comments and version history. Toolbar, plugin and option names follow familiar c
   Office markup removed; anything outside the schema is dropped), Markdown import and export
   (`@novaprose/core/markdown`), English UI plus language packs
   (Russian, German, Spanish, French, Italian, Portuguese), light and dark theme.
-- **Small.** About 146 KB gzip on first load, including ProseMirror and tables; checked in CI
-  against a 150 KB budget. Optional plugins and the Office paste cleanup load lazily.
+- **Small.** About 145 KB gzip on first load, including ProseMirror; checked in CI against a
+  175 KB budget. Optional plugins and the Office paste cleanup load lazily.
 
 ## Install
 
