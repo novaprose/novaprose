@@ -10,6 +10,7 @@ import suggestions from './suggestions';
 import media from './media';
 import pagebreak from './pagebreak';
 import pagelayout from './pagelayout';
+import footnotes from './footnotes';
 
 /**
  * The catalog of built-in NovaProse plugins. Each one is attached by name (`plugins: ['insertdatetime']`)
@@ -48,6 +49,7 @@ registerPlugin('tableofcontents', tableofcontents);
 registerPlugin('math', math);
 registerPlugin('pagebreak', pagebreak);
 registerPlugin('pagelayout', pagelayout);
+registerPlugin('footnotes', footnotes);
 registerPlugin('media', media);
 registerPlugin('comments', comments);
 registerPlugin('mentions', mentions);

@@ -293,6 +293,8 @@ const ru: LanguagePack = {
   'template.insert': 'Вставить',
   'template.empty': 'Шаблонов нет',
   'template.failed': 'Не удалось загрузить шаблон',
+  'footnotes.insert': 'Вставить сноску',
+  'footnotes.update': 'Обновить сноски',
   'insertdatetime.title': 'Вставить дату/время',
   'insertdatetime.date': 'Дата',
   'insertdatetime.time': 'Время',

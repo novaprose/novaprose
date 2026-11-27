@@ -278,6 +278,12 @@ export const icons = {
   template: svg(
     '<rect width="18" height="7" x="3" y="3" rx="1" /><rect width="9" height="7" x="3" y="14" rx="1" /><rect width="5" height="7" x="16" y="14" rx="1" />',
   ),
+  footnote: svg(
+    '<rect width="18" height="18" x="3" y="3" rx="2" /><path d="M12 8v8" /><path d="m8.5 14 7-4" /><path d="m8.5 10 7 4" />',
+  ),
+  footnotesUpdate: svg(
+    '<path d="M21 5H3" /><path d="M7 12H3" /><path d="M7 19H3" /><path d="M12 18a5 5 0 0 0 9-3 4.5 4.5 0 0 0-4.5-4.5c-1.33 0-2.54.54-3.41 1.41L11 14" /><path d="M11 10v4h4" />',
+  ),
 };
 
 export type IconName = keyof typeof icons;

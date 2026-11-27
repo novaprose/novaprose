@@ -1,0 +1,28 @@
+/* Footnotes (the footnotes plugin): the reference number and the section of notes at the end. */
+.nova-prosemirror sup.mce-footnote a {
+  text-decoration: none;
+}
+.nova-prosemirror .mce-footnotes {
+  margin-top: 2em;
+  font-size: 0.9em;
+}
+.nova-prosemirror .mce-footnotes hr {
+  width: 30%;
+  margin: 0 0 0.5em;
+  border: 0;
+  border-top: 1px solid var(--nova-border);
+}
+.nova-prosemirror .mce-footnotes-backlink {
+  margin-inline-end: 0.35em;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+}
+@media print {
+  .nova-prosemirror .mce-footnotes {
+    break-inside: avoid;
+  }
+  .nova-prosemirror .mce-footnotes-backlink {
+    display: none;
+  }
+}

@@ -154,8 +154,8 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('comments')
       ? ['comments', 'mentions', 'revisionhistory', 'suggestions']
       : []),
-    // ?tools=1: change case, format painter, permanent pen, invisible characters, save
-    // (e2e/formatting-tools.spec.ts).
+    // ?tools=1: change case, format painter, permanent pen, invisible characters, save, Markdown,
+    // importcss, templates, footnotes (e2e/formatting-tools.spec.ts).
     ...(new URLSearchParams(location.search).has('tools')
       ? [
           'casechange',
@@ -166,6 +166,7 @@ const editor = createEditor({
           'markdown',
           'importcss',
           'template',
+          'footnotes',
         ]
       : []),
     // ?ai=1: the AI assistant with an offline demo model (e2e/ai.spec.ts); edits arrive as suggestions.

@@ -24,6 +24,7 @@ const RUNS = Number(process.env.FC_RUNS) || 300;
 // Every plugin with its own schema nodes: the largest parsing surface.
 const SCHEMA_PLUGINS = [
   'accordion',
+  'footnotes',
   'math',
   'tableofcontents',
   'anchor',
@@ -414,6 +415,8 @@ describe('HTML security and stability (property-based)', () => {
       checked: anyValue,
       checklist: anyValue,
       open: anyValue,
+      // A footnote reference: its id goes into href and id, its number is shown.
+      number: anyValue,
       // The formula source goes into data-latex and the text: anything from JSON.
       latex: fc.oneof(anyValue, attrValue),
       // Table of contents items: level, id and text can be anything too (the id goes into href).
@@ -445,7 +448,15 @@ describe('HTML security and stability (property-based)', () => {
       marks: fc.uniqueArray(mark, { maxLength: 2, selector: (m) => m.type }),
     });
     const atom = fc.record({
-      type: fc.constantFrom('image', 'hard_break', 'mergetag', 'mention', 'anchor', 'math_inline'),
+      type: fc.constantFrom(
+        'image',
+        'hard_break',
+        'mergetag',
+        'mention',
+        'anchor',
+        'math_inline',
+        'footnote_ref',
+      ),
       attrs,
       marks: fc.uniqueArray(mark, { maxLength: 1, selector: (m) => m.type }),
     });
@@ -510,10 +521,23 @@ describe('HTML security and stability (property-based)', () => {
         textblock,
       ),
     });
+    // The footnotes section: note ids go into id and href.
+    const footnotes = fc.record({
+      type: fc.constant('footnotes'),
+      attrs,
+      content: fc.array(
+        fc.record({
+          type: fc.constant('footnote'),
+          attrs,
+          content: fc.array(fc.oneof(text, atom), { maxLength: 3 }),
+        }),
+        { minLength: 1, maxLength: 2 },
+      ),
+    });
     let accepted = 0;
     fc.assert(
       fc.property(
-        fc.array(fc.oneof(textblock, textblock, blockAtom, table, list, details), {
+        fc.array(fc.oneof(textblock, textblock, blockAtom, table, list, details, footnotes), {
           minLength: 1,
           maxLength: 3,
         }),

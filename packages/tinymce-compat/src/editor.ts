@@ -104,8 +104,8 @@ const COMMANDS: Record<string, CommandName> = {
 };
 
 /**
- * Commands of the casechange, formatpainter and permanentpen plugins (as in the TinyMCE
- * documentation) → the menu item or button of the same action.
+ * Commands of the casechange, formatpainter, permanentpen, visualchars, save, template and
+ * footnotes plugins (as in the TinyMCE documentation) → the menu item or button of the same action.
  */
 const PLUGIN_COMMANDS: Record<string, string> = {
   mcelowercase: 'lowercase',
@@ -118,6 +118,8 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mcesave: 'save',
   mcecancel: 'cancel',
   mcetemplate: 'template',
+  mceinsertfootnote: 'footnotes',
+  mceupdatefootnotes: 'footnotesupdate',
 };
 
 /** Commands of collapsible blocks (the accordion plugin), as in the TinyMCE documentation. */

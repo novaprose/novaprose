@@ -30,6 +30,15 @@ All packages in this repository are versioned together. The format follows
   zero-width spaces as a dashed mark — without touching the text; screen readers read it as before
   (`pluginOptions.visualchars.default`, for TinyMCE `visualchars_default_state` and
   `mceVisualChars`). Only changed paragraphs are scanned again, so long documents stay fast.
+- `footnotes` plugin: "Insert footnote" puts the next number at the cursor and the cursor into
+  its note in the section at the end of the document. As you edit, the numbers follow the order in
+  the text and the notes follow the numbers; a deleted number takes its note along, a copied one gets
+  a note of its own, and undo brings a number and its note back together. Enter in a note is a line
+  break and pasted paragraphs become its lines; changes touch only the notes involved, so a
+  co-author typing in another note loses nothing. A click on a number goes to its note, `^` back to
+  the number. The HTML is the one TinyMCE writes (`sup.mce-footnote`, `div.mce-footnotes`,
+  DPUB-ARIA roles), so its footnotes load as they are; with `tinymce.init`, `mceInsertFootnote` and
+  `mceUpdateFootnotes` work.
 - `template` plugin ("Insert template", named as in TinyMCE 5–6): your templates with a
   description and a preview, inserted at the cursor through the schema like a paste. A template is
   HTML or a file; `{$name}` becomes `values.name` (as text, never HTML), an element with the class

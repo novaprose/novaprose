@@ -291,6 +291,8 @@ const ptBR: LanguagePack = {
   'template.insert': 'Inserir',
   'template.empty': 'Nenhum modelo',
   'template.failed': 'Não foi possível carregar o modelo',
+  'footnotes.insert': 'Inserir nota de rodapé',
+  'footnotes.update': 'Atualizar notas de rodapé',
   'insertdatetime.title': 'Inserir data/hora',
   'insertdatetime.date': 'Data',
   'insertdatetime.time': 'Hora',

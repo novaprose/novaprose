@@ -131,6 +131,8 @@ const editor = {
   visualChars: 'pilcrow-square',
   cancelChanges: 'rotate-ccw',
   template: 'layout-template',
+  footnote: 'square-asterisk',
+  footnotesUpdate: 'list-restart',
 };
 
 const entries = Object.entries(editor).map(([key, value]) => {

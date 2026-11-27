@@ -224,6 +224,15 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'template dialog');
     });
 
+    test('footnotes: numbers in the text, the notes at the end', async ({ page }) => {
+      await open(page, theme, '&tools=1');
+      await page.keyboard.press('ControlOrMeta+End');
+      await control(page, 'footnotes');
+      await page.keyboard.type('A note');
+      await expect(page.locator('.nova-prosemirror .mce-footnote-text')).toHaveText('A note');
+      await audit(page, 'footnotes');
+    });
+
     test('collapsible blocks: expanded, collapsed, empty title', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.evaluate(async () => {

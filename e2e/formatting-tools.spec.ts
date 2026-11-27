@@ -198,3 +198,59 @@ test('templates: the dialog shows the description and a preview, Insert puts it 
   await expect(dialog).toBeHidden();
   expect(await html(page)).toBe('<p>Dear Ann,</p><p>Best regards</p><p>end</p>');
 });
+
+const refs = (page: Page) => content(page).locator('sup.mce-footnote');
+const notes = (page: Page) => content(page).locator('.mce-footnote-text');
+
+test('footnotes: typing goes into the new note; numbers and notes follow the text order', async ({
+  page,
+}) => {
+  await open(page, '<p>one two</p>');
+  await page.keyboard.press('End');
+  await clickControl(page, 'footnotes');
+  await page.keyboard.type('About two');
+  // A second footnote before the first one: it becomes number 1. (The keyboard, not a click: on a
+  // narrow screen the open "⋯" panel covers the text.)
+  await page.keyboard.press('ControlOrMeta+Home');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await clickControl(page, 'footnotes');
+  await page.keyboard.type('About one');
+  // Enter in a note is a line break in the same note.
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('more');
+  await expect(refs(page)).toHaveText(['1', '2']);
+  await expect(notes(page)).toHaveText(['About onemore', 'About two']);
+  expect(await html(page)).toMatch(
+    /^<p>one<sup class="mce-footnote">.*>1<\/a><\/sup> two<sup class="mce-footnote">.*>2<\/a><\/sup><\/p><div class="mce-footnotes" role="doc-endnotes"><hr><ol>.*About one<br>more.*About two.*<\/ol><\/div>$/,
+  );
+});
+
+test('footnotes: a click on a number leads to its note, "^" back to the number; Backspace removes both', async ({
+  page,
+}) => {
+  const ref = (id: string, n: number) =>
+    `<sup class="mce-footnote"><a href="#footnote-${id}" id="footnote-ref-${id}">${n}</a></sup>`;
+  const note = (id: string, text: string) =>
+    `<li id="footnote-${id}"><a class="mce-footnotes-backlink" href="#footnote-ref-${id}">^</a>` +
+    `<span class="mce-footnote-text">${text}</span></li>`;
+  await open(
+    page,
+    `<p>a${ref('a', 1)} b${ref('b', 2)}</p>` +
+      `<div class="mce-footnotes"><hr><ol>${note('a', 'First')}${note('b', 'Second')}</ol></div>`,
+  );
+  await refs(page).nth(1).click();
+  await page.keyboard.type('>');
+  await expect(notes(page)).toHaveText(['First', '>Second']);
+  // The page does not jump to an anchor: the URL stays as it was.
+  expect(new URL(page.url()).hash).toBe('');
+  await content(page).locator('a.mce-footnotes-backlink').first().click();
+  // The first number is selected: Backspace removes it, its note goes too, the other becomes 1.
+  await page.keyboard.press('Backspace');
+  await expect(refs(page)).toHaveText(['1']);
+  await expect(notes(page)).toHaveText(['>Second']);
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(refs(page)).toHaveText(['1', '2']);
+  await expect(notes(page)).toHaveText(['First', '>Second']);
+});

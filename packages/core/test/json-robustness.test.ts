@@ -9,6 +9,7 @@ import { createEditor } from '../src';
  */
 const PLUGINS = [
   'accordion',
+  'footnotes',
   'math',
   'tableofcontents',
   'anchor',
@@ -62,6 +63,7 @@ const ATTR_NAMES = [
   'open',
   'entries',
   'latex',
+  'number',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));
@@ -82,6 +84,12 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
   }),
   image: (attrs) => para({ type: 'image', attrs }),
   mention: (attrs) => para({ type: 'mention', attrs }),
+  footnote_ref: (attrs) => para({ type: 'footnote_ref', attrs }),
+  footnotes: (attrs) => ({
+    type: 'footnotes',
+    attrs,
+    content: [{ type: 'footnote', attrs, content: [text] }],
+  }),
   mergetag: (attrs) => para({ type: 'mergetag', attrs }),
   anchor: (attrs) => para({ type: 'anchor', attrs }),
   media: (attrs) => ({ type: 'media', attrs }),

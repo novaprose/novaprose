@@ -293,6 +293,8 @@ const fr: LanguagePack = {
   'template.insert': 'Insérer',
   'template.empty': 'Aucun modèle',
   'template.failed': 'Impossible de charger le modèle',
+  'footnotes.insert': 'Insérer une note de bas de page',
+  'footnotes.update': 'Mettre à jour les notes de bas de page',
   'insertdatetime.title': 'Insérer la date/heure',
   'insertdatetime.date': 'Date',
   'insertdatetime.time': 'Heure',

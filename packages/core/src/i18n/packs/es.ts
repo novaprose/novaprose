@@ -290,6 +290,8 @@ const es: LanguagePack = {
   'template.insert': 'Insertar',
   'template.empty': 'No hay plantillas',
   'template.failed': 'No se pudo cargar la plantilla',
+  'footnotes.insert': 'Insertar nota al pie',
+  'footnotes.update': 'Actualizar notas al pie',
   'insertdatetime.title': 'Insertar fecha/hora',
   'insertdatetime.date': 'Fecha',
   'insertdatetime.time': 'Hora',

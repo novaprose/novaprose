@@ -292,6 +292,8 @@ const de: LanguagePack = {
   'template.insert': 'Einfügen',
   'template.empty': 'Keine Vorlagen',
   'template.failed': 'Die Vorlage konnte nicht geladen werden',
+  'footnotes.insert': 'Fußnote einfügen',
+  'footnotes.update': 'Fußnoten aktualisieren',
   'insertdatetime.title': 'Datum/Uhrzeit einfügen',
   'insertdatetime.date': 'Datum',
   'insertdatetime.time': 'Uhrzeit',

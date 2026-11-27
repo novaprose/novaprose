@@ -290,6 +290,8 @@ const it: LanguagePack = {
   'template.insert': 'Inserisci',
   'template.empty': 'Nessun modello',
   'template.failed': 'Impossibile caricare il modello',
+  'footnotes.insert': 'Inserisci nota a piè di pagina',
+  'footnotes.update': 'Aggiorna note a piè di pagina',
   'insertdatetime.title': 'Inserisci data/ora',
   'insertdatetime.date': 'Data',
   'insertdatetime.time': 'Ora',

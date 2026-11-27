@@ -566,6 +566,27 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/template/);
   });
 
+  it('footnotes: the plugin, its buttons, mceInsertFootnote and mceUpdateFootnotes', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"><p>Text</p></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'footnotes',
+      toolbar: 'footnotes footnotesupdate',
+    });
+    const { core } = editor!;
+    core.view.dispatch(core.view.state.tr.setSelection(TextSelection.atEnd(core.view.state.doc)));
+    expect(editor!.queryCommandSupported('mceInsertFootnote')).toBe(true);
+    expect(editor!.queryCommandSupported('mceUpdateFootnotes')).toBe(true);
+    expect(editor!.execCommand('mceInsertFootnote')).toBe(true);
+    core.view.dispatch(core.view.state.tr.insertText('A note'));
+    expect(editor!.getContent()).toMatch(
+      /^<p>Text<sup class="mce-footnote"><a href="#footnote-[\w-]+" id="footnote-ref-[\w-]+" role="doc-noteref">1<\/a><\/sup><\/p><div class="mce-footnotes" role="doc-endnotes"><hr><ol><li id="footnote-[\w-]+">.*A note<\/span><\/li><\/ol><\/div>$/,
+    );
+    expect(editor!.execCommand('mceUpdateFootnotes')).toBe(true);
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/footnote/);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

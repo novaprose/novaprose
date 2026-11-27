@@ -19,7 +19,10 @@ export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
   },
   edit: { title: 'menu.edit', items: 'undo redo | selectall | searchreplace pastetext' },
   view: { title: 'menu.view', items: 'code preview | fullscreen | visualblocks visualchars' },
-  insert: { title: 'menu.insert', items: 'image link inserttable hr | insertdatetime template' },
+  insert: {
+    title: 'menu.insert',
+    items: 'image link inserttable hr | insertdatetime template footnotes',
+  },
   format: {
     title: 'menu.format',
     items:
