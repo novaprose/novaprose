@@ -285,6 +285,8 @@ const ru: LanguagePack = {
   'save.saved': 'Сохранено',
   'save.canceled': 'Изменения отменены',
   'save.failed': 'Не удалось сохранить',
+  'markdown.pasted': 'Markdown вставлен с оформлением',
+  'markdown.asText': 'Вставить как текст',
   'insertdatetime.title': 'Вставить дату/время',
   'insertdatetime.date': 'Дата',
   'insertdatetime.time': 'Время',

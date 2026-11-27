@@ -157,7 +157,7 @@ const editor = createEditor({
     // ?tools=1: change case, format painter, permanent pen, invisible characters, save
     // (e2e/formatting-tools.spec.ts).
     ...(new URLSearchParams(location.search).has('tools')
-      ? ['casechange', 'formatpainter', 'permanentpen', 'visualchars', 'save']
+      ? ['casechange', 'formatpainter', 'permanentpen', 'visualchars', 'save', 'markdown']
       : []),
     // ?ai=1: the AI assistant with an offline demo model (e2e/ai.spec.ts); edits arrive as suggestions.
     ...(new URLSearchParams(location.search).has('ai')

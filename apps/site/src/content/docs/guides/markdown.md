@@ -18,6 +18,22 @@ editor.insertContent(markdownToHTML('**Note:** see [docs](https://novaprose.com)
 const markdown = toMarkdown(editor); // or toMarkdown(doc) for a ProseMirror node
 ```
 
+## Pasting Markdown
+
+With the `markdown` plugin, Markdown pasted as plain text — from a text editor, a terminal, a chat,
+a README, Markdown copied in VS Code — becomes formatting: headings, lists and checklists, quotes,
+code, tables, links, bold, italic and strikethrough. A notification offers **Paste as text** to undo
+it. The parser loads with the plugin, not with the editor.
+
+```ts
+createEditor({ element, plugins: ['markdown'] });
+```
+
+Only text that looks like Markdown is converted: a heading, two list items, a quote, a code fence or a
+table, or inline marks such as `**bold**`, `` `code` `` and `[a link](https://…)`. Ordinary text,
+Ctrl/Cmd+Shift+V, "paste as text" mode and pasting into a code block stay plain.
+`pluginOptions.markdown.paste: false` turns the conversion off.
+
 ## What is supported
 
 CommonMark plus GitHub-style tables and `~~strikethrough~~`: headings, paragraphs, bold, italic,

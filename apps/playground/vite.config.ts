@@ -16,7 +16,12 @@ const grammars = [
 
 export default defineConfig({
   optimizeDeps: {
-    include: ['@novaprose/core > highlight.js/lib/core', '@novaprose/core > temml', ...grammars],
+    include: [
+      '@novaprose/core > highlight.js/lib/core',
+      '@novaprose/core > temml',
+      '@novaprose/core > markdown-it',
+      ...grammars,
+    ],
   },
   resolve: {
     // The playground works directly with the core sources: changes show up at once, without a build.

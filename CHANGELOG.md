@@ -25,6 +25,12 @@ All packages in this repository are versioned together. The format follows
   zero-width spaces as a dashed mark — without touching the text; screen readers read it as before
   (`pluginOptions.visualchars.default`, for TinyMCE `visualchars_default_state` and
   `mceVisualChars`). Only changed paragraphs are scanned again, so long documents stay fast.
+- `markdown` plugin: Markdown pasted as plain text — from a text editor, a terminal, a chat, VS Code
+  — becomes formatting (headings, lists and checklists, quotes, code, tables, links, bold, italic,
+  strikethrough), and a notification offers **Paste as text** to undo it. Only text that looks like
+  Markdown is converted; Ctrl/Cmd+Shift+V, "paste as text" mode and code blocks stay plain. The
+  parser loads with the plugin (`pluginOptions.markdown.paste: false` turns it off). See
+  [Markdown](https://novaprose.com/guides/markdown/#pasting-markdown).
 - `save` plugin: the Save button and Ctrl/Cmd+S call `pluginOptions.save.onSave(editor)` or submit
   the form around the editor; Save is enabled only with unsaved changes (`enableWhenDirty: false` —
   always), and Cancel brings back the text of the last save. With `tinymce.init`,

@@ -237,6 +237,8 @@ function pasteFromCodeEditor(
   } catch {
     // Not JSON: the language is unknown, paste as code without a language.
   }
+  // Markdown becomes formatting when the markdown plugin is on: its own handlePaste takes it.
+  if (mode === 'markdown' && editor.hasPlugin('markdown') && !editor.isPasteAsText()) return false;
   // A whole copied line (Ctrl+C without a selection) ends with a line break, which is extra.
   const text = raw.replace(/\r\n?/g, '\n').replace(/\n$/, '');
   const codeBlock = view.state.schema.nodes.code_block;

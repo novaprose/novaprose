@@ -284,6 +284,8 @@ const de: LanguagePack = {
   'save.saved': 'Gespeichert',
   'save.canceled': 'Änderungen verworfen',
   'save.failed': 'Speichern fehlgeschlagen',
+  'markdown.pasted': 'Markdown als Formatierung eingefügt',
+  'markdown.asText': 'Als Text einfügen',
   'insertdatetime.title': 'Datum/Uhrzeit einfügen',
   'insertdatetime.date': 'Datum',
   'insertdatetime.time': 'Uhrzeit',

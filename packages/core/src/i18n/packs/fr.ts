@@ -285,6 +285,8 @@ const fr: LanguagePack = {
   'save.saved': 'Enregistré',
   'save.canceled': 'Modifications annulées',
   'save.failed': 'Échec de l’enregistrement',
+  'markdown.pasted': 'Markdown collé avec sa mise en forme',
+  'markdown.asText': 'Coller comme texte',
   'insertdatetime.title': 'Insérer la date/heure',
   'insertdatetime.date': 'Date',
   'insertdatetime.time': 'Heure',

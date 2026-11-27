@@ -151,3 +151,25 @@ test('save: Ctrl/Cmd+S saves (and never opens the browser save dialog)', async (
     .poll(() => page.evaluate(() => (window as unknown as { lastSaved?: string }).lastSaved))
     .toBe('<p>text more</p>');
 });
+
+test('Markdown pasted as plain text becomes formatting; "Paste as text" undoes it', async ({
+  page,
+  browserName,
+}) => {
+  test.skip(browserName === 'firefox', 'Firefox ignores clipboardData in a synthetic paste');
+  await open(page, '<p></p>');
+  const paste = (text: string) =>
+    content(page).evaluate((el, value) => {
+      const data = new DataTransfer();
+      data.setData('text/plain', value);
+      el.dispatchEvent(
+        new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }),
+      );
+    }, text);
+  await paste('## Plan\n\n- **first** step\n- second');
+  expect(await html(page)).toBe(
+    '<h2>Plan</h2><ul><li><p><strong>first</strong> step</p></li><li><p>second</p></li></ul>',
+  );
+  await page.getByRole('button', { name: 'Paste as text' }).click();
+  await expect.poll(() => html(page)).toBe('<p>## Plan</p><p>- **first** step</p><p>- second</p>');
+});

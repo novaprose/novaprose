@@ -282,6 +282,8 @@ const it: LanguagePack = {
   'save.saved': 'Salvato',
   'save.canceled': 'Modifiche annullate',
   'save.failed': 'Impossibile salvare',
+  'markdown.pasted': 'Markdown incollato con la formattazione',
+  'markdown.asText': 'Incolla come testo',
   'insertdatetime.title': 'Inserisci data/ora',
   'insertdatetime.date': 'Data',
   'insertdatetime.time': 'Ora',

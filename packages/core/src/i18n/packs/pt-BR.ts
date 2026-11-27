@@ -283,6 +283,8 @@ const ptBR: LanguagePack = {
   'save.saved': 'Salvo',
   'save.canceled': 'Alterações descartadas',
   'save.failed': 'Não foi possível salvar',
+  'markdown.pasted': 'Markdown colado com formatação',
+  'markdown.asText': 'Colar como texto',
   'insertdatetime.title': 'Inserir data/hora',
   'insertdatetime.date': 'Data',
   'insertdatetime.time': 'Hora',
