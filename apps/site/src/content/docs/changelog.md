@@ -151,6 +151,14 @@ All packages in this repository are versioned together. The format follows
   is created, and `hasLanguage(code)` tells whether a language is ready.
 - The `SchemaSpecs` type is exported. The types of `@novaprose/core/html-rules` used it without a
   public name, so a type inferred from them could fail with TS2742 in your project.
+- **Changed:** `editor.resolveCommand()` and `editor.contentRules` are no longer part of the public
+  types. They were undocumented internals; use `editor.exec()`, `editor.can()` and
+  `editor.isAllowed()`.
+- Ready for renames after 1.0: a renamed option, command or event keeps working under its old name and
+  logs one console warning that names the replacement. Nothing is renamed today.
+- The reference lists every option: `disabled`, `resize`, `blockFormats`, `formats`,
+  `styleFormats`, `styleFormatsMerge`, `validClasses`, `tableClassList`, `tableCellClassList`,
+  `filePicker` and `filePickerTypes` were missing.
 
 ### Plugins API
 

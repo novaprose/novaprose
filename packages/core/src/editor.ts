@@ -26,6 +26,7 @@ import { createTranslator, type LanguagePack } from './i18n';
 import { embeddedImageUploadPlugin, imageDropPastePlugin, type UploadImageHandler } from './image';
 import { firstClickPlugin } from './first-click';
 import { announcePlugin } from './announce';
+import { currentName, renameOptions } from './deprecations';
 import { buildInputRules, codeFenceKeymap } from './inputrules';
 import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
@@ -321,7 +322,7 @@ export class Editor {
   private readonly transactionTransforms: NonNullable<NovaPlugin['transformTransaction']>[] = [];
   private readonly cleanups: (() => void)[] = [];
   /** Content restrictions (validElements/invalidElements/validStyles), or null when there are none. */
-  readonly contentRules: ContentRules | null;
+  private readonly contentRules: ContentRules | null;
   /** This editor's document schema: the built-in one plus nodes and marks of plugins. */
   readonly schema: NovaSchema;
   /** Formats: register / apply / remove / toggle / match. */
@@ -334,6 +335,8 @@ export class Editor {
   private pasteAsText: boolean;
 
   constructor(options: EditorOptions) {
+    // Renamed options keep working under their old names, with a console warning (deprecations.ts).
+    options = renameOptions(options);
     this.options = options;
     this.root = document.createElement('div');
     this.root.className = 'nova-editor';
@@ -793,7 +796,8 @@ export class Editor {
   // ---------- commands ----------
 
   /** The command for a name: a plugin's override or the built-in one; unknown names return false. */
-  resolveCommand(name: CommandName): Command {
+  private resolveCommand(name: CommandName): Command {
+    name = currentName('commands', name) as CommandName;
     const command =
       this.commandOverrides.get(name) ??
       (Object.prototype.hasOwnProperty.call(commands, name) ? commands[name] : undefined);
@@ -843,7 +847,7 @@ export class Editor {
 
   /** Whether a named command is active for the current selection (for your own toolbar buttons). */
   isActive(command: CommandName): boolean {
-    return isCommandActive(this.view.state, command);
+    return isCommandActive(this.view.state, currentName('commands', command) as CommandName);
   }
 
   /**
@@ -922,6 +926,7 @@ export class Editor {
   // ---------- events ----------
 
   on<E extends EditorEvent>(event: E, listener: EditorListener<E>): () => void {
+    event = currentName('events', event) as E;
     let set = this.listeners.get(event);
     if (!set) this.listeners.set(event, (set = new Set()));
     set.add(listener as EditorListener);
@@ -929,6 +934,7 @@ export class Editor {
   }
 
   off<E extends EditorEvent>(event: E, listener: EditorListener<E>): void {
+    event = currentName('events', event) as E;
     this.listeners.get(event)?.delete(listener as EditorListener);
   }
 

@@ -81,6 +81,7 @@ their own and are not accepted in a chain. A custom command in a chain must buil
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
 | `focus()`                                  | focus the text                                                                                              |
 | `isEditable()`, `setEditable(value)`       | read-only mode                                                                                              |
+| `isDisabled()`, `setDisabled(value)`       | disabled mode: no editing, no focus, dimmed, like a disabled form field                                     |
 | `isPasteAsText()`, `setPasteAsText(value)` | plain-text paste mode                                                                                       |
 | `openSearch()`, `closeSearch()`            | the search and replace bar                                                                                  |
 | `isAllowed(name): boolean`                 | whether content rules allow an element or control                                                           |
@@ -89,6 +90,8 @@ their own and are not accepted in a chain. A custom command in a chain must buil
 | `updateUI()`                               | refresh toolbar state (pressed/disabled) after a display-only change                                        |
 | `ready: Promise<void>`                     | resolves when all plugins and lazy parts (e.g. table editing) are set up                                    |
 | `mode`                                     | `'classic'`, `'inline'` or `'distraction-free'`                                                             |
+| `direction`                                | `'ltr'` or `'rtl'`: from the `direction` option or the language                                             |
+| `formatter`                                | named formats: `apply(name)`, `remove(name)`, `toggle(name)`, `match(name)`, `register(name, spec)`         |
 | `root: HTMLElement`                        | the editor's root element                                                                                   |
 | `ui.registry`                              | register controls ([Custom buttons](/guides/custom-buttons-and-plugins/))                                   |
 | `ui.t(key)`                                | translate a UI string                                                                                       |

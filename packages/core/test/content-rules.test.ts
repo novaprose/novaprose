@@ -188,7 +188,8 @@ describe('the UI respects the restrictions', () => {
 
   it("without restrictions everything is allowed and the plugin isn't attached", () => {
     const e = mount('<p>a</p>');
-    expect(e.contentRules).toBeNull();
+    const keys = e.view.state.plugins.map((plugin) => (plugin as unknown as { key: string }).key);
+    expect(keys.some((key) => key.startsWith('nova-content-rules'))).toBe(false);
     expect(e.isAllowed('table')).toBe(true);
   });
 });
