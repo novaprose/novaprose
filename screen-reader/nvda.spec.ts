@@ -29,8 +29,13 @@ async function heard(nvda: NVDAPlaywright, step: string): Promise<string> {
 }
 
 /** The playground with the given content, NVDA on the page and the cursor in the text. */
-async function openEditor(page: Page, nvda: NVDAPlaywright, content: string): Promise<void> {
-  await page.goto('/?lang=en', { waitUntil: 'load' });
+async function openEditor(
+  page: Page,
+  nvda: NVDAPlaywright,
+  content: string,
+  query = '',
+): Promise<void> {
+  await page.goto(`/?lang=en${query}`, { waitUntil: 'load' });
   await page.evaluate(async (value) => {
     await window.editor.ready;
     window.editor.setContent(value, { addToHistory: false });
@@ -95,6 +100,24 @@ test('Alt+0 opens the keyboard shortcuts and Escape closes them', async ({ page,
   await nvda.press('Escape');
   await heard(nvda, 'Escape');
   await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeHidden();
+});
+
+// AI autocomplete (the playground's offline demo model): the grey suggestion is hidden from screen
+// readers, so it is announced once; Tab accepts it.
+test('AI autocomplete: the suggestion is announced, Tab accepts it', async ({ page, nvda }) => {
+  await openEditor(page, nvda, '<p>Start</p>', '&ai=1&complete=1');
+  await nvda.press('Control+End');
+  await heard(nvda, 'Ctrl+End');
+  await nvda.type(' here');
+  await expect(page.locator('.nova-ai-ghost')).toBeVisible();
+  await page.waitForTimeout(1000);
+  const spoken = await heard(nvda, 'a pause after typing');
+  expect(spoken, 'what NVDA said when the suggestion appeared').toContain(
+    'Suggestion: and a little more. Press Tab to accept.',
+  );
+  await nvda.press('Tab');
+  await heard(nvda, 'Tab');
+  await expect.poll(() => html(page)).toBe('<p>Start here and a little more.</p>');
 });
 
 test('Ctrl+K opens the link dialog: "Insert link"', async ({ page, nvda }) => {

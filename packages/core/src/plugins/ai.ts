@@ -369,8 +369,12 @@ export default definePlugin({
             autocompletePlugin(editor, {
               delay,
               enabled: () => autocompleteOn.get(editor) === true,
+              // "Suggestion: and so on. Press Tab…": the label ends the sentence itself.
               announcement: (text) =>
-                pickLabels(editor, 'ai', LABELS).completion.replace('{text}', text),
+                pickLabels(editor, 'ai', LABELS).completion.replace(
+                  '{text}',
+                  text.replace(/[.!?…]+$/, ''),
+                ),
               hint: () => pickLabels(editor, 'ai', LABELS).completionHint,
             }),
           ]),

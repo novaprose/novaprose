@@ -61,6 +61,7 @@ describe('AI autocomplete', () => {
   it('a pause at the end of a paragraph: the continuation in grey; Tab accepts it', async () => {
     const request = vi.fn(async (_r: AiRequest) => 'ld, how are you?');
     const e = await mount('<p>Hello</p>', request);
+    const announce = vi.spyOn(e.ui, 'announce');
     toEnd(e);
     type(e, ' wor');
     await vi.advanceTimersByTimeAsync(600);
@@ -71,6 +72,8 @@ describe('AI autocomplete', () => {
     expect(r).toMatchObject({ action: 'complete', text: '', before: 'Hello wor', after: '' });
     expect(r.prompt).toContain('<before>\nHello wor\n</before>');
     expect(ghost(e)).toBe('ld, how are you?');
+    // Hidden from screen readers, so announced once (the label ends the sentence itself).
+    expect(announce).toHaveBeenCalledWith('Suggestion: ld, how are you. Press Tab to accept.');
     // Only shown: not in the document, not in the HTML.
     expect(e.getHTML()).toBe('<p>Hello wor</p>');
     key(e, 'Tab');
