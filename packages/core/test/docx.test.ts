@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createEditor, listSuggestions, type Editor } from '../src';
+import { createEditor, listSuggestions, resolveSuggestions, type Editor } from '../src';
 import { exportDocx, fromDocx, importDocx } from '../src/docx';
 import { bookmarkName, hexColor, imageSize } from '../src/docx/export';
 import { parseXml, textContent, type XmlElement } from '../src/docx/xml';
@@ -450,6 +450,55 @@ describe('Word tracked changes as suggestions', () => {
       ['insert', 'June now', 'Ann Lee'],
     ]);
     expect(e.getText()).toBe('Ship in MayJune now.');
+  });
+
+  it('a formatting change: w:rPrChange becomes a suggested format that remembers the old look', async () => {
+    const { html } = await fromDocx(
+      await docx(
+        para(
+          `<w:r><w:rPr><w:b/><w:rPrChange w:id="6" ${ANN}><w:rPr><w:i/></w:rPr></w:rPrChange></w:rPr><w:t>now bold</w:t></w:r>`,
+        ),
+      ),
+      { revisions: 'suggestions' },
+    );
+    expect(html).toBe(
+      `<p><span data-suggestion="w6" data-name="Ann Lee" data-time="${when}" data-format="[{&quot;type&quot;:&quot;italic&quot;}]"><strong>now bold</strong></span></p>`,
+    );
+    const accepted = await fromDocx(
+      await docx(
+        para(
+          `<w:r><w:rPr><w:b/><w:rPrChange w:id="6" ${ANN}><w:rPr/></w:rPrChange></w:rPr><w:t>x</w:t></w:r>`,
+        ),
+      ),
+    );
+    expect(accepted.html).toBe('<p><strong>x</strong></p>');
+  });
+
+  it('a suggested format goes to Word as w:rPrChange and comes back the same', async () => {
+    const e = mount(
+      '<p><strong><span data-suggestion="f1" data-format="[{&quot;type&quot;:&quot;italic&quot;}]" data-author="u1" data-name="Anna" data-time="1700000000000">bold</span></strong> rest</p>',
+      { plugins: ['suggestions'] },
+    );
+    const bytes = await exportDocx(e);
+    const xml = text((await unzip(bytes)).get('word/document.xml'));
+    expect(xml).toMatch(
+      /<w:rPr><w:b\/><w:bCs\/><w:rPrChange w:id="\d+" w:author="Anna" w:date="2023-11-14T22:13:20Z"><w:rPr><w:i\/><w:iCs\/><\/w:rPr><\/w:rPrChange><\/w:rPr>/,
+    );
+    wellFormed(xml);
+    const back = mount('', { plugins: ['suggestions'] });
+    await importDocx(back, bytes);
+    expect(listSuggestions(back.view.state.doc)).toMatchObject([
+      {
+        kind: 'format',
+        text: 'bold',
+        added: ['bold'],
+        removed: ['italic'],
+        author: { name: 'Anna' },
+        time: 1700000000000,
+      },
+    ]);
+    back.view.dispatch(resolveSuggestions(back.view.state, 'reject'));
+    expect(back.getHTML()).toBe('<p><em>bold</em> rest</p>');
   });
 
   it('round trip: suggestions → Word revisions → the same suggestions', async () => {

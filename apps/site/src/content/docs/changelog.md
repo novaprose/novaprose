@@ -13,6 +13,13 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Suggested formats: in suggesting mode, text formatting (bold, italic, underline, strikethrough,
+  code, sub/superscript, colors, fonts, sizes, links, styles) is a suggestion too. The new look
+  shows at once with a dotted line in the author's color; rejecting it brings back how the text
+  looked (`<span data-suggestion="…" data-format="[…]">` remembers it), and a change back takes
+  the suggestion away. People who can only suggest (`force`) no longer change formatting directly.
+  The panel says what changed ("+Bold −Italic"), and Word gets and gives tracked formatting
+  changes (`w:rPrChange`). `Suggestion.kind` can now be `format`, with `added` and `removed`.
 - Reviewing suggested edits: the **Suggestions** panel (`suggestionspanel`, or Review suggestions →
   Show all suggestions) lists every suggestion as a card with its author, time and text, a deletion
   right before an insertion by the same person as one replacement; a click finds it in the text.

@@ -1,6 +1,7 @@
 import type { Node as PMNode } from 'prosemirror-model';
 import { TextSelection } from 'prosemirror-state';
 import type { Editor } from '../editor';
+import type { MessageKey } from '../i18n';
 import { activeElement, h, uniqueId } from '../ui/dom';
 import css from './suggestions-panel.css?raw';
 import {
@@ -20,15 +21,17 @@ import {
 export interface SuggestionCard {
   /** Ids of the suggestions on the card (a replacement has two: the deletion and the insertion). */
   ids: string[];
-  kind: 'insert' | 'delete' | 'replace';
+  kind: 'insert' | 'delete' | 'replace' | 'format';
   author: SuggestionAuthor;
   time: number;
   /** Where the card's text starts and ends in the document. */
   from: number;
   to: number;
-  /** Deleted text (delete, replace) and inserted text (insert, replace). */
+  /** Deleted text (delete, replace) and inserted text (insert, replace); the formatted text (format). */
   removed: string;
   added: string;
+  /** format: the mark names the text got and lost. */
+  marks?: { added: string[]; removed: string[] };
 }
 
 export interface SuggestionsPanelLabels {
@@ -38,6 +41,7 @@ export interface SuggestionsPanelLabels {
   kindInsert: string;
   kindDelete: string;
   kindReplace: string;
+  kindFormat: string;
   accept: string;
   reject: string;
   acceptShown: string;
@@ -64,8 +68,14 @@ export function suggestionCards(doc: PMNode): SuggestionCard[] {
     const key = `${s.kind}:${s.id}`;
     const known = byPart.get(key);
     if (known) {
-      if (s.kind === 'insert') known.added += ` ${s.text}`;
-      else known.removed += ` ${s.text}`;
+      if (s.kind === 'delete') known.removed += ` ${s.text}`;
+      else known.added += ` ${s.text}`;
+      if (known.marks) {
+        for (const name of s.added ?? [])
+          if (!known.marks.added.includes(name)) known.marks.added.push(name);
+        for (const name of s.removed ?? [])
+          if (!known.marks.removed.includes(name)) known.marks.removed.push(name);
+      }
       known.to = Math.max(known.to, s.to);
       continue;
     }
@@ -91,13 +101,33 @@ export function suggestionCards(doc: PMNode): SuggestionCard[] {
       from: s.from,
       to: s.to,
       removed: s.kind === 'delete' ? s.text : '',
-      added: s.kind === 'insert' ? s.text : '',
+      added: s.kind === 'delete' ? '' : s.text,
+      ...(s.kind === 'format'
+        ? { marks: { added: [...(s.added ?? [])], removed: [...(s.removed ?? [])] } }
+        : {}),
     };
     cards.push(card);
     byPart.set(key, card);
   }
   return cards;
 }
+
+/** UI strings of the formatting a suggested format changes (mark names of the schema). */
+const MARK_LABELS: Record<string, MessageKey> = {
+  bold: 'bold',
+  italic: 'italic',
+  underline: 'underline',
+  strike: 'strike',
+  code: 'code',
+  subscript: 'subscript',
+  superscript: 'superscript',
+  link: 'link',
+  color: 'textColor',
+  background: 'backgroundColor',
+  font_family: 'fontFamily',
+  font_size: 'fontSize',
+  span_class: 'styles',
+};
 
 /** At most `max` characters of a suggestion's text, on one line. */
 function excerpt(text: string, max = 140): string {
@@ -213,16 +243,28 @@ export function createSuggestionsPanel(
   function cardElement(card: SuggestionCard, active: boolean): HTMLElement {
     const key = card.ids[0]!;
     const summaryId = uniqueId('nova-sugg-summary');
-    const kind =
-      card.kind === 'insert'
-        ? labels.kindInsert
-        : card.kind === 'delete'
-          ? labels.kindDelete
-          : labels.kindReplace;
-    const text = (value: string, tag: 'ins' | 'del') =>
+    const kind = {
+      insert: labels.kindInsert,
+      delete: labels.kindDelete,
+      replace: labels.kindReplace,
+      format: labels.kindFormat,
+    }[card.kind];
+    const text = (value: string, tag: 'ins' | 'del' | 'span') =>
       value.trim()
         ? h(tag, { className: 'nova-sugg-text' }, excerpt(value))
         : h('span', { className: 'nova-sugg-text is-object' }, labels.nonText);
+    // A suggested format: "+Bold −Italic" (the formatting the text got and lost).
+    const markName = (name: string) => (MARK_LABELS[name] ? editor.ui.t(MARK_LABELS[name]) : name);
+    const changes = card.marks
+      ? h(
+          'span',
+          { className: 'nova-sugg-changes' },
+          [
+            ...card.marks.added.map((name) => `+${markName(name)}`),
+            ...card.marks.removed.map((name) => `−${markName(name)}`),
+          ].join(' '),
+        )
+      : null;
     const summary = h(
       'button',
       {
@@ -234,8 +276,10 @@ export function createSuggestionsPanel(
         onClick: () => goTo(card),
       },
       h('span', { className: 'nova-sugg-kind' }, kind),
-      card.kind !== 'insert' ? text(card.removed, 'del') : null,
-      card.kind !== 'delete' ? text(card.added, 'ins') : null,
+      card.kind === 'delete' || card.kind === 'replace' ? text(card.removed, 'del') : null,
+      card.kind === 'insert' || card.kind === 'replace' ? text(card.added, 'ins') : null,
+      card.kind === 'format' ? text(card.added, 'span') : null,
+      changes,
     );
     const editable = editor.isEditable();
     const action = (name: 'accept' | 'reject') =>

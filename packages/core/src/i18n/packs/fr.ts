@@ -418,6 +418,8 @@ const fr: LanguagePack = {
   'suggestions.rejectedCount': 'Suggestions refusées : {count}',
   'suggestions.noneFrom': 'Aucune suggestion de {name}',
   'suggestions.nonText': 'pas du texte (une image ou un autre contenu)',
+  'suggestions.formatted': 'Mis en forme par {name}',
+  'suggestions.kindFormat': 'Mis en forme',
   'visualblocks.title': 'Afficher les blocs',
 };
 

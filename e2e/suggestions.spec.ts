@@ -110,6 +110,31 @@ test("the panel: every suggestion as a card; one author's at once with the filte
   await expect.poll(() => html(page)).toBe('<p>Ship in June.</p><p>A good plan.</p>');
 });
 
+test('Ctrl+B in suggesting mode suggests the format; Reject takes the bold away', async ({
+  page,
+}) => {
+  await open(page, '<p>plain words</p>');
+  await page.keyboard.press('ControlOrMeta+Alt+Shift+e');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press('ControlOrMeta+b');
+  await expect
+    .poll(() => html(page))
+    .toBe('<p><strong><span data-format="[]">plain</span></strong> words</p>');
+  // The text is bold at once, with the suggestion's dotted line under it.
+  await expect(
+    content(page).locator('strong .nova-sugg-format, .nova-sugg-format strong').first(),
+  ).toBeVisible();
+  await page.keyboard.press('ArrowLeft');
+  const bar = page.getByRole('toolbar', { name: 'Suggestion' });
+  await bar.getByRole('button', { name: 'Reject' }).click();
+  await expect.poll(() => html(page)).toBe('<p>plain words</p>');
+});
+
 test('previews: the text with every suggestion accepted, then rejected; the text stays', async ({
   page,
 }) => {

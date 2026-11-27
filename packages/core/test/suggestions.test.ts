@@ -245,3 +245,131 @@ describe('suggesting mode', () => {
     expect(nested.getHTML()).toBe('<ul><li><p></p><ul><li><p>B</p></li></ul></li></ul>');
   });
 });
+
+/** Select from..to. */
+const select = (editor: Editor, from: number, to: number) =>
+  editor.view.dispatch(
+    editor.view.state.tr.setSelection(TextSelection.create(editor.view.state.doc, from, to)),
+  );
+
+/** HTML without ids, times and the author: the format suggestion's span keeps data-format. */
+const plain = (editor: Editor) => html(editor).replace(/ data-suggestion="[^"]+"/g, '');
+
+describe('suggested formats', () => {
+  it('bold in suggesting mode: bold at once, remembering it was not; reject takes it back', () => {
+    const editor = mount('<p>plain text</p>');
+    select(editor, 1, 6);
+    editor.exec('bold');
+    expect(html(editor)).toBe('<p><strong><span data-format="[]">plain</span></strong> text</p>');
+    const [s] = listSuggestions(editor.view.state.doc);
+    expect(s).toMatchObject({ kind: 'format', text: 'plain', added: ['bold'], removed: [] });
+    editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject'));
+    expect(editor.getHTML()).toBe('<p>plain text</p>');
+  });
+
+  it('accept keeps the new format; the suggestion goes', () => {
+    const editor = mount('<p>plain text</p>');
+    select(editor, 1, 6);
+    editor.exec('italic');
+    editor.view.dispatch(resolveSuggestions(editor.view.state, 'accept'));
+    expect(editor.getHTML()).toBe('<p><em>plain</em> text</p>');
+    expect(listSuggestions(editor.view.state.doc)).toEqual([]);
+  });
+
+  it('taking italic away is a suggestion too; reject brings italic back', () => {
+    const editor = mount('<p><em>slanted</em> text</p>');
+    select(editor, 1, 8);
+    editor.exec('italic');
+    expect(plain(editor)).toBe(
+      '<p><span data-format="[{&quot;type&quot;:&quot;italic&quot;}]">slanted</span> text</p>',
+    );
+    expect(listSuggestions(editor.view.state.doc)[0]).toMatchObject({
+      added: [],
+      removed: ['italic'],
+    });
+    editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject'));
+    expect(editor.getHTML()).toBe('<p><em>slanted</em> text</p>');
+  });
+
+  it('two changes are one suggestion that remembers the start; back to the start, it goes', () => {
+    const editor = mount('<p>word</p>');
+    select(editor, 1, 5);
+    editor.exec('bold');
+    editor.exec('italic');
+    expect(listSuggestions(editor.view.state.doc)).toHaveLength(1);
+    expect(listSuggestions(editor.view.state.doc)[0]!.added).toEqual(['bold', 'italic']);
+    editor.exec('italic');
+    editor.exec('bold');
+    expect(editor.getHTML()).toBe('<p>word</p>');
+  });
+
+  it('formatting your own suggested insertion just formats it', () => {
+    const editor = mount('<p>Hi</p>');
+    cursor(editor, 3);
+    type(editor, ' there');
+    select(editor, 4, 9);
+    editor.exec('bold');
+    expect(html(editor)).toBe('<p>Hi<ins> </ins><strong><ins>there</ins></strong></p>');
+    expect(listSuggestions(editor.view.state.doc).map((s) => s.kind)).toEqual(['insert']);
+  });
+
+  it("another person's insertion formatted: rejecting both leaves the text as it was", () => {
+    const editor = mount(
+      '<p>a <ins data-suggestion="b1" data-author="u2" data-name="Bob">new</ins> b</p>',
+    );
+    select(editor, 3, 6);
+    editor.exec('bold');
+    expect(listSuggestions(editor.view.state.doc).map((s) => s.kind)).toEqual(['insert', 'format']);
+    editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject'));
+    expect(editor.getHTML()).toBe('<p>a &nbsp;b</p>');
+  });
+
+  it('the format suggestion comes back from HTML; a damaged data-format is safe', () => {
+    const editor = mount(
+      '<p><strong><span data-suggestion="f1" data-format="[{&quot;type&quot;:&quot;italic&quot;}]" data-author="u2" data-name="Bob" data-time="1700000000000">x</span></strong>' +
+        '<span data-suggestion="f2" data-format="not json">y</span>' +
+        '<span data-suggestion="f3" data-format="[{&quot;type&quot;:&quot;nosuchmark&quot;},{&quot;type&quot;:&quot;link&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;javascript:alert(1)&quot;}}]">z</span></p>',
+      { enabled: false },
+    );
+    expect(editor.getHTML()).toBe(
+      '<p><strong><span data-suggestion="f1" data-format="[{&quot;type&quot;:&quot;italic&quot;}]" data-author="u2" data-name="Bob" data-time="1700000000000">x</span></strong>' +
+        '<span data-suggestion="f2" data-format="[]">y</span>' +
+        '<span data-suggestion="f3" data-format="[{&quot;type&quot;:&quot;nosuchmark&quot;},{&quot;type&quot;:&quot;link&quot;,&quot;attrs&quot;:{&quot;href&quot;:&quot;javascript:alert(1)&quot;}}]">z</span></p>',
+    );
+    editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject'));
+    // x goes back to italic; z gets the link back, but its unsafe address is never written.
+    expect(editor.getHTML()).toBe('<p><em>x</em>y<a href="#">z</a></p>');
+  });
+
+  it('JSON with any attributes on the format mark: listing, accepting and rejecting don’t throw', () => {
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    const editor = createEditor({
+      element,
+      plugins: ['suggestions'],
+      content: {
+        type: 'doc',
+        content: [
+          {
+            type: 'paragraph',
+            content: [
+              {
+                type: 'text',
+                text: 'odd',
+                marks: [
+                  { type: 'suggestion_format', attrs: { id: 7, before: { a: 1 }, author: null } },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+    editors.push(editor);
+    expect(listSuggestions(editor.view.state.doc)[0]).toMatchObject({ kind: 'format' });
+    expect(() =>
+      editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject')),
+    ).not.toThrow();
+    expect(editor.getHTML()).toBe('<p>odd</p>');
+  });
+});

@@ -417,6 +417,8 @@ const ru: LanguagePack = {
   'suggestions.rejectedCount': 'Отклонено правок: {count}',
   'suggestions.noneFrom': 'Нет правок от: {name}',
   'suggestions.nonText': 'не текст (картинка или другое содержимое)',
+  'suggestions.formatted': 'Форматирование: {name}',
+  'suggestions.kindFormat': 'Отформатировано',
   'visualblocks.title': 'Показать блоки',
 };
 

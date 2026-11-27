@@ -149,3 +149,12 @@ del.nova-sugg-text {
     padding: 0 14px;
   }
 }
+/* A suggested format: the text in the author's color, what changed under it. */
+span.nova-sugg-text:not(.is-object) {
+  border-bottom: 2px dotted currentColor;
+}
+.nova-sugg-changes {
+  flex-basis: 100%;
+  color: var(--nova-muted);
+  font-size: 12px;
+}

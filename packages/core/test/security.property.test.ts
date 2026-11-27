@@ -417,6 +417,8 @@ describe('HTML security and stability (property-based)', () => {
       open: anyValue,
       // A footnote reference: its id goes into href and id, its number is shown.
       number: anyValue,
+      // A suggested format: the formatting before it, as JSON (goes into data-format).
+      before: fc.oneof(anyValue, attrValue),
       // The formula source goes into data-latex and the text: anything from JSON.
       latex: fc.oneof(anyValue, attrValue),
       // Table of contents items: level, id and text can be anything too (the id goes into href).
@@ -439,6 +441,7 @@ describe('HTML security and stability (property-based)', () => {
         'comment',
         'suggestion_insert',
         'suggestion_delete',
+        'suggestion_format',
       ),
       attrs,
     });

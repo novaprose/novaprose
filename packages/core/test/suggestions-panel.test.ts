@@ -159,6 +159,16 @@ describe('the suggestions panel', () => {
     expect(button(other, 'Accept shown').disabled).toBe(true);
   });
 
+  it('a suggested format: "Formatted", the text, and the formatting it got and lost', async () => {
+    const editor = await mount(
+      '<p><strong><span data-suggestion="f1" data-format="[{&quot;type&quot;:&quot;italic&quot;}]" data-author="ann" data-name="Ann">word</span></strong></p>',
+    );
+    const panel = await openPanel(editor);
+    expect(cardTexts(panel)).toEqual(['Ann: Formattedword+Bold −Italic']);
+    panel.querySelector<HTMLButtonElement>('.nova-sugg-reject')!.click();
+    expect(editor.getHTML()).toBe('<p><em>word</em></p>');
+  });
+
   it('suggestions from JSON with odd attributes are listed, not a crash', async () => {
     const element = document.createElement('div');
     document.body.appendChild(element);

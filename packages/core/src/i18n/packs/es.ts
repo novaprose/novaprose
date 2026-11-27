@@ -414,6 +414,8 @@ const es: LanguagePack = {
   'suggestions.rejectedCount': 'Sugerencias rechazadas: {count}',
   'suggestions.noneFrom': 'No hay sugerencias de {name}',
   'suggestions.nonText': 'no es texto (una imagen u otro contenido)',
+  'suggestions.formatted': 'Formato cambiado por {name}',
+  'suggestions.kindFormat': 'Formato cambiado',
   'visualblocks.title': 'Mostrar bloques',
 };
 

@@ -415,6 +415,8 @@ const ptBR: LanguagePack = {
   'suggestions.rejectedCount': 'Sugestões rejeitadas: {count}',
   'suggestions.noneFrom': 'Nenhuma sugestão de {name}',
   'suggestions.nonText': 'não é texto (uma imagem ou outro conteúdo)',
+  'suggestions.formatted': 'Formatado por {name}',
+  'suggestions.kindFormat': 'Formatado',
   'visualblocks.title': 'Mostrar blocos',
 };
 

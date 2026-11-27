@@ -34,6 +34,7 @@ export const LABELS = {
     kindInsert: 'Inserted',
     kindDelete: 'Deleted',
     kindReplace: 'Replaced',
+    kindFormat: 'Formatted',
     acceptShown: 'Accept shown',
     rejectShown: 'Reject shown',
     acceptSelection: 'Accept suggestions in selection',

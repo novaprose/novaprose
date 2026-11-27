@@ -78,9 +78,9 @@ const { html, page, warnings } = await fromDocx(uploadedBytes);
 | page layout: header, footer, `{page}` and `{pages}`                                         | header and footer with PAGE and NUMPAGES fields                    |
 
 Imported documents bring the same back, plus footnotes (at the end of the document) and links
-made with Word's HYPERLINK field. Tracked changes in an imported document become suggested edits,
-with Word's author names and dates, when the editor has the `suggestions` plugin; otherwise they
-are accepted. On the server, `fromDocx(bytes, { revisions: 'suggestions' })` keeps them.
+made with Word's HYPERLINK field. Tracked changes in an imported document — inserted, deleted,
+moved and reformatted text — become suggested edits, with Word's author names and dates, when the
+editor has the `suggestions` plugin; otherwise they are accepted. On the server, `fromDocx(bytes, { revisions: 'suggestions' })` keeps them.
 
 ## Limitations
 

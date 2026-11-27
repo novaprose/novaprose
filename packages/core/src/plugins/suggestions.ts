@@ -13,7 +13,7 @@ import {
   type EditorState,
   type Transaction,
 } from 'prosemirror-state';
-import { ReplaceStep } from 'prosemirror-transform';
+import { AddMarkStep, RemoveMarkStep, ReplaceStep } from 'prosemirror-transform';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { keymap } from 'prosemirror-keymap';
 import type { Editor } from '../editor';
@@ -27,8 +27,10 @@ import { pickLabels } from './shared';
  * stays until a decision). Every suggestion knows its author and time; it is accepted or rejected
  * one by one (the panel above it) or all at once. In HTML: `<ins data-suggestion="id" …>`.
  *
- * Inserting and deleting text is tracked. Structural changes (a new paragraph, a list, a format)
- * apply directly even in suggesting mode.
+ * Inserting and deleting text is tracked, and so is text formatting (bold, a color, a link…): the
+ * new formatting shows at once, and the text remembers what it was, to go back to it if the
+ * suggestion is rejected (`<span data-suggestion="id" data-format="[…]">`). Structural changes (a new
+ * paragraph, a list, alignment) apply directly even in suggesting mode.
  */
 
 export interface SuggestionAuthor {
@@ -49,12 +51,16 @@ export interface SuggestionsOptions {
 
 export interface Suggestion {
   id: string;
-  kind: 'insert' | 'delete';
+  /** insert and delete: text; format: the text's formatting changed. */
+  kind: 'insert' | 'delete' | 'format';
   author: SuggestionAuthor;
   time: number;
   from: number;
   to: number;
   text: string;
+  /** format: the formatting (mark names) the text got, and the formatting it lost. */
+  added?: string[];
+  removed?: string[];
 }
 
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
@@ -72,6 +78,7 @@ export const LABELS = {
     previous: 'Previous suggestion',
     inserted: 'Inserted by {name}',
     deleted: 'Deleted by {name}',
+    formatted: 'Formatted by {name}',
     toolbar: 'Suggestion',
     guest: 'Guest',
     none: 'No suggestions',
@@ -140,10 +147,116 @@ function markSpec(kind: 'insert' | 'delete'): MarkSpec {
   };
 }
 
+/**
+ * What the text's formatting was before a suggested change: a list of marks as JSON (`[{"type":
+ * "bold"}, {"type": "color", "attrs": {…}}]`). From HTML or JSON it can be anything, so it is cleaned:
+ * mark names only, plain attribute values, at most 16 marks; anything else becomes `[]`.
+ */
+export function cleanFormat(value: unknown): string {
+  let list: unknown;
+  try {
+    list = typeof value === 'string' ? JSON.parse(value) : value;
+  } catch {
+    return '[]';
+  }
+  if (!Array.isArray(list)) return '[]';
+  const out: { type: string; attrs?: Record<string, string | number | boolean | null> }[] = [];
+  for (const item of list.slice(0, 16)) {
+    const type = (item as { type?: unknown } | null)?.type;
+    if (typeof type !== 'string' || !/^[a-z][a-z0-9_]{0,39}$/.test(type)) continue;
+    const raw = (item as { attrs?: unknown }).attrs;
+    const attrs: Record<string, string | number | boolean | null> = {};
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      for (const [key, attr] of Object.entries(raw).slice(0, 8)) {
+        if (!/^[A-Za-z][\w-]{0,39}$/.test(key)) continue;
+        if (typeof attr === 'string') attrs[key] = attr.slice(0, 2000);
+        else if (typeof attr === 'number' || typeof attr === 'boolean' || attr === null)
+          attrs[key] = attr;
+      }
+    }
+    out.push(Object.keys(attrs).length ? { type, attrs } : { type });
+  }
+  return JSON.stringify(out);
+}
+
+function formatSpec(): MarkSpec {
+  return {
+    attrs: {
+      id: {},
+      author: { default: '' },
+      name: { default: '' },
+      time: { default: 0 },
+      before: { default: '[]' },
+    },
+    inclusive: false,
+    excludes: '',
+    parseDOM: [
+      {
+        tag: 'span[data-suggestion][data-format]',
+        priority: 60,
+        getAttrs: (dom) => {
+          const el = dom as HTMLElement;
+          const id = el.getAttribute('data-suggestion') ?? '';
+          if (!ID_RE.test(id)) return false;
+          const author = el.getAttribute('data-author') ?? '';
+          return {
+            id,
+            author: USER_ID_RE.test(author) ? author : '',
+            name: (el.getAttribute('data-name') ?? '').slice(0, 80),
+            time: Number(el.getAttribute('data-time')) || 0,
+            before: cleanFormat(el.getAttribute('data-format')),
+          };
+        },
+      },
+    ],
+    toDOM: (mark: Mark) => [
+      'span',
+      {
+        'data-suggestion': ID_RE.test(mark.attrs.id as string) ? mark.attrs.id : null,
+        'data-format': cleanFormat(mark.attrs.before),
+        'data-author': USER_ID_RE.test(mark.attrs.author as string) ? mark.attrs.author : null,
+        'data-name': String(mark.attrs.name ?? '').slice(0, 80) || null,
+        'data-time': Number(mark.attrs.time) || null,
+      },
+      0,
+    ],
+  };
+}
+
 const typesOf = (schema: EditorState['schema']) => ({
   insert: schema.marks.suggestion_insert as MarkType,
   delete: schema.marks.suggestion_delete as MarkType,
+  format: schema.marks.suggestion_format as MarkType,
 });
+
+/** Marks that aren't formatting: suggestions themselves and comments. */
+const NOT_FORMATTING = new Set([
+  'suggestion_insert',
+  'suggestion_delete',
+  'suggestion_format',
+  'comment',
+]);
+
+const formatting = (marks: readonly Mark[]) =>
+  marks.filter((m) => !NOT_FORMATTING.has(m.type.name));
+
+/** The marks of a `before` list that this schema knows (others are left out, never an error). */
+export function formatMarks(schema: EditorState['schema'], before: unknown): Mark[] {
+  const marks: Mark[] = [];
+  for (const json of JSON.parse(cleanFormat(before)) as { type: string }[]) {
+    if (NOT_FORMATTING.has(json.type) || !schema.marks[json.type]) continue;
+    try {
+      const mark = schema.markFromJSON(json);
+      if (!mark.isInSet(marks)) marks.push(mark);
+    } catch {
+      // Attributes the mark doesn't take: without this mark.
+    }
+  }
+  return marks;
+}
+
+const sameMarks = (a: readonly Mark[], b: readonly Mark[]) =>
+  a.length === b.length && a.every((mark) => mark.isInSet(b));
 
 /** Transactions that must not become suggestions. */
 function isTracked(tr: Transaction): boolean {
@@ -155,8 +268,67 @@ function isTracked(tr: Transaction): boolean {
   if (tr.getMeta('history$')) return false;
   const ySync = tr.getMeta('y-sync$') as { isChangeOrigin?: boolean } | undefined;
   if (ySync?.isChangeOrigin) return false;
-  // Inserted and deleted text is tracked; structure (lists, wrappers, attributes) changes directly.
-  return tr.steps.every((step) => step instanceof ReplaceStep);
+  // Inserted and deleted text and text formatting are tracked; structure (lists, wrappers, block
+  // attributes) changes directly.
+  return tr.steps.every(
+    (step) =>
+      step instanceof ReplaceStep || step instanceof AddMarkStep || step instanceof RemoveMarkStep,
+  );
+}
+
+/**
+ * A formatting change as a suggestion: the change is made (the new look shows at once), and text that
+ * had no suggested format yet remembers its formatting before it. Your own suggested insertion is
+ * just formatted: rejecting it removes the text anyway. A change that brings text back to how it was
+ * takes the suggestion away.
+ */
+function suggestFormat(
+  out: Transaction,
+  from: number,
+  to: number,
+  op: 'add' | 'remove',
+  mark: Mark,
+  author: SuggestionAuthor,
+  time: number,
+): void {
+  const types = typesOf(out.doc.type.schema);
+  const apply = (start: number, end: number) =>
+    op === 'add' ? out.addMark(start, end, mark) : out.removeMark(start, end, mark);
+  if (NOT_FORMATTING.has(mark.type.name) || !types.format) {
+    apply(from, to);
+    return;
+  }
+  const pieces: { from: number; to: number; node: PMNode }[] = [];
+  out.doc.nodesBetween(from, to, (node, pos, parent) => {
+    if (!node.isInline) return true;
+    const start = Math.max(pos, from);
+    const end = Math.min(pos + node.nodeSize, to);
+    if (start < end && parent?.type.allowsMarkType(mark.type))
+      pieces.push({ from: start, to: end, node });
+    return false;
+  });
+  let id: string | null = null;
+  for (const { from: start, to: end, node } of pieces) {
+    const after = op === 'add' ? mark.addToSet(node.marks) : mark.removeFromSet(node.marks);
+    if (sameMarks(after, node.marks)) continue;
+    apply(start, end);
+    const own = node.marks.some((m) => m.type === types.insert && m.attrs.author === author.id);
+    if (own || types.delete.isInSet(node.marks)) continue;
+    const suggested = node.marks.find((m) => m.type === types.format);
+    if (suggested) {
+      // Already a suggested format: it keeps what the text was; back there, it goes away.
+      const before = formatMarks(out.doc.type.schema, suggested.attrs.before);
+      if (sameMarks(formatting(after), before)) out.removeMark(start, end, suggested);
+      continue;
+    }
+    id ??= newId();
+    const before = cleanFormat(formatting(node.marks).map((m) => m.toJSON()));
+    out.addMark(
+      start,
+      end,
+      types.format.create({ id, author: author.id, name: author.name, time, before }),
+    );
+  }
 }
 
 /**
@@ -206,6 +378,12 @@ export function suggestTransaction(
   let insertEnd: number | null = null;
 
   tr.steps.forEach((rawStep) => {
+    // Formatting: marks don't move positions, here or in the original.
+    if (rawStep instanceof AddMarkStep || rawStep instanceof RemoveMarkStep) {
+      const op = rawStep instanceof AddMarkStep ? 'add' : 'remove';
+      suggestFormat(out, toOut(rawStep.from), toOut(rawStep.to), op, rawStep.mark, author, time);
+      return;
+    }
     const step = rawStep as ReplaceStep & { from: number; to: number; slice: Slice };
     const outStart = out.steps.length;
     const prev = toOut;
@@ -282,7 +460,10 @@ export function suggestTransaction(
   });
 
   // Selection: where the cursor would have ended up in the original transaction.
-  if (forwardDeleteEnd !== null) {
+  if (tr.steps.every((step) => !(step instanceof ReplaceStep))) {
+    // Formatting only: positions are the same, the selection too (text, a node or everything).
+    out.setSelection(tr.selection.map(out.doc, out.mapping.slice(out.steps.length)));
+  } else if (forwardDeleteEnd !== null) {
     out.setSelection(TextSelection.create(out.doc, forwardDeleteEnd));
   } else if (insertEnd !== null && tr.selection.empty) {
     out.setSelection(TextSelection.create(out.doc, insertEnd));
@@ -303,6 +484,21 @@ export function suggestTransaction(
   return out;
 }
 
+/** What a suggested format changed on a piece of text: mark names it got and lost. */
+function formatChange(node: PMNode, mark: Mark): { added: string[]; removed: string[] } {
+  const before = formatMarks(node.type.schema, mark.attrs.before);
+  const now = formatting(node.marks);
+  const added = now.filter((m) => !m.isInSet(before)).map((m) => m.type.name);
+  const removed = before
+    .filter((m) => !m.isInSet(now) && !added.includes(m.type.name))
+    .map((m) => m.type.name);
+  return { added, removed };
+}
+
+const addAll = (list: string[], more: string[]) => {
+  for (const name of more) if (!list.includes(name)) list.push(name);
+};
+
 /** All suggestions in the document (consecutive parts of one suggestion are merged). */
 export function listSuggestions(doc: PMNode): Suggestion[] {
   const types = typesOf(doc.type.schema);
@@ -311,14 +507,25 @@ export function listSuggestions(doc: PMNode): Suggestion[] {
     if (!node.isInline) return true;
     for (const mark of node.marks) {
       const kind =
-        mark.type === types.insert ? 'insert' : mark.type === types.delete ? 'delete' : null;
+        mark.type === types.insert
+          ? 'insert'
+          : mark.type === types.delete
+            ? 'delete'
+            : mark.type === types.format
+              ? 'format'
+              : null;
       if (!kind) continue;
       const last = result[result.length - 1];
       // Not text (a mention, a footnote number, a line break): its text form, if it has one.
       const text = node.isText ? node.text! : (node.type.spec.leafText?.(node) ?? '');
+      const change = kind === 'format' ? formatChange(node, mark) : null;
       if (last && last.id === mark.attrs.id && last.kind === kind && last.to === pos) {
         last.to = pos + node.nodeSize;
         last.text += text;
+        if (change) {
+          addAll(last.added!, change.added);
+          addAll(last.removed!, change.removed);
+        }
       } else {
         result.push({
           id: mark.attrs.id as string,
@@ -328,12 +535,40 @@ export function listSuggestions(doc: PMNode): Suggestion[] {
           from: pos,
           to: pos + node.nodeSize,
           text,
+          ...(change ?? {}),
         });
       }
     }
     return false;
   });
   return result;
+}
+
+/** A suggested format accepted (the mark goes) or rejected (the text gets back its formatting). */
+function resolveFormat(tr: Transaction, s: Suggestion, action: 'accept' | 'reject'): void {
+  const type = typesOf(tr.doc.type.schema).format;
+  const pieces: { from: number; to: number; node: PMNode; mark: Mark }[] = [];
+  tr.doc.nodesBetween(s.from, s.to, (node, pos) => {
+    if (!node.isInline) return true;
+    const mark = node.marks.find((m) => m.type === type && m.attrs.id === s.id);
+    if (mark) {
+      pieces.push({
+        from: Math.max(pos, s.from),
+        to: Math.min(pos + node.nodeSize, s.to),
+        node,
+        mark,
+      });
+    }
+    return false;
+  });
+  for (const { from, to, node, mark } of pieces) {
+    if (action === 'reject') {
+      const before = formatMarks(tr.doc.type.schema, mark.attrs.before);
+      for (const m of formatting(node.marks)) if (!m.isInSet(before)) tr.removeMark(from, to, m);
+      for (const m of before) if (!m.isInSet(node.marks)) tr.addMark(from, to, m);
+    }
+    tr.removeMark(from, to, mark);
+  }
 }
 
 /** Accept or reject suggestions (all of them, or those with the given ids). */
@@ -345,10 +580,13 @@ export function resolveSuggestions(
   const types = typesOf(state.schema);
   const tr = state.tr.setMeta(OWN, true);
   const chosen = listSuggestions(state.doc).filter((s) => !ids || ids.includes(s.id));
+  // Formats first: they don't move text, and the text they are on may go next.
+  for (const s of chosen) if (s.kind === 'format') resolveFormat(tr, s, action);
   // Blocks whose text was removed (the position before the block).
   const emptied = new Set<number>();
   // From the end, so positions ahead don't shift.
   for (const s of [...chosen].sort((a, b) => b.from - a.from)) {
+    if (s.kind === 'format') continue;
     const remove = (s.kind === 'insert') === (action === 'reject');
     if (remove) {
       emptied.add(state.doc.resolve(s.from).before());
@@ -406,6 +644,7 @@ export default definePlugin({
   marks: {
     suggestion_insert: markSpec('insert'),
     suggestion_delete: markSpec('delete'),
+    suggestion_format: formatSpec(),
   },
   prosemirrorPlugins: (editor) => {
     const options = (editor.options.pluginOptions?.suggestions ?? {}) as SuggestionsOptions;
@@ -436,11 +675,14 @@ export default definePlugin({
               listSuggestions(state.doc).map((s) =>
                 Decoration.inline(s.from, s.to, {
                   title:
-                    (s.kind === 'insert' ? labels.inserted : labels.deleted).replace(
-                      '{name}',
-                      s.author.name || labels.guest,
-                    ) + (s.time ? ` · ${time.format(s.time)}` : ''),
-                  class: s.kind === 'insert' ? 'nova-sugg-insert' : 'nova-sugg-delete',
+                    (s.kind === 'insert'
+                      ? labels.inserted
+                      : s.kind === 'delete'
+                        ? labels.deleted
+                        : labels.formatted
+                    ).replace('{name}', s.author.name || labels.guest) +
+                    (s.time ? ` · ${time.format(s.time)}` : ''),
+                  class: `nova-sugg-${s.kind}`,
                   style: `--nova-suggestion: ${suggestionColor(s.author.id || s.author.name)}`,
                 }),
               ),

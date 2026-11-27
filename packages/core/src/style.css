@@ -2109,6 +2109,15 @@ html.nova-fullscreen-lock body {
   /* No transparency: the strike-through is enough, and semi-transparent text fails the contrast check. */
   text-decoration: line-through 2px;
 }
+/* A suggested format: the new look shows; a dotted line under it in the author's color marks it. */
+.nova-sugg-format {
+  border-bottom: 2px dotted
+    color-mix(
+      in srgb,
+      var(--nova-suggestion, var(--nova-accent)),
+      white var(--nova-suggestion-lift)
+    );
+}
 /* In suggesting mode the cursor takes the suggestion color: a visible sign that typing becomes a suggestion. */
 .nova-prosemirror.nova-suggesting {
   caret-color: var(--nova-success);

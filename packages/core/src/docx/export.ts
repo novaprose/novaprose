@@ -5,6 +5,7 @@ import {
   type PageLayout,
   type PageLayoutOptions,
 } from '../plugins/pagelayout';
+import { formatMarks } from '../plugins/suggestions';
 import { isSafeLinkUrl } from '../url';
 import { escapeXml } from './xml';
 import { zip, type ZipEntry } from './zip';
@@ -261,7 +262,22 @@ class DocxWriter {
 
   // ----- text -----
 
+  /**
+   * A run's w:rPr. A suggested format becomes a tracked formatting change: w:rPrChange holds the
+   * formatting the text had before it (Word shows "Formatted" and can accept or reject it).
+   */
   private runProps(marks: readonly Mark[], ctx: Context, own: RunOptions = {}): string {
+    const props = this.props(marks, ctx, own);
+    const format = marks.find((m) => m.type.name === 'suggestion_format');
+    if (!format) return props ? `<w:rPr>${props}</w:rPr>` : '';
+    const before = this.props(formatMarks(format.type.schema, format.attrs.before), ctx, own);
+    const author = String(format.attrs.name || format.attrs.author || 'NovaProse').slice(0, 80);
+    const change = `<w:rPrChange w:id="${++this.changeCount}" w:author="${escapeXml(author)}" w:date="${dateOf(format.attrs.time)}"><w:rPr>${before}</w:rPr></w:rPrChange>`;
+    return `<w:rPr>${props}${change}</w:rPr>`;
+  }
+
+  /** The run properties of a set of marks (the content of w:rPr). */
+  private props(marks: readonly Mark[], ctx: Context, own: RunOptions = {}): string {
     let style = own.style ?? '';
     let fonts = own.font ?? '';
     let bold = !!ctx.bold;
@@ -305,7 +321,7 @@ class DocxWriter {
       (underline ? '<w:u w:val="single"/>' : '') +
       (shade ? `<w:shd w:val="clear" w:color="auto" w:fill="${shade}"/>` : '') +
       (vertical ? `<w:vertAlign w:val="${vertical}"/>` : '');
-    return props ? `<w:rPr>${props}</w:rPr>` : '';
+    return props;
   }
 
   /** Text as runs: a line break is w:br, a tab is w:tab. */

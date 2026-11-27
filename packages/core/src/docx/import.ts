@@ -236,8 +236,67 @@ class DocxReader {
 
   // ---------- text ----------
 
-  /** A run's formatting. Inside a link, color and underline belong to the link itself and aren't carried over. */
+  /** A run's formatting as HTML tags around its text. */
   private runStyle(rPr: XmlElement | undefined, inLink = false): { open: string; close: string } {
+    const { bold, italic, underline, strike, vertical, color, background, font, size } =
+      this.runFormat(rPr, inLink);
+    // A monospace font means code (the editor's code styling sets its background and font).
+    const code = MONOSPACE.test(font);
+    const css: string[] = [];
+    if (color) css.push(`color: ${color}`);
+    if (background && !(code && CODE_SHADES.has(background)))
+      css.push(`background-color: ${background}`);
+    if (font && !code) css.push(`font-family: ${font}`);
+    if (size) css.push(`font-size: ${size}`);
+    // Default formatting (font and size) isn't carried over, to keep the text clean.
+    const tags: string[] = [];
+    if (bold) tags.push('strong');
+    if (italic) tags.push('em');
+    if (underline) tags.push('u');
+    if (strike) tags.push('s');
+    if (vertical === 'superscript') tags.push('sup');
+    if (vertical === 'subscript') tags.push('sub');
+    if (code) tags.push('code');
+    let open = tags.map((t) => `<${t}>`).join('');
+    let close = tags
+      .reverse()
+      .map((t) => `</${t}>`)
+      .join('');
+    if (css.length) {
+      open = `<span style="${escape(css.join('; '))}">${open}`;
+      close = `${close}</span>`;
+    }
+    return { open, close };
+  }
+
+  /**
+   * A run's formatting as the editor's marks (JSON): what a suggested format remembers as the text's
+   * formatting before a tracked formatting change (w:rPrChange).
+   */
+  private formatMarks(rPr: XmlElement | undefined, inLink = false): string {
+    const { bold, italic, underline, strike, vertical, color, background, font, size } =
+      this.runFormat(rPr, inLink);
+    const code = MONOSPACE.test(font);
+    const marks: { type: string; attrs?: { value: string } }[] = [];
+    if (bold) marks.push({ type: 'bold' });
+    if (italic) marks.push({ type: 'italic' });
+    if (underline) marks.push({ type: 'underline' });
+    if (strike) marks.push({ type: 'strike' });
+    if (code) marks.push({ type: 'code' });
+    if (vertical === 'superscript') marks.push({ type: 'superscript' });
+    if (vertical === 'subscript') marks.push({ type: 'subscript' });
+    if (color) marks.push({ type: 'color', attrs: { value: color } });
+    if (background && !(code && CODE_SHADES.has(background)))
+      marks.push({ type: 'background', attrs: { value: background } });
+    // Names with spaces are quoted, as the browser writes them in a style.
+    if (font && !code)
+      marks.push({ type: 'font_family', attrs: { value: /\s/.test(font) ? `"${font}"` : font } });
+    if (size) marks.push({ type: 'font_size', attrs: { value: size } });
+    return JSON.stringify(marks);
+  }
+
+  /** A run's formatting. Inside a link, color and underline belong to the link itself and aren't carried over. */
+  private runFormat(rPr: XmlElement | undefined, inLink: boolean) {
     const props: XmlElement[] = [];
     // A character style (Strong, Emphasis…) comes before direct formatting.
     for (const style of this.styleChain(val(element(rPr, 'w:rStyle'))).reverse())
@@ -272,33 +331,7 @@ class DocxReader {
       const sz = Number(val(element(p, 'w:sz')));
       if (sz > 0) size = `${sz / 2}pt`;
     }
-    // A monospace font means code (the editor's code styling sets its background and font).
-    const code = MONOSPACE.test(font);
-    const css: string[] = [];
-    if (color) css.push(`color: ${color}`);
-    if (background && !(code && CODE_SHADES.has(background)))
-      css.push(`background-color: ${background}`);
-    if (font && !code) css.push(`font-family: ${font}`);
-    if (size) css.push(`font-size: ${size}`);
-    // Default formatting (font and size) isn't carried over, to keep the text clean.
-    const tags: string[] = [];
-    if (bold) tags.push('strong');
-    if (italic) tags.push('em');
-    if (underline) tags.push('u');
-    if (strike) tags.push('s');
-    if (vertical === 'superscript') tags.push('sup');
-    if (vertical === 'subscript') tags.push('sub');
-    if (code) tags.push('code');
-    let open = tags.map((t) => `<${t}>`).join('');
-    let close = tags
-      .reverse()
-      .map((t) => `</${t}>`)
-      .join('');
-    if (css.length) {
-      open = `<span style="${escape(css.join('; '))}">${open}`;
-      close = `${close}</span>`;
-    }
-    return { open, close };
+    return { bold, italic, underline, strike, vertical, color, background, font, size };
   }
 
   private image(rid: string | undefined, width?: number, height?: number, alt = ''): string {
@@ -429,9 +462,25 @@ class DocxReader {
    * of the same kind, author and date continues it under the same id.
    */
   private revision(node: XmlElement, tag: 'ins' | 'del', state: InlineState): void {
+    const { key, id, attrs } = this.revisionAttrs(node, tag, state);
+    state.push(`<${tag}${attrs}>`);
+    const deleted = state.deleted;
+    state.deleted = deleted || tag === 'del';
+    this.inline(node, state);
+    state.deleted = deleted;
+    state.push(`</${tag}>`);
+    state.revision = { key, id, end: state.pushed };
+  }
+
+  /** A tracked change's suggestion id (continuing the one right before it) and HTML attributes. */
+  private revisionAttrs(
+    node: XmlElement,
+    kind: string,
+    state: InlineState,
+  ): { key: string; id: string; attrs: string } {
     const author = (node.attrs['w:author'] ?? '').slice(0, 80);
     const time = Date.parse(node.attrs['w:date'] ?? '');
-    const key = `${tag}|${author}|${time}`;
+    const key = `${kind}|${author}|${time}`;
     const last = state.revision;
     const id =
       last && last.key === key && last.end === state.pushed
@@ -441,13 +490,7 @@ class DocxReader {
       ` data-suggestion="${escape(id)}"` +
       (author ? ` data-name="${escape(author)}"` : '') +
       (Number.isFinite(time) ? ` data-time="${time}"` : '');
-    state.push(`<${tag}${attrs}>`);
-    const deleted = state.deleted;
-    state.deleted = deleted || tag === 'del';
-    this.inline(node, state);
-    state.deleted = deleted;
-    state.push(`</${tag}>`);
-    state.revision = { key, id, end: state.pushed };
+    return { key, id, attrs };
   }
 
   private run(run: XmlElement, state: InlineState): void {
@@ -460,7 +503,15 @@ class DocxReader {
         );
       return;
     }
-    const { open, close } = this.runStyle(rPr, state.links > 0);
+    let { open, close } = this.runStyle(rPr, state.links > 0);
+    // A tracked formatting change kept as a suggested format: the run remembers its old formatting.
+    const change = this.revisions === 'suggestions' ? element(rPr, 'w:rPrChange') : undefined;
+    const format = change ? this.revisionAttrs(change, 'format', state) : null;
+    if (change && format) {
+      const before = this.formatMarks(element(change, 'w:rPr'), state.links > 0);
+      open = `<span${format.attrs} data-format="${escape(before)}">${open}`;
+      close = `${close}</span>`;
+    }
     let text = '';
     const flush = () => {
       if (text && state.field !== 'code') state.push(`${open}${text}${close}`);
@@ -549,6 +600,7 @@ class DocxReader {
       }
     }
     flush();
+    if (format) state.revision = { key: format.key, id: format.id, end: state.pushed };
   }
 
   private noteText(note: XmlElement): string {

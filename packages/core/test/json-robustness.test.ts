@@ -64,6 +64,7 @@ const ATTR_NAMES = [
   'entries',
   'latex',
   'number',
+  'before',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));

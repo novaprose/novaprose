@@ -60,6 +60,8 @@ Suggestions are part of the content, so they are saved with your HTML and sync i
   Ship in <del data-suggestion="s1" data-author="u42" data-name="Anna" data-time="…">May</del
   ><ins data-suggestion="s1" …>June</ins>
 </p>
+<!-- A suggested format: italic before it was made bold -->
+<strong><span data-suggestion="s2" data-format='[{"type":"italic"}]'>Bold</span></strong>
 ```
 
 Before publishing, resolve them, or render the final text without changing the document:
@@ -74,10 +76,15 @@ const final = suggestionsResult(editor, 'accept'); // document as if all were ac
 
 ## What is tracked
 
-Inserting and deleting text (typing, pasting, cutting) becomes a suggestion. Structural changes —
-new paragraphs, lists, formatting — are applied directly even in suggesting mode. A paragraph whose
-whole text was a suggestion goes with it: reject a new paragraph's text, or accept the deletion of
-a paragraph's text, and no empty line is left.
+Inserting and deleting text (typing, pasting, cutting) becomes a suggestion, and so does text
+formatting: bold, italic, underline, strikethrough, code, subscript and superscript, colors,
+fonts, sizes, links and styles. The new formatting shows at once, with a dotted line under it in
+the author's color; rejecting it gives the text back the look it had. Formatting your own
+suggested insertion just formats it. Structural changes — new paragraphs, lists, alignment — are
+applied directly even in suggesting mode.
+
+A paragraph whose whole text was a suggestion goes with it: reject a new paragraph's text, or
+accept the deletion of a paragraph's text, and no empty line is left.
 
 The [AI assistant](/guides/ai-assistant/) makes its changes as suggestions too.
 
