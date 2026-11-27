@@ -396,6 +396,11 @@ export class Editor {
       () => this.focus(),
       this,
     );
+    // The interface says its language (WCAG 3.1.2), so it is read in that language on a page in
+    // another one; the text keeps the page's language.
+    if (options.language) {
+      for (const part of [header, statusbarHost, this.ui.overlayHost]) part.lang = options.language;
+    }
     // The prompt in an empty image caption goes through a CSS variable (it isn't in the document's HTML).
     this.root.style.setProperty(
       '--nova-caption-placeholder',

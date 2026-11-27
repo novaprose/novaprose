@@ -165,6 +165,7 @@ export class Sidebars {
         className: `nova-sidebar${header ? '' : ' nova-sidebar-bare'}`,
         hidden: true,
         'data-sidebar': name,
+        ...(this.editor.options.language ? { lang: this.editor.options.language } : {}),
         ...(header ? { role: 'complementary', 'aria-labelledby': titleId } : {}),
         onKeydown: ((event: KeyboardEvent) => {
           if (event.key !== 'Escape' || event.defaultPrevented) return;

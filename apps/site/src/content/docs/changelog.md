@@ -13,6 +13,9 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- **Fixed (accessibility, WCAG 3.1.2):** with the `language` option, the toolbar, menus, dialogs,
+  tooltips, the status bar and side panels carry `lang`, so a screen reader reads the interface in
+  its language on a page in another one; the text area keeps the page's language.
 - **Fixed (accessibility, WCAG 1.4.13):** toolbar tooltips can be dismissed with Escape without
   moving focus or the pointer, and they stay while the pointer rests on them. A button focused from
   the keyboard shows its tooltip, so its first Escape dismisses the tooltip and the next one goes
