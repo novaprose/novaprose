@@ -244,7 +244,8 @@ const callout = definePlugin({
 `nodeAttributes` adds your own attribute to nodes that already exist: it is kept in the document,
 read from the element when HTML is loaded and written back to it. `nodes: 'textblock'` gives it to
 every node that holds text (paragraphs, headings, code blocks and the text blocks of other
-plugins), or list node names. The value can come back from saved JSON as anything, so `render`
+plugins), `nodes: 'all'` to every node but the document and text (tables, rows, cells, list items,
+images too), or list node names. The value can come back from saved JSON as anything, so `render`
 checks it:
 
 ```ts

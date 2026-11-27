@@ -13,6 +13,7 @@ import { definePlugin } from '../plugins';
 import { icons } from '../ui/icons';
 import { LABELS, tocEntries, tocSettings, type TocEntry } from './tableofcontents';
 import { pickLabels } from './shared';
+import { replaceSelectionWithBlock } from '../commands';
 
 /**
  * The lazy part of the tableofcontents plugin: the table of contents follows the headings (new, renamed,
@@ -133,7 +134,7 @@ function insertToc(title: string | null): Command {
       const tr =
         emptyBlock && $from.node(-1).canReplaceWith(index, index + 1, type)
           ? state.tr.replaceWith($from.before(), $from.after(), node)
-          : state.tr.replaceSelectionWith(node);
+          : replaceSelectionWithBlock(state.tr, node);
       dispatch(tr.scrollIntoView());
     }
     return true;

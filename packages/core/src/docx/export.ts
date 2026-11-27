@@ -5,7 +5,7 @@ import {
   type PageLayout,
   type PageLayoutOptions,
 } from '../plugins/pagelayout';
-import { formatMarks } from '../plugins/suggestions';
+import { blockSuggestion, formatMarks } from '../plugins/suggestions';
 import { isSafeLinkUrl } from '../url';
 import { escapeXml } from './xml';
 import { zip, type ZipEntry } from './zip';
@@ -215,6 +215,26 @@ interface Context {
   style?: string;
   /** Bold text (header cells, the title of a collapsible block). */
   bold?: boolean;
+  /** Inside a whole node suggested as inserted or deleted (a table, a row, an image): its revision. */
+  change?: Revision;
+}
+
+/** A Word revision: inserted or deleted, by whom, when. */
+interface Revision {
+  tag: 'w:ins' | 'w:del';
+  author: string;
+  time: unknown;
+}
+
+/** The revision a node carries as a whole (a suggestion on the node itself), or null. */
+function nodeRevision(node: PMNode): Revision | null {
+  const s = blockSuggestion(node.attrs.suggestion);
+  if (s?.change !== 'insert' && s?.change !== 'delete') return null;
+  return {
+    tag: s.change === 'insert' ? 'w:ins' : 'w:del',
+    author: (s.name || s.author || 'NovaProse').slice(0, 80),
+    time: s.time,
+  };
 }
 
 const BULLETS = ['•', '◦', '▪'];
@@ -338,20 +358,38 @@ class DocxWriter {
   }
 
   private run(value: string, marks: readonly Mark[], ctx: Context, own: RunOptions = {}): string {
-    const deleted = marks.some((m) => m.type.name === 'suggestion_delete');
+    const deleted = this.revisionOf(marks, ctx)?.tag === 'w:del';
     const body = `<w:r>${this.runProps(marks, ctx, own)}${this.text(value, deleted ? 'w:delText' : 'w:t')}</w:r>`;
-    return this.tracked(body, marks);
+    return this.tracked(body, marks, ctx);
   }
 
-  /** A suggested edit becomes a Word revision (w:ins / w:del with author and time). */
-  private tracked(body: string, marks: readonly Mark[]): string {
+  /**
+   * The revision of a run: its own suggested edit, or the node's it is in (a deleted node wins:
+   * the whole of it goes).
+   */
+  private revisionOf(marks: readonly Mark[], ctx?: Context): Revision | null {
+    if (ctx?.change?.tag === 'w:del') return ctx.change;
     const change = marks.find(
       (m) => m.type.name === 'suggestion_insert' || m.type.name === 'suggestion_delete',
     );
-    if (!change) return body;
-    const tag = change.type.name === 'suggestion_insert' ? 'w:ins' : 'w:del';
-    const author = String(change.attrs.name || change.attrs.author || 'NovaProse').slice(0, 80);
-    return `<${tag} w:id="${++this.changeCount}" w:author="${escapeXml(author)}" w:date="${dateOf(change.attrs.time)}">${body}</${tag}>`;
+    if (!change) return ctx?.change ?? null;
+    return {
+      tag: change.type.name === 'suggestion_insert' ? 'w:ins' : 'w:del',
+      author: String(change.attrs.name || change.attrs.author || 'NovaProse').slice(0, 80),
+      time: change.attrs.time,
+    };
+  }
+
+  /** A revision's attributes: a new id, the author, the date. */
+  private revisionAttrs(revision: Revision): string {
+    return `w:id="${++this.changeCount}" w:author="${escapeXml(revision.author)}" w:date="${dateOf(revision.time)}"`;
+  }
+
+  /** A suggested edit becomes a Word revision (w:ins / w:del with author and time). */
+  private tracked(body: string, marks: readonly Mark[], ctx?: Context): string {
+    const revision = this.revisionOf(marks, ctx);
+    if (!revision) return body;
+    return `<${revision.tag} ${this.revisionAttrs(revision)}>${body}</${revision.tag}>`;
   }
 
   private bookmark(id: unknown, inner = ''): string {
@@ -395,9 +433,13 @@ class DocxWriter {
   private inlineNode(node: PMNode, ctx: Context): string {
     const name = node.type.name;
     if (node.isText) return this.run(node.text ?? '', node.marks, ctx);
-    if (name === 'hard_break') return this.tracked('<w:r><w:br/></w:r>', node.marks);
+    if (name === 'hard_break') return this.tracked('<w:r><w:br/></w:r>', node.marks, ctx);
     if (name === 'image')
-      return `<w:r>${this.drawing(node.attrs.src, node.attrs.alt, node.attrs.width, node.attrs.height)}</w:r>`;
+      return this.tracked(
+        `<w:r>${this.drawing(node.attrs.src, node.attrs.alt, node.attrs.width, node.attrs.height)}</w:r>`,
+        node.marks,
+        ctx,
+      );
     if (name === 'anchor') return this.bookmark(node.attrs.id);
     if (name === 'math_inline')
       return this.run(String(node.attrs.latex ?? ''), node.marks, ctx, MATH);
@@ -472,7 +514,8 @@ class DocxWriter {
       (rtl ? '<w:bidi/>' : '') +
       spacing +
       (left && !options.numPr ? `<w:ind w:${rtl ? 'right' : 'left'}="${left}"/>` : '') +
-      (jc ? `<w:jc w:val="${jc}"/>` : '');
+      (jc ? `<w:jc w:val="${jc}"/>` : '') +
+      (ctx.change ? `<w:rPr><${ctx.change.tag} ${this.revisionAttrs(ctx.change)}/></w:rPr>` : '');
     const content = options.content ?? (node ? this.inline(node, ctx) : '');
     return `<w:p>${pPr ? `<w:pPr>${pPr}</w:pPr>` : ''}${options.prefix ?? ''}${content}</w:p>`;
   }
@@ -612,6 +655,8 @@ class DocxWriter {
       grid.slice(col, col + colspan).reduce((a, b) => a + b, 0);
     let body = '';
     rows.forEach((row, r) => {
+      const rowRevision = nodeRevision(row) ?? ctx.change ?? null;
+      const rowCtx = rowRevision ? { ...ctx, change: rowRevision } : ctx;
       let header = row.childCount > 0;
       row.forEach((cell) => {
         if (cell.type.name !== 'table_header') header = false;
@@ -631,6 +676,9 @@ class DocxWriter {
           cells += `<w:tc><w:tcPr>${width}${gridSpan}<w:vMerge/></w:tcPr><w:p/></w:tc>`;
         } else {
           const { cell } = placed;
+          // A cell of a column inserted or deleted: Word's cell revision.
+          const cellRevision = nodeRevision(cell);
+          const cellCtx = cellRevision ? { ...rowCtx, change: cellRevision } : rowCtx;
           const fill = hexColor(cell.attrs.background);
           const valign = cell.attrs.valign === 'middle' ? 'center' : cell.attrs.valign;
           const tcPr =
@@ -640,9 +688,12 @@ class DocxWriter {
             (fill ? `<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>` : '') +
             (valign === 'top' || valign === 'center' || valign === 'bottom'
               ? `<w:vAlign w:val="${valign}"/>`
+              : '') +
+            (cellRevision
+              ? `<w:${cellRevision.tag === 'w:ins' ? 'cellIns' : 'cellDel'} ${this.revisionAttrs(cellRevision)}/>`
               : '');
           let content = this.blocks(cell, {
-            ...ctx,
+            ...cellCtx,
             listLevel: -1,
             continuation: undefined,
             style: undefined,
@@ -654,7 +705,10 @@ class DocxWriter {
         }
         c += placed.colspan;
       }
-      body += `<w:tr>${header ? '<w:trPr><w:tblHeader/></w:trPr>' : ''}${cells}</w:tr>`;
+      const trPr =
+        (header ? '<w:tblHeader/>' : '') +
+        (rowRevision ? `<${rowRevision.tag} ${this.revisionAttrs(rowRevision)}/>` : '');
+      body += `<w:tr>${trPr ? `<w:trPr>${trPr}</w:trPr>` : ''}${cells}</w:tr>`;
     });
     return `<w:tbl>${tblPr}${tblGrid}${body}</w:tbl>`;
   }
@@ -667,8 +721,10 @@ class DocxWriter {
     return out;
   }
 
-  private block(node: PMNode, ctx: Context): string {
+  private block(node: PMNode, outer: Context): string {
     const name = node.type.name;
+    const own = nodeRevision(node);
+    const ctx = own ? { ...outer, change: own } : outer;
     switch (name) {
       case 'paragraph':
         return this.paragraph(node, ctx);
@@ -715,7 +771,10 @@ class DocxWriter {
         const jc =
           node.attrs.align === 'center' || node.attrs.align === 'right' ? node.attrs.align : '';
         return (
-          this.paragraph(null, ctx, { jc, content: image ? `<w:r>${image}</w:r>` : '' }) + caption
+          this.paragraph(null, ctx, {
+            jc,
+            content: image ? this.tracked(`<w:r>${image}</w:r>`, [], ctx) : '',
+          }) + caption
         );
       }
       case 'math_block':

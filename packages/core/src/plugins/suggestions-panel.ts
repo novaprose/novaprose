@@ -1,5 +1,5 @@
 import type { Node as PMNode } from 'prosemirror-model';
-import { TextSelection } from 'prosemirror-state';
+import { NodeSelection, Selection, TextSelection } from 'prosemirror-state';
 import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
 import { COMMENT_MAX_LENGTH, newCommentId, type CommentThread } from '../comments';
@@ -26,7 +26,7 @@ import {
 export interface SuggestionCard {
   /** Ids of the suggestions on the card (a replacement has two: the deletion and the insertion). */
   ids: string[];
-  kind: 'insert' | 'delete' | 'replace' | 'format' | 'block' | 'split' | 'join';
+  kind: 'insert' | 'delete' | 'replace' | 'format' | 'block' | 'split' | 'join' | 'wrap' | 'unwrap';
   author: SuggestionAuthor;
   time: number;
   /** Where the card's text starts and ends in the document. */
@@ -39,6 +39,11 @@ export interface SuggestionCard {
   marks?: { added: string[]; removed: string[] };
   /** block: what the block was and what it is now. */
   block?: { before: BlockBefore; after: BlockBefore };
+  /** A suggestion nodes carry: the type of the node, and how many of them (the cells of a column). */
+  node?: string;
+  nodes?: number;
+  /** wrap, unwrap: how many levels. */
+  depth?: number;
 }
 
 export interface SuggestionsPanelLabels {
@@ -61,6 +66,12 @@ export interface SuggestionsPanelLabels {
   noneFrom: string;
   guest: string;
   nonText: string;
+  nodeTable: string;
+  nodeRow: string;
+  nodeColumn: string;
+  nodeCell: string;
+  nodeImage: string;
+  nodeListItem: string;
 }
 
 /** Whose suggestion: the id, or the name for authors without one (a Word document). */
@@ -79,6 +90,7 @@ export function suggestionCards(doc: PMNode): SuggestionCard[] {
     if (known) {
       if (s.kind === 'delete') known.removed += ` ${s.text}`;
       else known.added += ` ${s.text}`;
+      if (known.nodes) known.nodes++;
       if (known.marks) {
         for (const name of s.added ?? [])
           if (!known.marks.added.includes(name)) known.marks.added.push(name);
@@ -91,6 +103,8 @@ export function suggestionCards(doc: PMNode): SuggestionCard[] {
     const last = cards[cards.length - 1];
     if (
       s.kind === 'insert' &&
+      !s.node &&
+      !last?.node &&
       last?.kind === 'delete' &&
       last.to === s.from &&
       authorKey(last.author) === authorKey(s.author)
@@ -114,9 +128,9 @@ export function suggestionCards(doc: PMNode): SuggestionCard[] {
       ...(s.kind === 'format'
         ? { marks: { added: [...(s.added ?? [])], removed: [...(s.removed ?? [])] } }
         : {}),
-      ...(s.kind === 'block'
-        ? { block: { before: s.before!, after: blockNow(doc, s.from - 1) } }
-        : {}),
+      ...(s.kind === 'block' ? { block: { before: s.before!, after: blockNow(doc, s.from) } } : {}),
+      ...(s.node ? { node: s.node, nodes: 1 } : {}),
+      ...(s.depth ? { depth: s.depth } : {}),
     };
     cards.push(card);
     byPart.set(key, card);
@@ -271,23 +285,67 @@ export function createSuggestionsPanel(
     const { state } = editor.view;
     const to = Math.min(card.to, state.doc.content.size);
     try {
-      editor.view.dispatch(
-        state.tr.setSelection(TextSelection.create(state.doc, card.from, to)).scrollIntoView(),
-      );
+      const node = card.node ? state.doc.nodeAt(card.from) : null;
+      const selection = !card.node
+        ? TextSelection.create(state.doc, card.from, to)
+        : node?.isLeaf && NodeSelection.isSelectable(node)
+          ? NodeSelection.create(state.doc, card.from)
+          : Selection.near(state.doc.resolve(Math.min(card.from + 1, state.doc.content.size)));
+      editor.view.dispatch(state.tr.setSelection(selection).scrollIntoView());
     } catch {
       // Not a text position (the document changed meanwhile): nothing to show.
     }
   }
 
-  /** A block type's name: Paragraph, Heading 2, Code block. */
-  function blockName(block: BlockBefore): string {
-    if (block.type === 'paragraph') return editor.ui.t('paragraph');
-    if (block.type === 'code_block') return editor.ui.t('codeBlock');
-    if (block.type === 'heading') {
-      const level = Math.min(6, Math.max(1, Math.trunc(Number(block.attrs.level)) || 1));
-      return editor.ui.t(`h${level}` as MessageKey);
+  /** A node type's name: Paragraph, Heading 2, Table, Bulleted list (a column: several cells). */
+  function blockName(block: BlockBefore, count = 1): string {
+    switch (block.type) {
+      case 'paragraph':
+        return editor.ui.t('paragraph');
+      case 'code_block':
+        return editor.ui.t('codeBlock');
+      case 'heading': {
+        const level = Math.min(6, Math.max(1, Math.trunc(Number(block.attrs.level)) || 1));
+        return editor.ui.t(`h${level}` as MessageKey);
+      }
+      case 'bullet_list':
+        return editor.ui.t('bulletList');
+      case 'ordered_list':
+        return editor.ui.t('orderedList');
+      case 'list_item':
+        return labels.nodeListItem;
+      case 'blockquote':
+        return editor.ui.t('blockquote');
+      case 'horizontal_rule':
+        return editor.ui.t('horizontalRule');
+      case 'table':
+        return labels.nodeTable;
+      case 'table_row':
+        return labels.nodeRow;
+      case 'table_cell':
+      case 'table_header':
+        return count > 1 ? labels.nodeColumn : labels.nodeCell;
+      case 'image':
+      case 'figure':
+      case 'figure_image':
+        return labels.nodeImage;
+      default:
+        return labels.nonText;
     }
-    return block.type;
+  }
+
+  /** What a wrap or an unwrap does: "+Bulleted list", "−Quote", "Increase indent". */
+  function structureChange(card: SuggestionCard): string {
+    const times = (card.depth ?? 1) > 1 ? ` ×${card.depth}` : '';
+    const sign = card.kind === 'wrap' ? '+' : '−';
+    const { doc } = editor.view.state;
+    if (card.node !== 'list_item' || card.from > doc.content.size)
+      return `${sign}${blockName({ type: card.node ?? '', attrs: {} })}${times}`;
+    const $pos = doc.resolve(card.from);
+    // A list inside a list item: a level of indent; otherwise the list itself.
+    if ($pos.depth >= 2 && $pos.node($pos.depth - 1).type.name === 'list_item')
+      return `${editor.ui.t(card.kind === 'wrap' ? 'indent' : 'outdent')}${times}`;
+    return `${sign}${blockName({ type: $pos.parent.type.name, attrs: {} })}${times}`;
   }
 
   /** What a block suggestion changes: "Paragraph → Heading 2", "Align center", "Increase indent". */
@@ -329,6 +387,8 @@ export function createSuggestionsPanel(
       block: labels.kindFormat,
       split: labels.kindSplit,
       join: labels.kindJoin,
+      wrap: labels.kindFormat,
+      unwrap: labels.kindFormat,
     }[card.kind];
     const text = (value: string, tag: 'ins' | 'del' | 'span') =>
       value.trim()
@@ -347,7 +407,18 @@ export function createSuggestionsPanel(
         )
       : card.block
         ? h('span', { className: 'nova-sugg-changes' }, blockChanges(card.block).join(' · '))
-        : null;
+        : card.kind === 'wrap' || card.kind === 'unwrap'
+          ? h('span', { className: 'nova-sugg-changes' }, structureChange(card))
+          : card.node && (card.kind === 'insert' || card.kind === 'delete')
+            ? h(
+                'span',
+                { className: 'nova-sugg-changes' },
+                blockName({ type: card.node, attrs: {} }, card.nodes),
+              )
+            : null;
+    // A whole node inserted or deleted: its name, and its text if it has any.
+    const nodeText = (value: string, tag: 'ins' | 'del') =>
+      card.node && !value.trim() ? null : text(value, tag);
     const summary = h(
       'button',
       {
@@ -359,12 +430,14 @@ export function createSuggestionsPanel(
         onClick: () => goTo(card),
       },
       h('span', { className: 'nova-sugg-kind' }, kind),
-      card.kind === 'delete' || card.kind === 'replace' ? text(card.removed, 'del') : null,
-      card.kind === 'insert' || card.kind === 'replace' ? text(card.added, 'ins') : null,
+      card.kind === 'delete' || card.kind === 'replace' ? nodeText(card.removed, 'del') : null,
+      card.kind === 'insert' || card.kind === 'replace' ? nodeText(card.added, 'ins') : null,
       card.kind === 'format' ||
         card.kind === 'block' ||
         card.kind === 'split' ||
-        card.kind === 'join'
+        card.kind === 'join' ||
+        card.kind === 'wrap' ||
+        card.kind === 'unwrap'
         ? text(card.added, 'span')
         : null,
       changes,

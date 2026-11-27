@@ -91,7 +91,7 @@ Before publishing, resolve them, or render the final text without changing the d
 ```ts
 import { listSuggestions, resolveSuggestions, suggestionsResult } from '@novaprose/core';
 
-listSuggestions(editor.view.state.doc); // [{ id, kind, author, time, text, from, to }]
+listSuggestions(editor.view.state.doc); // [{ id, kind, author, time, text, from, to, node? }]
 editor.view.dispatch(resolveSuggestions(editor.view.state, 'accept')); // accept all
 const final = suggestionsResult(editor, 'accept'); // document as if all were accepted
 ```
@@ -114,21 +114,65 @@ Change it back yourself and the suggestion goes. In HTML the block remembers wha
 <h2 data-suggestion="s3" data-before='{"type":"paragraph","attrs":{}}' data-author="u42">Plan</h2>
 ```
 
-Paragraph breaks are suggestions as well. <kbd>Enter</kbd> makes a new paragraph (or list item)
-with a pilcrow ¶ in the author's color in its margin, and <kbd>Backspace</kbd> or <kbd>Delete</kbd>
-across a break marks it deleted, with a struck pilcrow, instead of joining the paragraphs at once.
-Rejecting a new break joins the paragraphs again; accepting a deleted one joins them. Your own new
-paragraph is deleted for real, like your own inserted text. In HTML:
+Paragraph breaks are suggestions as well. <kbd>Enter</kbd> in the middle of a line makes a new
+paragraph (or list item) with a pilcrow ¶ in the author's color in its margin; at the end of a line
+the new paragraph is new as a whole, one suggestion with what you type in it. <kbd>Backspace</kbd>
+or <kbd>Delete</kbd> across a break marks it deleted, with a struck pilcrow, instead of joining the
+paragraphs at once. Rejecting a new break joins the paragraphs again, rejecting a new paragraph
+removes it; accepting a deleted break joins them. Your own new paragraph is deleted for real, like
+your own inserted text. In HTML:
 
 ```html
-<p data-suggestion="s4" data-change="split" data-author="u42">A new paragraph</p>
-<p data-suggestion="s5" data-change="join" data-author="u42">Joined to the one above</p>
+<p data-suggestion="s4" data-change="split" data-author="u42">The second half of a line</p>
+<p data-suggestion="s5" data-change="insert" data-author="u42">A new paragraph</p>
+<p data-suggestion="s6" data-change="join" data-author="u42">Joined to the one above</p>
 ```
 
-Other structural changes — lists, tables, images — are applied directly even in suggesting mode.
+Whole things are suggestions too: a table, a row, a column, an image, a horizontal line, a page
+break, a paragraph inserted or deleted as a whole. A new one is outlined in the author's color, a
+deleted one dashed (a deleted image or line is faded, a deleted row tinted), and it stays until the
+deletion is accepted. Rejecting a new one removes it; a line or a table put in the middle of a
+paragraph takes its break with it, so rejecting joins the paragraph again. A column is one
+suggestion: a new cell in every row. Inside your own new table, what you type and the rows you add
+are part of it. In HTML the node carries the suggestion:
 
-A paragraph whose whole text was a suggestion goes with it: reject a new paragraph's text, or
-accept the deletion of a paragraph's text, and no empty line is left.
+```html
+<table data-suggestion="s6" data-change="insert" data-author="u42">
+  …
+</table>
+<tr data-suggestion="s7" data-change="delete" data-author="u42">
+  …
+</tr>
+```
+
+So are the settings of any node: a bulleted list made numbered, table and cell properties, a header
+row, an image's size. The node remembers what it was, like a block's style, and rejecting gives it
+back.
+
+Lists and quotes: making paragraphs a list (the button or a typed `- `), taking items out of a list,
+<kbd>Tab</kbd> and <kbd>Shift</kbd>+<kbd>Tab</kbd> in a list, putting text into a quote and taking it
+out. Something put into a list or quote shows at once, with the author's bar; something taken out
+stays where it is, with a dashed bar, until the change is accepted. The card reads “+Bulleted list”,
+“−Quote” or “Increase indent”. <kbd>Tab</kbd> then <kbd>Shift</kbd>+<kbd>Tab</kbd> is no change at
+all, and <kbd>Enter</kbd> on your own new empty item leaves the list as usual.
+
+```html
+<li data-suggestion="s8" data-change="wrap" data-author="u42"><p>Put into the list</p></li>
+<li data-suggestion="s9" data-change="unwrap" data-author="u42"><p>To be taken out</p></li>
+```
+
+Deciding gives exactly what the same edits give outside suggesting mode, and rejecting gives
+exactly the document before them, whatever order the edits were made in: a test checks both on
+thousands of random documents and edits. Deleting a paragraph's text leaves the paragraph;
+deleting the paragraph with its break removes it.
+
+An edit that can't be a suggestion (merging table cells, the page setup) isn't made in suggesting
+mode, and a notice says so: nothing changes the document directly. Content you paste carries no
+suggestions of its own, so nobody's name can be put on a suggestion they didn't make.
+
+In Word (`.docx`, with the `exportword` and `importword` plugins), a row or table cell inserted or
+deleted is Word's own row or cell revision, and the text and images of a node inserted or deleted are
+Word revisions; changes of lists and styles are exported as they are now.
 
 The [AI assistant](/guides/ai-assistant/) makes its changes as suggestions too.
 

@@ -519,3 +519,57 @@ describe('Word tracked changes as suggestions', () => {
     ]);
   });
 });
+
+describe('Word: rows, cells and whole nodes suggested', () => {
+  const ROWS =
+    '<table><tbody>' +
+    '<tr><td><p>keep</p></td><td data-suggestion="c1" data-change="insert" data-author="u1" data-name="Anna" data-time="1700000000000"><p>new cell</p></td></tr>' +
+    '<tr data-suggestion="r1" data-change="insert" data-author="u1" data-name="Anna" data-time="1700000000000"><td><p>new row</p></td><td><p>x</p></td></tr>' +
+    '<tr data-suggestion="r2" data-change="delete" data-author="u1" data-name="Anna" data-time="1700000000000"><td><p>old row</p></td><td><p>y</p></td></tr>' +
+    '</tbody></table>';
+
+  it('a row or cell inserted or deleted becomes Word’s row and cell revision, its text too', async () => {
+    const e = mount(ROWS, { plugins: ['suggestions'] });
+    const doc = text((await unzip(await exportDocx(e))).get('word/document.xml'));
+    wellFormed(doc);
+    expect(doc).toMatch(
+      /<w:trPr><w:ins w:id="\d+" w:author="Anna" w:date="2023-11-14T22:13:20Z"\/><\/w:trPr>/,
+    );
+    expect(doc).toMatch(/<w:trPr><w:del w:id="\d+" w:author="Anna"/);
+    expect(doc).toMatch(/<w:cellIns w:id="\d+" w:author="Anna"/);
+    // Text in a deleted row is deleted text; the paragraph mark too.
+    expect(doc).toContain('<w:delText xml:space="preserve">old row</w:delText>');
+    expect(doc).toMatch(/<w:rPr><w:del w:id="\d+" w:author="Anna"[^>]*\/><\/w:rPr>/);
+  });
+
+  it('back from Word: the rows and cells carry the suggestion, their text isn’t one more', async () => {
+    const e = mount(ROWS, { plugins: ['suggestions'] });
+    const bytes = await exportDocx(e);
+    const { html } = await fromDocx(bytes, { revisions: 'suggestions' });
+    const back = mount(html, { plugins: ['suggestions'] });
+    expect(
+      listSuggestions(back.view.state.doc).map((s) => `${s.kind}:${s.node ?? 'text'}`),
+    ).toEqual(['insert:table_cell', 'insert:table_row', 'delete:table_row']);
+    // Accepted on import: the deleted row is gone, the new one stays.
+    const accepted = await fromDocx(bytes);
+    expect(accepted.html).not.toContain('old row');
+    expect(accepted.html).toContain('new row');
+    expect(accepted.html).toContain('new cell');
+  });
+
+  it('an inserted image and an inserted table: their runs are Word insertions', async () => {
+    const e = mount(
+      `<figure data-suggestion="f1" data-change="insert" data-author="u1" data-name="Anna"><img src="data:image/png;base64,${PNG}" alt="A"><figcaption>Cap</figcaption></figure>`,
+      { plugins: ['suggestions'] },
+    );
+    const doc = text((await unzip(await exportDocx(e))).get('word/document.xml'));
+    wellFormed(doc);
+    expect(doc).toMatch(/<w:ins w:id="\d+" w:author="Anna"[^>]*><w:r><w:drawing>/);
+    expect(doc).toMatch(
+      /<w:ins w:id="\d+" w:author="Anna"[^>]*><w:r><w:t xml:space="preserve">Cap/,
+    );
+    // Rejected in NovaProse: gone; accepted: stays.
+    e.view.dispatch(resolveSuggestions(e.view.state, 'reject'));
+    expect(e.getHTML()).toBe('<p></p>');
+  });
+});

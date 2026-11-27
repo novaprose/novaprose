@@ -24,6 +24,7 @@ import {
 } from './code-languages';
 import css from './codesample.css?raw';
 import { pickLabels } from './shared';
+import { replaceSelectionWithBlock } from '../commands';
 
 /**
  * The codesample plugin: syntax highlighting in code blocks, language choice and the "Code sample" dialog
@@ -209,7 +210,7 @@ function insertBlock(state: EditorState, block: PMNode): Transaction {
   ) {
     tr.replaceWith($from.before(), $from.after(), block);
   } else {
-    tr.replaceSelectionWith(block);
+    replaceSelectionWithBlock(tr, block);
   }
   // The cursor goes to the end of the code, so you can keep typing.
   let end = -1;

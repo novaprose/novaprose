@@ -104,6 +104,23 @@ function resolvePart(base: string, target: string): string {
   return parts.join('/');
 }
 
+/** What tells one Word revision from another: its kind, author and date. */
+function revisionKey(node: XmlElement, kind: string): string {
+  return `${kind}|${(node.attrs['w:author'] ?? '').slice(0, 80)}|${Date.parse(node.attrs['w:date'] ?? '')}`;
+}
+
+/** A row's or cell's revision as a whole (w:ins / w:del in trPr, w:cellIns / w:cellDel in tcPr). */
+function wholeChange(
+  props: XmlElement | undefined,
+  insert: string,
+  remove: string,
+): { node: XmlElement; kind: 'ins' | 'del'; change: 'insert' | 'delete' } | null {
+  const deleted = element(props, remove);
+  if (deleted) return { node: deleted, kind: 'del', change: 'delete' };
+  const inserted = element(props, insert);
+  return inserted ? { node: inserted, kind: 'ins', change: 'insert' } : null;
+}
+
 class DocxReader {
   readonly warnings = new Set<string>();
   private readonly styles = new Map<string, Style>();
@@ -118,6 +135,11 @@ class DocxReader {
   private inHeader = false;
   /** Tracked changes without an id get one from this count. */
   private revisionCount = 0;
+  /**
+   * Inside a row or cell inserted or deleted as a whole (kept as a suggestion): the text revisions
+   * of the same kind, author and date in it are part of that one, not suggestions of their own.
+   */
+  private wholeRevision: string | null = null;
 
   constructor(
     private readonly files: Map<string, Uint8Array>,
@@ -462,6 +484,13 @@ class DocxReader {
    * of the same kind, author and date continues it under the same id.
    */
   private revision(node: XmlElement, tag: 'ins' | 'del', state: InlineState): void {
+    if (this.wholeRevision === revisionKey(node, tag)) {
+      const deleted = state.deleted;
+      state.deleted = deleted || tag === 'del';
+      this.inline(node, state);
+      state.deleted = deleted;
+      return;
+    }
     const { key, id, attrs } = this.revisionAttrs(node, tag, state);
     state.push(`<${tag}${attrs}>`);
     const deleted = state.deleted;
@@ -472,6 +501,18 @@ class DocxReader {
     state.revision = { key, id, end: state.pushed };
   }
 
+  /** The HTML attributes of a row or cell inserted or deleted as a whole. */
+  private wholeAttrs({ node, change }: { node: XmlElement; change: 'insert' | 'delete' }): string {
+    const author = (node.attrs['w:author'] ?? '').slice(0, 80);
+    const time = Date.parse(node.attrs['w:date'] ?? '');
+    const id = `w${(node.attrs['w:id'] ?? '').replace(/[^\w-]/g, '').slice(0, 60) || `r${++this.revisionCount}`}`;
+    return (
+      ` data-suggestion="${escape(id)}" data-change="${change}"` +
+      (author ? ` data-name="${escape(author)}"` : '') +
+      (Number.isFinite(time) ? ` data-time="${time}"` : '')
+    );
+  }
+
   /** A tracked change's suggestion id (continuing the one right before it) and HTML attributes. */
   private revisionAttrs(
     node: XmlElement,
@@ -480,7 +521,7 @@ class DocxReader {
   ): { key: string; id: string; attrs: string } {
     const author = (node.attrs['w:author'] ?? '').slice(0, 80);
     const time = Date.parse(node.attrs['w:date'] ?? '');
-    const key = `${kind}|${author}|${time}`;
+    const key = revisionKey(node, kind);
     const last = state.revision;
     const id =
       last && last.key === key && last.end === state.pushed
@@ -737,12 +778,24 @@ class DocxReader {
       }
     });
     out.push('<table><tbody>');
+    const suggestions = this.revisions === 'suggestions';
     for (const { tr, cells } of rows) {
-      const header = on(element(element(tr, 'w:trPr'), 'w:tblHeader'));
-      out.push('<tr>');
+      const trPr = element(tr, 'w:trPr');
+      const header = on(element(trPr, 'w:tblHeader'));
+      // Word's revision of a whole row: accepted, a deleted row is gone; as suggestions, the row carries it.
+      const rowChange = wholeChange(trPr, 'w:ins', 'w:del');
+      if (rowChange?.change === 'delete' && !suggestions) continue;
+      const rowKey = suggestions && rowChange ? revisionKey(rowChange.node, rowChange.kind) : null;
+      out.push(suggestions && rowChange ? `<tr${this.wholeAttrs(rowChange)}>` : '<tr>');
       for (const cell of cells) {
         if (cell.merge === 'continue') continue;
         const tcPr = element(cell.tc, 'w:tcPr');
+        // A cell of a column inserted or deleted: the same, for the cell.
+        const cellChange = wholeChange(tcPr, 'w:cellIns', 'w:cellDel');
+        if (cellChange?.change === 'delete' && !suggestions) continue;
+        const cellAttrs = suggestions && cellChange ? this.wholeAttrs(cellChange) : '';
+        this.wholeRevision =
+          suggestions && cellChange ? revisionKey(cellChange.node, cellChange.kind) : rowKey;
         const tag = header ? 'th' : 'td';
         const css: string[] = [];
         const fill = element(tcPr, 'w:shd')?.attrs['w:fill'];
@@ -757,11 +810,12 @@ class DocxReader {
             ? ` data-colwidth="${widths.join(',')}"`
             : '';
         out.push(
-          `<${tag}${cell.span > 1 ? ` colspan="${cell.span}"` : ''}${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${colwidth}${css.length ? ` style="${css.join('; ')}"` : ''}>`,
+          `<${tag}${cell.span > 1 ? ` colspan="${cell.span}"` : ''}${cell.rowspan > 1 ? ` rowspan="${cell.rowspan}"` : ''}${colwidth}${css.length ? ` style="${css.join('; ')}"` : ''}${cellAttrs}>`,
         );
         this.inHeader = header;
         this.blocks(cell.tc, out);
         this.inHeader = false;
+        this.wholeRevision = null;
         out.push(`</${tag}>`);
       }
       out.push('</tr>');

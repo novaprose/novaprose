@@ -2,7 +2,7 @@ import { lift, setBlockType, toggleMark, wrapIn } from 'prosemirror-commands';
 import { redo, undo } from 'prosemirror-history';
 import type { MarkType, Node as PMNode, NodeType } from 'prosemirror-model';
 import { liftListItem, sinkListItem, wrapInList } from 'prosemirror-schema-list';
-import type { Command, EditorState, Transaction } from 'prosemirror-state';
+import { Selection, type Command, type EditorState, type Transaction } from 'prosemirror-state';
 import {
   indentLevel,
   type MarkName,
@@ -83,9 +83,33 @@ function setAlign(align: TextAlign | null): Command {
   };
 }
 
+/**
+ * A node in place of the selection, as replaceSelectionWith puts it, except that a block never cuts
+ * through a node that can't hold it: in an image's caption the block goes after the image (split,
+ * the image would become two, one of them without a picture).
+ */
+export function replaceSelectionWithBlock(tr: Transaction, node: PMNode): Transaction {
+  const { $from } = tr.selection;
+  if (node.isBlock) {
+    for (let depth = $from.depth - 1; depth > 0; depth--) {
+      const container = $from.node(depth);
+      if (!container.type.spec.isolating) continue;
+      let fits = false;
+      for (let i = 0; i <= container.childCount && !fits; i++)
+        fits = container.canReplaceWith(i, i, node.type);
+      // A table cell holds blocks: the usual way.
+      if (fits) break;
+      const after = $from.after(depth);
+      tr.insert(after, node);
+      return tr.setSelection(Selection.near(tr.doc.resolve(after + node.nodeSize)));
+    }
+  }
+  return tr.replaceSelectionWith(node);
+}
+
 const insertHorizontalRule: Command = (state, dispatch) => {
   dispatch?.(
-    state.tr.replaceSelectionWith(nodesOf(state).horizontal_rule.create()).scrollIntoView(),
+    replaceSelectionWithBlock(state.tr, nodesOf(state).horizontal_rule.create()).scrollIntoView(),
   );
   return true;
 };

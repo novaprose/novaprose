@@ -182,6 +182,8 @@ const ATTRS = [
   'data-comment',
   'data-suggestion',
   'data-before',
+  'data-change',
+  'data-depth',
   'data-time',
   'contenteditable',
   'name',

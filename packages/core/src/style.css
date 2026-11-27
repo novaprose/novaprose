@@ -2121,8 +2121,11 @@ html.nova-fullscreen-lock body {
       white var(--nova-suggestion-lift)
     );
 }
-/* A block whose type or style is a suggestion: a bar in the author's color at its start, the text unmoved. */
-.nova-sugg-block {
+/* A block whose type or style is a suggestion, a list item or quote put into a list or quote or taken
+   out of one: a bar in the author's color at its start (dashed: taken out), the text unmoved. */
+.nova-sugg-block:not(table, tr, td, th, img, .tableWrapper),
+.nova-sugg-wrap,
+.nova-sugg-unwrap {
   margin-inline-start: -13px;
   padding-inline-start: 10px;
   border-inline-start: 3px solid
@@ -2132,13 +2135,63 @@ html.nova-fullscreen-lock body {
       white var(--nova-suggestion-lift)
     );
 }
-/* A suggested paragraph break before a block: a pilcrow in the margin, underlined if new, struck if deleted. */
+.nova-sugg-unwrap {
+  border-inline-start-style: dashed;
+}
+/* A quote has a bar of its own: it takes the author's color. */
+blockquote:is(.nova-sugg-wrap, .nova-sugg-unwrap) {
+  margin-inline-start: 0;
+  padding-inline-start: 1em;
+  border-inline-start-color: color-mix(
+    in srgb,
+    var(--nova-suggestion, var(--nova-accent)),
+    white var(--nova-suggestion-lift)
+  );
+}
+/* Tables, cells and images keep their box: a dotted outline instead of the bar. */
+:is(table, tr, td, th, img, .tableWrapper).nova-sugg-block {
+  outline: 2px dotted
+    color-mix(
+      in srgb,
+      var(--nova-suggestion, var(--nova-accent)),
+      white var(--nova-suggestion-lift)
+    );
+  outline-offset: -2px;
+}
+/* A whole node inserted or deleted (a table, an image, a line): its text looks inserted or deleted,
+   and the node is outlined in the author's color (dashed: deleted). Rows and cells are tinted
+   instead (an outline doesn't draw well in a table) and text blocks get a pilcrow (below). */
+.nova-sugg-node:not(tr, td, th, p, h1, h2, h3, h4, h5, h6, pre, figcaption) {
+  outline: 2px solid
+    color-mix(
+      in srgb,
+      var(--nova-suggestion, var(--nova-success)),
+      white var(--nova-suggestion-lift)
+    );
+  outline-offset: 2px;
+}
+.nova-sugg-node.nova-sugg-delete:not(tr, td, th, p, h1, h2, h3, h4, h5, h6, pre, figcaption) {
+  outline-style: dashed;
+}
+/* An image or a line can't be struck through: a deleted one is faded. */
+:is(img, hr).nova-sugg-node.nova-sugg-delete,
+.nova-sugg-node.nova-sugg-delete img {
+  opacity: 0.45;
+}
+:is(td, th).nova-sugg-node.nova-sugg-delete,
+tr.nova-sugg-node.nova-sugg-delete > * {
+  background: color-mix(in srgb, var(--nova-suggestion, var(--nova-danger)) 10%, transparent);
+}
+/* A suggested paragraph break before a block, or a whole text block inserted or deleted: a pilcrow
+   in the margin, underlined if new, struck if deleted. */
 .nova-sugg-split,
-.nova-sugg-join {
+.nova-sugg-join,
+:is(p, h1, h2, h3, h4, h5, h6, pre, figcaption).nova-sugg-node {
   position: relative;
 }
 .nova-sugg-split::before,
-.nova-sugg-join::before {
+.nova-sugg-join::before,
+:is(p, h1, h2, h3, h4, h5, h6, pre, figcaption).nova-sugg-node::before {
   content: '¶';
   position: absolute;
   inset-inline-start: -16px;
@@ -2151,12 +2204,14 @@ html.nova-fullscreen-lock body {
   user-select: none;
   pointer-events: none;
 }
-.nova-sugg-join::before {
+.nova-sugg-join::before,
+.nova-sugg-node.nova-sugg-delete::before {
   text-decoration: line-through 2px;
 }
 /* In a list item, past the bullet. */
 li > .nova-sugg-split::before,
-li > .nova-sugg-join::before {
+li > .nova-sugg-join::before,
+li > .nova-sugg-node::before {
   inset-inline-start: -34px;
 }
 /* In suggesting mode the cursor takes the suggestion color: a visible sign that typing becomes a suggestion. */

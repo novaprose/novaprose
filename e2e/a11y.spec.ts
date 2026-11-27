@@ -319,6 +319,34 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'suggestion discussion');
     });
 
+    test('structural suggestions: rows, a table, list items, a line, and their cards', async ({
+      page,
+    }) => {
+      await open(page, theme, '&comments=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        const by = (id: string, change: string, who = 'ann', name = 'Ann') =>
+          `data-suggestion="${id}" data-change="${change}" data-author="${who}" data-name="${name}"`;
+        e.setContent(
+          '<table><tbody>' +
+            '<tr><td><p>kept</p></td><td><p>row</p></td></tr>' +
+            `<tr ${by('r1', 'insert')}><td><p>new</p></td><td><p>row</p></td></tr>` +
+            `<tr ${by('r2', 'delete', 'bob', 'Bob')}><td><p>old</p></td><td><p>row</p></td></tr>` +
+            '</tbody></table>' +
+            `<ul><li ${by('w1', 'wrap')}><p>Into the list</p></li><li ${by('u1', 'unwrap', 'bob', 'Bob')}><p>Out of it</p></li></ul>` +
+            `<hr ${by('h1', 'delete')}>` +
+            `<p ${by('p1', 'insert', 'bob', 'Bob')}>A new paragraph</p>`,
+        );
+      });
+      await control(page, 'reviewsuggestions');
+      await page.getByRole('menuitem', { name: 'Show all suggestions' }).click();
+      await expect(page.locator('.nova-sugg-card')).toHaveCount(6);
+      await audit(page, 'structural suggestions');
+    });
+
     test('footnotes: numbers in the text, the notes at the end', async ({ page }) => {
       await open(page, theme, '&tools=1');
       await page.keyboard.press('ControlOrMeta+End');

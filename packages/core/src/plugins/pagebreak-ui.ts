@@ -1,6 +1,7 @@
 import { definePlugin } from '../plugins';
 import { icons } from '../ui/icons';
 import { pickLabels } from './shared';
+import { replaceSelectionWithBlock } from '../commands';
 
 /** The lazy part of the pagebreak plugin: the "Page break" button and menu item. */
 
@@ -14,7 +15,7 @@ export default definePlugin({
     const insert = () => {
       const { state, dispatch } = editor.view;
       const type = editor.schema.nodes.pagebreak!;
-      dispatch(state.tr.replaceSelectionWith(type.create()).scrollIntoView());
+      dispatch(replaceSelectionWithBlock(state.tr, type.create()).scrollIntoView());
       editor.focus();
     };
     editor.ui.registry.addButton('pagebreak', {

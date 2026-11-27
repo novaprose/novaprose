@@ -179,3 +179,17 @@ describe('content restrictions and Markdown', () => {
     expect(e.getHTML()).not.toContain('src="null"');
   });
 });
+
+describe('a block inserted in a caption', () => {
+  it('goes after the image instead of cutting it in two (one of them without a picture)', () => {
+    const e = mount(`${FIG}<p>after</p>`);
+    let caption = -1;
+    e.view.state.doc.descendants((node, pos) => {
+      if (caption < 0 && node.type.name === 'figcaption') caption = pos + 1;
+    });
+    e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, caption)));
+    e.exec('horizontalRule');
+    expect(e.getHTML()).toBe(`${FIG}<hr><p>after</p>`);
+    expect(e.view.state.doc.childCount).toBe(3);
+  });
+});

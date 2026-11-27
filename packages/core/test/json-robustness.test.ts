@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createEditor } from '../src';
+import { createEditor, listSuggestions, resolveSuggestions } from '../src';
 
 /**
  * A JSON document comes from outside (a database, an API, old versions) and doesn't have to match the schema's types.
@@ -176,6 +176,41 @@ describe('external JSON with attributes of the wrong type', () => {
         content: [para({ ...text, marks: [{ type: 'link', attrs: { href } }] })],
       });
       expect(editor.getHTML()).toBe('<p><a href="#">x</a></p>');
+    }
+  });
+
+  it('a suggestion any node carries can be anything: listing, accepting, rejecting and HTML stay safe', () => {
+    const hostile: unknown[] = [
+      {
+        id: 's1',
+        change: 'insert',
+        author: '"><img src=x onerror=alert(1)>',
+        name: '<script>alert(1)</script>',
+        time: 'soon',
+      },
+      { id: 's2', change: 'delete', author: 'bob', name: 'Bob', time: 1 },
+      { id: 's3', change: 'wrap', depth: 1e9 },
+      { id: 's4', change: 'unwrap', depth: -5 },
+      { id: 's5', change: 'block', before: { type: 'heading', attrs: { level: '"><x' } } },
+      { id: 's6', change: 'block', before: '{"type":"table_cell","attrs":{"colspan":"x"}}' },
+      { id: '<bad id>', change: 'insert' },
+      { id: 's7', change: 'teleport' },
+    ];
+    for (const [name, make] of Object.entries(NODES)) {
+      for (const suggestion of hostile) {
+        const label = `${name}: ${JSON.stringify(suggestion)}`;
+        expect(() => {
+          editor.setContent({
+            type: 'doc',
+            content: [para(text), make({ ...attrsWith(null), suggestion })],
+          });
+          const html = editor.getHTML();
+          expect(html, label).not.toMatch(/<script|<img src=x|onerror=/i);
+          listSuggestions(editor.view.state.doc);
+          for (const action of ['accept', 'reject'] as const)
+            editor.view.state.apply(resolveSuggestions(editor.view.state, action));
+        }, label).not.toThrow();
+      }
     }
   });
 

@@ -14,6 +14,7 @@ import { schema as baseSchema, type NovaSchema } from './schema';
 import type { CellProps, SortDirection, TableProps } from './table';
 import { isInTable } from './table-nodes';
 import { h } from './ui/dom';
+import { replaceSelectionWithBlock } from './commands';
 
 export { isInTable };
 
@@ -175,7 +176,7 @@ export function insertTable(rows: number, cols: number, withHeader = true): Comm
     if (isInTable(state)) return false;
     if (dispatch) {
       const node = createTable(rows, cols, withHeader, state.schema as NovaSchema);
-      const tr = state.tr.replaceSelectionWith(node);
+      const tr = replaceSelectionWithBlock(state.tr, node);
       // Nodes are immutable: the inserted table is found by object reference.
       let tablePos = -1;
       tr.doc.descendants((n, pos) => {

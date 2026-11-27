@@ -192,8 +192,9 @@ describe('AI and code blocks', () => {
     await vi.waitFor(() => expect(e.root.querySelector('.nova-dialog')).toBeNull());
     expect(request.mock.calls[0]![0].text).toBe('');
     expect(accepted(e)).toBe('Intro\n\nThis is a very good text.\n\nNext sentence.');
+    // A whole new paragraph carries the suggestion itself.
     expect(e.getHTML()).toMatch(
-      /^<p>Intro<\/p><pre><code>This is a very good text\.<\/code><\/pre><p><ins [^>]*>Next sentence\.<\/ins><\/p>$/,
+      /^<p>Intro<\/p><pre><code>This is a very good text\.<\/code><\/pre><p data-suggestion="[^"]+" data-change="insert"[^>]*>Next sentence\.<\/p>$/,
     );
   });
 

@@ -908,8 +908,11 @@ export interface SchemaExtensions {
  * written back to it. The value can come from JSON as anything: `render` must cope with that.
  */
 export interface NodeAttribute {
-  /** Which nodes get it: their names, or 'textblock' for every node that holds text. */
-  nodes: readonly string[] | 'textblock';
+  /**
+   * Which nodes get it: their names, 'textblock' for every node that holds text, or 'all' for every
+   * node but the document and text.
+   */
+  nodes: readonly string[] | 'textblock' | 'all';
   default: unknown;
   /** The value from the element (null or undefined: none). */
   parse(dom: HTMLElement): unknown;
@@ -1007,14 +1010,17 @@ export function createSchema(
     if (name in marks) throw new Error(`[nova] mark "${name}" already exists in the base schema`);
   }
   let allNodes: Record<string, NodeSpec> = { ...baseNodes, ...Object.fromEntries(extraNodes) };
+  const gets = (attr: NodeAttribute, node: string, spec: NodeSpec) =>
+    attr.nodes === 'all'
+      ? node !== 'doc' && node !== 'text'
+      : attr.nodes === 'textblock'
+        ? holdsText(spec)
+        : attr.nodes.includes(node);
   for (const [name, attr] of attributes) {
     allNodes = Object.fromEntries(
       Object.entries(allNodes).map(([node, spec]) => [
         node,
-        (attr.nodes === 'textblock' ? holdsText(spec) : attr.nodes.includes(node)) &&
-        !spec.attrs?.[name]
-          ? withAttribute(name, attr, spec)
-          : spec,
+        gets(attr, node, spec) && !spec.attrs?.[name] ? withAttribute(name, attr, spec) : spec,
       ]),
     );
   }

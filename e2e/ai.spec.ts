@@ -88,12 +88,15 @@ test('the chat: a question about the document, the answer inserted as a suggesti
     'The document has 3 words.',
   );
   await panel.getByRole('button', { name: 'Insert' }).click();
-  await expect(page.locator('.nova-prosemirror ins[data-suggestion]')).toHaveText(
+  // A new paragraph after the last one: new as a whole, one suggestion.
+  await expect(page.locator('.nova-prosemirror p.nova-sugg-insert')).toHaveText(
     'The document has 3 words.',
   );
   await expect
     .poll(() => page.evaluate(() => window.editor.getHTML()))
-    .toMatch(/^<p>One two three\.<\/p><p><ins [^>]*>The document has 3 words\.<\/ins><\/p>$/);
+    .toMatch(
+      /^<p>One two three\.<\/p><p data-suggestion="[^"]+" data-change="insert"[^>]*>The document has 3 words\.<\/p>$/,
+    );
 });
 
 test('the chat in Edit mode: the whole document changed as suggestions, then "Accept all"', async ({

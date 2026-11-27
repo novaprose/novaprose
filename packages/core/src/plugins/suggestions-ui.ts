@@ -1,4 +1,4 @@
-import { TextSelection, type EditorState, type Transaction } from 'prosemirror-state';
+import { Selection, type EditorState, type Transaction } from 'prosemirror-state';
 import { definePlugin } from '../plugins';
 import { icons } from '../ui/icons';
 import type { MenuEntry } from '../ui/menu';
@@ -9,13 +9,13 @@ import {
   listSuggestions,
   resolveSuggestions,
   RESOLVED,
-  setBlockTracker,
+  setStructureTrackers,
   setSuggesting,
   suggestionsResult,
   type Suggestion,
   type SuggestionsOptions,
 } from './suggestions';
-import { trackBlockChanges } from './suggestions-blocks';
+import { trackers } from './suggestions-blocks';
 import type { createSuggestionsPanel } from './suggestions-panel';
 import { getComments } from './comments';
 import { pickLabels } from './shared';
@@ -51,6 +51,12 @@ export const LABELS = {
     rejectedCount: 'Suggestions rejected: {count}',
     noneFrom: 'No suggestions from {name}',
     nonText: 'not text (an image or other content)',
+    nodeTable: 'Table',
+    nodeRow: 'Table row',
+    nodeColumn: 'Table column',
+    nodeCell: 'Table cell',
+    nodeImage: 'Image',
+    nodeListItem: 'List item',
   },
 };
 
@@ -62,16 +68,19 @@ const ICON_REVIEW = icons.review;
 const ICON_ACCEPT = icons.check;
 const ICON_REJECT = icons.close;
 
-// From now on, a change of a block's type or style in suggesting mode is a suggestion too.
-setBlockTracker(trackBlockChanges);
+// From now on, paragraph breaks and changes of lists and quotes in suggesting mode are suggestions too.
+setStructureTrackers(trackers);
 
 function suggestionAt(state: EditorState): Suggestion | null {
   const { from } = state.selection;
   const here = listSuggestions(state.doc).filter(
     (s) => from >= s.from && from <= s.to && (s.to > from || s.from < from),
   );
-  // Text suggested inside a block whose style is suggested too: the text's suggestion first.
-  return here.find((s) => s.kind !== 'block') ?? here[0] ?? null;
+  // Text suggested inside a node that carries a suggestion too: the text's first, then the
+  // innermost node's (a row before its table).
+  return (
+    here.find((s) => !s.node) ?? [...here].sort((a, b) => b.from - a.from || a.to - b.to)[0] ?? null
+  );
 }
 
 /** Ids of the suggestions the selection touches (none for a cursor). */
@@ -125,7 +134,7 @@ export default definePlugin({
         return;
       }
       dispatch(
-        state.tr.setSelection(TextSelection.create(state.doc, target.from)).scrollIntoView(),
+        state.tr.setSelection(Selection.near(state.doc.resolve(target.from))).scrollIntoView(),
       );
       editor.focus();
     };

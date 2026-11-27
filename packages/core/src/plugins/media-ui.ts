@@ -6,6 +6,7 @@ import { attachFilePicker } from '../ui/file-picker';
 import { icons } from '../ui/icons';
 import { parseMediaUrl } from './media';
 import { pickLabels } from './shared';
+import { replaceSelectionWithBlock } from '../commands';
 
 /** The lazy part of the media plugin: the "Video" dialog, the button and the menu item. */
 
@@ -64,9 +65,10 @@ export default definePlugin({
             dispatch(state.tr.setNodeMarkup(sel.from, undefined, { ...sel.node.attrs, ...attrs }));
           else
             dispatch(
-              state.tr
-                .replaceSelectionWith(editor.schema.nodes.media!.create(attrs))
-                .scrollIntoView(),
+              replaceSelectionWithBlock(
+                state.tr,
+                editor.schema.nodes.media!.create(attrs),
+              ).scrollIntoView(),
             );
           return true;
         },

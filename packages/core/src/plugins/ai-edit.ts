@@ -255,8 +255,23 @@ export function rewriteTransaction(
   const targets = segments.map((_, index) =>
     index < segments.length - 1 ? (next[index] ?? '') : next.slice(index).join(' '),
   );
-  for (let index = segments.length - 1; index >= 0; index--)
-    rewriteSegment(tr, segments[index]!, targets[index]!);
+  for (let index = segments.length - 1; index >= 0; index--) {
+    const segment = segments[index]!;
+    // A block the answer has no paragraph for, all of it in the range: the block goes (accepted,
+    // no empty line is left), unless its parent needs it.
+    const $block = tr.doc.resolve(segment.from);
+    if (
+      index > 0 &&
+      !targets[index] &&
+      segment.from === $block.start() &&
+      segment.to === $block.end() &&
+      $block.node(-1).canReplace($block.index(-1), $block.index(-1) + 1)
+    ) {
+      tr.delete($block.before(), $block.after());
+      continue;
+    }
+    rewriteSegment(tr, segment, targets[index]!);
+  }
   return tr;
 }
 

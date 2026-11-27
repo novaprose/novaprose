@@ -241,3 +241,48 @@ test('previews: the text with every suggestion accepted, then rejected; the text
     '<p>Ship in <del>May</del><ins>June</ins>.</p><p>A <ins>very </ins>good <del>old </del>plan.</p>',
   );
 });
+
+async function showPanel(page: Page) {
+  await clickControl(page, 'reviewsuggestions');
+  await page.getByRole('menuitem', { name: 'Show all suggestions' }).click();
+  return page.getByRole('complementary', { name: 'Suggestions' });
+}
+
+test('a table inserted in suggesting mode is outlined and named on its card; Reject removes it', async ({
+  page,
+}) => {
+  await open(page, '<p>Plan</p>');
+  await page.keyboard.press('ControlOrMeta+Alt+Shift+e');
+  await clickControl(page, 'table');
+  await page.locator('.nova-grid-cell[data-row="2"][data-col="2"]').click();
+  await expect(content(page).locator('.nova-sugg-node table')).toBeVisible();
+  // Typing in your own new table is part of it.
+  await page.keyboard.type('A');
+  const panel = await showPanel(page);
+  await expect(panel.locator('.nova-sugg-card')).toHaveCount(1);
+  await expect(panel.locator('.nova-sugg-kind')).toHaveText('Inserted');
+  await expect(panel.locator('.nova-sugg-changes')).toHaveText('Table');
+  await panel.getByRole('button', { name: 'Reject', exact: true }).click();
+  await expect.poll(() => html(page)).toBe('<p>Plan</p>');
+});
+
+test('lists: paragraphs made a list, Tab and Shift+Tab are suggestions', async ({ page }) => {
+  await open(page, '<p>Milk</p><p>Eggs</p>');
+  await page.keyboard.press('ControlOrMeta+Alt+Shift+e');
+  await page.keyboard.press('ControlOrMeta+a');
+  await clickControl(page, 'bullist');
+  await expect(content(page).locator('li.nova-sugg-wrap')).toHaveCount(2);
+  const panel = await showPanel(page);
+  await expect(panel.locator('.nova-sugg-changes')).toHaveText('+Bulleted list');
+  await panel.getByRole('button', { name: 'Accept', exact: true }).click();
+  await expect.poll(() => html(page)).toBe('<ul><li><p>Milk</p></li><li><p>Eggs</p></li></ul>');
+
+  // Tab in the second item: one level deeper, as a suggestion; Shift+Tab takes it back.
+  await content(page).getByText('Eggs').click();
+  await page.keyboard.press('Tab');
+  await expect(content(page).locator('li li.nova-sugg-wrap')).toHaveText('Eggs');
+  await expect(panel.locator('.nova-sugg-changes')).toHaveText('Increase indent');
+  await page.keyboard.press('Shift+Tab');
+  await expect.poll(() => html(page)).toBe('<ul><li><p>Milk</p></li><li><p>Eggs</p></li></ul>');
+  await expect(panel).toContainText('No suggestions');
+});

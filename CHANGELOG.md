@@ -8,6 +8,36 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Suggested edits cover structure. Whole things inserted or deleted are suggestions: a table, a
+  row, a column (one suggestion, a cell in every row), an image, a horizontal line, a page break, a
+  paragraph; a deleted one stays, dashed or faded, until the deletion is accepted. So are the
+  settings of any node (a bulleted list made numbered, table and cell properties, a header row, an
+  image's size) and lists and quotes: paragraphs made a list (the button or a typed `- `), items
+  taken out of a list, <kbd>Tab</kbd> and <kbd>Shift</kbd>+<kbd>Tab</kbd> in a list, text put into a
+  quote or taken out. Cards name what changed (“Table row”, “+Bulleted list”, “Increase
+  indent”). In HTML the node carries `data-change="insert"`, `"delete"`, `"wrap"` or `"unwrap"`;
+  `Suggestion` has a new `node` field, and for a suggestion a node carries, `from`…`to` is the whole
+  node. Accepting gives exactly what the same edit gives outside suggesting mode and rejecting gives
+  back exactly the document before the edits, in any order: a property-based test checks both on
+  thousands of random documents and edits.
+- **Changed:** in suggesting mode nothing changes the document directly. An edit that can't be a
+  suggestion yet (merging table cells, the page setup) isn't made, and a notice says so; before, such
+  edits, lists and tables were applied directly. Accepting the deletion of a paragraph's text
+  leaves the paragraph (as deleting its text does outside suggesting mode); deleting the paragraph
+  with its break removes it. A line or paragraphs put in the middle of a paragraph are rejected with
+  the break they made. <kbd>Enter</kbd> at the end of a line makes a paragraph that is new as a
+  whole: one suggestion with what is typed in it (`data-change="insert"`), and in Word an inserted
+  paragraph; in the middle of a line it is still a new paragraph break.
+- **Fixed (security):** pasted or dropped content carries no suggestions of its own, so a copied web
+  page can't put somebody's name on a suggestion they didn't make. What a node "was" in a suggestion
+  saved in HTML or JSON can only bring back a type that fits where the node is.
+- **Fixed:** a table, a line or another block inserted at the start of an image's caption cut the
+  image in two, one of them without a picture; the block now goes after the image.
+- Word (`.docx`): a table row or cell inserted or deleted as a suggestion is Word's row or cell
+  revision (`w:trPr`, `w:cellIns`, `w:cellDel`), and the text, images and paragraph marks of a node
+  inserted or deleted are Word revisions; on import they come back as suggestions on the row or cell.
+  **Fixed:** with revisions accepted on import, a row Word marked deleted no longer arrives as an
+  empty row.
 - **Fixed:** in suggesting mode, a collaborator's change (or one kept out of the undo history) that
   looked like a paragraph break or a block style change could be turned into a suggestion on your
   side instead of being applied as it was; only your own edits become suggestions.
@@ -44,7 +74,8 @@ All packages in this repository are versioned together. The format follows
   **Suggestions** panel reads “Paragraph → Heading 2” or “Align center”, and rejecting it gives
   the block back its type and style (changing it back yourself takes the suggestion away). In HTML
   the block keeps what it was in `data-before`; values from HTML or JSON are checked like any
-  other. Plugins can now add their own attribute to existing blocks with `nodeAttributes`.
+  other. Plugins can now add their own attribute to existing blocks with `nodeAttributes`
+  (`nodes: 'textblock'`, `'all'` for every node but the document and text, or node names).
 - Discussing a suggested edit: with the `comments` plugin, every card in the **Suggestions** panel
   has a **Comment** button, and replies follow one another on the card (Ctrl+Enter sends, Esc
   closes the box, your own replies can be deleted). Accepting or rejecting the suggestion resolves

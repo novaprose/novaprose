@@ -210,28 +210,38 @@ describe('suggesting mode', () => {
     expect(editor.getHTML()).not.toContain('title');
   });
 
-  it('the text of a new paragraph rejected: no empty line is left (the break and the text are suggestions)', () => {
+  it('a new paragraph at the end of one is new as a whole: rejected, no empty line is left', () => {
     const editor = mount('<p>One</p><p>Two</p>');
     cursor(editor, 4);
     editor.view.dispatch(editor.view.state.tr.split(4));
     type(editor, 'New');
-    expect(html(editor)).toBe('<p>One</p><p data-change="split"><ins>New</ins></p><p>Two</p>');
+    expect(html(editor)).toBe('<p>One</p><p data-change="insert">New</p><p>Two</p>');
     editor.view.dispatch(resolveSuggestions(editor.view.state, 'reject'));
     expect(editor.getHTML()).toBe('<p>One</p><p>Two</p>');
   });
 
-  it("the deletion of all of a block's text accepted: the block goes; where it is required it stays empty", () => {
+  it("a block's text deleted leaves the block, the block deleted goes (as outside suggesting mode); a required one stays empty", () => {
     const editor = mount('<p>One</p><p>Two</p>');
     editor.view.dispatch(editor.view.state.tr.delete(6, 9));
     expect(html(editor)).toBe('<p>One</p><p><del>Two</del></p>');
     editor.view.dispatch(resolveSuggestions(editor.view.state, 'accept'));
-    expect(editor.getHTML()).toBe('<p>One</p>');
+    expect(editor.getHTML()).toBe('<p>One</p><p></p>');
+    // The whole paragraph, its break included: it goes.
+    const whole = mount('<p>One</p><p>Two</p>');
+    whole.view.dispatch(whole.view.state.tr.delete(5, 10));
+    expect(whole.getHTML()).toMatch(/^<p>One<\/p><p data-suggestion="[^"]+" data-change="delete"/);
+    whole.view.dispatch(resolveSuggestions(whole.view.state, 'accept'));
+    expect(whole.getHTML()).toBe('<p>One</p>');
 
-    // A list item without text goes entirely.
+    // A list item's text: the item stays; the item itself: it goes.
     const list = mount('<ul><li><p>A</p></li><li><p>B</p></li></ul>');
     list.view.dispatch(list.view.state.tr.delete(8, 9));
     list.view.dispatch(resolveSuggestions(list.view.state, 'accept'));
-    expect(list.getHTML()).toBe('<ul><li><p>A</p></li></ul>');
+    expect(list.getHTML()).toBe('<ul><li><p>A</p></li><li><p></p></li></ul>');
+    const item = mount('<ul><li><p>A</p></li><li><p>B</p></li></ul>');
+    item.view.dispatch(item.view.state.tr.delete(6, 11));
+    item.view.dispatch(resolveSuggestions(item.view.state, 'accept'));
+    expect(item.getHTML()).toBe('<ul><li><p>A</p></li></ul>');
 
     // The only paragraph of the document and the item's paragraph before a nested list are required.
     const only = mount('<p>Only</p>');

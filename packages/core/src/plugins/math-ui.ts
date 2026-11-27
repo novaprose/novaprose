@@ -7,6 +7,7 @@ import { h } from '../ui/dom';
 import { icons } from '../ui/icons';
 import { loadTemml, mathLatex, renderMath } from './math';
 import { pickLabels } from './shared';
+import { replaceSelectionWithBlock } from '../commands';
 
 /**
  * The lazy part of the math plugin: the "Formula" dialog with a live preview, typing `$formula$` in the text and
@@ -93,7 +94,7 @@ async function mathDialog(editor: Editor, labels: Labels): Promise<void> {
       ? next.tr.setNodeMarkup(current.from, undefined, { latex: source })
       : current
         ? next.tr.replaceRangeWith(current.from, current.to, node)
-        : next.tr.replaceSelectionWith(node);
+        : replaceSelectionWithBlock(next.tr, node);
   editor.view.dispatch(tr.scrollIntoView());
   editor.focus();
 }

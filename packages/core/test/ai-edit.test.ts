@@ -95,7 +95,9 @@ describe('AI edits as suggestions', () => {
     const pos = e.view.state.selection.from;
     e.view.dispatch(suggestInsert(e.view.state, pos, ' Next sentence.\n\nNew paragraph.', AI));
     expect(textOf(e, 'accept')).toBe('Start. Next sentence.\n\nNew paragraph.');
-    expect(listSuggestions(e.view.state.doc).every((c) => c.kind === 'insert')).toBe(true);
+    // The text is an insertion, the new paragraph's break a new paragraph break.
+    const all = listSuggestions(e.view.state.doc);
+    expect(all.every((c) => c.kind === 'insert' || c.kind === 'split')).toBe(true);
     // Rejecting gives exactly the original text: the new paragraph doesn't remain as an empty line.
     expect(textOf(e, 'reject')).toBe('Start.');
   });

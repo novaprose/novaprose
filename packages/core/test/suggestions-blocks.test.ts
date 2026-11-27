@@ -232,7 +232,8 @@ describe('paragraph breaks as suggestions', () => {
     expect(kinds(e)).toEqual([]);
     press(e, 'Enter');
     e.view.dispatch(e.view.state.tr.insertText('new'));
-    expect(kinds(e)).toEqual(['split', 'insert']);
+    // Enter at the end of a line: a new paragraph as a whole, its text part of it (one suggestion).
+    expect(kinds(e)).toEqual(['insert']);
     decide(e, 'reject');
     expect(e.getHTML()).toBe('<p>ab</p>');
   });
@@ -249,9 +250,16 @@ describe('paragraph breaks as suggestions', () => {
     expect(e.getHTML()).toBe('<p>ab</p><p>cd</p>');
   });
 
-  it('a new list item is a suggested break two levels deep', async () => {
+  it('a new list item: at the end of an item a new item, in the middle a break two levels deep', async () => {
     const e = await mount('<ul><li><p>one</p></li></ul>');
     at(e, 6);
+    press(e, 'Enter');
+    expect(listSuggestions(e.view.state.doc).map((s) => `${s.kind}:${s.node}`)).toEqual([
+      'insert:list_item',
+    ]);
+    decide(e, 'reject');
+    expect(e.getHTML()).toBe('<ul><li><p>one</p></li></ul>');
+    at(e, 4);
     press(e, 'Enter');
     expect(kinds(e)).toEqual(['split']);
     expect(listSuggestions(e.view.state.doc)[0]!.depth).toBe(2);
