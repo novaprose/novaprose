@@ -144,6 +144,63 @@ describe('markup email clients understand', () => {
   });
 });
 
+// toEmailHTML may get HTML that didn't come from the editor (old content, a database): nothing that
+// runs code, submits a form or opens a dangerous address may come out.
+describe('unsafe HTML in', () => {
+  it('scripts, handlers, forms, SVG, javascript: and unsafe images go', () => {
+    const out = toEmailHTML(
+      '<p onclick="alert(1)">Hi <script>alert(2)</script><img src="x.png" onerror="alert(3)"></p>' +
+        '<p><a href="javascript:alert(4)">bad</a> <a href=" jav&#x09;ascript:alert(5)">bad too</a></p>' +
+        '<object data="javascript:alert(6)"></object><embed src="javascript:alert(7)">' +
+        '<iframe src="javascript:alert(8)"></iframe><svg onload="alert(9)"><a href="javascript:alert(10)">x</a></svg>' +
+        '<form action="https://evil.test/"><input name="card"><button>Pay</button></form>' +
+        '<p><img src="data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=" alt="svg"> <img src="data:image/png;base64,AAAA" alt="png"></p>' +
+        '<table background="javascript:alert(11)"><tbody><tr><td srcdoc="x" formaction="y">c</td></tr></tbody></table>' +
+        '<style>p { color: red }</style>',
+      { baseStyles: false, baseUrl: 'https://example.com/' },
+    );
+    for (const bad of [
+      '<script',
+      'alert(',
+      'onclick',
+      'onerror',
+      'onload',
+      'javascript',
+      '<svg',
+      '<form',
+      '<input',
+      '<button',
+      '<object',
+      '<embed',
+      '<style',
+      'image/svg',
+      'srcdoc',
+      'formaction',
+      'background=',
+    ]) {
+      expect(out, bad).not.toContain(bad);
+    }
+    // What is safe stays: the text, the raster image, the table.
+    expect(out).toContain('Hi <img src="https://example.com/x.png">');
+    expect(toEmailHTML('<p><img src="cid:logo@acme" alt="Acme"></p>', { baseStyles: false })).toBe(
+      '<p><img src="cid:logo@acme" alt="Acme"></p>',
+    );
+    expect(out).toContain('<img src="data:image/png;base64,AAAA" alt="png">');
+    expect(out).toContain('<td>c</td>');
+  });
+
+  it('dangerous CSS in a style attribute is dropped, the rest is kept', () => {
+    const out = toEmailHTML(
+      '<p style="color: red; width: expression(alert(1)); background: url(javascript:alert(2)); behavior: url(x.htc); -moz-binding: url(x.xml#y)">a</p>' +
+        '<p style="background-image: url(https://cdn.test/bg.png)">b</p>',
+      { baseStyles: false },
+    );
+    expect(out).toBe(
+      '<p style="color: red">a</p><p style="background-image: url(https://cdn.test/bg.png)">b</p>',
+    );
+  });
+});
+
 describe('a whole email', () => {
   it('doctype, title, hidden preview text, a centered column, @media kept in the head', () => {
     const out = toEmailHTML('<p>Hello</p>', {

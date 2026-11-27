@@ -57,7 +57,9 @@ Without `document`, `emailHTML` returns the content alone, for a mail composer o
 template. `pluginOptions.email` holds the defaults for both the preview and `emailHTML`.
 
 On a server, `toEmailHTML` turns stored content into email HTML with a DOM such as
-[jsdom](https://github.com/jsdom/jsdom):
+[jsdom](https://github.com/jsdom/jsdom). It takes HTML from anywhere, not only from the editor: what
+doesn't belong in an email is removed — scripts, event handlers, forms, SVG, `javascript:` and other
+unsafe addresses, SVG images, and CSS that runs code.
 
 ```ts
 import { createRenderer } from '@novaprose/core';

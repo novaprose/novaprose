@@ -1,5 +1,6 @@
 import { loadCss, scopeSelector, splitSelectors, splitTopLevel } from './content-css';
 import type { Editor } from './editor';
+import { isSafeImageUrl, isSafeLinkUrl } from './url';
 
 /**
  * Email HTML from the editor's content (a separate entry, @novaprose/core/email: it isn't part of the
@@ -286,6 +287,11 @@ function inlineInto(
   }
   const byPrecedence = (a: { rule: Rule }, b: { rule: Rule }) =>
     a.rule.specificity - b.rule.specificity || a.rule.order - b.rule.order;
+  // Elements with a style of their own are rewritten too, even with no rule matching them: their
+  // style is checked like the rest.
+  for (const el of [root, ...root.querySelectorAll('[style]')]) {
+    if (el.hasAttribute('style') && !matched.has(el)) matched.set(el, []);
+  }
   for (const [el, list] of matched) {
     const inline = parseDeclarations(el.getAttribute('style') ?? '');
     // The cascade, lowest first: style sheet, inline style, !important in the style sheet, inline !important.
@@ -309,9 +315,10 @@ function inlineInto(
       if (d.name.startsWith('--') || seen.has(d.name)) continue;
       seen.add(d.name);
       const value = resolveVars(d.value, vars);
-      if (value !== null) out.unshift(`${d.name}: ${value}`);
+      if (value !== null && safeDeclaration(d.name, value)) out.unshift(`${d.name}: ${value}`);
     }
     if (out.length) el.setAttribute('style', out.join('; '));
+    else el.removeAttribute('style');
   }
   return { kept };
 }
@@ -339,8 +346,42 @@ function videoPage(src: string): string {
   return src;
 }
 
+/**
+ * Never in an email: what runs code, submits a form, or draws with markup of its own (SVG and MathML
+ * carry links and scripts of their own; email clients don't show them anyway).
+ */
+const UNSAFE_ELEMENTS =
+  'script, style, link, meta, base, frame, frameset, object, embed, applet, noscript, template, form, input, button, select, textarea, svg, math';
+/** Event handlers and attributes that load or submit somewhere. */
+const UNSAFE_ATTRIBUTE = /^(on|xmlns|xlink)|^(formaction|action|srcdoc|srcset)$/i;
+
+/**
+ * The input may not come from the editor (old content, a database): what is unsafe goes first,
+ * so nothing below can turn it into a link or a style.
+ */
+function stripUnsafe(root: Element): void {
+  for (const el of [...root.querySelectorAll(UNSAFE_ELEMENTS)]) el.remove();
+  for (const el of [root, ...root.querySelectorAll('*')]) {
+    for (const { name } of [...el.attributes]) {
+      if (UNSAFE_ATTRIBUTE.test(name)) el.removeAttribute(name);
+    }
+  }
+}
+
+/** CSS that runs code or loads an unsafe address. */
+const UNSAFE_CSS = /expression\s*\(|javascript:|vbscript:|-moz-binding/i;
+
+function safeDeclaration(name: string, value: string): boolean {
+  if (name === 'behavior' || name === '-moz-binding' || UNSAFE_CSS.test(value)) return false;
+  for (const url of value.matchAll(/url\(\s*(['"]?)([^'")]*)\1\s*\)/gi)) {
+    if (!isSafeImageUrl(url[2]!)) return false;
+  }
+  return true;
+}
+
 function emailSafe(root: Element, base: string): void {
   const doc = root.ownerDocument;
+  stripUnsafe(root);
   // Collapsible blocks: email clients don't open them, so they are shown open, the title in bold.
   for (const details of [...root.querySelectorAll('details')].reverse()) {
     const block = doc.createElement('div');
@@ -365,14 +406,14 @@ function emailSafe(root: Element, base: string): void {
     const latex = math.getAttribute('data-latex');
     if (latex !== null) math.textContent = latex;
   }
-  // Players: a link to the video's page.
-  for (const media of [...root.querySelectorAll('iframe, video, audio, object, embed')]) {
-    const src = media.getAttribute('src') ?? media.getAttribute('data') ?? '';
-    if (!src) {
+  // Players: a link to the video's page (a player with an unsafe address just goes).
+  for (const media of [...root.querySelectorAll('iframe, video, audio')]) {
+    const src = media.getAttribute('src') ?? '';
+    const href = src ? absolute(videoPage(src), base) : '';
+    if (!href || !isSafeLinkUrl(href)) {
       media.remove();
       continue;
     }
-    const href = absolute(videoPage(src), base);
     const link = doc.createElement('a');
     link.setAttribute('href', href);
     link.textContent = media.getAttribute('title') || href;
@@ -385,13 +426,26 @@ function emailSafe(root: Element, base: string): void {
   }
   // Page breaks mean nothing in an email.
   for (const pagebreak of root.querySelectorAll('.nova-pagebreak')) pagebreak.remove();
-  // Addresses: absolute, since the email is read away from the page. Image widths as attributes for Outlook.
+  // Addresses: absolute, since the email is read away from the page, and checked as the editor
+  // checks them (no javascript:, no SVG images). Image widths as attributes for Outlook.
   for (const link of root.querySelectorAll('a[href]')) {
-    link.setAttribute('href', absolute(link.getAttribute('href')!, base));
+    const href = absolute(link.getAttribute('href')!, base);
+    if (isSafeLinkUrl(href)) link.setAttribute('href', href);
+    else link.removeAttribute('href');
   }
-  for (const img of root.querySelectorAll('img')) {
-    const src = img.getAttribute('src');
-    if (src) img.setAttribute('src', absolute(src, base));
+  for (const el of root.querySelectorAll('[background]')) {
+    const image = absolute(el.getAttribute('background')!, base);
+    if (isSafeImageUrl(image)) el.setAttribute('background', image);
+    else el.removeAttribute('background');
+  }
+  for (const img of [...root.querySelectorAll('img')]) {
+    const src = absolute(img.getAttribute('src') ?? '', base);
+    // cid: is an image attached to the email itself.
+    if (!src || !(isSafeImageUrl(src) || /^cid:[^\s"'<>]+$/i.test(src))) {
+      img.remove();
+      continue;
+    }
+    img.setAttribute('src', src);
     if (!img.hasAttribute('width')) {
       const width = /(?:^|;)\s*width\s*:\s*(\d+(?:\.\d+)?)px/i.exec(
         img.getAttribute('style') ?? '',

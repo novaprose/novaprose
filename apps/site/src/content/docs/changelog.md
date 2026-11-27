@@ -111,7 +111,8 @@ All packages in this repository are versioned together. The format follows
   of a whole email. A video becomes a link to its page, a collapsible block is shown open, checklist
   items get ☑ and ☐, relative links and images become absolute, and template tags such as
   `{{unsubscribe_url}}` stay as they are. `document` gives a whole email: a centered column Outlook
-  keeps too, preview text for the inbox. **Email preview** (`emailpreview`) shows it on a desktop
+  keeps too, preview text for the inbox. `toEmailHTML` takes HTML from anywhere: scripts, event
+  handlers, forms, SVG, unsafe addresses and CSS that runs code are removed. **Email preview** (`emailpreview`) shows it on a desktop
   or a phone screen with its size (Gmail cuts off emails over 102 KB) and copies it as an email or
   as HTML code. With `tinymce.init`, `inlinecss` works (`editor.plugins.inlinecss.getContent()`,
   the `InlineCSS` event, `inlinecss_selector_filter`, `inlinecss_file_filter`), and
