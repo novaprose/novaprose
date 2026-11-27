@@ -30,9 +30,9 @@ export default defineConfig({
       include: ['packages/*/src/**/*.{ts,tsx}', 'apps/sync-server/src/**'],
       exclude: ['**/*.d.ts', 'packages/angular/**', 'packages/*/src/**/index.ts'],
       reporter: ['text-summary', 'html', 'json-summary'],
-      // A ratchet: slightly below the current level (November 2026: lines 90.6%, branches 84.9%).
-      // Coverage can only grow: raise the thresholds after it.
-      thresholds: { lines: 89, statements: 89, branches: 83, functions: 80 },
+      // A ratchet: slightly below the current level (November 2026: lines 91.5%, branches 85.6%,
+      // functions 83.4%). Coverage can only grow: raise the thresholds after it.
+      thresholds: { lines: 90, statements: 90, branches: 84, functions: 82 },
     },
     include: [
       'packages/*/test/**/*.test.ts',
