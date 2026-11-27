@@ -183,7 +183,10 @@ Conventional Commits.
 - **Accessibility is mandatory:** ARIA roles, keyboard (arrows, Esc, Tab), visible focus, aria-label on icons.
   Text contrast ≥ 4.5:1 on every surface (hover/pressed included): text uses `--nova-muted`, not
   `--nova-subtle`; a fill with white text uses `--nova-accent-strong`. A new dialog/menu → add its state to
-  `e2e/a11y.spec.ts` (axe).
+  `e2e/a11y.spec.ts` (axe). Screen readers: an inline mark whose element Chromium exposes as an object of
+  its own (strong, em, s, code, sub, sup) gets `role="none"` in the editing view (`mark-views.ts`),
+  otherwise NVDA reads the next word as "unselected" after its shortcut; a new shortcut or announcement →
+  a check in `screen-reader/nvda.spec.ts` (runs on a Windows runner, see what NVDA said in the run's notices).
 - Every UI color comes from the `--nova-*` CSS variables in `style.css`; the light and dark themes must both work.
 - **Styles of lazy parts** (panels, dialogs, plugin views) don't go into `style.css` (12 KB budget) but into
   `<module>.css` next to the code: `import css from './x.css?raw'` + `editor.ui.addStyles('nova-x', css)` on first
