@@ -10,10 +10,10 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
-function mount(content: string) {
+function mount(content: string, options: Record<string, unknown> = {}) {
   const element = document.createElement('div');
   document.body.appendChild(element);
-  const editor = createEditor({ element, content });
+  const editor = createEditor({ element, content, ...options });
   editors.push(editor);
   const end = TextSelection.atEnd(editor.view.state.doc);
   editor.view.dispatch(editor.view.state.tr.setSelection(end));
@@ -48,5 +48,14 @@ describe('typographic input rules', () => {
     const block = mount('<pre><code>x</code></pre>');
     type(block, ' --help ...');
     expect(block.view.state.doc.textContent).toBe('x --help ...');
+  });
+
+  it('textPatterns: false turns them all off: Markdown and typography stay as typed (WCAG 2.1.4)', () => {
+    const e = mount('<p></p>', { textPatterns: false });
+    type(e, '# Title -- so... - x');
+    expect(e.getHTML()).toBe('<p># Title -- so... - x</p>');
+    const md = mount('<p></p>');
+    type(md, '# Title');
+    expect(md.getHTML()).toBe('<h1>Title</h1>');
   });
 });

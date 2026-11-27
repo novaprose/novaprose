@@ -160,6 +160,12 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   mode?: EditorMode;
   /** Menu bar: true for the standard one ('file edit view insert format table help'), a string for your own set. Off by default. */
   menubar?: boolean | string;
+  /**
+   * Shortcuts that react to typed characters: Markdown ("# " a heading, "- " a list, "```" a code
+   * block) and typography ("--" a dash, "..." an ellipsis). On by default; false turns them off,
+   * for people who dictate or type those characters as text (WCAG 2.1.4).
+   */
+  textPatterns?: boolean;
   /** Your own menus, or overrides of the standard ones: { insert: { title: 'Insert', items: 'image link | hr' } }. */
   menu?: Record<string, MenuDefinition>;
   /** Status bar with the element path and the word count. On by default. */
@@ -470,8 +476,12 @@ export class Editor {
     const initialPlugins = [
       // First: while the list is open, Enter/Tab/arrows belong to the autocompleter, not the keymap.
       autocompleterPlugin(this),
-      buildInputRules((name) => this.isAllowed(name), this.schema),
-      codeFenceKeymap((name) => this.isAllowed(name), this.schema),
+      ...(options.textPatterns === false
+        ? []
+        : [
+            buildInputRules((name) => this.isAllowed(name), this.schema),
+            codeFenceKeymap((name) => this.isAllowed(name), this.schema),
+          ]),
       editorKeys,
       // The table plugins go here (before the general keymap) once the mechanics load: Tab in a table is
       // the next cell, not a list indent. See installTables().

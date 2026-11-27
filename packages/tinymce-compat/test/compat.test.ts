@@ -796,6 +796,22 @@ describe('tinymce.init', () => {
     expect(Object.keys(editor!.plugins).sort()).toEqual(['inlinecss', 'lists']);
   });
 
+  it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
+    page('<textarea id="t"></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({ selector: '#t', text_patterns: false });
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('text_patterns');
+    const view = editor!.core.view;
+    for (const ch of '# Title') {
+      const { from, to } = view.state.selection;
+      const handled = view.someProp('handleTextInput', (f) =>
+        f(view, from, to, ch, () => view.state.tr.insertText(ch, from, to)),
+      );
+      if (!handled) view.dispatch(view.state.tr.insertText(ch, from, to));
+    }
+    expect(editor!.getContent()).toBe('<p># Title</p>');
+  });
+
   it('autocorrect: the options, the Tools menu items and their Start/End events', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

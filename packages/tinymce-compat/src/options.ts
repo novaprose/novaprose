@@ -185,6 +185,8 @@ const IGNORED = new Set([
   'autocorrect_autocorrect',
   'autocorrect_capitalize',
   'autocorrect_service_url',
+  // text_patterns: false turns the patterns off; custom pattern lists aren't supported.
+  'text_patterns',
   'template_replace_values',
   'template_preview_replace_values',
   'template_selected_content_classes',
@@ -356,6 +358,7 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   else if (Array.isArray(config.toolbar)) options.toolbar = config.toolbar.join(' | ');
   else if (typeof config.toolbar === 'string') options.toolbar = config.toolbar;
   if (config.menubar !== undefined) options.menubar = config.menubar;
+  if (config.text_patterns === false) options.textPatterns = false;
   if (typeof config.statusbar === 'boolean') options.statusbar = config.statusbar;
   if (typeof config.placeholder === 'string') options.placeholder = config.placeholder;
   if (config.readonly === true) options.editable = false;

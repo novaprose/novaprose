@@ -27,20 +27,21 @@ Exceptions with runtime setters are noted below.
 
 ## Interface
 
-| Option          | Type                                          | Default                      | Description                                                                                                      |
-| --------------- | --------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `toolbar`       | `string \| string[] \| false`                 | see below                    | toolbar controls; `false` hides the toolbar                                                                      |
-| `toolbarMode`   | `'sliding' \| 'wrap'`                         | `'sliding'`                  | what happens when the toolbar doesn't fit                                                                        |
-| `mode`          | `'classic' \| 'inline' \| 'distraction-free'` | `'classic'`                  | editor layout ([Modes](/guides/toolbar-and-menus/#modes))                                                        |
-| `menubar`       | `boolean \| string`                           | `false`                      | `true` for the standard menus, or a list such as `'edit insert format'`                                          |
-| `menu`          | `Record<string, { title, items }>`            | —                            | add or override menus                                                                                            |
-| `statusbar`     | `boolean`                                     | `true`                       | element path and word count                                                                                      |
-| `resize`        | `boolean \| 'both'`                           | `false`                      | a resize handle in the status bar: `true` for height, `'both'` for height and width; works with the keyboard too |
-| `blockFormats`  | `{ label, block }[]`                          | paragraph, H1–H6, code block | items and order of the block list (the `blocks` button)                                                          |
-| `slashCommands` | `false \| SlashCommand[]`                     | built-in                     | `/` command menu; `false` to disable, an array to add commands                                                   |
-| `language`      | `string`                                      | `'en'`                       | UI language ([Localization](/guides/localization/))                                                              |
-| `direction`     | `'ltr' \| 'rtl'`                              | by language                  | right-to-left interface and text ([Right-to-left languages](/guides/localization/#right-to-left-languages))      |
-| `translations`  | `Partial<Messages>`                           | —                            | override individual UI strings                                                                                   |
+| Option          | Type                                          | Default                      | Description                                                                                                                   |
+| --------------- | --------------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `toolbar`       | `string \| string[] \| false`                 | see below                    | toolbar controls; `false` hides the toolbar                                                                                   |
+| `toolbarMode`   | `'sliding' \| 'wrap'`                         | `'sliding'`                  | what happens when the toolbar doesn't fit                                                                                     |
+| `mode`          | `'classic' \| 'inline' \| 'distraction-free'` | `'classic'`                  | editor layout ([Modes](/guides/toolbar-and-menus/#modes))                                                                     |
+| `menubar`       | `boolean \| string`                           | `false`                      | `true` for the standard menus, or a list such as `'edit insert format'`                                                       |
+| `textPatterns`  | `boolean`                                     | `true`                       | shortcuts that react to typed characters: Markdown (`# `, `- `, ` ``` `) and typography (`--`, `...`); `false` turns them off |
+| `menu`          | `Record<string, { title, items }>`            | —                            | add or override menus                                                                                                         |
+| `statusbar`     | `boolean`                                     | `true`                       | element path and word count                                                                                                   |
+| `resize`        | `boolean \| 'both'`                           | `false`                      | a resize handle in the status bar: `true` for height, `'both'` for height and width; works with the keyboard too              |
+| `blockFormats`  | `{ label, block }[]`                          | paragraph, H1–H6, code block | items and order of the block list (the `blocks` button)                                                                       |
+| `slashCommands` | `false \| SlashCommand[]`                     | built-in                     | `/` command menu; `false` to disable, an array to add commands                                                                |
+| `language`      | `string`                                      | `'en'`                       | UI language ([Localization](/guides/localization/))                                                                           |
+| `direction`     | `'ltr' \| 'rtl'`                              | by language                  | right-to-left interface and text ([Right-to-left languages](/guides/localization/#right-to-left-languages))                   |
+| `translations`  | `Partial<Messages>`                           | —                            | override individual UI strings                                                                                                |
 
 Default toolbar: see [Toolbar and menus](/guides/toolbar-and-menus/#toolbar).
 

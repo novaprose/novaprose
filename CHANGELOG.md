@@ -8,6 +8,9 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- `textPatterns: false` turns off the shortcuts that react to typed characters (Markdown: "# ",
+  "- ", "```"; typography: "--", "..."), for people who dictate or type those characters as text
+  (WCAG 2.1.4). With `tinymce.init`, `text_patterns: false` does the same.
 - **Fixed (accessibility, WCAG 3.1.2):** with the `language` option, the toolbar, menus, dialogs,
   tooltips, the status bar and side panels carry `lang`, so a screen reader reads the interface in
   its language on a page in another one; the text area keeps the page's language.
