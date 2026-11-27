@@ -127,6 +127,13 @@ export function openDialog(options: DialogOptions): DialogHandle {
     }
   });
 
+  // Safari doesn't focus a button or a radio on a click: focus falls to the page itself (no focusin),
+  // where Escape and Tab no longer reach the dialog. A click inside keeps focus in the dialog.
+  form.tabIndex = -1;
+  form.addEventListener('click', () => {
+    if (!closed && !form.contains(activeElement(form))) form.focus({ preventScroll: true });
+  });
+
   // If focus still leaves (a click outside, programmatic focus), it is returned to the dialog.
   // The real target, inside a shadow root too (for a listener on document it is replaced by the host).
   const stopKeepFocus = listenDocument(form, 'focusin', (_event, target) => {

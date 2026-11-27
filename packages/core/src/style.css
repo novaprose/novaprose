@@ -1461,6 +1461,11 @@ html.nova-fullscreen-lock body {
   animation: nova-pop-in 0.15s ease-out;
 }
 
+/* The dialog itself takes focus only to keep it after a click in Safari: no ring for that. */
+.nova-dialog:focus {
+  outline: none;
+}
+
 .nova-dialog-header {
   display: flex;
   align-items: center;

@@ -116,6 +116,20 @@ test('a dialog: Escape closes it and returns focus to the editor', async ({ page
   await expect(content(page)).toBeFocused();
 });
 
+// A click on something that takes no focus (the title; in Safari a button or a radio too) used to
+// drop focus out of the dialog to the page, and Escape no longer closed it.
+test('a dialog keeps focus after a click inside it: Escape still closes it', async ({ page }) => {
+  await open(page, '<p>text</p>');
+  await page.keyboard.press('ControlOrMeta+k');
+  const dialog = page.getByRole('dialog', { name: 'Insert link' });
+  await dialog.getByRole('heading', { name: 'Insert link' }).click();
+  await expect
+    .poll(() => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]')))
+    .toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+});
+
 test('toolbar accessibility: Alt+F10, arrows, Escape', async ({ page, isMobile }) => {
   test.skip(isMobile, 'keyboard navigation of the toolbar is a desktop scenario');
   await open(page, '<p>text</p>');
