@@ -31,7 +31,8 @@ Both are also added to the **File** menu.
 
 With [page layout](/guides/pages-and-printing/) on, the sheet size and margins go both ways: the
 exported document has the editor's sheet, and an imported document sets the editor's sheet to its
-own.
+own. The page layout's [header and footer](/guides/pages-and-printing/#headers-footers-and-page-numbers)
+go into the exported file as a Word header and footer, with page numbers as Word fields.
 
 ## From code
 
@@ -74,6 +75,7 @@ const { html, page, warnings } = await fromDocx(uploadedBytes);
 | quotes, code blocks, horizontal lines, page breaks                                          | Quote and Code styles, a bottom border line, page breaks           |
 | [suggested edits](/guides/suggested-edits/)                                                 | tracked changes — accept or reject them in Word                    |
 | page layout: sheet and margins                                                              | page setup                                                         |
+| page layout: header, footer, `{page}` and `{pages}`                                         | header and footer with PAGE and NUMPAGES fields                    |
 
 Imported documents bring the same back, plus footnotes (at the end of the document) and links
 made with Word's HYPERLINK field. Tracked changes in an imported document are accepted.

@@ -3,7 +3,13 @@ import type { EditorView } from 'prosemirror-view';
 import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
 import { h } from '../ui/dom';
-import { pageLayout, setPageCount, type PageLayout } from './pagelayout';
+import {
+  fillBand,
+  pageLayout,
+  setPageCount,
+  type PageBandParts,
+  type PageLayout,
+} from './pagelayout';
 import css from './pagelayout-ui.css?raw';
 import { pickLabels } from './shared';
 
@@ -182,10 +188,18 @@ class PageBreaks {
   private render(breaks: PageBreak[] | null, layout: PageLayout): void {
     const dom = this.view.dom;
     const { root } = this.editor;
-    const signature = breaks ? breaks.map((b) => b.mark.toFixed(1)).join(',') : 'none';
+    const signature = breaks
+      ? `${breaks.map((b) => b.mark.toFixed(1)).join(',')}|${JSON.stringify([layout.header, layout.footer, layout.differentFirstPage, layout.margins])}`
+      : 'none';
     this.overlay.style.cssText = `top:${dom.offsetTop}px;left:${dom.offsetLeft}px;width:${dom.offsetWidth}px`;
     if (signature !== this.signature) {
       this.signature = signature;
+      // The last page runs to the end, like a sheet of paper: from its start, the text and the bottom margin.
+      const last = breaks?.[breaks.length - 1]?.at;
+      if (last !== undefined) {
+        const rest = (layout.height - layout.margins.top) * PX_PER_MM;
+        root.style.setProperty('--nova-pages-height', `${last + rest}px`);
+      } else root.style.removeProperty('--nova-pages-height');
       this.overlay.replaceChildren(
         ...(breaks ?? []).map((pageBreak, index) =>
           h(
@@ -194,15 +208,43 @@ class PageBreaks {
             h('span', {}, this.editor.ui.t('pagelayout.page', { page: index + 2 })),
           ),
         ),
+        ...(breaks ? this.bands(layout, breaks.length + 1, dom.offsetHeight) : []),
       );
-      // The last page runs to the end, like a sheet of paper: from its start, the text and the bottom margin.
-      const last = breaks?.[breaks.length - 1]?.at;
-      if (last !== undefined) {
-        const rest = (layout.height - layout.margins.top) * PX_PER_MM;
-        root.style.setProperty('--nova-pages-height', `${last + rest}px`);
-      } else root.style.removeProperty('--nova-pages-height');
     }
     setPageCount(this.editor, breaks ? breaks.length + 1 : null);
+  }
+
+  /**
+   * The header in the top margin of the first page and the footer in the bottom margin of the last one, with
+   * their page numbers: a preview of what prints on every page. The sheet here is one long page, so there is
+   * no margin between pages to draw them in.
+   */
+  private bands(layout: PageLayout, pages: number, sheetHeight: number): HTMLElement[] {
+    const { margins } = layout;
+    const band = (parts: PageBandParts, page: number, top: number, className: string) =>
+      h(
+        'div',
+        {
+          className: `nova-page-band ${className}`,
+          style: `top:${top}px;padding:0 ${margins.right}mm 0 ${margins.left}mm`,
+        },
+        ...(['left', 'center', 'right'] as const).map((side) =>
+          h('span', {}, fillBand(parts[side], page, pages)),
+        ),
+      );
+    const result: HTMLElement[] = [];
+    if (layout.header && !layout.differentFirstPage)
+      result.push(band(layout.header, 1, (margins.top * PX_PER_MM) / 2, 'nova-page-header'));
+    if (layout.footer && !(layout.differentFirstPage && pages === 1))
+      result.push(
+        band(
+          layout.footer,
+          pages,
+          sheetHeight - (margins.bottom * PX_PER_MM) / 2,
+          'nova-page-footer',
+        ),
+      );
+    return result;
   }
 
   destroy(): void {

@@ -1,5 +1,10 @@
 import type { Mark, Node as PMNode } from 'prosemirror-model';
-import { resolvePageLayout, type PageLayout, type PageLayoutOptions } from '../plugins/pagelayout';
+import {
+  resolvePageLayout,
+  type PageBandParts,
+  type PageLayout,
+  type PageLayoutOptions,
+} from '../plugins/pagelayout';
 import { isSafeLinkUrl } from '../url';
 import { escapeXml } from './xml';
 import { zip, type ZipEntry } from './zip';
@@ -744,6 +749,67 @@ class DocxWriter {
     }
   }
 
+  // ----- header and footer -----
+
+  /** The header and footer parts written so far: word/header1.xml, word/footer1.xml. */
+  private readonly bands: { name: string; xml: string; contentType: string }[] = [];
+
+  /**
+   * A header or footer part: one paragraph with the left part, a centre tab, the centre part, a right tab
+   * and the right part, in small grey text as in print. {page} and {pages} become PAGE and NUMPAGES fields,
+   * which Word fills in on every page.
+   */
+  private bandXml(kind: 'hdr' | 'ftr', parts: PageBandParts): string {
+    const { layout } = this;
+    const width = twips(layout.width - layout.margins.left - layout.margins.right);
+    const rPr = '<w:rPr><w:color w:val="595959"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr>';
+    const field = (instr: string) =>
+      `<w:fldSimple w:instr=" ${instr} "><w:r>${rPr}<w:t>1</w:t></w:r></w:fldSimple>`;
+    const runs = (text: string) =>
+      text
+        .split(/(\{pages?\})/)
+        .filter((part) => part !== '')
+        .map((part) =>
+          part === '{page}'
+            ? field('PAGE')
+            : part === '{pages}'
+              ? field('NUMPAGES')
+              : `<w:r>${rPr}<w:t xml:space="preserve">${escapeXml(part)}</w:t></w:r>`,
+        )
+        .join('');
+    const tab = `<w:r>${rPr}<w:tab/></w:r>`;
+    return (
+      `${XML}<w:${kind} xmlns:w="${NS.w}" xmlns:r="${NS.r}"><w:p><w:pPr>` +
+      `<w:tabs><w:tab w:val="center" w:pos="${Math.round(width / 2)}"/><w:tab w:val="right" w:pos="${width}"/></w:tabs>` +
+      `<w:spacing w:before="0" w:after="0"/></w:pPr>` +
+      `${runs(parts.left)}${tab}${runs(parts.center)}${tab}${runs(parts.right)}</w:p></w:${kind}>`
+    );
+  }
+
+  /** The header or footer part and its reference for the section ('' when there is none). */
+  private bandReference(kind: 'header' | 'footer', parts: PageBandParts | null): string {
+    if (!parts) return '';
+    const name = `${kind}1.xml`;
+    const id = this.rel(kind, name);
+    this.bands.push({
+      name: `word/${name}`,
+      xml: this.bandXml(kind === 'header' ? 'hdr' : 'ftr', parts),
+      contentType: `application/vnd.openxmlformats-officedocument.wordprocessingml.${kind}+xml`,
+    });
+    return `<w:${kind}Reference w:type="default" r:id="${id}"/>`;
+  }
+
+  /** The header and footer parts, after document(). */
+  bandFiles(): { entries: ZipEntry[]; overrides: string } {
+    const encode = (text: string) => new TextEncoder().encode(text);
+    return {
+      entries: this.bands.map((band) => ({ name: band.name, data: encode(band.xml) })),
+      overrides: this.bands
+        .map((band) => `<Override PartName="/${band.name}" ContentType="${band.contentType}"/>`)
+        .join(''),
+    };
+  }
+
   // ----- parts of the file -----
 
   document(doc: PMNode): string {
@@ -752,9 +818,15 @@ class DocxWriter {
     const { layout } = this;
     const m = layout.margins;
     const landscape = layout.width > layout.height ? ' w:orient="landscape"' : '';
+    const references =
+      this.bandReference('header', layout.header) + this.bandReference('footer', layout.footer);
+    // The header and footer sit in the middle of their margins, as in print and on screen.
+    const distance = (margin: number) => twips(Math.min(12.5, Math.max(3, margin / 2)));
+    // "Different first page": the first page gets no header and footer (no first-page parts are written).
+    const titlePage = references && layout.differentFirstPage ? '<w:titlePg/>' : '';
     const sectPr =
-      `<w:sectPr><w:pgSz w:w="${twips(layout.width)}" w:h="${twips(layout.height)}"${landscape}/>` +
-      `<w:pgMar w:top="${twips(m.top)}" w:right="${twips(m.right)}" w:bottom="${twips(m.bottom)}" w:left="${twips(m.left)}" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr>`;
+      `<w:sectPr>${references}<w:pgSz w:w="${twips(layout.width)}" w:h="${twips(layout.height)}"${landscape}/>` +
+      `<w:pgMar w:top="${twips(m.top)}" w:right="${twips(m.right)}" w:bottom="${twips(m.bottom)}" w:left="${twips(m.left)}" w:header="${distance(m.top)}" w:footer="${distance(m.bottom)}" w:gutter="0"/>${titlePage}</w:sectPr>`;
     return (
       XML +
       `<w:document xmlns:w="${NS.w}" xmlns:r="${NS.r}" xmlns:wp="${NS.wp}" xmlns:a="${NS.a}" xmlns:pic="${NS.pic}">` +
@@ -834,6 +906,7 @@ export async function toDocx(doc: PMNode, options: DocxExportOptions = {}): Prom
   );
   const writer = new DocxWriter(layout, images);
   const documentXml = writer.document(doc);
+  const bands = writer.bandFiles();
   const encode = (text: string) => new TextEncoder().encode(text);
   const title = options.title ? `<dc:title>${escapeXml(options.title)}</dc:title>` : '';
   const files: ZipEntry[] = [
@@ -850,6 +923,7 @@ export async function toDocx(doc: PMNode, options: DocxExportOptions = {}): Prom
           `<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>` +
           `<Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>` +
           `<Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>` +
+          bands.overrides +
           `</Types>`,
       ),
     },
@@ -884,6 +958,7 @@ export async function toDocx(doc: PMNode, options: DocxExportOptions = {}): Prom
           `<Application>NovaProse</Application></Properties>`,
       ),
     },
+    ...bands.entries,
     ...writer.mediaFiles(),
   ];
   return zip(files);

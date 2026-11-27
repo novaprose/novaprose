@@ -28,6 +28,7 @@ registerPlugin('autosave', () => import('./autosave'));
 registerPlugin('autoresize', () => import('./autoresize'));
 registerPlugin('visualblocks', () => import('./visualblocks'));
 registerPlugin('exportword', () => import('./exportword'));
+registerPlugin('exportpdf', () => import('./exportpdf'));
 registerPlugin('importword', () => import('./importword'));
 registerPlugin('ai', () => import('./ai'));
 

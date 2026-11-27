@@ -22,6 +22,9 @@ export interface PageMargins {
   left: number;
 }
 
+/** Text in a page margin: one string (centered), or parts at the left, the center and the right. */
+export type PageBand = string | { left?: string; center?: string; right?: string };
+
 export interface PageLayoutOptions {
   /** Sheet size: 'A4' (default), 'A3', 'A5', 'A6', 'Letter', 'Legal' or { width, height } in mm. */
   size?: PageSizeName | { width: number; height: number };
@@ -29,15 +32,35 @@ export interface PageLayoutOptions {
   orientation?: 'portrait' | 'landscape';
   /** Margins in mm: one number for all sides, or per side. Default 20. */
   margins?: number | Partial<PageMargins>;
+  /**
+   * Text in the top margin of every page: one string (centered) or { left, center, right }.
+   * `{page}` and `{pages}` become the page number and the number of pages: 'Page {page} of {pages}'.
+   */
+  header?: PageBand;
+  /** Text in the bottom margin of every page, like `header`. */
+  footer?: PageBand;
+  /** The first page without header and footer (a title page), as "Different first page" in Word. */
+  differentFirstPage?: boolean;
 }
 
-/** The sheet in mm (orientation already applied) and the margins. */
+/** A header or footer: its three parts, '' where there is nothing. */
+export interface PageBandParts {
+  left: string;
+  center: string;
+  right: string;
+}
+
+/** The sheet in mm (orientation already applied), the margins and the header and footer. */
 export interface PageLayout {
   size: PageSizeName | 'custom';
   orientation: 'portrait' | 'landscape';
   width: number;
   height: number;
   margins: PageMargins;
+  /** null when there is none. */
+  header: PageBandParts | null;
+  footer: PageBandParts | null;
+  differentFirstPage: boolean;
 }
 
 /** Sheet sizes in mm (portrait). */
@@ -55,6 +78,31 @@ const DEFAULT_MARGIN = 20;
 function millimetres(value: unknown, min: number, max: number, fallback: number): number {
   const n = typeof value === 'number' ? value : typeof value === 'string' ? Number(value) : NaN;
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n * 10) / 10)) : fallback;
+}
+
+/** One line of plain text, at most 200 characters; anything but a string gives ''. */
+function bandText(value: unknown): string {
+  return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim().slice(0, 200) : '';
+}
+
+/** A header or footer setting → its parts; null when it has no text. */
+export function resolveBand(value: unknown): PageBandParts | null {
+  let parts: PageBandParts | null = null;
+  if (typeof value === 'string') parts = { left: '', center: bandText(value), right: '' };
+  else if (typeof value === 'object' && value !== null) {
+    const given = value as Record<string, unknown>;
+    parts = {
+      left: bandText(given.left),
+      center: bandText(given.center),
+      right: bandText(given.right),
+    };
+  }
+  return parts && (parts.left || parts.center || parts.right) ? parts : null;
+}
+
+/** `{page}` and `{pages}` in a header or footer replaced with numbers (for the screen and for Word previews). */
+export function fillBand(text: string, page: number, pages: number): string {
+  return text.replace(/\{page\}/g, String(page)).replace(/\{pages\}/g, String(pages));
 }
 
 /** Settings → the sheet. Garbage from the config gets the defaults; a margin is at most a third of the sheet. */
@@ -88,6 +136,9 @@ export function resolvePageLayout(options: PageLayoutOptions = {}): PageLayout {
     width,
     height,
     margins: { top: side('top'), right: side('right'), bottom: side('bottom'), left: side('left') },
+    header: resolveBand(options.header),
+    footer: resolveBand(options.footer),
+    differentFirstPage: options.differentFirstPage === true,
   };
 }
 

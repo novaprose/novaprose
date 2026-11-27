@@ -32,6 +32,9 @@ describe('the sheet', () => {
       width: 210,
       height: 297,
       margins: { top: 20, right: 20, bottom: 20, left: 20 },
+      header: null,
+      footer: null,
+      differentFirstPage: false,
     });
     const a5 = resolvePageLayout({ size: 'A5', orientation: 'landscape', margins: { top: 10 } });
     expect([a5.width, a5.height, a5.orientation]).toEqual([210, 148, 'landscape']);

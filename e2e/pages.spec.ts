@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -38,6 +39,13 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/pages.html');
   await expect(page.locator('.nova-pages .ProseMirror')).toBeVisible();
 });
+
+async function clickControl(page: Page, name: string) {
+  const control = page.locator(`.nova-toolbar [data-control="${name}"]`).first();
+  if (await control.isVisible()) return control.click();
+  await page.locator('.nova-tb-more').click();
+  await page.locator(`.nova-tb-overflow-popover [data-control="${name}"]`).click();
+}
 
 test.describe('on a computer', () => {
   test.skip(({ isMobile }) => isMobile, 'on a phone the sheet is a regular input area');
@@ -106,6 +114,73 @@ test.describe('on a computer', () => {
     const pdf = await printed.pdf({ preferCSSPageSize: true });
     const pages = pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)?.length;
     expect(pages).toBe(expected);
+  });
+
+  test('the header and footer on the sheet, with the first and the last page number', async ({
+    page,
+  }) => {
+    await expect.poll(async () => (await state(page)).pages).toBeGreaterThanOrEqual(3);
+    const pages = (await state(page)).pages!;
+    const bands = await page.evaluate(() => {
+      const { editor } = window.pagesDemo;
+      const sheet = editor.view.dom.getBoundingClientRect();
+      const band = (selector: string) => {
+        const el = editor.root.querySelector<HTMLElement>(selector);
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        return {
+          parts: [...el.children].map((part) => part.textContent),
+          middle: (rect.top + rect.bottom) / 2 - sheet.top,
+          sheetHeight: sheet.height,
+        };
+      };
+      return { header: band('.nova-page-header'), footer: band('.nova-page-footer') };
+    });
+    expect(bands.header?.parts).toEqual(['NovaProse', '', 'Pages playground']);
+    expect(bands.footer?.parts).toEqual(['', `Page ${pages} of ${pages}`, '']);
+    // In the middle of the 15 mm margins, where printing puts them.
+    expect(Math.abs(bands.header!.middle - 7.5 * PX_PER_MM)).toBeLessThan(3);
+    expect(
+      Math.abs(bands.footer!.sheetHeight - bands.footer!.middle - 7.5 * PX_PER_MM),
+    ).toBeLessThan(3);
+  });
+
+  test('Export to PDF: the print document goes to the server, the PDF downloads with the same pages', async ({
+    page,
+    browserName,
+    context,
+  }) => {
+    test.skip(browserName !== 'chromium', 'only Chromium can make a PDF');
+    await expect.poll(async () => (await state(page)).pages).toBeGreaterThanOrEqual(3);
+    const expected = (await state(page)).pages;
+    // The "server": headless Chromium renders the print document, as a real PDF server does.
+    let html = '';
+    await page.exposeFunction('renderPdf', async (documentHtml: string) => {
+      html = documentHtml;
+      const printed = await context.newPage();
+      await printed.setContent(documentHtml);
+      await printed.evaluate(() => document.fonts.ready);
+      const pdf = await printed.pdf({ preferCSSPageSize: true, printBackground: true });
+      await printed.close();
+      return pdf.toString('base64');
+    });
+    await page.evaluate(() => {
+      const server = window as unknown as { renderPdf(html: string): Promise<string> };
+      window.pagesDemo.pdf = async (request) =>
+        Uint8Array.from(atob(await server.renderPdf(request.html)), (ch) => ch.charCodeAt(0));
+    });
+    const download = page.waitForEvent('download');
+    await clickControl(page, 'exportpdf');
+    const file = await download;
+    expect(file.suggestedFilename()).toBe('pages.pdf');
+    const bytes = await readFile((await file.path())!);
+    expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-');
+    expect(bytes.toString('latin1').match(/\/Type\s*\/Page[^s]/g)?.length).toBe(expected);
+    expect(html).toContain('size: 148mm 210mm');
+    expect(html).toContain('@top-left { content: "NovaProse";');
+    expect(html).toContain(
+      '@bottom-center { content: "Page " counter(page) " of " counter(pages);',
+    );
   });
 });
 

@@ -65,6 +65,16 @@ All packages in this repository are versioned together. The format follows
   a page break. `pageLayout(editor)` changes the sheet and reports the page count. The sheet stays
   white in the dark theme. Printing uses the same sheet, so pages break where the editor shows
   (checked against a PDF in Chromium).
+- Headers, footers and page numbers in page layout: `header` and `footer` (a string, or
+  `{ left, center, right }`) with `{page}` and `{pages}`, and `differentFirstPage` for a title page.
+  They print on every page in Chrome and Edge (CSS page margin boxes), appear in PDF files, and go into
+  Word files as a Word header and footer with PAGE and NUMPAGES fields. On screen the header shows in
+  the top margin of the first page and the footer in the bottom margin of the last one.
+- Export to PDF (`plugins: ['exportpdf']`, button and File menu item `exportpdf`, as in TinyMCE): your
+  server turns the editor's print document — text, styles, sheet, header and footer — into a PDF with
+  a headless Chrome (`pluginOptions.exportpdf.request`), and the file downloads. Without a server the
+  button opens the print dialog with a hint to choose “Save as PDF”. A server example with the
+  security settings it needs is in [Pages and printing](https://novaprose.com/guides/pages-and-printing/).
 - **Changed:** printing prints what the editor shows — formulas, highlighted code and node views
   included — with the page's styles and `contentStyle` / `contentCss`; it used to print simplified
   HTML with its own styles. Without page layout the margins are 20 mm, as before.

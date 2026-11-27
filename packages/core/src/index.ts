@@ -170,12 +170,16 @@ export { getComments, type CommentsOptions, type CommentsController } from './pl
 export {
   pageLayout,
   PAGE_SIZES,
+  type PageBand,
+  type PageBandParts,
   type PageLayout,
   type PageLayoutController,
   type PageLayoutOptions,
   type PageMargins,
   type PageSizeName,
 } from './plugins/pagelayout';
+export type { ExportPdfOptions, PdfRequest } from './plugins/exportpdf';
+export type { ExportWordOptions } from './plugins/exportword';
 export { getMentions, type MentionUser, type MentionsOptions } from './plugins/mentions';
 export type { MergeTag, MergeTagGroup, MergeTagsOptions } from './plugins/mergetags';
 export type { Revision, RevisionHistoryOptions } from './plugins/revisionhistory';

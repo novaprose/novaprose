@@ -11,6 +11,37 @@
   border-top: 1px dashed #8c959f;
 }
 
+/* The header and footer preview: the same small grey text as in print, in the page margins. */
+.nova-page-band {
+  position: absolute;
+  inset-inline: 0;
+  display: flex;
+  gap: 12px;
+  direction: ltr;
+  transform: translateY(-50%);
+  color: #59636e;
+  font:
+    11px/1.4 system-ui,
+    sans-serif;
+  white-space: nowrap;
+}
+
+.nova-page-band > span {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  unicode-bidi: plaintext;
+}
+
+.nova-page-band > span:nth-child(2) {
+  text-align: center;
+}
+
+.nova-page-band > span:last-child {
+  text-align: right;
+}
+
 .nova-page-break > span {
   position: absolute;
   inset-inline-end: 6px;

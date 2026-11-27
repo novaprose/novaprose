@@ -308,6 +308,10 @@ const de: LanguagePack = {
   'pagelayout.page': 'Seite {page}',
   'exportword.export': 'Nach Word exportieren',
   'exportword.failed': 'Die Word-Datei konnte nicht erstellt werden',
+  'exportpdf.export': 'Als PDF exportieren',
+  'exportpdf.saveAsPdf': 'Wählen Sie im Druckdialog „Als PDF speichern“.',
+  'exportpdf.working': 'PDF wird erstellt…',
+  'exportpdf.failed': 'Die PDF-Datei konnte nicht erstellt werden',
   'importword.import': 'Aus Word importieren',
   'importword.failed':
     'Diese Datei konnte nicht geöffnet werden. Wählen Sie ein Word-Dokument (.docx).',

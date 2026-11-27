@@ -1,6 +1,7 @@
 import type { AccordionOptions } from './plugins/accordion';
 import type { TableOfContentsOptions } from './plugins/tableofcontents';
 import type { PageLayoutOptions } from './plugins/pagelayout';
+import type { ExportPdfOptions } from './plugins/exportpdf';
 import type { ExportWordOptions } from './plugins/exportword';
 import type { ImportWordOptions } from './plugins/importword';
 import type { AiOptions } from './plugins/ai';
@@ -123,6 +124,7 @@ export interface PluginOptions {
   tableofcontents?: TableOfContentsOptions;
   pagelayout?: PageLayoutOptions;
   exportword?: ExportWordOptions;
+  exportpdf?: ExportPdfOptions;
   importword?: ImportWordOptions;
   ai?: AiOptions;
   [plugin: string]: unknown;

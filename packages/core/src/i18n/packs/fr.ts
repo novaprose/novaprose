@@ -309,6 +309,10 @@ const fr: LanguagePack = {
   'pagelayout.page': 'Page {page}',
   'exportword.export': 'Exporter vers Word',
   'exportword.failed': 'Impossible de créer le fichier Word',
+  'exportpdf.export': 'Exporter en PDF',
+  'exportpdf.saveAsPdf': 'Dans la fenêtre d’impression, choisissez « Enregistrer au format PDF ».',
+  'exportpdf.working': 'Création du PDF…',
+  'exportpdf.failed': 'Impossible de créer le fichier PDF',
   'importword.import': 'Importer depuis Word',
   'importword.failed': 'Impossible d’ouvrir ce fichier. Choisissez un document Word (.docx).',
   'importword.partial':

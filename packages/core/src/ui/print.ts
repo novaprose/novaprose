@@ -1,5 +1,5 @@
 import type { Editor } from '../editor';
-import { pageLayout, type PageLayout } from '../plugins/pagelayout';
+import { pageLayout, type PageBandParts, type PageLayout } from '../plugins/pagelayout';
 import { h } from './dom';
 
 /**
@@ -41,13 +41,55 @@ function styleSources(editor: Editor): StyleSource[] {
   return [...sheets(document, !!shadow), ...(shadow ? sheets(shadow, false) : [])];
 }
 
+/**
+ * Text as a CSS string. Quotes, backslashes and angle brackets become escapes, so the text can't end the
+ * string or the <style> it sits in (the print document also goes to a server as HTML for PDF files).
+ */
+function cssString(text: string): string {
+  const escaped = text
+    .replace(/[\\"<>]/g, (ch) => `\\${ch.charCodeAt(0).toString(16)} `)
+    .replace(/[\n\r\f]/g, ' ');
+  return `"${escaped}"`;
+}
+
+/** A header or footer part → the CSS `content` value: text in quotes, {page} and {pages} as page counters. */
+export function marginBoxContent(template: string): string {
+  const parts = template.split(/(\{pages?\})/).filter((part) => part !== '');
+  const tokens = parts.map((part) =>
+    part === '{page}' ? 'counter(page)' : part === '{pages}' ? 'counter(pages)' : cssString(part),
+  );
+  return tokens.join(' ') || '""';
+}
+
+const SIDES = ['left', 'center', 'right'] as const;
+/** Header and footer text: small, grey, in the system font, as in the editor's page view. */
+const BAND_STYLE = "font: 9pt/1.3 system-ui, -apple-system, 'Segoe UI', sans-serif; color: #444;";
+
+/** CSS page margin boxes (@top-left … @bottom-right) for the header and footer. */
+function marginBoxes(band: PageBandParts | null, edge: 'top' | 'bottom'): string {
+  if (!band) return '';
+  return SIDES.filter((side) => band[side])
+    .map((side) => `@${edge}-${side} { content: ${marginBoxContent(band[side])}; ${BAND_STYLE} }`)
+    .join(' ');
+}
+
 /** Printing on top of the page styles: only the content, the sheet from page mode, no editor frame. */
 export function printCss(layout: PageLayout | undefined): string {
   const page = layout
     ? `size: ${layout.width}mm ${layout.height}mm; margin: ${layout.margins.top}mm ${layout.margins.right}mm ${layout.margins.bottom}mm ${layout.margins.left}mm;`
     : 'margin: 20mm;';
+  // Headers and footers: CSS margin boxes, printed by Chromium (Chrome, Edge) and by headless Chrome into PDF files.
+  const bands = layout
+    ? `${marginBoxes(layout.header, 'top')} ${marginBoxes(layout.footer, 'bottom')}`.trim()
+    : '';
+  const titlePage =
+    bands && layout?.differentFirstPage
+      ? `@page :first { ${(['top', 'bottom'] as const)
+          .flatMap((edge) => SIDES.map((side) => `@${edge}-${side} { content: none; }`))
+          .join(' ')} }`
+      : '';
   return `
-@page { ${page} }
+@page { ${page}${bands ? ` ${bands}` : ''} }${titlePage ? `\n${titlePage}` : ''}
 html, body { margin: 0 !important; padding: 0 !important; background: #fff !important;
   height: auto !important; overflow: visible !important; }
 body > .nova-print { display: block !important; }
@@ -128,6 +170,22 @@ export function buildPrintDocument(editor: Editor, doc: Document): void {
   content.append(contentClone(editor.view.dom));
   root.append(content);
   doc.body.append(root);
+}
+
+/**
+ * The print document as one HTML string, for a server that makes a PDF from it (headless Chrome:
+ * `page.setContent(html)`, `page.pdf({ preferCSSPageSize: true })`). Addresses of images and style sheets
+ * resolve against this page (`<base href>`); the sheet, margins, header and footer are in its @page rule.
+ */
+export function printDocumentHtml(editor: Editor, title = ''): string {
+  const doc = document.implementation.createHTMLDocument(title);
+  const charset = doc.createElement('meta');
+  charset.setAttribute('charset', 'utf-8');
+  const base = doc.createElement('base');
+  base.href = document.baseURI;
+  doc.head.prepend(charset, base);
+  buildPrintDocument(editor, doc);
+  return `<!doctype html>\n${doc.documentElement.outerHTML}`;
 }
 
 /** The print document's images, style sheets and fonts have loaded (but no longer than 2 s). */

@@ -1,5 +1,11 @@
 import '@novaprose/core/style.css';
-import { createEditor, pageLayout, printContent, type PageSizeName } from '@novaprose/core';
+import {
+  createEditor,
+  pageLayout,
+  printContent,
+  type PageSizeName,
+  type PdfRequest,
+} from '@novaprose/core';
 import '../playground.css';
 
 /**
@@ -27,11 +33,27 @@ const content = [
   ...Array.from({ length: 3 }, (_, i) => paragraph(i + 11)),
 ].join('');
 
+/**
+ * Export to PDF needs a server with headless Chrome (novaprose.com/guides/pages-and-printing/). The playground
+ * has none: e2e replaces pagesDemo.pdf with a real Chromium that renders the print document.
+ */
+const noPdfServer = async (): Promise<Uint8Array> => {
+  throw new Error('The playground has no PDF server');
+};
+
 const editor = createEditor({
   element: document.querySelector<HTMLElement>('#editor')!,
   content,
-  plugins: ['pagelayout', 'pagebreak', 'exportword', 'importword'],
-  pluginOptions: { pagelayout: { size: 'A5', margins: 15 } },
+  plugins: ['pagelayout', 'pagebreak', 'exportword', 'importword', 'exportpdf'],
+  pluginOptions: {
+    pagelayout: {
+      size: 'A5',
+      margins: 15,
+      header: { left: 'NovaProse', right: 'Pages playground' },
+      footer: 'Page {page} of {pages}',
+    },
+    exportpdf: { filename: 'pages', request: (request) => window.pagesDemo.pdf(request) },
+  },
   menubar: true,
 });
 const controller = pageLayout(editor)!;
@@ -56,7 +78,11 @@ field('#print').addEventListener('click', () => printContent(editor));
 
 declare global {
   interface Window {
-    pagesDemo: { editor: typeof editor; controller: typeof controller };
+    pagesDemo: {
+      editor: typeof editor;
+      controller: typeof controller;
+      pdf: (request: PdfRequest) => Promise<Uint8Array>;
+    };
   }
 }
-window.pagesDemo = { editor, controller };
+window.pagesDemo = { editor, controller, pdf: noPdfServer };
