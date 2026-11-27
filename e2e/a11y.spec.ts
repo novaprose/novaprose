@@ -279,6 +279,16 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'autocorrect menu');
     });
 
+    test('typography: the menu of the button with the languages', async ({ page }) => {
+      await open(page, theme, '&typography=1');
+      await page.evaluate(
+        () => (window as unknown as { editor: { ready: Promise<void> } }).editor.ready,
+      );
+      await control(page, 'typography-options');
+      await expect(page.getByRole('menuitemradio', { name: 'German' })).toBeVisible();
+      await audit(page, 'typography menu');
+    });
+
     test('the suggestions panel with cards by two authors', async ({ page }) => {
       await open(page, theme, '&comments=1');
       await page.evaluate(async () => {

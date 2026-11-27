@@ -181,6 +181,8 @@ export {
 export type { AiAction, AiMessage, AiOptions, AiRequest, AiShortcut } from './plugins/ai-core';
 export type { AutocorrectCorrection, AutocorrectOptions } from './plugins/autocorrect';
 export type { CorrectionKind } from './plugins/autocorrect-rules';
+export type { TypographyOptions } from './plugins/typography';
+export type { TypographyRule } from './plugins/typography-rules';
 export type { ExportPdfOptions, PdfRequest } from './plugins/exportpdf';
 export type { ExportWordOptions } from './plugins/exportword';
 export { getMentions, type MentionUser, type MentionsOptions } from './plugins/mentions';

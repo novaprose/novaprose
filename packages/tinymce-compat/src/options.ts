@@ -185,6 +185,11 @@ const IGNORED = new Set([
   'autocorrect_autocorrect',
   'autocorrect_capitalize',
   'autocorrect_service_url',
+  // typography: the language, the languages of the menu, the rules (Typograf rule ids), tags left alone.
+  'typography_default_lang',
+  'typography_langs',
+  'typography_rules',
+  'typography_ignore',
   // text_patterns: false turns the patterns off; custom pattern lists aren't supported.
   'text_patterns',
   'template_replace_values',
@@ -202,6 +207,78 @@ const list = (value: unknown): string[] =>
 /** The TinyMCE names of the listed plugins that work here: built into the core, or loaded from the catalog. */
 export function activePlugins(config: TinyConfig, has: (name: string) => boolean): string[] {
   return list(config.plugins).filter((name) => BUILT_IN.has(name) || has(RENAMED[name] ?? name));
+}
+
+/** Typograf rule ids (as typography_rules names them) → the typography plugin's rules. */
+function typographyRule(id: string): string | null {
+  if (/\/dash\//.test(id)) return 'dashes';
+  if (/^common\/punctuation\/(quote|apostrophe)$/.test(id)) return 'quotes';
+  if (id === 'common/punctuation/hellip') return 'ellipsis';
+  if (id === 'common/punctuation/delDoublePunctuation' || id.startsWith('common/space/'))
+    return 'spaces';
+  if (id === 'common/symbols/arrow') return 'arrows';
+  if (id.startsWith('common/symbols/')) return 'symbols';
+  if (id === 'common/number/fraction') return 'fractions';
+  if (id.startsWith('common/number/')) return 'math';
+  if (id.startsWith('common/nbsp/')) return 'nbsp';
+  return null;
+}
+
+/** HTML tags of typography_ignore → mark and node names left alone. */
+const TYPOGRAPHY_TAGS: Record<string, string[]> = {
+  code: ['code', 'code_block'],
+  pre: ['code_block'],
+  a: ['link'],
+  strong: ['bold'],
+  b: ['bold'],
+  em: ['italic'],
+  i: ['italic'],
+  blockquote: ['blockquote'],
+};
+
+/** The typography plugin's options from typography_*. */
+function typographyOptions(config: TinyConfig): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  const lang = config.typography_default_lang;
+  const first = Array.isArray(lang) ? lang[0] : lang;
+  if (typeof first === 'string' && first) out.language = first.replace(/_/g, '-');
+  const langs = config.typography_langs;
+  const codes = Array.isArray(langs)
+    ? langs
+    : langs && typeof langs === 'object'
+      ? Object.keys(langs)
+      : [];
+  const languages = codes
+    .filter((c): c is string => typeof c === 'string')
+    .map((c) => c.replace(/_/g, '-'));
+  if (languages.length) out.languages = languages;
+  if (Array.isArray(config.typography_rules)) {
+    const on = new Set(
+      config.typography_rules.map((id) => (typeof id === 'string' ? typographyRule(id) : null)),
+    );
+    out.rules = Object.fromEntries(
+      [
+        'quotes',
+        'dashes',
+        'ellipsis',
+        'symbols',
+        'arrows',
+        'math',
+        'fractions',
+        'spaces',
+        'nbsp',
+      ].map((rule) => [rule, on.has(rule)]),
+    );
+  }
+  if (Array.isArray(config.typography_ignore)) {
+    const ignore = config.typography_ignore.flatMap((tag) =>
+      typeof tag === 'string'
+        ? (TYPOGRAPHY_TAGS[tag.toLowerCase().replace(/\[.*$/, '')] ?? [])
+        : [],
+    );
+    if (ignore.length) out.ignore = [...new Set(ignore)];
+  }
+  return out;
 }
 
 /** «Arial=arial,helvetica,sans-serif; Courier New=courier new» → [{ label, value }]. */
@@ -706,6 +783,8 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.autocorrect_capitalize === 'boolean')
     autocorrect.capitalize = config.autocorrect_capitalize;
   if (Object.keys(autocorrect).length) pluginOptions.autocorrect = autocorrect;
+  const typography = typographyOptions(config);
+  if (Object.keys(typography).length) pluginOptions.typography = typography;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };

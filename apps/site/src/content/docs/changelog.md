@@ -13,6 +13,16 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- `typography` plugin: the **Enhance typography** button gives the selection (or the whole
+  text) the typography of its language — typographic quotes as the language writes them (“ ”,
+  „ “, « », ‘ ’ nested), apostrophes, dashes, an ellipsis, ©, ®, ™, arrows, ≤ ≥ ≠ ±, ½ ¼ ¾, ×,
+  no stray spaces, non-breaking spaces (numbers and units, §, Slavic short words, French
+  punctuation). Conventions of 24 languages are built in; the button's arrow picks the language,
+  applies it and remembers it. It changes text only (formatting stays), leaves code, addresses and
+  text suggested for deletion alone, and is one undo step; in suggesting mode its changes are
+  suggestions. `rules` turns rules off, `ignore` leaves formatting alone. With `tinymce.init`,
+  `typography_default_lang`, `typography_langs`, `typography_rules` (Typograf rule ids),
+  `typography_ignore` and `mceTypography` work. The plugin loads lazily.
 - `textPatterns: false` turns off the shortcuts that react to typed characters (Markdown: "# ",
   "- ", "```"; typography: "--", "..."), for people who dictate or type those characters as text
   (WCAG 2.1.4). With `tinymce.init`, `text_patterns: false` does the same.

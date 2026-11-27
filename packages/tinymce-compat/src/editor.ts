@@ -121,6 +121,7 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mceinsertfootnote: 'footnotes',
   mceupdatefootnotes: 'footnotesupdate',
   mcespellcheckdialog: 'spellcheckdialog',
+  mcetypography: 'typography',
 };
 
 /**

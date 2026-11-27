@@ -78,6 +78,7 @@ export default defineConfig({
             { slug: 'guides/ai-assistant' },
             { slug: 'guides/spell-check' },
             { slug: 'guides/autocorrect' },
+            { slug: 'guides/typography' },
             { slug: 'guides/accessibility-checker' },
             { slug: 'guides/email' },
             { slug: 'guides/custom-buttons-and-plugins' },

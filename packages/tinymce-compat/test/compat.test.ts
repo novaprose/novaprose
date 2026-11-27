@@ -796,6 +796,24 @@ describe('tinymce.init', () => {
     expect(Object.keys(editor!.plugins).sort()).toEqual(['inlinecss', 'lists']);
   });
 
+  it('typography: the options and mceTypography', async () => {
+    page('<textarea id="t"><p>"Hallo" -- <code>"x"</code> ...</p></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'typography',
+      typography_default_lang: ['de'],
+      typography_langs: ['de', 'en-US'],
+      typography_rules: ['common/punctuation/quote', 'en-US/dash/main'],
+      typography_ignore: ['code'],
+    });
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('typography');
+    editor!.execCommand('mceTypography');
+    // German quotes and dash; the ellipsis rule wasn't listed; code is left alone.
+    expect(editor!.getContent()).toBe('<p>„Hallo“ – <code>"x"</code> ...</p>');
+    localStorage.removeItem('novaprose-typography');
+  });
+
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
