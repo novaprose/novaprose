@@ -197,6 +197,8 @@ All packages in this repository are versioned together. The format follows
 - The CDN builds include `novaprose.licenses.txt` / `tinymce.licenses.txt` with the license of
   every bundled package (ProseMirror, highlight.js…), generated from the build itself, and a banner
   pointing to it.
+- CDN builds: code that several lazy parts need (the Word export helpers, the comparison of
+  versions) ships once, as a part of its own that they share, instead of a copy inside each part.
 
 - Checklists (`plugins: ['checklist']`, button `checklist`): tick an item with a click or Ctrl/Cmd+Enter,
   type `[ ]` or `[x]` at the start of a line, Enter starts a new unticked item; nesting, indent and

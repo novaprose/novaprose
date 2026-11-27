@@ -119,6 +119,9 @@ const mainModules = new Set(Object.keys(first.metafile.inputs));
 
 // ---------- 2. parts: shared modules come from the main file's registry ----------
 const shared = new Set();
+// Modules that several parts import and the main file does not: each becomes a part of its own, and the
+// parts import it by address (a static import between ES modules). One copy of the code, one instance.
+const ownChunk = new Set();
 const fromRegistry = {
   name: 'nova-shared',
   setup(b) {
@@ -134,6 +137,9 @@ const fromRegistry = {
       });
       if (r.errors.length || r.external) return undefined;
       const key = keyOf(r.path);
+      if (ownChunk.has(key)) {
+        return { path: `${PLACEHOLDER}${lazyId(r.path)}#${PAD}`, external: true };
+      }
       if (!mainModules.has(key)) return { path: r.path };
       shared.add(key);
       return { path: key, namespace: 'nova-shared' };
@@ -150,31 +156,43 @@ for (var k in m) (function (k) { Object.defineProperty(exports, k, { enumerable:
 
 const chunks = new Map(); // id → { text, map, deps }
 const chunkModules = new Map(); // module key → [ids]
-while (queue.length) {
-  const abs = queue.shift();
-  const id = lazy.get(abs);
-  const result = await build({
-    ...common,
-    entryPoints: { [id]: abs },
-    outdir: path.join(outDir, chunkDir),
-    format: 'esm',
-    plugins: [rawCss, splitDynamic, fromRegistry],
-  });
-  const text = js(result).text;
-  const deps = [...text.matchAll(PLACEHOLDER_RE)].map((m) => m[2]);
-  chunks.set(id, { text, map: map(result).text, deps });
-  for (const key of Object.keys(result.metafile.inputs)) {
-    if (key.startsWith('nova-shared:')) continue;
-    chunkModules.set(key, [...(chunkModules.get(key) ?? []), id]);
+async function buildParts() {
+  chunks.clear();
+  chunkModules.clear();
+  queue.length = 0;
+  queue.push(...lazy.keys()); // parts found so far; new ones (shared modules) join while building
+  while (queue.length) {
+    const abs = queue.shift();
+    const id = lazy.get(abs);
+    const result = await build({
+      ...common,
+      entryPoints: { [id]: abs },
+      outdir: path.join(outDir, chunkDir),
+      format: 'esm',
+      plugins: [rawCss, splitDynamic, fromRegistry],
+    });
+    const text = js(result).text;
+    const deps = [...text.matchAll(PLACEHOLDER_RE)].map((m) => m[2]);
+    chunks.set(id, { text, map: map(result).text, deps });
+    for (const key of Object.keys(result.metafile.inputs)) {
+      if (key.startsWith('nova-shared:')) continue;
+      chunkModules.set(key, [...(chunkModules.get(key) ?? []), id]);
+    }
   }
 }
-
-// A module that ended up in several parts (and not in the main file) gets its own instance in each.
-// For modules with shared state that is a bug: report it so the decision is deliberate.
-const duplicated = [...chunkModules].filter(([, ids]) => ids.length > 1);
-if (duplicated.length) {
+await buildParts();
+// A module copied into several parts would get its own instance in each (a bug for shared state) and
+// ship several times: make it a part of its own and build again, until no module is copied.
+for (;;) {
+  const copied = [...chunkModules].filter(([key, ids]) => ids.length > 1 && !ownChunk.has(key));
+  if (!copied.length) break;
+  for (const [key] of copied) ownChunk.add(key);
+  await buildParts();
+}
+const stillCopied = [...chunkModules].filter(([, ids]) => ids.length > 1);
+if (stillCopied.length) {
   console.warn(`[build-cdn] ${bundle}: modules copied into several chunks:`);
-  for (const [key, ids] of duplicated) console.warn(`  ${key} → ${ids.join(', ')}`);
+  for (const [key, ids] of stillCopied) console.warn(`  ${key} → ${ids.join(', ')}`);
 }
 
 // ---------- 3. part names by hash (first the ones others depend on) ----------
@@ -280,6 +298,7 @@ writeFileSync(
 const kb = (s) => (Buffer.byteLength(s) / 1024).toFixed(1);
 console.log(
   `[build-cdn] ${path.basename(outFile)}: ${kb(mainText)} KB + ${chunks.size} chunks in ${chunkDir}/ ` +
-    `(${kb([...finalText.values()].join(''))} KB), ${shared.size} shared modules, ` +
+    `(${kb([...finalText.values()].join(''))} KB; ${ownChunk.size} imported by other chunks), ` +
+    `${shared.size} shared modules, ` +
     `${packages.length} third-party packages in ${licensesFile}`,
 );
