@@ -1,5 +1,9 @@
 import { createEditor, registerLanguage, type Editor } from '@novaprose/core';
 import type { AiRequest } from '../../../packages/core/src/plugins/ai';
+import type {
+  SpellCheckMatch,
+  SpellCheckRequest,
+} from '../../../packages/core/src/plugins/spellchecker';
 import '@novaprose/core/style.css';
 import './playground.css';
 import ru from '@novaprose/core/i18n/ru';
@@ -63,6 +67,39 @@ async function* demoModel(request: AiRequest): AsyncGenerator<string> {
     if (request.signal.aborted) return;
     yield word;
   }
+}
+
+/**
+ * An offline demo spell checker (?spell=1): a few known mistakes, predictable for e2e. In a real
+ * application the text goes to your server, and from there to LanguageTool or another service.
+ */
+const MISSPELLED: Record<string, string[]> = {
+  teh: ['the', 'ten'],
+  recieve: ['receive'],
+  wierd: ['weird', 'wired'],
+};
+async function demoSpellCheck(request: SpellCheckRequest): Promise<SpellCheckMatch[]> {
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  const matches: SpellCheckMatch[] = [];
+  for (const m of request.text.matchAll(/\b(teh|recieve|wierd)\b/g)) {
+    matches.push({
+      offset: m.index!,
+      length: m[0].length,
+      kind: 'spelling',
+      message: 'Possible spelling mistake found.',
+      replacements: MISSPELLED[m[0]],
+    });
+  }
+  for (const m of request.text.matchAll(/\ba (apple|hour|idea)\b/g)) {
+    matches.push({
+      offset: m.index!,
+      length: m[0].length,
+      kind: 'grammar',
+      message: 'Use “an” instead of “a” before a vowel sound.',
+      replacements: [`an ${m[1]}`],
+    });
+  }
+  return matches;
 }
 
 const editor = createEditor({
@@ -173,9 +210,19 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('ai')
       ? [...(new URLSearchParams(location.search).has('comments') ? [] : ['suggestions']), 'ai']
       : []),
+    // ?spell=1: the spell checker with an offline demo service (e2e/spellchecker.spec.ts).
+    ...(new URLSearchParams(location.search).has('spell') ? ['spellchecker'] : []),
   ],
   pluginOptions: {
     ai: { request: demoModel },
+    spellchecker: {
+      check: demoSpellCheck,
+      languages: [
+        { code: 'en-US', name: 'English (US)' },
+        { code: 'en-GB', name: 'English (UK)' },
+      ],
+      addToDictionary: (word: string) => console.info('[playground] added to dictionary:', word),
+    },
     // Templates for "Insert template" (e2e/formatting-tools.spec.ts).
     template: {
       templates: [

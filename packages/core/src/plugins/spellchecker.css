@@ -1,0 +1,61 @@
+/*
+ * The spellchecker plugin: wavy underlines and the bubble with corrections.
+ * Attached when the plugin loads, through editor.ui.addStyles; not part of the first-load style.css.
+ */
+
+.nova-spell {
+  text-decoration-line: underline;
+  text-decoration-style: wavy;
+  text-decoration-thickness: 1.5px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+.nova-spell-spelling {
+  text-decoration-color: var(--nova-danger);
+}
+.nova-spell-grammar {
+  text-decoration-color: var(--nova-accent);
+}
+
+.nova-spell-bubble {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 320px;
+  padding: 8px;
+  font-size: 13px;
+}
+.nova-spell-message {
+  margin: 0;
+  color: var(--nova-muted);
+  line-height: 1.45;
+}
+.nova-spell-fixes,
+.nova-spell-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.nova-spell-bubble .nova-button {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+/* Corrections stand out from the other actions. */
+.nova-spell-bubble .nova-spell-fix {
+  font-weight: 600;
+}
+.nova-spell-none {
+  color: var(--nova-muted);
+  font-style: italic;
+}
+.nova-spell-actions {
+  padding-top: 8px;
+  border-top: 1px solid var(--nova-border);
+}
+@media (pointer: coarse) {
+  .nova-spell-bubble .nova-button {
+    height: 36px;
+    padding: 0 14px;
+  }
+}

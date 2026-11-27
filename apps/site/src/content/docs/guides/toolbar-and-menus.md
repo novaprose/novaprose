@@ -43,7 +43,7 @@ blockquote codeblock hr | removeformat | searchreplace preview code fullscreen h
 | Insert    | `link` `unlink` `image` `table` `insertdatetime` `template` `footnotes` `footnotesupdate` (plugins)                                                                                                                                                                                |
 | Tables    | `tableinsertrowbefore` `tableinsertrowafter` `tabledeleterow` `tableinsertcolbefore` `tableinsertcolafter` `tabledeletecol` `tablemergecells` `tablesplitcells` `tablerowheader` `tablecolheader` `tablecellbackground` `tableprops` `tablecellprops` `advtablesort` `tabledelete` |
 | Images    | `imagealignleft` `imagealigncenter` `imagealignright` `imagesize` `imagealt` `imagedelete`                                                                                                                                                                                         |
-| Tools     | `searchreplace` `pastetext` `code` `preview` `fullscreen` `help`; with plugins: `save` `cancel` `visualblocks` `visualchars`                                                                                                                                                       |
+| Tools     | `searchreplace` `pastetext` `code` `preview` `fullscreen` `help`; with plugins: `save` `cancel` `visualblocks` `visualchars` `spellchecker` `spellcheckdialog`                                                                                                                     |
 
 Table and image controls also appear in context toolbars when a table cell or an image is
 selected.

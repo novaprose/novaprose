@@ -53,6 +53,7 @@ const BUILT_IN = new Set([
 /** Plugins with a different name in NovaProse. */
 const RENAMED: Record<string, string> = {
   tinycomments: 'comments',
+  tinymcespellchecker: 'spellchecker',
 };
 
 /** Options that are understood but not needed in NovaProse (cloud, skins, license, iframe). */
@@ -152,6 +153,16 @@ const IGNORED = new Set([
   'importcss_exclusive',
   'importcss_selector_converter',
   'templates',
+  // tinymcespellchecker: the checking goes through your service (spellchecker_languagetool_url or
+  // spellchecker_check, NovaProse's own options); Tiny's spellchecker_rpc_url is not used.
+  'spellchecker_active',
+  'spellchecker_language',
+  'spellchecker_languages',
+  'spellchecker_ignore_list',
+  'spellchecker_dialog',
+  'content_language',
+  'spellchecker_languagetool_url',
+  'spellchecker_check',
   'template_replace_values',
   'template_preview_replace_values',
   'template_selected_content_classes',
@@ -548,6 +559,36 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     ).filter(([, value]) => value !== undefined),
   );
   if (Object.keys(template).length) pluginOptions.template = template;
+  // tinymcespellchecker → spellchecker. "Label=code,…" languages, an ignore list (also by language).
+  const spellchecker: Record<string, unknown> = {};
+  if (typeof config.spellchecker_active === 'boolean')
+    spellchecker.active = config.spellchecker_active;
+  const spellLanguage = config.content_language ?? config.spellchecker_language;
+  if (typeof spellLanguage === 'string' && spellLanguage)
+    spellchecker.language = spellLanguage.replace(/_/g, '-');
+  if (typeof config.spellchecker_languages === 'string') {
+    spellchecker.languages = config.spellchecker_languages
+      .split(',')
+      .map((pair) => pair.split('='))
+      .filter(
+        (pair): pair is [string, string] =>
+          pair.length === 2 && !!pair[0]!.trim() && !!pair[1]!.trim(),
+      )
+      .map(([name, code]) => ({ name: name.trim(), code: code.trim().replace(/_/g, '-') }));
+  }
+  const ignore = config.spellchecker_ignore_list;
+  const ignored = Array.isArray(ignore)
+    ? ignore
+    : ignore && typeof ignore === 'object'
+      ? Object.values(ignore).flatMap((words) => (Array.isArray(words) ? words : []))
+      : [];
+  if (ignored.length)
+    spellchecker.ignore = ignored.filter((w): w is string => typeof w === 'string');
+  if (typeof config.spellchecker_check === 'function')
+    spellchecker.check = config.spellchecker_check;
+  if (typeof config.spellchecker_languagetool_url === 'string')
+    spellchecker.languageTool = { url: config.spellchecker_languagetool_url };
+  if (Object.keys(spellchecker).length) pluginOptions.spellchecker = spellchecker;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };

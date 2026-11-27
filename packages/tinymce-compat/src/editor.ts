@@ -120,7 +120,19 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mcetemplate: 'template',
   mceinsertfootnote: 'footnotes',
   mceupdatefootnotes: 'footnotesupdate',
+  mcespellcheckdialog: 'spellcheckdialog',
 };
+
+/**
+ * Commands of the spell checker (tinymcespellchecker in TinyMCE): on, off, check again (it checks as
+ * you type anyway), close the bubble. mceSpellcheckDialog is in PLUGIN_COMMANDS: the next problem.
+ */
+const SPELLCHECK_COMMANDS = new Set([
+  'mcespellcheckenable',
+  'mcespellcheckdisable',
+  'mcespellcheckupdate',
+  'mcespellcheckdialogclose',
+]);
 
 /** Commands of collapsible blocks (the accordion plugin), as in the TinyMCE documentation. */
 const ACCORDION_COMMANDS = new Set([
@@ -411,6 +423,8 @@ export class CompatEditor {
         new CustomEvent('nova-insert-template', { detail: String(value ?? '') }),
       );
       done = true;
+    } else if (SPELLCHECK_COMMANDS.has(name) && this.core.hasPlugin('spellchecker')) {
+      done = this.spellcheckCommand(name);
     } else if (PLUGIN_COMMANDS[name] || name === 'mcetogglestickyformatpainter') {
       done = this.pluginCommand(name);
     } else if (name === 'codesample') {
@@ -442,6 +456,20 @@ export class CompatEditor {
    * otherwise insert); ToggleAccordion / ToggleAllAccordions — value true expands, false collapses,
    * no value toggles. Collapsing is a view, not an edit: it doesn't go into the undo history.
    */
+  private spellcheckCommand(name: string): boolean {
+    if (name === 'mcespellcheckdialogclose') {
+      this.core.ui.closeOverlays();
+      return true;
+    }
+    if (name === 'mcespellcheckupdate') return true;
+    const toggle = this.core.ui.registry.get('spellchecker') as
+      { isActive?: (e: Editor) => boolean; onAction: (e: Editor) => void } | undefined;
+    if (!toggle) return false;
+    const on = !!toggle.isActive?.(this.core);
+    if ((name === 'mcespellcheckenable') !== on) toggle.onAction(this.core);
+    return true;
+  }
+
   private accordionCommand(name: string, value: unknown): boolean {
     const { view } = this.core;
     const { state } = view;
@@ -520,6 +548,7 @@ export class CompatEditor {
       ['formatblock', 'mceinsertcontent', 'mcesetcontent'].includes(name) ||
       (name in PLUGIN_COMMANDS && !!this.core.ui.registry.getMenuItem(PLUGIN_COMMANDS[name]!)) ||
       (name === 'mcetogglestickyformatpainter' && this.core.ui.registry.has('formatpainter')) ||
+      (SPELLCHECK_COMMANDS.has(name) && this.core.hasPlugin('spellchecker')) ||
       this.commands.has(name)
     );
   }

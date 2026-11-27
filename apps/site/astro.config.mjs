@@ -63,6 +63,7 @@ export default defineConfig({
             { slug: 'guides/version-history' },
             { slug: 'guides/suggested-edits' },
             { slug: 'guides/ai-assistant' },
+            { slug: 'guides/spell-check' },
             { slug: 'guides/custom-buttons-and-plugins' },
             { slug: 'guides/node-views' },
             { slug: 'guides/shadow-dom' },

@@ -587,6 +587,45 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/footnote/);
   });
 
+  it('tinymcespellchecker: its options and commands, checking through your own service', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"><p>teh Nova teh</p></textarea>');
+    const check = vi.fn(async ({ text }: { text: string }) =>
+      [...text.matchAll(/\b(teh|Nova)\b/g)].map((m) => ({
+        offset: m.index!,
+        length: m[0].length,
+        replacements: ['the'],
+      })),
+    );
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'tinymcespellchecker',
+      toolbar: 'spellchecker spellcheckdialog',
+      spellchecker_language: 'en_US',
+      spellchecker_languages: 'US English=en_US,German=de',
+      spellchecker_ignore_list: { en_US: ['Nova'] },
+      spellchecker_check: check,
+    });
+    const { core } = editor!;
+    const marks = () => core.view.dom.querySelectorAll('.nova-spell').length;
+    await vi.waitFor(() => expect(marks()).toBe(2), { timeout: 3000 });
+    expect(check.mock.calls[0]![0]).toMatchObject({ language: 'en-US' });
+    const menu = core.ui.registry.get('spellchecker') as unknown as {
+      items: (e: unknown) => { label?: string }[];
+    };
+    expect(menu.items(core).map((item) => item.label)).toContain('German');
+    expect(editor!.queryCommandSupported('mceSpellcheckDisable')).toBe(true);
+    expect(editor!.execCommand('mceSpellcheckDisable')).toBe(true);
+    expect(marks()).toBe(0);
+    expect(editor!.execCommand('mceSpellcheckEnable')).toBe(true);
+    await vi.waitFor(() => expect(marks()).toBe(2));
+    expect(editor!.execCommand('mceSpellcheckDialog')).toBe(true);
+    expect(document.querySelector('.nova-spell-bubble')).not.toBeNull();
+    expect(editor!.execCommand('mceSpellcheckDialogClose')).toBe(true);
+    expect(document.querySelector('.nova-spell-bubble')).toBeNull();
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/spellchecker/);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

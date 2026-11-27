@@ -224,6 +224,21 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'template dialog');
     });
 
+    test('spell check: underlined problems and the bubble with corrections', async ({ page }) => {
+      await open(page, theme, '&spell=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent('<p>I recieve teh letter.</p><p>Eat a apple.</p>');
+      });
+      await expect(page.locator('.nova-spell')).toHaveCount(3);
+      await page.locator('.nova-spell', { hasText: 'recieve' }).click();
+      await expect(page.getByRole('dialog', { name: 'Spelling: recieve' })).toBeVisible();
+      await audit(page, 'spell check bubble');
+    });
+
     test('the suggestions panel with cards by two authors', async ({ page }) => {
       await open(page, theme, '&comments=1');
       await page.evaluate(async () => {

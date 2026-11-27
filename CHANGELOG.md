@@ -8,6 +8,14 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- `spellchecker` plugin: spelling and grammar checked as you type by your own service, the way the
+  AI assistant uses your model — a LanguageTool server (`languageTool: { url }`, open source and
+  self-hostable) or a `check` function. Problems are underlined (spelling red, grammar blue) with
+  `aria-invalid`; a click, or Alt+F7 for the next one, opens a bubble with corrections, Ignore,
+  Ignore all and Add to dictionary (`addToDictionary`). Paragraphs go in batches and are checked
+  again only when they change; code and text suggested for deletion are skipped; the browser's
+  own check is off meanwhile. The whole plugin loads lazily. With `tinymce.init`,
+  `tinymcespellchecker`, its `spellchecker_*` options and `mceSpellcheck*` commands work.
 - Suggested formats: in suggesting mode, text formatting (bold, italic, underline, strikethrough,
   code, sub/superscript, colors, fonts, sizes, links, styles) is a suggestion too. The new look
   shows at once with a dotted line in the author's color; rejecting it brings back how the text
