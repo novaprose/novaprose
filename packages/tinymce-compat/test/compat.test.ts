@@ -774,6 +774,35 @@ describe('tinymce.init', () => {
     expect(core.root.querySelector('.nova-dialog')).toBeNull();
   });
 
+  it('inlinecss: getContent() gives the content with its styles inline; the filters and InlineCSS work', async () => {
+    page('<textarea id="t"><p class="lead">Hello <a href="/x">link</a></p></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'inlinecss lists nosuchemailplugin',
+      valid_classes: 'lead',
+      content_style: '.lead { color: #7c3aed } a { color: red } .skip { color: blue }',
+      inlinecss_selector_filter: (selector: string) => selector !== '.skip',
+    });
+    const events: string[] = [];
+    editor!.on('InlineCSS', (event) => events.push(String(event.type)));
+    const inlinecss = editor!.plugins.inlinecss as { getContent(): Promise<{ html: string }> };
+    const { html } = await inlinecss.getContent();
+    expect(events).toEqual(['inlinecss']);
+    expect(html).toContain('<p class="lead" style="margin: 0 0 12px; color: #7c3aed">');
+    expect(html).toMatch(
+      /<a href="http[^"]*\/x" style="text-decoration: underline; color: red">link<\/a>/,
+    );
+    // editor.plugins: what is listed and works; not what is missing.
+    expect(Object.keys(editor!.plugins).sort()).toEqual(['inlinecss', 'lists']);
+  });
+
+  it('editor.plugins holds what your own plugin returns, as in TinyMCE', async () => {
+    page('<textarea id="t"></textarea>');
+    tinymce.PluginManager.add('greeter', () => ({ hello: () => 'hi' }));
+    const [editor] = await tinymce.init({ selector: '#t', plugins: 'greeter' });
+    expect((editor!.plugins.greeter as { hello(): string }).hello()).toBe('hi');
+  });
+
   it('ai_shortcuts: false hides the shortcuts', async () => {
     page('<textarea id="t"></textarea>');
     const [editor] = await tinymce.init({

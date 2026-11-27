@@ -309,6 +309,11 @@ export class CompatEditor {
   readonly core: Editor;
   readonly targetElm: HTMLElement;
   readonly settings: Record<string, unknown>;
+  /**
+   * The plugins by their TinyMCE names (`editor.plugins.lists`): the listed ones that work here, and
+   * what your own plugins return. inlinecss has `getContent()`: the content with its styles inline.
+   */
+  readonly plugins: Record<string, Record<string, unknown>> = {};
   initialized = false;
   removed = false;
   private readonly handlers = new Map<string, Set<Handler>>();

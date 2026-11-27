@@ -19,11 +19,20 @@ export interface TextSegment {
   chars: number[];
 }
 
-/** Text blocks in the range, cut to it, with the position of every character. */
-export function textSegments(doc: PMNode, from: number, to: number): TextSegment[] {
+/**
+ * Text blocks in the range, cut to it, with the position of every character. `skipCode` leaves code
+ * blocks out: AI edits are suggestions, and code can't carry them (it has no marks).
+ */
+export function textSegments(
+  doc: PMNode,
+  from: number,
+  to: number,
+  { skipCode = false } = {},
+): TextSegment[] {
   const segments: TextSegment[] = [];
   doc.nodesBetween(from, to, (node, pos) => {
     if (!node.isTextblock) return true;
+    if (skipCode && node.type.spec.code) return false;
     const start = Math.max(from, pos + 1);
     const end = Math.min(to, pos + node.nodeSize - 1);
     let text = '';
@@ -55,10 +64,22 @@ export function textSegments(doc: PMNode, from: number, to: number): TextSegment
 }
 
 /** The range's text for the model request: paragraphs separated by an empty line. */
-export function rangeText(doc: PMNode, from: number, to: number): string {
-  return textSegments(doc, from, to)
+export function rangeText(
+  doc: PMNode,
+  from: number,
+  to: number,
+  options: { skipCode?: boolean } = {},
+): string {
+  return textSegments(doc, from, to, options)
     .map((segment) => segment.text)
     .join('\n\n');
+}
+
+/** Whether the selection has text AI can change: some outside code blocks. */
+export function hasEditableText(state: EditorState): boolean {
+  const { from, to, empty } = state.selection;
+  if (empty) return false;
+  return textSegments(state.doc, from, to, { skipCode: true }).some((s) => s.text.trim());
 }
 
 /** The model's answer → paragraphs (a single line break inside a paragraph is a space). */
@@ -229,7 +250,7 @@ export function rewriteTransaction(
   text: string,
 ): Transaction {
   const tr = state.tr;
-  const segments = textSegments(state.doc, from, to);
+  const segments = textSegments(state.doc, from, to, { skipCode: true });
   const next = paragraphs(text);
   const targets = segments.map((_, index) =>
     index < segments.length - 1 ? (next[index] ?? '') : next.slice(index).join(' '),
@@ -256,7 +277,8 @@ export function suggestRewrite(
  * AI text at a position (a continuation, a summary) as a suggestion; paragraphs become new paragraphs.
  * `newParagraph` starts with a new paragraph (a summary after the selection). In the middle of a paragraph the answer goes
  * into that paragraph as one insertion: a paragraph break isn't tracked as a suggestion, and "reject" would leave
- * the paragraph cut in two.
+ * the paragraph cut in two. At a position inside a code block the text goes after the block, as new
+ * paragraphs: code can't carry suggestions.
  */
 export function suggestInsert(
   state: EditorState,
@@ -265,6 +287,22 @@ export function suggestInsert(
   author: SuggestionAuthor,
   { newParagraph = false } = {},
 ): Transaction {
+  const $code = state.doc.resolve(pos);
+  if ($code.parent.type.spec.code) {
+    const paragraph = state.schema.nodes.paragraph;
+    const parts = paragraphs(text).filter(Boolean);
+    const out = state.tr;
+    if (!paragraph || !parts.length) return out;
+    try {
+      out.insert(
+        $code.after(),
+        parts.map((part) => paragraph.create(null, state.schema.text(part))),
+      );
+    } catch {
+      return state.tr; // the block's parent takes no paragraphs here
+    }
+    return suggestTransaction(out, state, author).setMeta(OWN, true);
+  }
   const tr = state.tr;
   let at = pos;
   const $pos = state.doc.resolve(pos);

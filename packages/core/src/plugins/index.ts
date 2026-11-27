@@ -27,6 +27,7 @@ registerPlugin('importcss', () => import('./importcss'));
 registerPlugin('template', () => import('./template'));
 registerPlugin('spellchecker', () => import('./spellchecker'));
 registerPlugin('a11ychecker', () => import('./a11ychecker'));
+registerPlugin('email', () => import('./email'));
 registerPlugin('quickbars', () => import('./quickbars'));
 registerPlugin('charmap', () => import('./charmap'));
 registerPlugin('emoticons', () => import('./emoticons'));

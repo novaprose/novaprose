@@ -99,6 +99,24 @@ All packages in this repository are versioned together. The format follows
   `save_onsavecallback` and `save_oncancelcallback` get the editor (the content is already in the
   `<textarea>`), and `save_enablewhendirty`, `mceSave` and `mceCancel` work.
 
+- `email` plugin and `@novaprose/core/email`: email HTML from the content. Content styles go into each
+  element's `style` attribute with a browser's cascade (specificity, order, `!important`, inline
+  styles), on top of built-in email styles that keep the editor look (tables with borders, quotes,
+  code); custom properties are resolved, structural selectors work, `@media` rules go to the head
+  of a whole email. A video becomes a link to its page, a collapsible block is shown open, checklist
+  items get ☑ and ☐, relative links and images become absolute, and template tags such as
+  `{{unsubscribe_url}}` stay as they are. `document` gives a whole email: a centered column Outlook
+  keeps too, preview text for the inbox. **Email preview** (`emailpreview`) shows it on a desktop
+  or a phone screen with its size (Gmail cuts off emails over 102 KB) and copies it as an email or
+  as HTML code. With `tinymce.init`, `inlinecss` works (`editor.plugins.inlinecss.getContent()`,
+  the `InlineCSS` event, `inlinecss_selector_filter`, `inlinecss_file_filter`), and
+  `editor.plugins` lists the plugins that work, with what your own plugins return.
+- **Fixed:** the AI assistant on text in a code block sent its request and then said it suggested
+  no changes: code can't carry suggestions. Now, with only code selected, the window says so and
+  writes after the code block; with text and code selected, only the text changes.
+- **Fixed:** a click on a dialog's title or anything else in it that takes no focus (in Safari, a
+  button or a radio too) dropped focus out of the dialog, and Escape and Tab stopped working; a
+  click inside now keeps focus in the dialog.
 - AI assistant (`plugins: ['suggestions', 'ai']`, buttons `aidialog` and `aishortcuts`, as in
   TinyMCE): select text and pick **Improve writing**, **Fix spelling and grammar**, **Make
   shorter**, **Make longer**, **Simplify**, a formal or friendly tone, **Summarize**, or type your

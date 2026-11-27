@@ -16,7 +16,7 @@ interface Item {
 }
 
 /** Splits CSS into top-level items, minding strings, comments and nested brackets. */
-function splitTopLevel(css: string): Item[] {
+export function splitTopLevel(css: string): Item[] {
   const items: Item[] = [];
   let i = 0;
   let start = 0;
@@ -65,7 +65,7 @@ function splitTopLevel(css: string): Item[] {
 }
 
 /** Splits a selector list at top-level commas (not inside :is(a, b) and [x="a,b"]). */
-function splitSelectors(list: string): string[] {
+export function splitSelectors(list: string): string[] {
   const parts: string[] = [];
   let depth = 0;
   let quote = '';
@@ -88,7 +88,7 @@ function splitSelectors(list: string): string[] {
 }
 
 /** `body p` → `<scope> p`; `html body.dark` → `<scope>.dark`; `p` → `<scope> p`. */
-function scopeSelector(selector: string, scope: string): string {
+export function scopeSelector(selector: string, scope: string): string {
   let rest = selector;
   let root = false;
   for (;;) {

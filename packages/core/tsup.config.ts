@@ -24,6 +24,8 @@ export default defineConfig({
     'html-rules': 'src/html-rules.ts',
     // Accessibility checks of a document (the a11ychecker plugin's rules): on a server too.
     a11y: 'src/a11y.ts',
+    // Email HTML: content styles put inline, markup email clients understand (a browser or jsdom).
+    email: 'src/email.ts',
     ...packs,
   },
   format: ['esm', 'cjs'],

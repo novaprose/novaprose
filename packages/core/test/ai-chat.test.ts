@@ -200,6 +200,34 @@ describe('the AI chat: Ask', () => {
   });
 });
 
+describe('the AI chat and code blocks', () => {
+  it('Insert with the cursor in code puts the answer after the block; Replace is off for code', async () => {
+    const e = await mount('<pre><code>let x = 1;</code></pre>', { request: async () => 'A note.' });
+    const panel = await openChat(e);
+    e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 4)));
+    send(panel, 'Explain');
+    await vi.waitFor(() => expect(button(panel, 'Insert')).toBeDefined());
+    select(e, 1, 6);
+    expect(button(panel, 'Replace selection').disabled).toBe(true);
+    e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 4)));
+    button(panel, 'Insert').click();
+    expect(accepted(e)).toBe('let x = 1;\n\nA note.');
+  });
+
+  it('Edit with only code selected: no request, the panel says why', async () => {
+    const request = vi.fn(async () => 'NO CHANGES');
+    const e = await mount('<p>Text</p><pre><code>let x = 1;</code></pre>', { request });
+    const panel = await openChat(e);
+    editMode(panel);
+    select(e, 8, 14);
+    send(panel, 'Fix it');
+    await vi.waitFor(() =>
+      expect(lastAnswer(panel).textContent).toContain("There's no text to change here"),
+    );
+    expect(request).not.toHaveBeenCalled();
+  });
+});
+
 describe('the AI chat: Edit', () => {
   it('the whole document goes as numbered blocks; changed blocks come back as suggestions', async () => {
     const request = vi.fn(async (_r: AiRequest) => '<block id="2">The quick red fox.</block>');

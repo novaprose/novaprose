@@ -21,6 +21,7 @@ import {
   blockText,
   currentBlock,
   editableBlocks,
+  hasEditableText,
   rangeText,
   readBlocks,
   suggestInsert,
@@ -55,7 +56,7 @@ export interface EditResult {
   /** The answer had no blocks and wasn't "NO CHANGES": it couldn't be matched to the document. */
   unmatched: boolean;
   /** done, or why it ended early. */
-  status: 'done' | 'stopped' | 'tooLong' | 'notConfigured' | 'failed';
+  status: 'done' | 'stopped' | 'tooLong' | 'notConfigured' | 'failed' | 'noText';
 }
 
 /**
@@ -80,7 +81,11 @@ export async function runEdit(
     whole ? doc.content.size : selection.to,
   );
   const result: EditResult = { changed: 0, skipped: 0, ids: [], unmatched: false, status: 'done' };
-  if (!blocks.length) return result;
+  if (!blocks.length) {
+    // Nothing but code (or empty blocks): no request, and the panel says why.
+    result.status = 'noText';
+    return result;
+  }
   const max = aiOptions(editor).maxDocument ?? MAX_DOCUMENT;
   if (blocks.reduce((sum, block) => sum + block.text.length, 0) > max) {
     result.status = 'tooLong';
@@ -314,7 +319,8 @@ export function createChatPanel(
     editRadio.querySelector('input')!.disabled = busy || !editable;
     for (const button of el.querySelectorAll<HTMLButtonElement>('[data-ai-needs]')) {
       const needs = button.dataset.aiNeeds;
-      button.disabled = !editable || (needs === 'selection' && selection.empty);
+      // Replace selection needs text outside code: code can't carry suggestions.
+      button.disabled = !editable || (needs === 'selection' && !hasEditableText(editor.view.state));
     }
   }
 
@@ -386,6 +392,7 @@ export function createChatPanel(
   function editLines(result: EditResult): Array<{ text: string; kind: 'error' | 'note' | 'text' }> {
     const lines: Array<{ text: string; kind: 'error' | 'note' | 'text' }> = [];
     if (result.status === 'tooLong') lines.push({ text: labels.tooLong, kind: 'error' });
+    else if (result.status === 'noText') lines.push({ text: labels.noText, kind: 'note' });
     else if (result.status === 'notConfigured' || result.status === 'failed')
       lines.push({ text: labels[result.status], kind: 'error' });
     else if (result.unmatched) lines.push({ text: labels.editUnmatched, kind: 'error' });
@@ -588,8 +595,8 @@ export function createChatPanel(
 
   function replaceSelection(text: string): void {
     const state = editor.view.state;
-    const { from, to, empty } = state.selection;
-    if (empty) return;
+    const { from, to } = state.selection;
+    if (!hasEditableText(state)) return;
     const tr = suggestRewrite(state, from, to, text, author());
     if (!tr.docChanged) {
       editor.ui.announce(labels.nothing);

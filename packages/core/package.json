@@ -74,6 +74,16 @@
         "default": "./dist/a11y.cjs"
       }
     },
+    "./email": {
+      "import": {
+        "types": "./dist/email.d.ts",
+        "default": "./dist/email.js"
+      },
+      "require": {
+        "types": "./dist/email.d.cts",
+        "default": "./dist/email.cjs"
+      }
+    },
     "./html-rules": {
       "import": {
         "types": "./dist/html-rules.d.ts",

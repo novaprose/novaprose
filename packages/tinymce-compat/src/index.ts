@@ -2,7 +2,7 @@ import { createEditor, loadLanguage, registerHtmlRules, type AiRequest } from '@
 import { htmlRules } from '@novaprose/core/html-rules';
 import type { TinyAiHandler } from './ai';
 import { CompatEditor } from './editor';
-import { mapOptions, type TinyConfig } from './options';
+import { activePlugins, mapOptions, type TinyConfig } from './options';
 
 /**
  * A compatibility layer with the `tinymce` API, to move to NovaProse without rewriting the integration:
@@ -144,7 +144,10 @@ export function createTinymce(): TinyMCECompat {
         // Plugins added through tinymce.PluginManager.add, as in TinyMCE: (editor, url).
         for (const name of custom) {
           try {
-            plugins.get(name)!(compat, '');
+            // What the plugin returns is its API, at editor.plugins.<name> (as in TinyMCE).
+            const api = plugins.get(name)!(compat, '');
+            compat.plugins[name] =
+              api && typeof api === 'object' ? (api as Record<string, unknown>) : {};
           } catch (error) {
             console.error(`[nova] tinymce-compat: plugin "${name}" failed`, error);
           }
@@ -209,6 +212,17 @@ export function createTinymce(): TinyMCECompat {
     active ??= compat;
     await core.ready;
     if (compat.removed) return compat;
+    // editor.plugins: the listed plugins that work, so `if (editor.plugins.x)` checks are right.
+    for (const name of activePlugins(config, (plugin) => core.hasPlugin(plugin)))
+      compat.plugins[name] ??= {};
+    if (compat.plugins.inlinecss) {
+      // inlinecss: the content with its styles inline (for email), loaded when first asked for.
+      compat.plugins.inlinecss.getContent = async () => {
+        compat.fire('InlineCSS');
+        const { emailHTML } = await import('@novaprose/core/email');
+        return { html: await emailHTML(core, { document: false }) };
+      };
+    }
     compat.initialized = true;
     compat.fire('init');
     (config.init_instance_callback as ((e: CompatEditor) => void) | undefined)?.(compat);

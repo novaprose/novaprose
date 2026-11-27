@@ -33,9 +33,11 @@ const SAMPLE = `
 <p style="text-align: center;">Centered text, <span style="color: #1d4ed8;">text color</span>, <span style="background-color: #fef08a;">highlight</span> and <span style="font-family: Georgia, serif;">another font</span>.</p>
 <p>Put the cursor into <a href="https://prosemirror.net">this link</a> and a bubble appears. Ctrl+K inserts a link, Alt+F10 moves to the toolbar.</p>
 <pre><code class="language-ts">const editor = createEditor({ element, content: '&lt;p&gt;Hello&lt;/p&gt;' });</code></pre>
+<p>Keep writing here, below the code block: code is left out of spell checking and AI edits.</p>
 `;
 
-const STORAGE_KEY = 'nova-playground-content-v2';
+// v3: the sample ends with a paragraph (a click at the end used to land in the code block).
+const STORAGE_KEY = 'nova-playground-content-v3';
 const $ = <T extends HTMLElement>(sel: string) => document.querySelector<T>(sel)!;
 
 const output = $('#output');
@@ -232,6 +234,8 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('spell') ? ['spellchecker'] : []),
     // ?a11y=1: the accessibility checker (e2e/a11ychecker.spec.ts).
     ...(new URLSearchParams(location.search).has('a11y') ? ['a11ychecker'] : []),
+    // ?email=1: Email preview, the content as an email (e2e/email.spec.ts).
+    ...(new URLSearchParams(location.search).has('email') ? ['email'] : []),
   ],
   pluginOptions: {
     // &complete=1 turns on autocomplete (e2e/ai.spec.ts).

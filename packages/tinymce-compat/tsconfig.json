@@ -6,6 +6,7 @@
     "paths": {
       "@novaprose/core": ["../core/src/index.ts"],
       "@novaprose/core/html-rules": ["../core/src/html-rules.ts"],
+      "@novaprose/core/email": ["../core/src/email.ts"],
       "@novaprose/core/i18n/*": ["../core/src/i18n/packs/*"]
     }
   },

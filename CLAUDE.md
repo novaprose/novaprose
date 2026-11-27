@@ -135,8 +135,8 @@ Conventional Commits.
   `security.property.test.ts` and `json-robustness.test.ts`.
 - **Named commands** (`CommandName` in `commands.ts`) are part of the public API: renaming one is a breaking
   change.
-- **Size budget:** the core is ≤ 145 KB gzip on first load, ProseMirror included (November 2026: 143.0 KB;
-  style.css 9.5 of 12 KB; lazy chunks counted separately). `pnpm size` checks it in CI. The first load is counted
+- **Size budget:** the core is ≤ 145 KB gzip on first load, ProseMirror included (November 2026: 143.3 KB;
+  style.css 9.6 of 12 KB; lazy chunks counted separately). `pnpm size` checks it in CI. The first load is counted
   as ONE compressed file, the way an app build serves it (verified with Vite: 135.2 KB); the sum of separately
   compressed esbuild chunks (142.5) is printed for reference: it grows with chunk splitting, not with code. A new
   heavy dependency only as a separate lazily loaded plugin. A plugin with nodes keeps in the first load its schema
@@ -182,7 +182,7 @@ Conventional Commits.
   (`registerLanguage(code, () => import(…))`; a new pack goes there too, a test checks it); the element and
   tinymce.init wait for `loadLanguage` themselves; before `NovaProse.createEditor`, `await loadLanguage`. CDN
   builds are a main file + lazy parts next to it (scripts/build-cdn.mjs): web component 146.6 KB of 150,
-  compatibility 157.4 KB of 160 (November 2026).
+  compatibility 157.7 KB of 160 (November 2026).
 - **Optional functionality is a plugin** in `src/plugins/` (`definePlugin`, lazy registration in
   `src/plugins/index.ts`). The core holds only what an editor can't be an editor without.
 - **New buttons go through `editor.ui.registry`** (like a plugin); names follow the public TinyMCE documentation.

@@ -398,6 +398,17 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'AI autocomplete suggestion');
     });
 
+    test('the Email preview window: the email in a frame, the screen switch, the size', async ({
+      page,
+    }) => {
+      await open(page, theme, '&email=1');
+      await control(page, 'emailpreview');
+      const dialog = page.getByRole('dialog', { name: 'Email preview' });
+      await expect(dialog.getByRole('status')).toHaveText(/KB/);
+      await page.evaluate(() => Promise.all(document.getAnimations().map((a) => a.finished)));
+      await audit(page, 'Email preview');
+    });
+
     test('the block handle and its menu', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.locator('.nova-prosemirror h2').hover();

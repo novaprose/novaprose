@@ -17,7 +17,7 @@ import {
   type AiShortcut,
   type QuickAction,
 } from './ai-core';
-import { rangeText, suggestInsert, suggestRewrite } from './ai-edit';
+import { hasEditableText, rangeText, suggestInsert, suggestRewrite } from './ai-edit';
 import { pickLabels } from './shared';
 import type { SuggestionAuthor } from './suggestions';
 
@@ -98,6 +98,8 @@ export const LABELS = {
     editSkipped: 'Left as they are (changed while AI was writing): {count}',
     editUnmatched: "AI's answer didn't match the document. Try again.",
     tooLong: 'The document is too long for one request: select a part of it.',
+    inCode: "AI doesn't change code: what it writes goes after the code block.",
+    noText: "There's no text to change here: AI doesn't change code blocks.",
     show: 'Show in the text',
     acceptAll: 'Accept all',
     rejectAll: 'Reject all',
@@ -185,7 +187,9 @@ async function runAi(
 ): Promise<'done' | 'nothing'> {
   const author = aiAuthor(editor, pickLabels(editor, 'ai', LABELS));
   const { state } = editor.view;
-  const { from: start, to: end, empty } = state.selection;
+  const { from: start, to: end } = state.selection;
+  // Only code selected counts as no selection: AI writes after the code block, code stays as it is.
+  const empty = !hasEditableText(state);
   // Selection positions are mapped through edits that arrive while the model writes (co-authors, autosave).
   let from = start;
   let to = end;
@@ -200,7 +204,7 @@ async function runAi(
       {
         action,
         instruction,
-        text: empty ? '' : rangeText(doc, start, end),
+        text: empty ? '' : rangeText(doc, start, end, { skipCode: true }),
         ...around(doc, start, end),
       },
       signal,
@@ -240,7 +244,10 @@ export interface AiDialogOptions {
 /** The assistant window: your own request, quick actions, the answer as it is written. */
 function openAiDialog(editor: Editor, options: AiDialogOptions = {}): DialogHandle {
   const labels = pickLabels(editor, 'ai', LABELS);
-  const empty = editor.view.state.selection.empty;
+  const { state } = editor.view;
+  const empty = !hasEditableText(state);
+  // The cursor or the whole selection in code: say where AI's text goes instead.
+  const inCode = state.selection.empty ? !!state.selection.$from.parent.type.spec.code : empty;
   const controller = new AbortController();
   const show = options.display !== false;
   let running = false;
@@ -324,7 +331,8 @@ function openAiDialog(editor: Editor, options: AiDialogOptions = {}): DialogHand
     }
   };
 
-  const body = h('div', { className: 'nova-ai' }, input, actions, preview);
+  const note = inCode ? h('p', { className: 'nova-ai-note' }, labels.inCode) : null;
+  const body = h('div', { className: 'nova-ai' }, note, input, actions, preview);
   const handle = editor.ui.openDialog({
     title: labels.dialog,
     body,
@@ -417,7 +425,7 @@ export default definePlugin({
         tooltip: labels.shortcuts,
         isEnabled: enabled,
         items: (): MenuEntry[] => {
-          const empty = editor.view.state.selection.empty;
+          const empty = !hasEditableText(editor.view.state);
           const entries: MenuEntry[] = [];
           let group: string | undefined;
           (quickActions(editor, labels) ?? []).forEach((item, index) => {

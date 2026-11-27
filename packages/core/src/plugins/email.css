@@ -1,0 +1,99 @@
+/*
+ * The email plugin: the Email preview window. Attached when the plugin loads, through
+ * editor.ui.addStyles; not part of the first-load style.css.
+ */
+
+.nova-email-preview {
+  display: grid;
+  gap: 10px;
+}
+
+.nova-email-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.nova-email-views {
+  display: inline-flex;
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-toolbar-bg);
+}
+
+.nova-email-view {
+  position: relative;
+  display: inline-flex;
+}
+
+/* The radio stays in the page (keyboard, screen readers); its label is the visible segment. */
+.nova-email-view-input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.nova-email-view span {
+  padding: 3px 12px;
+  border-radius: 4px;
+  color: var(--nova-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nova-email-view-input:checked + span {
+  background: var(--nova-surface);
+  box-shadow: 0 0 0 1px var(--nova-border);
+  color: var(--nova-fg);
+}
+
+.nova-email-view-input:focus-visible + span {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 1px;
+}
+
+.nova-email-status {
+  margin: 0;
+  color: var(--nova-muted);
+  font-size: 13px;
+}
+
+.nova-email-status.is-warning {
+  color: var(--nova-danger);
+}
+
+/* The email on a neutral backdrop, as a mail client shows it. */
+.nova-email-stage {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+  background: var(--nova-toolbar-bg);
+}
+
+.nova-email-frame {
+  width: 100%;
+  height: min(60vh, 560px);
+  border: 0;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(31, 35, 40, 0.15);
+}
+
+.nova-email-stage.is-phone .nova-email-frame {
+  width: 375px;
+  max-width: 100%;
+}
+
+.nova-email-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}

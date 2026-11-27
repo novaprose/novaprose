@@ -174,6 +174,40 @@ describe('the AI assistant', () => {
   });
 });
 
+// Code can't carry suggestions: AI used to answer, change nothing and say "AI suggested no changes".
+describe('AI and code blocks', () => {
+  it('text selected in a code block: the window says so, rewriting is off, AI writes after the block', async () => {
+    const request = vi.fn(async (_r: AiRequest) => 'Next sentence.');
+    const e = await mount('<p>Intro</p><pre><code>This is a very good text.</code></pre>', request);
+    const { doc } = e.view.state;
+    e.view.dispatch(
+      e.view.state.tr.setSelection(TextSelection.create(doc, 9, doc.content.size - 1)),
+    );
+    const dialog = openDialog(e);
+    expect(dialog.querySelector('.nova-ai-note')?.textContent).toBe(
+      "AI doesn't change code: what it writes goes after the code block.",
+    );
+    expect(action(dialog, 'Make shorter').disabled).toBe(true);
+    action(dialog, 'Continue writing').click();
+    await vi.waitFor(() => expect(e.root.querySelector('.nova-dialog')).toBeNull());
+    expect(request.mock.calls[0]![0].text).toBe('');
+    expect(accepted(e)).toBe('Intro\n\nThis is a very good text.\n\nNext sentence.');
+    expect(e.getHTML()).toMatch(
+      /^<p>Intro<\/p><pre><code>This is a very good text\.<\/code><\/pre><p><ins [^>]*>Next sentence\.<\/ins><\/p>$/,
+    );
+  });
+
+  it('a selection over text and code: only the text is sent and changed', async () => {
+    const request = vi.fn(async (_r: AiRequest) => 'This is good.');
+    const e = await mount('<p>This is very good.</p><pre><code>very = 1</code></pre>', request);
+    selectAll(e);
+    action(openDialog(e), 'Make shorter').click();
+    await vi.waitFor(() => expect(e.root.querySelector('.nova-dialog')).toBeNull());
+    expect(request.mock.calls[0]![0].text).toBe('This is very good.');
+    expect(accepted(e)).toBe('This is good.\n\nvery = 1');
+  });
+});
+
 describe('your own quick actions', () => {
   const shortcuts = [
     { title: 'Tweet', prompt: 'Write a tweet about it', selection: false },

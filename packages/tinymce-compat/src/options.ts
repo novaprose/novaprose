@@ -54,6 +54,7 @@ const BUILT_IN = new Set([
 const RENAMED: Record<string, string> = {
   tinycomments: 'comments',
   tinymcespellchecker: 'spellchecker',
+  inlinecss: 'email',
 };
 
 /** Options that are understood but not needed in NovaProse (cloud, skins, license, iframe). */
@@ -177,6 +178,9 @@ const IGNORED = new Set([
   // becomes the quick actions.
   'ai_request',
   'ai_shortcuts',
+  // inlinecss → the email plugin: the filters of what is put inline.
+  'inlinecss_selector_filter',
+  'inlinecss_file_filter',
   'template_replace_values',
   'template_preview_replace_values',
   'template_selected_content_classes',
@@ -188,6 +192,11 @@ const IGNORED = new Set([
 
 const list = (value: unknown): string[] =>
   (Array.isArray(value) ? value.join(' ') : String(value ?? '')).split(/[\s,]+/).filter(Boolean);
+
+/** The TinyMCE names of the listed plugins that work here: built into the core, or loaded from the catalog. */
+export function activePlugins(config: TinyConfig, has: (name: string) => boolean): string[] {
+  return list(config.plugins).filter((name) => BUILT_IN.has(name) || has(RENAMED[name] ?? name));
+}
 
 /** «Arial=arial,helvetica,sans-serif; Courier New=courier new» → [{ label, value }]. */
 function parseFormats(value: unknown): { label: string; value: string }[] | undefined {
@@ -670,6 +679,19 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   } else if (Array.isArray(aiShortcuts)) {
     pluginOptions.ai = { shortcuts: toAiShortcuts(aiShortcuts) };
   }
+  // inlinecss: which selectors and which content style files are put inline.
+  const email: Record<string, unknown> = {};
+  if (
+    ['string', 'function'].includes(typeof config.inlinecss_selector_filter) ||
+    config.inlinecss_selector_filter instanceof RegExp
+  )
+    email.selectorFilter = config.inlinecss_selector_filter;
+  if (
+    ['string', 'function'].includes(typeof config.inlinecss_file_filter) ||
+    config.inlinecss_file_filter instanceof RegExp
+  )
+    email.fileFilter = config.inlinecss_file_filter;
+  if (Object.keys(email).length) pluginOptions.email = email;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };
