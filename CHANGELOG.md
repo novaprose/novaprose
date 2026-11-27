@@ -198,6 +198,17 @@ All packages in this repository are versioned together. The format follows
   dialogs and the TinyMCE-compatible dialogs now come with their lazily loaded code. If you override
   these styles in your own CSS, use a selector at least as specific as ours.
 
+### Sync server
+
+- Public rooms (`NOVA_SYNC_PUBLIC_PREFIX`) have limits, so a demo server can't become free hosting for
+  other sites. `NOVA_SYNC_PUBLIC_ORIGINS` lists the sites allowed to open them; at most 50 rooms are
+  open at once, with 25 people in a room and 20 connections from one address; a message over 512 KB, or
+  a room whose edits pass 2 MB, closes the room for an hour. A refused client gets the reason in
+  `onAuthenticationFailed`: `demo-origin`, `demo-busy`, `demo-room-full`, `demo-too-many-connections` or
+  `demo-room-closed`. Rooms with a token have none of these limits.
+- One WebSocket frame is at most 8 MB. Before, the socket library accepted frames of up to 100 MB from
+  anyone, before any token was checked.
+
 ## 0.7.0 — 2026-11-26
 
 ### Breaking

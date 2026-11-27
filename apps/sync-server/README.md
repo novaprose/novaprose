@@ -24,9 +24,23 @@ Or put it behind any TLS proxy (Caddy, nginx, Cloudflare) and connect with `wss:
 | `NOVA_SYNC_DB`               | `./data/novaprose-sync.db` | SQLite file (`:memory:` for tests)                                                      |
 | `NOVA_SYNC_DEV`              | —                          | `1` disables auth. Never in production                                                  |
 | `NOVA_SYNC_PUBLIC_PREFIX`    | —                          | Documents with this prefix (e.g. `demo/`) need no token and are never stored. For demos |
+| `NOVA_SYNC_PUBLIC_ORIGINS`   | —                          | Sites allowed to open public rooms, comma-separated (`https://example.com`). Empty: any |
 | `NOVA_SYNC_VERSION_INTERVAL` | `10`                       | Minimum minutes between automatic versions                                              |
 
 `GET /health` returns `{"ok":true}` for monitoring.
+
+## Public rooms
+
+Public rooms need no token, so the server limits them and they can't turn into free hosting for other
+sites. Rooms with a token have none of these limits.
+
+- Only the sites in `NOVA_SYNC_PUBLIC_ORIGINS` may open them (the browser's `Origin` header).
+- At most 50 rooms at once, 25 people in a room and 20 connections from one address.
+- A message over 512 KB, or a room whose edits pass 2 MB, closes the room for an hour.
+
+Refused clients get a reason in `onAuthenticationFailed`: `demo-origin`, `demo-busy`, `demo-room-full`,
+`demo-too-many-connections` or `demo-room-closed`. The numbers are in
+[`src/public-limits.mjs`](src/public-limits.mjs); `createSyncServer({ publicLimits })` changes them.
 
 ## Tokens
 

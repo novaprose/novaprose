@@ -129,6 +129,14 @@
 .np-collab-btn {
   cursor: pointer;
 }
+a.np-collab-btn {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+a.np-collab-btn[hidden] {
+  display: none;
+}
 .np-collab-btn:hover {
   border-color: var(--sl-color-accent);
 }

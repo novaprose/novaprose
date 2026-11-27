@@ -1,6 +1,6 @@
 # The NovaProse sync server + Caddy (HTTPS from Let's Encrypt).
 # On the server: /opt/novaprose/{compose.yml,Caddyfile,.env,sync-server/}; start with docker compose up -d --build.
-# .env: SYNC_DOMAIN, NOVA_SYNC_SECRET, NOVA_SYNC_PUBLIC_PREFIX. Never commit it.
+# .env: SYNC_DOMAIN, NOVA_SYNC_SECRET, NOVA_SYNC_PUBLIC_PREFIX, optionally NOVA_SYNC_PUBLIC_ORIGINS. Never commit it.
 services:
   sync:
     build: ./sync-server
@@ -8,6 +8,8 @@ services:
     environment:
       NOVA_SYNC_SECRET: ${NOVA_SYNC_SECRET:?set NOVA_SYNC_SECRET in .env}
       NOVA_SYNC_PUBLIC_PREFIX: ${NOVA_SYNC_PUBLIC_PREFIX:-}
+      # Public (demo) rooms open only from the website's own pages (and the site's local dev and preview).
+      NOVA_SYNC_PUBLIC_ORIGINS: ${NOVA_SYNC_PUBLIC_ORIGINS:-https://novaprose.com,http://localhost:4321,http://127.0.0.1:4321}
     volumes:
       - sync-data:/data
     # Not published to the outside: reachable only through Caddy.

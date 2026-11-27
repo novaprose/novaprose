@@ -10,8 +10,9 @@
   <div class="np-collab-bar">
     <span class="np-collab-status" data-status="connecting">
       <span class="np-collab-dot" aria-hidden="true"></span>
-      <span id="np-collab-status-text">Connecting…</span>
+      <span id="np-collab-status-text" aria-live="polite">Connecting…</span>
     </span>
+    <a class="np-collab-btn" id="np-collab-new" href="/demo/collaboration/" hidden>Start a new room</a>
     <ul class="np-collab-users" id="np-collab-users" aria-label="People in this document"></ul>
     <span class="np-collab-spacer"></span>
     <label class="np-collab-name">
@@ -62,6 +63,16 @@ see each other's cursors and changes instantly.</p>
   const statusText = document.getElementById('np-collab-status-text')!;
   const usersEl = document.getElementById('np-collab-users')!;
   const labels = { connecting: 'Connecting…', connected: 'Live', disconnected: 'Offline — reconnecting' };
+  // Demo rooms have limits on the server (apps/sync-server/src/public-limits.mjs): why it refused.
+  const refusals: Record<string, string> = {
+    'demo-room-full': 'This room is full',
+    'demo-room-closed': 'This room passed the demo size limit',
+    'demo-busy': 'The demo is busy, try again in a few minutes',
+    'demo-too-many-connections': 'Too many demo windows from your network',
+    'demo-origin': 'The demo works only on novaprose.com',
+  };
+  const newRoomLink = document.getElementById('np-collab-new')!;
+  let refused = false;
 
   /** «Guest Owl» → «GO», «Boris» → «B». */
   const initials = (value: string) =>
@@ -96,8 +107,15 @@ see each other's cursors and changes instantly.</p>
     document: `demo/${room}`,
     user: { name },
     onStatus: (status) => {
+      if (refused) return;
       statusEl.dataset.status = status;
       statusText.textContent = labels[status];
+    },
+    onAuthenticationFailed: (reason) => {
+      refused = true;
+      statusEl.dataset.status = 'disconnected';
+      statusText.textContent = refusals[reason] ?? 'Could not join this room';
+      newRoomLink.hidden = false;
     },
     onSynced: () => {
       // A new room is empty: put in the welcome text (once, only by the first visitor).
