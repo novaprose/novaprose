@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createEditor, type Editor } from '../src';
+import { createEditor, listSuggestions, type Editor } from '../src';
 import { exportDocx, fromDocx, importDocx } from '../src/docx';
 import { bookmarkName, hexColor, imageSize } from '../src/docx/export';
 import { parseXml, textContent, type XmlElement } from '../src/docx/xml';
@@ -397,5 +397,74 @@ describe('buttons in the editor', () => {
     await vi.waitFor(() => expect(e.getHTML()).toBe('<p>Hello</p>'));
     input.mockRestore();
     vi.unstubAllGlobals();
+  });
+});
+
+describe('Word tracked changes as suggestions', () => {
+  const ANN = 'w:author="Ann Lee" w:date="2026-11-20T10:00:00Z"';
+  const when = Date.parse('2026-11-20T10:00:00Z');
+  const tracked = para(
+    run('Ship in ') +
+      `<w:del w:id="3" ${ANN}><w:r><w:delText>May</w:delText></w:r></w:del>` +
+      `<w:ins w:id="4" ${ANN}><w:r><w:t>June</w:t></w:r></w:ins>` +
+      `<w:ins w:id="5" ${ANN}><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve"> now</w:t></w:r></w:ins>` +
+      run('.'),
+  );
+
+  it('with revisions: suggestions, each with its author and date; one insertion over two runs is one', async () => {
+    const { html } = await fromDocx(await docx(tracked), { revisions: 'suggestions' });
+    const attrs = (id: string) =>
+      ` data-suggestion="${id}" data-name="Ann Lee" data-time="${when}"`;
+    expect(html).toBe(
+      `<p>Ship in <del${attrs('w3')}>May</del><ins${attrs('w4')}>June</ins>` +
+        `<ins${attrs('w4')}><strong> now</strong></ins>.</p>`,
+    );
+  });
+
+  it('without: accepted, as before (the deleted text goes)', async () => {
+    const { html } = await fromDocx(await docx(tracked));
+    expect(html).toBe('<p>Ship in June<strong> now</strong>.</p>');
+  });
+
+  it('a move: the moved-from text is a deletion, the moved-to text an insertion', async () => {
+    const { html } = await fromDocx(
+      await docx(
+        para(
+          `<w:moveFrom w:id="8" ${ANN}><w:r><w:t>first</w:t></w:r></w:moveFrom>` + run(' then '),
+        ) + para(`<w:moveTo w:id="9" ${ANN}><w:r><w:t>first</w:t></w:r></w:moveTo>`),
+      ),
+      { revisions: 'suggestions' },
+    );
+    expect(html).toMatch(/^<p><del data-suggestion="w8"[^>]*>first<\/del> then <\/p>/);
+    expect(html).toMatch(/<p><ins data-suggestion="w9"[^>]*>first<\/ins><\/p>$/);
+  });
+
+  it('importDocx with the suggestions plugin keeps them, also in suggesting mode', async () => {
+    const e = mount('<p>Before</p>', {
+      plugins: ['suggestions'],
+      pluginOptions: { suggestions: { enabled: true, author: { id: 'me', name: 'Me' } } },
+    });
+    await importDocx(e, await docx(tracked));
+    expect(listSuggestions(e.view.state.doc).map((s) => [s.kind, s.text, s.author.name])).toEqual([
+      ['delete', 'May', 'Ann Lee'],
+      ['insert', 'June now', 'Ann Lee'],
+    ]);
+    expect(e.getText()).toBe('Ship in MayJune now.');
+  });
+
+  it('round trip: suggestions → Word revisions → the same suggestions', async () => {
+    const e = mount(
+      '<p>Keep <ins data-suggestion="s1" data-author="u1" data-name="Anna" data-time="1700000000000">new</ins>' +
+        ' and <del data-suggestion="s2" data-author="u2" data-name="Boris" data-time="1700000060000">old</del></p>',
+      { plugins: ['suggestions'] },
+    );
+    const back = mount('', { plugins: ['suggestions'] });
+    await importDocx(back, await exportDocx(e));
+    expect(
+      listSuggestions(back.view.state.doc).map((s) => [s.kind, s.text, s.author.name, s.time]),
+    ).toEqual([
+      ['insert', 'new', 'Anna', 1700000000000],
+      ['delete', 'old', 'Boris', 1700000060000],
+    ]);
   });
 });

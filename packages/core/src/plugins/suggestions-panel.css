@@ -1,0 +1,151 @@
+/*
+ * The suggestions panel (the suggestions plugin).
+ * Attached when the panel first opens, through editor.ui.addStyles; not part of the first-load style.css.
+ */
+
+.nova-sugg-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+.nova-sugg-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--nova-muted);
+}
+.nova-sugg-select {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+}
+.nova-sugg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.nova-sugg-empty {
+  margin: 8px 2px;
+  color: var(--nova-muted);
+  line-height: 1.5;
+}
+.nova-sugg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--nova-border);
+  border-inline-start: 3px solid
+    color-mix(
+      in srgb,
+      var(--nova-suggestion, var(--nova-accent)),
+      white var(--nova-suggestion-lift)
+    );
+  border-radius: var(--nova-radius);
+  background: var(--nova-surface);
+}
+/* The card of the suggestion at the cursor: framed in the author's color. */
+.nova-sugg-card.is-active {
+  border-color: color-mix(
+    in srgb,
+    var(--nova-suggestion, var(--nova-accent)),
+    white var(--nova-suggestion-lift)
+  );
+  box-shadow: var(--nova-shadow);
+}
+.nova-sugg-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--nova-muted);
+  font-size: 12px;
+}
+.nova-sugg-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--nova-suggestion, var(--nova-accent)),
+    white var(--nova-suggestion-lift)
+  );
+}
+.nova-sugg-author {
+  color: var(--nova-fg);
+  font-weight: 600;
+}
+/* The summary is a button (go to the suggestion), drawn as text. */
+.nova-sugg-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 6px;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--nova-fg);
+  font: inherit;
+  line-height: 1.45;
+  text-align: start;
+  cursor: pointer;
+}
+.nova-sugg-summary:hover {
+  background: var(--nova-hover);
+}
+.nova-sugg-summary:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 1px;
+}
+.nova-sugg-kind {
+  color: var(--nova-muted);
+}
+.nova-sugg-text {
+  overflow-wrap: anywhere;
+  color: color-mix(
+    in srgb,
+    var(--nova-suggestion, var(--nova-accent)),
+    white var(--nova-suggestion-lift)
+  );
+}
+ins.nova-sugg-text {
+  text-decoration: underline 2px;
+  text-underline-offset: 3px;
+}
+del.nova-sugg-text {
+  text-decoration: line-through 2px;
+}
+.nova-sugg-text.is-object {
+  color: var(--nova-muted);
+  font-style: italic;
+}
+.nova-sugg-actions,
+.nova-sugg-bulk {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.nova-sugg-card .nova-button {
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+.nova-sugg-bulk {
+  position: sticky;
+  bottom: 0;
+  padding: 8px 0 2px;
+  background: var(--nova-toolbar-bg);
+}
+/* Fingers need bigger buttons than a mouse pointer. */
+@media (pointer: coarse) {
+  .nova-sugg-card .nova-button {
+    height: 36px;
+    padding: 0 14px;
+  }
+}

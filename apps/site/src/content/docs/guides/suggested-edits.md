@@ -30,6 +30,26 @@ createEditor({
 });
 ```
 
+## Reviewing suggestions
+
+The **Suggestions** panel (the `suggestionspanel` button, or **Review suggestions → Show all
+suggestions**) lists every suggestion as a card: who made it, when, and what changed. A deletion
+right before an insertion by the same person reads as one replacement (“Replaced ~~May~~ June”).
+Click a card to find the suggestion in the text; **Accept** and **Reject** decide it.
+
+Choose an author in the panel to see only their suggestions: **Accept shown** and **Reject shown**
+then decide all of that person's suggestions at once. Without a filter they take every suggestion.
+
+The **Review suggestions** menu also has:
+
+- **Accept suggestions in selection** and **Reject suggestions in selection**: select a part of
+  the text to decide only the suggestions it touches;
+- **Preview: all accepted** and **Preview: all rejected**: read the text as it would be, without
+  changing it.
+
+Toolbar names: `suggestions` (the mode), `reviewsuggestions` (the menu), `suggestionspanel` (the
+panel), `acceptsuggestion` and `rejectsuggestion` (for your own toolbars).
+
 ## How suggestions are stored
 
 Suggestions are part of the content, so they are saved with your HTML and sync in

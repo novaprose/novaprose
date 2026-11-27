@@ -1,4 +1,4 @@
-import { DOMSerializer } from 'prosemirror-model';
+import { DOMSerializer, type Node as PMNode } from 'prosemirror-model';
 import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
 import { formatShortcut, h } from './dom';
@@ -22,21 +22,23 @@ export function toggleFullscreen(editor: Editor, value = !isFullscreen(editor)):
 
 /**
  * A preview of the result. The DOM is built by the schema's serializer (no HTML string parsing), in
- * a container with the same content styles, without editing.
+ * a container with the same content styles, without editing. `doc` and `title`: another document
+ * to show (for example, the text with every suggestion accepted) under its own title.
  */
-export function openPreview(editor: Editor): void {
+export function openPreview(
+  editor: Editor,
+  { doc = editor.view.state.doc, title }: { doc?: PMNode; title?: string } = {},
+): void {
   const { t } = editor.ui;
   const content = h('div', { className: 'nova-prosemirror nova-preview' });
-  content.append(
-    DOMSerializer.fromSchema(editor.schema).serializeFragment(editor.view.state.doc.content),
-  );
+  content.append(DOMSerializer.fromSchema(editor.schema).serializeFragment(doc.content));
   // Links in the preview open in a new tab, so you don't leave the page with unsaved text.
   content.querySelectorAll('a[href]').forEach((a) => {
     a.setAttribute('target', '_blank');
     a.setAttribute('rel', 'noopener noreferrer');
   });
   editor.ui.openDialog({
-    title: t('preview'),
+    title: title ?? t('preview'),
     body: content,
     size: 'large',
     cancelLabel: t('dialog.close'),

@@ -8,6 +8,20 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Reviewing suggested edits: the **Suggestions** panel (`suggestionspanel`, or Review suggestions →
+  Show all suggestions) lists every suggestion as a card with its author, time and text, a deletion
+  right before an insertion by the same person as one replacement; a click finds it in the text.
+  Choose an author to see only their suggestions, and **Accept shown** / **Reject shown** decides
+  all of them at once. The Review menu can accept or reject the suggestions in the selection only,
+  and preview the text with every suggestion accepted or rejected without changing it. Screen
+  readers hear how many suggestions were accepted or rejected.
+- Word tracked changes open as suggested edits: with the `suggestions` plugin, the tracked changes
+  of a `.docx` arrive as suggestions with Word's author names and dates (before, they were
+  accepted), so a document reviewed in Word can be reviewed here and saved back with its revisions.
+  On the server: `fromDocx(bytes, { revisions: 'suggestions' })`; `importDocx` takes `revisions`
+  to choose.
+- **Fixed:** in suggesting mode, `setContent` turned the whole document into one suggestion
+  (everything old deleted, everything new inserted). Loading a document is not an edit.
 - Three formatting tools, as plugins named as in TinyMCE. `casechange`: lowercase, UPPERCASE and
   Title Case for the selection or the word at the cursor; formatting stays letter by letter, code is
   left alone, Title Case keeps English minor words (a, the, of…) small except the first and last

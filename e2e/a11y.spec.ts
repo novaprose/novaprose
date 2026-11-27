@@ -224,6 +224,27 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'template dialog');
     });
 
+    test('the suggestions panel with cards by two authors', async ({ page }) => {
+      await open(page, theme, '&comments=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          '<p>Ship in <del data-suggestion="d1" data-author="ann" data-name="Ann">May</del>' +
+            '<ins data-suggestion="i1" data-author="ann" data-name="Ann">June</ins>.</p>' +
+            '<p>A <ins data-suggestion="i2" data-author="bob" data-name="Bob">very </ins>good plan.</p>',
+        );
+      });
+      await control(page, 'reviewsuggestions');
+      await page.getByRole('menuitem', { name: 'Show all suggestions' }).click();
+      await expect(page.locator('.nova-sugg-card')).toHaveCount(2);
+      // The active card (the cursor in a suggestion) has its own look: check it too.
+      await page.locator('.nova-sugg-summary').first().click();
+      await audit(page, 'suggestions panel');
+    });
+
     test('footnotes: numbers in the text, the notes at the end', async ({ page }) => {
       await open(page, theme, '&tools=1');
       await page.keyboard.press('ControlOrMeta+End');

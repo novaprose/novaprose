@@ -5,7 +5,7 @@ import { createRenderer, type DocumentOptions } from '../document';
 import type { Editor } from '../editor';
 import { pageLayout } from '../plugins/pagelayout';
 import { toDocx, type DocxExportOptions } from './export';
-import { fromDocx, type DocxImportResult } from './import';
+import { fromDocx, type DocxImportOptions, type DocxImportResult } from './import';
 
 /**
  * Word (.docx): `@novaprose/core/docx`. No third-party libraries and no DOM: export and parsing
@@ -17,7 +17,7 @@ import { fromDocx, type DocxImportResult } from './import';
  */
 
 export { fromDocx, toDocx };
-export type { DocxExportOptions, DocxImportResult };
+export type { DocxExportOptions, DocxImportOptions, DocxImportResult };
 export type { DocxImage } from './export';
 
 function isEditor(source: unknown): source is Editor {
@@ -41,6 +41,11 @@ export function exportDocx(
 export interface ImportDocxOptions {
   /** replace (default) — replace the content (Ctrl+Z brings it back); insert — insert at the cursor. */
   mode?: 'replace' | 'insert';
+  /**
+   * Tracked changes: kept as suggested edits when the editor has the suggestions plugin, accepted
+   * otherwise. Set it to choose.
+   */
+  revisions?: DocxImportOptions['revisions'];
 }
 
 /** .docx → into the editor. The document's sheet and margins go to page layout (if it is active). */
@@ -53,7 +58,9 @@ export async function importDocx(
     file instanceof Uint8Array
       ? file
       : new Uint8Array(file instanceof ArrayBuffer ? file : await file.arrayBuffer());
-  const result = await fromDocx(bytes);
+  const result = await fromDocx(bytes, {
+    revisions: options.revisions ?? (editor.hasPlugin('suggestions') ? 'suggestions' : 'accept'),
+  });
   if (options.mode === 'insert') editor.insertContent(result.html);
   else editor.setContent(result.html);
   if (result.page) pageLayout(editor)?.set(result.page);

@@ -73,12 +73,14 @@ const { html, page, warnings } = await fromDocx(uploadedBytes);
 | tables: merged cells, fill, column widths, header row                                       | Word tables with merged cells; the header repeats on each page     |
 | images                                                                                      | pictures in the text (PNG, JPEG, GIF)                              |
 | quotes, code blocks, horizontal lines, page breaks                                          | Quote and Code styles, a bottom border line, page breaks           |
-| [suggested edits](/guides/suggested-edits/)                                                 | tracked changes — accept or reject them in Word                    |
+| [suggested edits](/guides/suggested-edits/)                                                 | tracked changes, with author and date, both ways                   |
 | page layout: sheet and margins                                                              | page setup                                                         |
 | page layout: header, footer, `{page}` and `{pages}`                                         | header and footer with PAGE and NUMPAGES fields                    |
 
 Imported documents bring the same back, plus footnotes (at the end of the document) and links
-made with Word's HYPERLINK field. Tracked changes in an imported document are accepted.
+made with Word's HYPERLINK field. Tracked changes in an imported document become suggested edits,
+with Word's author names and dates, when the editor has the `suggestions` plugin; otherwise they
+are accepted. On the server, `fromDocx(bytes, { revisions: 'suggestions' })` keeps them.
 
 ## Limitations
 

@@ -17,6 +17,7 @@ import { ReplaceStep } from 'prosemirror-transform';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { keymap } from 'prosemirror-keymap';
 import type { Editor } from '../editor';
+import { SET_CONTENT_META } from '../meta';
 import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
 
@@ -88,8 +89,8 @@ export const OWN = 'nova-suggestions-own';
  */
 const PALETTE = ['#116329', '#6639ba', '#99286e', '#0550ae', '#953800', '#0e5b5e'];
 
-/** The color of an edit's author: the same for the same person. */
-function colorFor(key: string): string {
+/** The color of an edit's author: the same for the same person (by id, or by name without one). */
+export function suggestionColor(key: string): string {
   let hash = 0;
   for (const ch of String(key ?? '')) hash = (hash * 31 + ch.charCodeAt(0)) | 0;
   return PALETTE[Math.abs(hash) % PALETTE.length]!;
@@ -148,6 +149,8 @@ const typesOf = (schema: EditorState['schema']) => ({
 function isTracked(tr: Transaction): boolean {
   if (!tr.docChanged || tr.getMeta(OWN)) return false;
   if (tr.getMeta('addToHistory') === false) return false;
+  // setContent loads a document: that is not an edit to suggest.
+  if (tr.getMeta(SET_CONTENT_META)) return false;
   // Undo/redo (own and shared history) and other participants' edits arrive ready-made.
   if (tr.getMeta('history$')) return false;
   const ySync = tr.getMeta('y-sync$') as { isChangeOrigin?: boolean } | undefined;
@@ -311,7 +314,8 @@ export function listSuggestions(doc: PMNode): Suggestion[] {
         mark.type === types.insert ? 'insert' : mark.type === types.delete ? 'delete' : null;
       if (!kind) continue;
       const last = result[result.length - 1];
-      const text = node.isText ? node.text! : '';
+      // Not text (a mention, a footnote number, a line break): its text form, if it has one.
+      const text = node.isText ? node.text! : (node.type.spec.leafText?.(node) ?? '');
       if (last && last.id === mark.attrs.id && last.kind === kind && last.to === pos) {
         last.to = pos + node.nodeSize;
         last.text += text;
@@ -398,7 +402,7 @@ export function setSuggesting(editor: Editor, enabled: boolean): void {
 
 export default definePlugin({
   name: 'suggestions',
-  toolbar: 'suggestions reviewsuggestions',
+  toolbar: 'suggestions reviewsuggestions suggestionspanel',
   marks: {
     suggestion_insert: markSpec('insert'),
     suggestion_delete: markSpec('delete'),
@@ -437,7 +441,7 @@ export default definePlugin({
                       s.author.name || labels.guest,
                     ) + (s.time ? ` · ${time.format(s.time)}` : ''),
                   class: s.kind === 'insert' ? 'nova-sugg-insert' : 'nova-sugg-delete',
-                  style: `--nova-suggestion: ${colorFor(s.author.id || s.author.name)}`,
+                  style: `--nova-suggestion: ${suggestionColor(s.author.id || s.author.name)}`,
                 }),
               ),
             );

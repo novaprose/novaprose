@@ -58,6 +58,17 @@ const del = (editor: Editor) => {
 };
 
 describe('suggesting mode', () => {
+  it('setContent loads a document even in suggesting mode: no suggestion of everything', () => {
+    const editor = mount('<p>old</p>');
+    expect(isSuggesting(editor.view.state)).toBe(true);
+    editor.setContent('<p>new</p>');
+    expect(editor.getHTML()).toBe('<p>new</p>');
+    // Typing after it is still a suggestion.
+    cursor(editor, 4);
+    type(editor, '!');
+    expect(html(editor)).toBe('<p>new<ins>!</ins></p>');
+  });
+
   it('off by default: typing changes the text directly', () => {
     const editor = mount('<p>Hi</p>', {});
     expect(isSuggesting(editor.view.state)).toBe(false);

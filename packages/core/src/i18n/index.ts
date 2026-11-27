@@ -99,11 +99,15 @@ export function loadLanguage(code: string): Promise<boolean> {
   ));
 }
 
-/** A plugin's strings by language (en is the reference). The plugin calls it when its module loads. */
+/**
+ * A plugin's strings by language (en is the reference). The plugin calls it when its module loads.
+ * Strings add up: a plugin and its lazy part can each register theirs under the same namespace.
+ */
 export function registerPluginMessages(namespace: string, dict: PluginDict): void {
-  const flat: Record<string, Record<string, string>> = {};
-  for (const [lang, labels] of Object.entries(dict)) if (labels) flat[lang] = flatten(labels);
-  pluginPacks[namespace] = flat;
+  const packs = (pluginPacks[namespace] ??= {});
+  for (const [lang, labels] of Object.entries(dict)) {
+    if (labels) packs[lang] = { ...packs[lang], ...flatten(labels) };
+  }
 }
 
 /**

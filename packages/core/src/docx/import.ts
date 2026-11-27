@@ -11,7 +11,7 @@ import { unzip } from './zip';
  * in the file are English — and the outline level), lists from the document's numbering (and from
  * a style, like "List Bullet"), tables with merged cells, fill and widths, images (drawing and the
  * old VML), links (and the HYPERLINK field), text formatting, footnotes at the end, tracked changes
- * as accepted, and the sheet and margins.
+ * (accepted, or kept as suggested edits), and the sheet and margins.
  */
 
 export interface DocxImportResult {
@@ -116,8 +116,13 @@ class DocxReader {
   private images = 0;
   /** Inside a table header row: th is bold anyway, so text boldness isn't carried over. */
   private inHeader = false;
+  /** Tracked changes without an id get one from this count. */
+  private revisionCount = 0;
 
-  constructor(private readonly files: Map<string, Uint8Array>) {}
+  constructor(
+    private readonly files: Map<string, Uint8Array>,
+    private readonly revisions: 'accept' | 'suggestions' = 'accept',
+  ) {}
 
   private xml(name: string): XmlElement | undefined {
     const bytes = this.files.get(name);
@@ -388,6 +393,14 @@ class DocxReader {
         }
         case 'w:ins':
         case 'w:moveTo':
+          if (this.revisions === 'suggestions') this.revision(node, 'ins', state);
+          else this.inline(node, state);
+          break;
+        case 'w:del':
+        case 'w:moveFrom':
+          // Accepted, the deleted text goes; as suggestions, it stays marked deleted.
+          if (this.revisions === 'suggestions') this.revision(node, 'del', state);
+          break;
         case 'w:smartTag':
         case 'w:customXml':
         case 'w:fldSimple':
@@ -404,10 +417,37 @@ class DocxReader {
           this.warnings.add('equations');
           break;
         default:
-          // w:del, w:moveFrom (accepted revisions), bookmarks, comments, w:proofErr: no text.
+          // Bookmarks, comments, w:proofErr: no text.
           break;
       }
     }
+  }
+
+  /**
+   * A tracked change kept as a suggestion: <ins>/<del> with Word's author name and date (Word has no
+   * user ids). Word cuts one change into several elements (a run each): an element right after one
+   * of the same kind, author and date continues it under the same id.
+   */
+  private revision(node: XmlElement, tag: 'ins' | 'del', state: InlineState): void {
+    const author = (node.attrs['w:author'] ?? '').slice(0, 80);
+    const time = Date.parse(node.attrs['w:date'] ?? '');
+    const key = `${tag}|${author}|${time}`;
+    const last = state.revision;
+    const id =
+      last && last.key === key && last.end === state.pushed
+        ? last.id
+        : `w${(node.attrs['w:id'] ?? '').replace(/[^\w-]/g, '').slice(0, 60) || `r${++this.revisionCount}`}`;
+    const attrs =
+      ` data-suggestion="${escape(id)}"` +
+      (author ? ` data-name="${escape(author)}"` : '') +
+      (Number.isFinite(time) ? ` data-time="${time}"` : '');
+    state.push(`<${tag}${attrs}>`);
+    const deleted = state.deleted;
+    state.deleted = deleted || tag === 'del';
+    this.inline(node, state);
+    state.deleted = deleted;
+    state.push(`</${tag}>`);
+    state.revision = { key, id, end: state.pushed };
   }
 
   private run(run: XmlElement, state: InlineState): void {
@@ -430,6 +470,10 @@ class DocxReader {
       switch (node.name) {
         case 'w:t':
           text += escape(textContent(node));
+          break;
+        case 'w:delText':
+          // Deleted text: only when tracked changes stay suggestions (accepted, it is gone).
+          if (state.deleted) text += escape(textContent(node));
           break;
         case 'w:tab':
         case 'w:ptab':
@@ -737,9 +781,16 @@ class InlineState {
   readonly fields: Array<{ code: string; link: boolean }> = [];
   /** Link depth (w:hyperlink, the HYPERLINK field). */
   links = 0;
+  /** Inside a deletion kept as a suggestion: w:delText is text. */
+  deleted = false;
+  /** How many pieces were pushed: a change continues the last one if nothing came between. */
+  pushed = 0;
+  /** The last tracked change: its kind, author and date, its id, and where it ended. */
+  revision: { key: string; id: string; end: number } | null = null;
 
   push(html: string): void {
     this.current.push(html);
+    this.pushed++;
   }
 
   pageBreak(): void {
@@ -791,11 +842,23 @@ class ListState {
   }
 }
 
+export interface DocxImportOptions {
+  /**
+   * Tracked changes: `accept` (default) brings the text as if every change were accepted;
+   * `suggestions` keeps them as suggested edits (<ins>/<del> with Word's author and date) for the
+   * suggestions plugin.
+   */
+  revisions?: 'accept' | 'suggestions';
+}
+
 /** .docx → HTML (plus the sheet and margins). Throws when the file isn't a .docx or is damaged. */
-export async function fromDocx(input: Uint8Array | ArrayBuffer): Promise<DocxImportResult> {
+export async function fromDocx(
+  input: Uint8Array | ArrayBuffer,
+  options: DocxImportOptions = {},
+): Promise<DocxImportResult> {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
   const files = await unzip(bytes);
-  const reader = new DocxReader(files);
+  const reader = new DocxReader(files, options.revisions);
   const body = reader.load();
   if (!body) throw new Error('Not a Word document (.docx)');
   const out: string[] = [];

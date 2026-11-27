@@ -65,6 +65,7 @@ import { ImageView } from './ui/image-view';
 import { flatMarkViews } from './mark-views';
 import { autocompleterPlugin } from './ui/autocompleter';
 import { registerSlashCommands, type SlashCommand } from './ui/slash';
+import { SET_CONTENT_META } from './meta';
 import { UiManager } from './ui/manager';
 import { createStatusbar } from './ui/statusbar';
 import {
@@ -777,7 +778,7 @@ export class Editor {
     this.emit('beforeSetContent', detail);
     const doc = parseContent(this.schema, detail.content);
     const tr = this.view.state.tr.replaceWith(0, this.view.state.doc.content.size, doc.content);
-    tr.setMeta(API_CHANGE_META, true);
+    tr.setMeta(API_CHANGE_META, true).setMeta(SET_CONTENT_META, true);
     if (!addToHistory) tr.setMeta('addToHistory', false);
     this.view.dispatch(tr);
     this.emit('setContent', { content: detail.content });
