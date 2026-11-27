@@ -17,6 +17,7 @@ import { AddMarkStep, RemoveMarkStep, ReplaceStep } from 'prosemirror-transform'
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { keymap } from 'prosemirror-keymap';
 import type { Editor } from '../editor';
+import type { NodeAttribute } from '../schema';
 import { SET_CONTENT_META } from '../meta';
 import { definePlugin } from '../plugins';
 import { pickLabels } from './shared';
@@ -29,8 +30,10 @@ import { pickLabels } from './shared';
  *
  * Inserting and deleting text is tracked, and so is text formatting (bold, a color, a link…): the
  * new formatting shows at once, and the text remembers what it was, to go back to it if the
- * suggestion is rejected (`<span data-suggestion="id" data-format="[…]">`). Structural changes (a new
- * paragraph, a list, alignment) apply directly even in suggesting mode.
+ * suggestion is rejected (`<span data-suggestion="id" data-format="[…]">`). So is a block's type
+ * and style (a heading instead of a paragraph, alignment, indent): the block remembers what it was
+ * (`<h2 data-suggestion="id" data-before='{"type":"paragraph"}'>`). Other structural changes (a new
+ * paragraph, a list) apply directly even in suggesting mode.
  */
 
 export interface SuggestionAuthor {
@@ -51,8 +54,8 @@ export interface SuggestionsOptions {
 
 export interface Suggestion {
   id: string;
-  /** insert and delete: text; format: the text's formatting changed. */
-  kind: 'insert' | 'delete' | 'format';
+  /** insert and delete: text; format: the text's formatting changed; block: a block's type or style. */
+  kind: 'insert' | 'delete' | 'format' | 'block';
   author: SuggestionAuthor;
   time: number;
   from: number;
@@ -61,6 +64,22 @@ export interface Suggestion {
   /** format: the formatting (mark names) the text got, and the formatting it lost. */
   added?: string[];
   removed?: string[];
+  /** block: what the block was before: its type and attributes. */
+  before?: BlockBefore;
+}
+
+export interface BlockBefore {
+  type: string;
+  attrs: Record<string, string | number | boolean | null>;
+}
+
+/** A suggested change of a block's type or style, kept on the block (its `suggestion` attribute). */
+export interface BlockSuggestion {
+  id: string;
+  author: string;
+  name: string;
+  time: number;
+  before: BlockBefore;
 }
 
 const ID_RE = /^[A-Za-z0-9_-]{1,64}$/;
@@ -167,19 +186,89 @@ export function cleanFormat(value: unknown): string {
   for (const item of list.slice(0, 16)) {
     const type = (item as { type?: unknown } | null)?.type;
     if (typeof type !== 'string' || !/^[a-z][a-z0-9_]{0,39}$/.test(type)) continue;
-    const raw = (item as { attrs?: unknown }).attrs;
-    const attrs: Record<string, string | number | boolean | null> = {};
-    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
-      for (const [key, attr] of Object.entries(raw).slice(0, 8)) {
-        if (!/^[A-Za-z][\w-]{0,39}$/.test(key)) continue;
-        if (typeof attr === 'string') attrs[key] = attr.slice(0, 2000);
-        else if (typeof attr === 'number' || typeof attr === 'boolean' || attr === null)
-          attrs[key] = attr;
-      }
-    }
+    const attrs = cleanAttrs((item as { attrs?: unknown }).attrs, 8);
     out.push(Object.keys(attrs).length ? { type, attrs } : { type });
   }
   return JSON.stringify(out);
+}
+
+/** Plain attribute values only (short strings, numbers, booleans, null), at most `max` of them. */
+function cleanAttrs(raw: unknown, max: number): BlockBefore['attrs'] {
+  const attrs: BlockBefore['attrs'] = {};
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    for (const [key, attr] of Object.entries(raw).slice(0, max)) {
+      if (!/^[A-Za-z][\w-]{0,39}$/.test(key) || key === 'suggestion') continue;
+      if (typeof attr === 'string') attrs[key] = attr.slice(0, 2000);
+      else if (typeof attr === 'number' || typeof attr === 'boolean' || attr === null)
+        attrs[key] = attr;
+    }
+  }
+  return attrs;
+}
+
+/**
+ * A block suggestion from a block's attribute, or null. It comes from HTML or JSON, so it can be
+ * anything: only an id, an author, a time and a type name with plain attribute values are kept.
+ */
+export function blockSuggestion(value: unknown): BlockSuggestion | null {
+  if (!value || typeof value !== 'object') return null;
+  const raw = value as Record<string, unknown>;
+  let before = raw.before;
+  try {
+    if (typeof before === 'string') before = JSON.parse(before);
+  } catch {
+    return null;
+  }
+  const type = (before as { type?: unknown } | null)?.type;
+  if (typeof raw.id !== 'string' || !ID_RE.test(raw.id)) return null;
+  if (typeof type !== 'string' || !/^[a-z][a-z0-9_]{0,39}$/.test(type)) return null;
+  const author = String(raw.author ?? '');
+  return {
+    id: raw.id,
+    author: USER_ID_RE.test(author) ? author : '',
+    name: String(raw.name ?? '').slice(0, 80),
+    time: Number(raw.time) || 0,
+    before: { type, attrs: cleanAttrs((before as { attrs?: unknown }).attrs, 12) },
+  };
+}
+
+/** The suggestion attribute of blocks, read from and written to the block's element. */
+const blockAttribute: NodeAttribute = {
+  nodes: 'textblock',
+  default: null,
+  parse: (dom) =>
+    dom.hasAttribute('data-before')
+      ? blockSuggestion({
+          id: dom.getAttribute('data-suggestion'),
+          author: dom.getAttribute('data-author'),
+          name: dom.getAttribute('data-name'),
+          time: dom.getAttribute('data-time'),
+          before: dom.getAttribute('data-before'),
+        })
+      : null,
+  render(value) {
+    const s = blockSuggestion(value);
+    if (!s) return {};
+    const out: Record<string, string> = {
+      'data-suggestion': s.id,
+      'data-before': JSON.stringify(s.before),
+    };
+    if (s.author) out['data-author'] = s.author;
+    if (s.name) out['data-name'] = s.name;
+    if (s.time) out['data-time'] = String(s.time);
+    return out;
+  },
+};
+
+/** Where the block tracker plugs in (suggestions-blocks.ts, loaded with the plugin's interface). */
+type BlockTracker = (
+  tr: Transaction,
+  state: EditorState,
+  author: SuggestionAuthor,
+) => Transaction | null;
+let trackBlocks: BlockTracker | null = null;
+export function setBlockTracker(tracker: BlockTracker): void {
+  trackBlocks = tracker;
 }
 
 function formatSpec(): MarkSpec {
@@ -370,6 +459,9 @@ export function suggestTransaction(
   state: EditorState,
   author: SuggestionAuthor,
 ): Transaction {
+  // A change of a block's type or style: the block remembers what it was.
+  const blocks = tr.docChanged && !tr.getMeta(OWN) ? trackBlocks?.(tr, state, author) : null;
+  if (blocks) return blocks;
   if (!isTracked(tr)) return tr;
   const types = typesOf(state.schema);
   const out = state.tr;
@@ -507,7 +599,22 @@ export function listSuggestions(doc: PMNode): Suggestion[] {
   const types = typesOf(doc.type.schema);
   const result: Suggestion[] = [];
   doc.descendants((node, pos) => {
-    if (!node.isInline) return true;
+    if (!node.isInline) {
+      const block = blockSuggestion(node.attrs.suggestion);
+      if (block) {
+        result.push({
+          id: block.id,
+          kind: 'block',
+          author: { id: block.author, name: block.name },
+          time: block.time,
+          from: pos + 1,
+          to: pos + node.nodeSize - 1,
+          text: node.textContent,
+          before: block.before,
+        });
+      }
+      return true;
+    }
     for (const mark of node.marks) {
       const kind =
         mark.type === types.insert
@@ -574,6 +681,28 @@ function resolveFormat(tr: Transaction, s: Suggestion, action: 'accept' | 'rejec
   }
 }
 
+/**
+ * A block's suggested type or style accepted (the block forgets what it was) or rejected (it gets
+ * back its type and attributes; a type that can't hold the text now leaves the block as it is).
+ */
+function resolveBlock(tr: Transaction, s: Suggestion, action: 'accept' | 'reject'): void {
+  const pos = s.from - 1;
+  const node = tr.doc.nodeAt(pos);
+  if (!node) return;
+  const type = action === 'reject' ? tr.doc.type.schema.nodes[s.before!.type] : undefined;
+  if (
+    type?.isTextblock &&
+    type.spec.attrs &&
+    'suggestion' in type.spec.attrs &&
+    type.validContent(node.content)
+  ) {
+    const attrs = Object.fromEntries(
+      Object.entries(s.before!.attrs).filter(([key]) => key in type.spec.attrs!),
+    );
+    tr.setNodeMarkup(pos, type, { ...attrs, suggestion: null }, node.marks);
+  } else tr.setNodeAttribute(pos, 'suggestion', null);
+}
+
 /** Accept or reject suggestions (all of them, or those with the given ids). */
 export function resolveSuggestions(
   state: EditorState,
@@ -586,11 +715,12 @@ export function resolveSuggestions(
   tr.setMeta(RESOLVED, { action, ids: [...new Set(chosen.map((s) => s.id))] });
   // Formats first: they don't move text, and the text they are on may go next.
   for (const s of chosen) if (s.kind === 'format') resolveFormat(tr, s, action);
+  for (const s of chosen) if (s.kind === 'block') resolveBlock(tr, s, action);
   // Blocks whose text was removed (the position before the block).
   const emptied = new Set<number>();
   // From the end, so positions ahead don't shift.
   for (const s of [...chosen].sort((a, b) => b.from - a.from)) {
-    if (s.kind === 'format') continue;
+    if (s.kind === 'format' || s.kind === 'block') continue;
     const remove = (s.kind === 'insert') === (action === 'reject');
     if (remove) {
       emptied.add(state.doc.resolve(s.from).before());
@@ -632,6 +762,10 @@ export function suggestionsResult(editor: Editor, action: 'accept' | 'reject'): 
   return resolveSuggestions(editor.view.state, action).doc;
 }
 
+/** A block suggestion's decoration: on the whole block (from…to is its content). */
+const blockDecoration = (from: number, to: number, attrs: Record<string, string>) =>
+  Decoration.node(from - 1, to + 1, attrs);
+
 export function isSuggesting(state: EditorState): boolean {
   return suggestionsKey.getState(state)?.enabled ?? false;
 }
@@ -650,6 +784,7 @@ export default definePlugin({
     suggestion_delete: markSpec('delete'),
     suggestion_format: formatSpec(),
   },
+  nodeAttributes: { suggestion: blockAttribute },
   prosemirrorPlugins: (editor) => {
     const options = (editor.options.pluginOptions?.suggestions ?? {}) as SuggestionsOptions;
     let cache: { doc: PMNode; set: DecorationSet } | null = null;
@@ -677,7 +812,7 @@ export default definePlugin({
             const set = DecorationSet.create(
               state.doc,
               listSuggestions(state.doc).map((s) =>
-                Decoration.inline(s.from, s.to, {
+                (s.kind === 'block' ? blockDecoration : Decoration.inline)(s.from, s.to, {
                   title:
                     (s.kind === 'insert'
                       ? labels.inserted

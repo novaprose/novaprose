@@ -195,6 +195,7 @@ createEditor({ element, plugins: [wordLimit] });
 | `toolbar`            | controls appended to the default toolbar                                                     |
 | `prosemirrorPlugins` | `(editor) => Plugin[]` for low-level input handling and decorations                          |
 | `nodeViews`          | `{ name: view }`: draw nodes with your own component — see [Node views](/guides/node-views/) |
+| `nodeAttributes`     | your own attribute on existing blocks — see [below](#an-attribute-on-existing-blocks)        |
 | `load`               | `() => import(...)`: the rest of a plugin with nodes, loaded after the editor is created     |
 
 ### New content types
@@ -237,6 +238,31 @@ const callout = definePlugin({
   load: () => import('./callout-ui'), // definePlugin({ name: 'callout-ui', setup… })
 });
 ```
+
+### An attribute on existing blocks
+
+`nodeAttributes` adds your own attribute to nodes that already exist: it is kept in the document,
+read from the element when HTML is loaded and written back to it. `nodes: 'textblock'` gives it to
+every node that holds text (paragraphs, headings, code blocks and the text blocks of other
+plugins), or list node names. The value can come back from saved JSON as anything, so `render`
+checks it:
+
+```ts
+const reviewed = definePlugin({
+  name: 'reviewed',
+  nodeAttributes: {
+    reviewedBy: {
+      nodes: 'textblock',
+      default: null,
+      parse: (dom) => dom.getAttribute('data-reviewed-by'),
+      render: (value) =>
+        typeof value === 'string' ? { 'data-reviewed-by': value.slice(0, 80) } : {},
+    },
+  },
+});
+```
+
+The suggestions plugin keeps a suggested change of a block's type or style this way.
 
 ### Loading plugins
 

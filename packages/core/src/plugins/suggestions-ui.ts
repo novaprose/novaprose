@@ -9,11 +9,13 @@ import {
   listSuggestions,
   resolveSuggestions,
   RESOLVED,
+  setBlockTracker,
   setSuggesting,
   suggestionsResult,
   type Suggestion,
   type SuggestionsOptions,
 } from './suggestions';
+import { trackBlockChanges } from './suggestions-blocks';
 import type { createSuggestionsPanel } from './suggestions-panel';
 import { getComments } from './comments';
 import { pickLabels } from './shared';
@@ -58,13 +60,16 @@ const ICON_REVIEW = icons.review;
 const ICON_ACCEPT = icons.check;
 const ICON_REJECT = icons.close;
 
+// From now on, a change of a block's type or style in suggesting mode is a suggestion too.
+setBlockTracker(trackBlockChanges);
+
 function suggestionAt(state: EditorState): Suggestion | null {
   const { from } = state.selection;
-  return (
-    listSuggestions(state.doc).find(
-      (s) => from >= s.from && from <= s.to && (s.to > from || s.from < from),
-    ) ?? null
+  const here = listSuggestions(state.doc).filter(
+    (s) => from >= s.from && from <= s.to && (s.to > from || s.from < from),
   );
+  // Text suggested inside a block whose style is suggested too: the text's suggestion first.
+  return here.find((s) => s.kind !== 'block') ?? here[0] ?? null;
 }
 
 /** Ids of the suggestions the selection touches (none for a cursor). */

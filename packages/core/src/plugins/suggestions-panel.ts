@@ -10,6 +10,7 @@ import {
   listSuggestions,
   resolveSuggestions,
   suggestionColor,
+  type BlockBefore,
   type SuggestionAuthor,
 } from './suggestions';
 
@@ -25,7 +26,7 @@ import {
 export interface SuggestionCard {
   /** Ids of the suggestions on the card (a replacement has two: the deletion and the insertion). */
   ids: string[];
-  kind: 'insert' | 'delete' | 'replace' | 'format';
+  kind: 'insert' | 'delete' | 'replace' | 'format' | 'block';
   author: SuggestionAuthor;
   time: number;
   /** Where the card's text starts and ends in the document. */
@@ -36,6 +37,8 @@ export interface SuggestionCard {
   added: string;
   /** format: the mark names the text got and lost. */
   marks?: { added: string[]; removed: string[] };
+  /** block: what the block was and what it is now. */
+  block?: { before: BlockBefore; after: BlockBefore };
 }
 
 export interface SuggestionsPanelLabels {
@@ -109,12 +112,37 @@ export function suggestionCards(doc: PMNode): SuggestionCard[] {
       ...(s.kind === 'format'
         ? { marks: { added: [...(s.added ?? [])], removed: [...(s.removed ?? [])] } }
         : {}),
+      ...(s.kind === 'block'
+        ? { block: { before: s.before!, after: blockNow(doc, s.from - 1) } }
+        : {}),
     };
     cards.push(card);
     byPart.set(key, card);
   }
   return cards;
 }
+
+/** A block's type and attributes now (without its suggestion). */
+function blockNow(doc: PMNode, pos: number): BlockBefore {
+  const node = doc.nodeAt(pos);
+  const attrs: BlockBefore['attrs'] = {};
+  for (const [key, value] of Object.entries(node?.attrs ?? {})) {
+    if (
+      key !== 'suggestion' &&
+      (value === null || ['string', 'number', 'boolean'].includes(typeof value))
+    )
+      attrs[key] = value as string | number | boolean | null;
+  }
+  return { type: node?.type.name ?? '', attrs };
+}
+
+/** UI strings of block alignments. */
+const ALIGN_LABELS: Record<string, MessageKey> = {
+  left: 'alignLeft',
+  center: 'alignCenter',
+  right: 'alignRight',
+  justify: 'alignJustify',
+};
 
 /** UI strings of the formatting a suggested format changes (mark names of the schema). */
 const MARK_LABELS: Record<string, MessageKey> = {
@@ -249,6 +277,45 @@ export function createSuggestionsPanel(
     }
   }
 
+  /** A block type's name: Paragraph, Heading 2, Code block. */
+  function blockName(block: BlockBefore): string {
+    if (block.type === 'paragraph') return editor.ui.t('paragraph');
+    if (block.type === 'code_block') return editor.ui.t('codeBlock');
+    if (block.type === 'heading') {
+      const level = Math.min(6, Math.max(1, Math.trunc(Number(block.attrs.level)) || 1));
+      return editor.ui.t(`h${level}` as MessageKey);
+    }
+    return block.type;
+  }
+
+  /** What a block suggestion changes: "Paragraph → Heading 2", "Align center", "Increase indent". */
+  function blockChanges({ before, after }: { before: BlockBefore; after: BlockBefore }): string[] {
+    const out: string[] = [];
+    // A missing attribute is its default (HTML saved elsewhere may leave defaults out).
+    const value = (block: BlockBefore, key: string) =>
+      block.attrs[key] ??
+      (
+        editor.view.state.schema.nodes[block.type]?.spec.attrs?.[key] as
+          { default?: unknown } | undefined
+      )?.default ??
+      null;
+    const differs = (key: string) => value(before, key) !== value(after, key);
+    if (before.type !== after.type || differs('level'))
+      out.push(`${blockName(before)} → ${blockName(after)}`);
+    if (differs('align'))
+      out.push(editor.ui.t(ALIGN_LABELS[String(after.attrs.align)] ?? 'alignLeft'));
+    if (differs('indent'))
+      out.push(
+        editor.ui.t(
+          Number(after.attrs.indent) > Number(before.attrs.indent) ? 'indent' : 'outdent',
+        ),
+      );
+    if (differs('lineHeight'))
+      out.push(`${editor.ui.t('lineHeight')}: ${after.attrs.lineHeight ?? editor.ui.t('default')}`);
+    if (differs('dir')) out.push(after.attrs.dir === 'rtl' ? 'RTL' : 'LTR');
+    return out.length ? out : [blockName(after)];
+  }
+
   function cardElement(card: SuggestionCard, active: boolean): HTMLElement {
     const key = card.ids[0]!;
     const summaryId = uniqueId('nova-sugg-summary');
@@ -257,6 +324,7 @@ export function createSuggestionsPanel(
       delete: labels.kindDelete,
       replace: labels.kindReplace,
       format: labels.kindFormat,
+      block: labels.kindFormat,
     }[card.kind];
     const text = (value: string, tag: 'ins' | 'del' | 'span') =>
       value.trim()
@@ -273,7 +341,9 @@ export function createSuggestionsPanel(
             ...card.marks.removed.map((name) => `−${markName(name)}`),
           ].join(' '),
         )
-      : null;
+      : card.block
+        ? h('span', { className: 'nova-sugg-changes' }, blockChanges(card.block).join(' · '))
+        : null;
     const summary = h(
       'button',
       {
@@ -287,7 +357,7 @@ export function createSuggestionsPanel(
       h('span', { className: 'nova-sugg-kind' }, kind),
       card.kind === 'delete' || card.kind === 'replace' ? text(card.removed, 'del') : null,
       card.kind === 'insert' || card.kind === 'replace' ? text(card.added, 'ins') : null,
-      card.kind === 'format' ? text(card.added, 'span') : null,
+      card.kind === 'format' || card.kind === 'block' ? text(card.added, 'span') : null,
       changes,
     );
     const editable = editor.isEditable();

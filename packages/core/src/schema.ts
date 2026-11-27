@@ -1,4 +1,11 @@
-import { Schema, type DOMOutputSpec, type MarkSpec, type NodeSpec } from 'prosemirror-model';
+import {
+  Schema,
+  type Attrs,
+  type DOMOutputSpec,
+  type MarkSpec,
+  type Node as PMNode,
+  type NodeSpec,
+} from 'prosemirror-model';
 import type { HtmlRulesInstance } from './html-rules-api';
 import { tableNodes } from './table-nodes';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
@@ -892,7 +899,69 @@ export const schema: NovaSchema = new Schema<NodeName, MarkName>({ nodes, marks 
 export interface SchemaExtensions {
   nodes?: Record<string, NodeSpec>;
   marks?: Record<string, MarkSpec>;
+  /** Attributes plugins add to existing nodes, by attribute name. */
+  attributes?: Record<string, NodeAttribute>;
 }
+
+/**
+ * An attribute a plugin adds to existing nodes: read from the node's element when HTML is parsed and
+ * written back to it. The value can come from JSON as anything: `render` must cope with that.
+ */
+export interface NodeAttribute {
+  /** Which nodes get it: their names, or 'textblock' for every node that holds text. */
+  nodes: readonly string[] | 'textblock';
+  default: unknown;
+  /** The value from the element (null or undefined: none). */
+  parse(dom: HTMLElement): unknown;
+  /** The element's attributes for a value ({} for none). */
+  render(value: unknown): Record<string, string>;
+}
+
+/** A node with a plugin's attribute: kept in the model, read from and written to its element. */
+function withAttribute(name: string, attr: NodeAttribute, spec: NodeSpec): NodeSpec {
+  const toDOM = spec.toDOM;
+  return {
+    ...spec,
+    attrs: { ...spec.attrs, [name]: { default: attr.default } },
+    parseDOM: spec.parseDOM?.map((rule) => {
+      if (!rule.tag) return rule;
+      const getAttrs = rule.getAttrs as ((dom: HTMLElement) => Attrs | false | null) | undefined;
+      return {
+        ...rule,
+        getAttrs: (dom: HTMLElement) => {
+          const base = getAttrs ? getAttrs(dom) : (rule.attrs ?? null);
+          if (base === false) return false;
+          const value = attr.parse(dom);
+          return value == null ? base : { ...base, [name]: value };
+        },
+      };
+    }),
+    ...(toDOM
+      ? {
+          toDOM: (node: PMNode) => {
+            const out = toDOM(node);
+            const extra = attr.render(node.attrs[name]);
+            if (!Array.isArray(out) || typeof out[0] !== 'string' || !Object.keys(extra).length)
+              return out;
+            const second = out[1] as unknown;
+            const hasAttrs =
+              !!second &&
+              typeof second === 'object' &&
+              !Array.isArray(second) &&
+              (second as { nodeType?: unknown }).nodeType === undefined;
+            return [
+              out[0],
+              { ...(hasAttrs ? (second as Attrs) : {}), ...extra },
+              ...(out as unknown[]).slice(hasAttrs ? 2 : 1),
+            ] as unknown as DOMOutputSpec;
+          },
+        }
+      : {}),
+  };
+}
+
+/** Whether a node spec holds text (inline content). */
+const holdsText = (spec: NodeSpec) => /\b(inline|text)\b/.test(spec.content ?? '');
 
 /**
  * A schema with the nodes and marks of plugins; without extensions, the shared base schema. New
@@ -911,7 +980,16 @@ export function createSchema(
   const rtl = direction === 'rtl';
   const extraNodes = Object.entries(extensions.nodes ?? {});
   const extraMarks = Object.entries(extensions.marks ?? {});
-  if (!extraNodes.length && !extraMarks.length && !classFilter && !htmlRules && !rtl) return schema;
+  const attributes = Object.entries(extensions.attributes ?? {});
+  if (
+    !extraNodes.length &&
+    !extraMarks.length &&
+    !attributes.length &&
+    !classFilter &&
+    !htmlRules &&
+    !rtl
+  )
+    return schema;
   let baseNodes: Record<string, NodeSpec> =
     classFilter || rtl ? buildNodes(classFilter ?? NO_CLASSES, rtl) : nodes;
   let baseMarks: Record<string, MarkSpec> = classFilter ? buildMarks(classFilter) : marks;
@@ -928,8 +1006,20 @@ export function createSchema(
   for (const [name] of extraMarks) {
     if (name in marks) throw new Error(`[nova] mark "${name}" already exists in the base schema`);
   }
+  let allNodes: Record<string, NodeSpec> = { ...baseNodes, ...Object.fromEntries(extraNodes) };
+  for (const [name, attr] of attributes) {
+    allNodes = Object.fromEntries(
+      Object.entries(allNodes).map(([node, spec]) => [
+        node,
+        (attr.nodes === 'textblock' ? holdsText(spec) : attr.nodes.includes(node)) &&
+        !spec.attrs?.[name]
+          ? withAttribute(name, attr, spec)
+          : spec,
+      ]),
+    );
+  }
   ref.schema = new Schema({
-    nodes: { ...baseNodes, ...Object.fromEntries(extraNodes) },
+    nodes: allNodes,
     marks: { ...baseMarks, ...Object.fromEntries(extraMarks) },
   });
   return ref.schema as unknown as NovaSchema;

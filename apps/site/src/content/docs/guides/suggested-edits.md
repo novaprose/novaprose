@@ -102,8 +102,20 @@ Inserting and deleting text (typing, pasting, cutting) becomes a suggestion, and
 formatting: bold, italic, underline, strikethrough, code, subscript and superscript, colors,
 fonts, sizes, links and styles. The new formatting shows at once, with a dotted line under it in
 the author's color; rejecting it gives the text back the look it had. Formatting your own
-suggested insertion just formats it. Structural changes — new paragraphs, lists, alignment — are
-applied directly even in suggesting mode.
+suggested insertion just formats it.
+
+A block's type and style are suggestions too: a heading instead of a paragraph (or a paragraph
+instead of a heading), a code block, alignment, indent, line height and direction. The change shows
+at once, with a bar in the author's color at the start of the block, and the card reads
+“Paragraph → Heading 2” or “Align center”; rejecting it gives the block back its type and style.
+Change it back yourself and the suggestion goes. In HTML the block remembers what it was:
+
+```html
+<h2 data-suggestion="s3" data-before='{"type":"paragraph","attrs":{}}' data-author="u42">Plan</h2>
+```
+
+Other structural changes — new paragraphs, lists, tables — are applied directly even in
+suggesting mode.
 
 A paragraph whose whole text was a suggestion goes with it: reject a new paragraph's text, or
 accept the deletion of a paragraph's text, and no empty line is left.

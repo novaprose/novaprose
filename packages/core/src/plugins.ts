@@ -3,6 +3,7 @@ import type { Command, EditorState, Plugin as PMPlugin, Transaction } from 'pros
 import type { CommandName } from './commands';
 import type { Editor } from './editor';
 import type { NodeViewFactory } from './node-view';
+import type { NodeAttribute } from './schema';
 
 /**
  * A NovaProse plugin. Built-in and third-party plugins use the same API.
@@ -39,6 +40,12 @@ export interface NovaPlugin {
   nodes?: Record<string, NodeSpec> | ((editor: Editor) => Record<string, NodeSpec>);
   /** New marks (inline formatting) with parseDOM and toDOM. */
   marks?: Record<string, MarkSpec>;
+  /**
+   * Attributes added to existing nodes, by name: read from the node's element when HTML is parsed and
+   * written back to it (`nodes: 'textblock'` for every node that holds text). The suggestions plugin
+   * keeps a suggested change of a block's type or style this way.
+   */
+  nodeAttributes?: Record<string, NodeAttribute>;
   /**
    * Your own way to draw nodes in the editor: `{ callout: reactNodeView(Callout) }`, `vueNodeView(…)`
    * or `defineNodeView(…)`. Doesn't affect the HTML (that comes from toDOM). Views belong in the plugin

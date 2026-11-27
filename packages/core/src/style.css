@@ -2120,6 +2120,17 @@ html.nova-fullscreen-lock body {
       white var(--nova-suggestion-lift)
     );
 }
+/* A block whose type or style is a suggestion: a bar in the author's color at its start, the text unmoved. */
+.nova-sugg-block {
+  margin-inline-start: -13px;
+  padding-inline-start: 10px;
+  border-inline-start: 3px solid
+    color-mix(
+      in srgb,
+      var(--nova-suggestion, var(--nova-accent)),
+      white var(--nova-suggestion-lift)
+    );
+}
 /* In suggesting mode the cursor takes the suggestion color: a visible sign that typing becomes a suggestion. */
 .nova-prosemirror.nova-suggesting {
   caret-color: var(--nova-success);

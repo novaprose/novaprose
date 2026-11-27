@@ -13,6 +13,13 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Suggested block changes: in suggesting mode, a heading instead of a paragraph (or the other
+  way round), a code block, alignment, indent, line height and direction are suggestions like
+  text edits. The change shows at once with a bar in the author's color, the card in the
+  **Suggestions** panel reads “Paragraph → Heading 2” or “Align center”, and rejecting it gives
+  the block back its type and style (changing it back yourself takes the suggestion away). In HTML
+  the block keeps what it was in `data-before`; values from HTML or JSON are checked like any
+  other. Plugins can now add their own attribute to existing blocks with `nodeAttributes`.
 - Discussing a suggested edit: with the `comments` plugin, every card in the **Suggestions** panel
   has a **Comment** button, and replies follow one another on the card (Ctrl+Enter sends, Esc
   closes the box, your own replies can be deleted). Accepting or rejecting the suggestion resolves

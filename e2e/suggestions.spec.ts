@@ -110,6 +110,24 @@ test("the panel: every suggestion as a card; one author's at once with the filte
   await expect.poll(() => html(page)).toBe('<p>Ship in June.</p><p>A good plan.</p>');
 });
 
+test('a heading instead of a paragraph is a suggestion; Reject makes it a paragraph again', async ({
+  page,
+}) => {
+  await open(page, '<p>Title</p><p>Text</p>');
+  await page.keyboard.press('ControlOrMeta+Alt+Shift+e');
+  await page.keyboard.press('ControlOrMeta+Home');
+  await clickControl(page, 'blocks');
+  await page.getByRole('menuitemradio', { name: 'Heading 2' }).click();
+  await expect(content(page).locator('h2.nova-sugg-block')).toHaveText('Title');
+  await expect.poll(() => html(page)).toContain('<h2 data-before=');
+  await clickControl(page, 'reviewsuggestions');
+  await page.getByRole('menuitem', { name: 'Show all suggestions' }).click();
+  const panel = page.getByRole('complementary', { name: 'Suggestions' });
+  await expect(panel.locator('.nova-sugg-changes')).toHaveText('Paragraph → Heading 2');
+  await panel.getByRole('button', { name: 'Reject', exact: true }).click();
+  await expect.poll(() => html(page)).toBe('<p>Title</p><p>Text</p>');
+});
+
 test('a suggestion is discussed on its card; accepting it resolves the discussion', async ({
   page,
 }) => {

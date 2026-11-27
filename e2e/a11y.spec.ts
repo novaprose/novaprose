@@ -289,12 +289,14 @@ for (const theme of ['light', 'dark'] as const) {
         e.setContent(
           '<p>Ship in <del data-suggestion="d1" data-author="ann" data-name="Ann">May</del>' +
             '<ins data-suggestion="i1" data-author="ann" data-name="Ann">June</ins>.</p>' +
-            '<p>A <ins data-suggestion="i2" data-author="bob" data-name="Bob">very </ins>good plan.</p>',
+            '<p>A <ins data-suggestion="i2" data-author="bob" data-name="Bob">very </ins>good plan.</p>' +
+            // A suggested block style: the bar in the author's color and its card.
+            `<h2 data-suggestion="b1" data-before='{"type":"paragraph"}' data-author="bob" data-name="Bob">Plan</h2>`,
         );
       });
       await control(page, 'reviewsuggestions');
       await page.getByRole('menuitem', { name: 'Show all suggestions' }).click();
-      await expect(page.locator('.nova-sugg-card')).toHaveCount(2);
+      await expect(page.locator('.nova-sugg-card')).toHaveCount(3);
       // The active card (the cursor in a suggestion) has its own look: check it too.
       await page.locator('.nova-sugg-summary').first().click();
       await audit(page, 'suggestions panel');

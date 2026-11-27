@@ -4,7 +4,7 @@ import type { EditorOptions } from './editor';
 import { formatClasses } from './formats';
 import { htmlRulesFor } from './html-rules-api';
 import { orderPlugins, resolveEntries, type NovaPlugin } from './plugins';
-import { createSchema, type ClassFilter, type NovaSchema } from './schema';
+import { createSchema, type ClassFilter, type NodeAttribute, type NovaSchema } from './schema';
 import { HTMLSerializer } from './serializer';
 
 /**
@@ -71,7 +71,9 @@ export function schemaFromOptions(
 
   const nodes: Record<string, NodeSpec> = {};
   const marks: Record<string, MarkSpec> = {};
+  const attributes: Record<string, NodeAttribute> = {};
   for (const plugin of plugins) {
+    Object.assign(attributes, plugin.nodeAttributes);
     // Nodes may depend on plugin settings (for example, the variable's attribute name). If one
     // plugin fails, it goes without its nodes, but the editor (and server rendering) keeps working.
     let pluginNodes: Record<string, NodeSpec> | undefined;
@@ -94,7 +96,7 @@ export function schemaFromOptions(
   }
   try {
     return {
-      schema: createSchema({ nodes, marks }, classFilter, htmlRules, direction),
+      schema: createSchema({ nodes, marks, attributes }, classFilter, htmlRules, direction),
       allowedClasses,
     };
   } catch (error) {
