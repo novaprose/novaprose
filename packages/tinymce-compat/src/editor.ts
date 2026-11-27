@@ -117,6 +117,7 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mcevisualchars: 'visualchars',
   mcesave: 'save',
   mcecancel: 'cancel',
+  mcetemplate: 'template',
 };
 
 /** Commands of collapsible blocks (the accordion plugin), as in the TinyMCE documentation. */
@@ -402,6 +403,12 @@ export class CompatEditor {
       }
     } else if (ACCORDION_COMMANDS.has(name)) {
       done = this.accordionCommand(name, value);
+    } else if (name === 'mceinserttemplate' && this.core.hasPlugin('template')) {
+      // The template plugin inserts it the way its dialog does (values, dates, selection).
+      this.core.root.dispatchEvent(
+        new CustomEvent('nova-insert-template', { detail: String(value ?? '') }),
+      );
+      done = true;
     } else if (PLUGIN_COMMANDS[name] || name === 'mcetogglestickyformatpainter') {
       done = this.pluginCommand(name);
     } else if (name === 'codesample') {

@@ -151,6 +151,14 @@ const IGNORED = new Set([
   'importcss_groups',
   'importcss_exclusive',
   'importcss_selector_converter',
+  'templates',
+  'template_replace_values',
+  'template_preview_replace_values',
+  'template_selected_content_classes',
+  'template_cdate_classes',
+  'template_mdate_classes',
+  'template_cdate_format',
+  'template_mdate_format',
 ]);
 
 const list = (value: unknown): string[] =>
@@ -515,6 +523,31 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     ).filter(([, value]) => value !== undefined),
   );
   if (Object.keys(importcss).length) pluginOptions.importcss = importcss;
+  // template: the list as an array, a URL or a function with a callback (as in TinyMCE 5–6).
+  const templates = config.templates;
+  const template = Object.fromEntries(
+    (
+      [
+        [
+          'templates',
+          typeof templates === 'function'
+            ? () =>
+                new Promise((resolve) =>
+                  (templates as (done: (list: unknown) => void) => void)(resolve),
+                )
+            : templates,
+        ],
+        ['values', config.template_replace_values],
+        ['previewValues', config.template_preview_replace_values],
+        ['selectedContentClasses', config.template_selected_content_classes],
+        ['creationDateClasses', config.template_cdate_classes],
+        ['modifiedDateClasses', config.template_mdate_classes],
+        ['creationDateFormat', config.template_cdate_format],
+        ['modifiedDateFormat', config.template_mdate_format],
+      ] as const
+    ).filter(([, value]) => value !== undefined),
+  );
+  if (Object.keys(template).length) pluginOptions.template = template;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;
 
   return { options, unknown, missingPlugins };

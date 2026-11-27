@@ -130,6 +130,7 @@ const editor = {
   permanentPen: 'highlighter',
   visualChars: 'pilcrow-square',
   cancelChanges: 'rotate-ccw',
+  template: 'layout-template',
 };
 
 const entries = Object.entries(editor).map(([key, value]) => {

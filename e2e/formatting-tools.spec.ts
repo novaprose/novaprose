@@ -182,3 +182,19 @@ test('importcss: a class of the content CSS is a Styles item and styles the para
   await page.locator('.nova-menu [role^="menuitem"]', { hasText: 'callout' }).click();
   expect(await html(page)).toBe('<p class="callout">text</p>');
 });
+
+test('templates: the dialog shows the description and a preview, Insert puts it at the cursor', async ({
+  page,
+}) => {
+  await open(page, '<p>end</p>');
+  await page.keyboard.press('ControlOrMeta+Home');
+  await clickControl(page, 'template');
+  const dialog = page.getByRole('dialog', { name: 'Insert template' });
+  await expect(dialog.getByRole('region', { name: 'Preview' })).toContainText('Meeting notes');
+  await dialog.getByLabel('Template').selectOption({ label: 'Letter' });
+  await expect(dialog).toContainText('A short letter with a greeting');
+  await expect(dialog.getByRole('region', { name: 'Preview' })).toContainText('Dear Ann,');
+  await dialog.getByRole('button', { name: 'Insert' }).click();
+  await expect(dialog).toBeHidden();
+  expect(await html(page)).toBe('<p>Dear Ann,</p><p>Best regards</p><p>end</p>');
+});

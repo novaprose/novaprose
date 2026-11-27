@@ -25,6 +25,13 @@ All packages in this repository are versioned together. The format follows
   zero-width spaces as a dashed mark — without touching the text; screen readers read it as before
   (`pluginOptions.visualchars.default`, for TinyMCE `visualchars_default_state` and
   `mceVisualChars`). Only changed paragraphs are scanned again, so long documents stay fast.
+- `template` plugin ("Insert template", named as in TinyMCE 5–6): your templates with a
+  description and a preview, inserted at the cursor through the schema like a paste. A template is
+  HTML or a file; `{$name}` becomes `values.name` (as text, never HTML), an element with the class
+  `selcontent` gets the selection, `cdate` and `mdate` get the date in a TinyMCE-style format, and
+  only what is inside `div.mceTmpl` is inserted. The list can be an array, a URL of a JSON list or
+  a function. With `tinymce.init`, `templates` (with a callback too), `template_*` options,
+  `mceTemplate` and `mceInsertTemplate` work.
 - `importcss` plugin: the classes of your content CSS (`contentCss` files and `contentStyle`) become
   Styles items — `p.lead` styles a paragraph, `h2.fancy` a heading, `.badge` or `span.badge` text,
   `img.round` an image; other selectors are left out. `pluginOptions.importcss`: `selectorFilter`,

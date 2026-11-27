@@ -544,6 +544,28 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/importcss/);
   });
 
+  it('template: templates with a callback, template_replace_values, mceInsertTemplate, mceTemplate', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    page('<textarea id="t"><p>end</p></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'template',
+      toolbar: 'template',
+      templates: (done: (list: unknown[]) => void) =>
+        done([{ title: 'Greeting', content: '<p>Hi {$name}</p>' }]),
+      template_replace_values: { name: 'Ann' },
+    });
+    const { core } = editor!;
+    core.view.dispatch(core.view.state.tr.setSelection(TextSelection.atStart(core.view.state.doc)));
+    expect(editor!.execCommand('mceInsertTemplate', false, '<p>Hi {$name}</p>')).toBe(true);
+    expect(editor!.getContent()).toBe('<p>Hi Ann</p><p>end</p>');
+    expect(editor!.queryCommandSupported('mceTemplate')).toBe(true);
+    const dialog = vi.spyOn(core.ui, 'dialog').mockResolvedValue(null);
+    expect(editor!.execCommand('mceTemplate')).toBe(true);
+    await vi.waitFor(() => expect(dialog).toHaveBeenCalled());
+    expect(warn.mock.calls.map((c) => c[0]).join('\n')).not.toMatch(/template/);
+  });
+
   it('unknown options and plugins give a warning, not an error', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     page('<textarea id="t"></textarea>');

@@ -165,6 +165,7 @@ const editor = createEditor({
           'save',
           'markdown',
           'importcss',
+          'template',
         ]
       : []),
     // ?ai=1: the AI assistant with an offline demo model (e2e/ai.spec.ts); edits arrive as suggestions.
@@ -174,6 +175,23 @@ const editor = createEditor({
   ],
   pluginOptions: {
     ai: { request: demoModel },
+    // Templates for "Insert template" (e2e/formatting-tools.spec.ts).
+    template: {
+      templates: [
+        {
+          title: 'Meeting notes',
+          description: 'Date, attendees and decisions',
+          content:
+            '<h2>Meeting notes</h2><p>Date: <span class="cdate">-</span></p><ul><li><p>Decision</p></li></ul>',
+        },
+        {
+          title: 'Letter',
+          description: 'A short letter with a greeting',
+          content: '<p>Dear {$name},</p><p>Best regards</p>',
+        },
+      ],
+      values: { name: 'Ann' },
+    },
     // Saving in the playground keeps the HTML on the page (e2e/formatting-tools.spec.ts reads it).
     save: {
       onSave: (e: Editor) => {

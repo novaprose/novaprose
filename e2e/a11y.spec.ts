@@ -217,6 +217,13 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'permanent pen dialog');
     });
 
+    test('the "Insert template" dialog with its preview', async ({ page }) => {
+      await open(page, theme, '&tools=1');
+      await control(page, 'template');
+      await expect(page.getByRole('region', { name: 'Preview' })).toContainText('Meeting notes');
+      await audit(page, 'template dialog');
+    });
+
     test('collapsible blocks: expanded, collapsed, empty title', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.evaluate(async () => {
