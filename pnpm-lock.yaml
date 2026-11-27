@@ -30,8 +30,8 @@ importers:
         specifier: 2.1.9
         version: 2.1.9(vitest@2.1.9(@types/node@22.20.5)(jsdom@25.0.1)(less@4.9.1)(lightningcss@1.33.0)(sass-embedded@1.108.2)(sass@1.108.2))
       esbuild:
-        specifier: 0.27.7
-        version: 0.27.7
+        specifier: 0.28.2
+        version: 0.28.2
       eslint:
         specifier: ^9.17.0
         version: 9.39.5
@@ -5072,12 +5072,12 @@ packages:
       jsdom:
         optional: true
 
-  vscode-jsonrpc@10.0.1:
-    resolution: {integrity: sha512-fGdu32Sp4GeSQ2twML46WPMB6cFfIJ4Vdx1K5s/WPzUYdShVPCGKscYltn5hiNz748xKNJdBHgocAvuN48tLGw==}
+  vscode-jsonrpc@10.0.2:
+    resolution: {integrity: sha512-U6K7wa1t8jTZf7eoHJLKSNdHE0oi9r/+/4TSXWPSLQ2FSQVMYLR5TvzQHrYjwW/lLjq0eTm+pi8vWz4jSV7o4w==}
     engines: {node: '>=14.17.0'}
 
-  vscode-languageserver-protocol@3.18.6:
-    resolution: {integrity: sha512-Ocoa4g/vyB66ZFkIKApV8/FTjQ+EYeOVDkq/nzw9SmfX+L6Ikl5KtL5AjmSAQ7nhqfud1ojiVuy+drHdvAlgUg==}
+  vscode-languageserver-protocol@3.18.7:
+    resolution: {integrity: sha512-5oItSZDTTehe0zXzwJCFUMso6RfUb2FWVTFfQxAesV3nTbkY1hjW3O6q8872M9TACEXFcALaU5xU37sGudYI8g==}
 
   vscode-languageserver-textdocument@1.0.16:
     resolution: {integrity: sha512-qeNEuOi9a3qkqRf7Gfez2WL2VwlBTLCNekHBGO9kxPVUp9XuY15yfTJ9jwvOwKI0I2MhUUfZq95NSp+LK1CLQg==}
@@ -6942,7 +6942,7 @@ snapshots:
   '@volar/language-service@2.4.31(typescript@6.0.3)':
     dependencies:
       '@volar/language-core': 2.4.31
-      vscode-languageserver-protocol: 3.18.6
+      vscode-languageserver-protocol: 3.18.7
       vscode-languageserver-textdocument: 1.0.16
       vscode-uri: 3.2.0
     optionalDependencies:
@@ -9855,12 +9855,12 @@ snapshots:
       - supports-color
       - terser
 
-  vscode-jsonrpc@10.0.1:
+  vscode-jsonrpc@10.0.2:
     optional: true
 
-  vscode-languageserver-protocol@3.18.6:
+  vscode-languageserver-protocol@3.18.7:
     dependencies:
-      vscode-jsonrpc: 10.0.1
+      vscode-jsonrpc: 10.0.2
       vscode-languageserver-types: 3.18.6
     optional: true
 
