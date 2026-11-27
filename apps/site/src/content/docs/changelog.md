@@ -13,6 +13,10 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- **Fixed (accessibility, WCAG 1.4.13):** toolbar tooltips can be dismissed with Escape without
+  moving focus or the pointer, and they stay while the pointer rests on them. A button focused from
+  the keyboard shows its tooltip, so its first Escape dismisses the tooltip and the next one goes
+  back to the text.
 - Suggested paragraph breaks: in suggesting mode, Enter makes a new paragraph (or list item) as a
   suggestion, with a pilcrow in the author's color in its margin, and Backspace or Delete across a
   break marks it deleted instead of joining the paragraphs. Rejecting a new break joins the

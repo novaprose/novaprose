@@ -144,6 +144,14 @@ test('toolbar accessibility: Alt+F10, arrows, Escape', async ({ page, isMobile }
   expect(await page.evaluate(() => document.activeElement?.getAttribute('data-control'))).toBe(
     'bold',
   );
+  // The focused button shows its tooltip: the first Escape dismisses it and focus stays (WCAG
+  // 1.4.13), the next one goes back to the text.
+  await expect(page.locator('.nova-tooltip')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.nova-tooltip')).toBeHidden();
+  expect(await page.evaluate(() => document.activeElement?.getAttribute('data-control'))).toBe(
+    'bold',
+  );
   await page.keyboard.press('Escape');
   await expect(content(page)).toBeFocused();
   expect(await toolbarButtons.count()).toBeGreaterThan(5);

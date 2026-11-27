@@ -1279,7 +1279,8 @@ html.nova-fullscreen-lock body {
   color: var(--nova-tooltip-fg);
   font-size: 12px;
   line-height: 1.4;
-  pointer-events: none;
+  /* The pointer can rest on it (WCAG 1.4.13). */
+  pointer-events: auto;
   white-space: nowrap;
 }
 
