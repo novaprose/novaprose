@@ -31,11 +31,21 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**/*.{ts,tsx}', 'apps/sync-server/src/**'],
-      exclude: ['**/*.d.ts', 'packages/angular/**', 'packages/*/src/**/index.ts'],
+      // index.ts and cdn.ts are entries of the packages and the CDN builds: they only re-export and
+      // register, and the e2e and speed tests run them in a browser.
+      exclude: [
+        '**/*.d.ts',
+        'packages/angular/**',
+        'packages/*/src/**/index.ts',
+        'packages/*/src/cdn.ts',
+      ],
       reporter: ['text-summary', 'html', 'json-summary'],
-      // A ratchet: slightly below the current level (November 2026: lines 91.5%, branches 85.6%,
-      // functions 83.4%). Coverage can only grow: raise the thresholds after it.
-      thresholds: { lines: 90, statements: 90, branches: 84, functions: 82 },
+      // A ratchet: slightly below the current level. Coverage can only grow: raise the thresholds
+      // after it. Vitest 5 maps V8 coverage onto the syntax tree and counts every branch of ??, ||,
+      // && and default values, so the same tests give lower statements and branches than Vitest 2
+      // did (November 2026, the same code: Vitest 2 lines 91.5%, branches 85.6%, functions 83.4%;
+      // Vitest 5 lines 88.9%, statements 85.9%, branches 76.8%, functions 83.5%).
+      thresholds: { lines: 88.5, statements: 85.5, branches: 76.5, functions: 83 },
     },
     include: [
       'packages/*/test/**/*.test.ts',
