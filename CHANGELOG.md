@@ -45,6 +45,12 @@ All packages in this repository are versioned together. The format follows
   as “- ”, “1. ”, “## ” or “> ” says “Bulleted list”, “Numbered list”, “Heading 2” or “Quote”. Before,
   NVDA read only the typed characters. The messages go to a hidden polite live region, translated with
   the editor; plugins can use it too: `editor.ui.announce(text)`.
+- **Fixed (screen readers):** after Ctrl+B on a selected word, NVDA also read the next word as
+  “unselected” (likewise Ctrl+I, Ctrl+E and the other format shortcuts). Chromium gave bold, italic,
+  strikethrough, inline code, subscript and superscript text accessibility objects of their own; in the
+  editor they now stay part of the line (`role="none"`), and the formatting still reaches screen readers
+  as text attributes. The HTML output is unchanged. An NVDA test on a Windows runner checks it on every
+  change.
 - The keyboard shortcuts help (Alt+0) lists each shortcut as one line, “Bold Ctrl+B”. It was a table,
   and screen readers named the row and column of every cell.
 - Word documents: `plugins: ['importword', 'exportword']` open a `.docx` and save the document as

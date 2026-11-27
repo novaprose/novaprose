@@ -43,26 +43,29 @@ async function openEditor(page: Page, nvda: NVDAPlaywright, content: string): Pr
   await heard(nvda, 'focus on the editor');
 }
 
-test('Ctrl+B on a selected word: "Bold on"', async ({ page, nvda }) => {
-  await openEditor(page, nvda, '<p>source text here</p>');
-  await nvda.press('Control+Home');
-  await nvda.press('Control+Shift+ArrowRight');
-  await heard(nvda, 'Ctrl+Shift+Right');
-  await nvda.press('Control+b');
-  const spoken = await heard(nvda, 'Ctrl+B');
-  expect(await html(page)).toMatch(/^<p><strong>source/);
-  expect(spoken, 'what NVDA said after Ctrl+B').toContain('Bold on');
-});
-
-test('Ctrl+B does not read the next word as unselected', async ({ page, nvda }) => {
-  await openEditor(page, nvda, '<p>source text here</p>');
-  await nvda.press('Control+Home');
-  await nvda.press('Control+Shift+ArrowRight');
-  await heard(nvda, 'Ctrl+Shift+Right');
-  await nvda.press('Control+b');
-  const spoken = await heard(nvda, 'Ctrl+B');
-  expect(spoken, 'what NVDA said after Ctrl+B').not.toMatch(/unselected/i);
-});
+// A format shortcut on a selected word says what changed and nothing else. NVDA used to add the next
+// word as "unselected" ("text unselected. Bold on"): Chromium gave <strong> an accessibility object of
+// its own, and the line's text NVDA tracks got shorter (fixed in packages/core/src/mark-views.ts).
+for (const [shortcut, key, tag, said] of [
+  ['Ctrl+B', 'Control+b', 'strong', 'Bold on'],
+  ['Ctrl+I', 'Control+i', 'em', 'Italic on'],
+  ['Ctrl+E', 'Control+e', 'code', 'Inline code on'],
+] as const) {
+  test(`${shortcut} on a selected word: "${said}", the next word left alone`, async ({
+    page,
+    nvda,
+  }) => {
+    await openEditor(page, nvda, '<p>source text here</p>');
+    await nvda.press('Control+Home');
+    await nvda.press('Control+Shift+ArrowRight');
+    await heard(nvda, 'Ctrl+Shift+Right');
+    await nvda.press(key);
+    const spoken = await heard(nvda, shortcut);
+    expect(await html(page)).toMatch(new RegExp(`^<p><${tag}>source`));
+    expect(spoken, `what NVDA said after ${shortcut}`).toContain(said);
+    expect(spoken, `what NVDA said after ${shortcut}`).not.toMatch(/unselected/i);
+  });
+}
 
 test('Ctrl+Shift+Left selects the previous word and says so', async ({ page, nvda }) => {
   await openEditor(page, nvda, '<p>source text here</p>');

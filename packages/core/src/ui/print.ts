@@ -1,4 +1,5 @@
 import type { Editor } from '../editor';
+import { FLAT_MARK_SELECTOR } from '../mark-views';
 import { pageLayout, type PageBandParts, type PageLayout } from '../plugins/pagelayout';
 import { h } from './dom';
 
@@ -118,6 +119,9 @@ function contentClone(dom: HTMLElement): HTMLElement {
   clone.classList.remove('ProseMirror-focused', 'nova-empty');
   for (const el of clone.querySelectorAll('.ProseMirror-gapcursor, .nova-image-handle'))
     el.remove();
+  // Bold, italic... carry role="none" only for screen readers in the editor (mark-views.ts).
+  for (const el of clone.querySelectorAll(FLAT_MARK_SELECTOR))
+    if (el.getAttribute('role') === 'none') el.removeAttribute('role');
   // Lazy images in an invisible iframe would never load.
   for (const el of clone.querySelectorAll('[loading]')) el.removeAttribute('loading');
   // cloneNode doesn't copy a canvas drawing, so it is carried over as an image.

@@ -62,6 +62,7 @@ import { registerBuiltins, type FontOption } from './ui/builtins';
 import { linkBubblePlugin } from './ui/link-bubble';
 import { contextToolbarPlugin, focusContextToolbar } from './ui/context-toolbar';
 import { ImageView } from './ui/image-view';
+import { flatMarkViews } from './mark-views';
 import { autocompleterPlugin } from './ui/autocompleter';
 import { registerSlashCommands, type SlashCommand } from './ui/slash';
 import { UiManager } from './ui/manager';
@@ -510,6 +511,8 @@ export class Editor {
       nodeViews: {
         image: (node, view, getPos) => new ImageView(node, view, getPos, this),
       },
+      // Bold, italic and the like stay part of the line's text for screen readers (mark-views.ts).
+      markViews: flatMarkViews(this.schema),
       handleDOMEvents: {
         focus: (_view, event) => (this.emit('focus', { event }), false),
         blur: (_view, event) => (this.emit('blur', { event }), false),
