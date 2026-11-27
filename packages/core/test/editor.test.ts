@@ -186,6 +186,14 @@ describe('commands', () => {
     e.setContent('<p>b</p>', { addToHistory: false });
     expect(e.can('undo')).toBe(false);
   });
+
+  it("a command that throws can't run: can() says false instead of breaking the buttons", () => {
+    const e = mount('<p>a</p>');
+    const broken = () => {
+      throw new Error('Called contentMatchAt on a node with invalid content');
+    };
+    expect(e.can(broken)).toBe(false);
+  });
 });
 
 describe('lifecycle', () => {

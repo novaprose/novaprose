@@ -58,10 +58,28 @@ function scan(doc: PMNode): { refs: Found[]; sections: Found[] } {
       sections.push({ pos, node });
       return false;
     }
+    // A paragraph with content it can't hold (JSON from elsewhere, a code block with a reference in
+    // it): its references are left alone, a change there would throw.
+    if (node.isTextblock && !node.type.validContent(node.content)) return false;
     if (node.type.name === 'footnote_ref') refs.push({ pos, node });
     return true;
   });
   return { refs, sections };
+}
+
+let warned = false;
+
+/** syncFootnotes that never breaks the change it follows: a document it can't fix stays as it is. */
+function safeSync(state: EditorState, focusId?: string): Transaction | null {
+  try {
+    return syncFootnotes(state, focusId);
+  } catch (error) {
+    if (!warned) {
+      warned = true;
+      console.warn('[nova] footnotes: could not bring them in step', error);
+    }
+    return null;
+  }
 }
 
 function hasFootnotes(doc: PMNode): boolean {
@@ -333,6 +351,8 @@ export const insertFootnote: Command = (state, dispatch) => {
   if (!refType) return false;
   const { $to } = state.selection;
   if (!$to.parent.inlineContent) return false;
+  // A paragraph with content it can't hold (JSON from elsewhere) can't be asked what fits in it.
+  if (!$to.parent.type.validContent($to.parent.content)) return false;
   if (!$to.parent.canReplaceWith($to.index(), $to.index(), refType)) return false;
   // Not inside a note: a footnote of a footnote has nowhere to go.
   if (inNote(state)) return false;
@@ -353,7 +373,7 @@ export const insertFootnote: Command = (state, dispatch) => {
 
 /** Numbers and notes brought in step now (they are kept in step after every change anyway). */
 export const updateFootnotes: Command = (state, dispatch) => {
-  const tr = syncFootnotes(state);
+  const tr = safeSync(state);
   if (tr && dispatch) dispatch(tr);
   return true;
 };
@@ -459,7 +479,7 @@ export default definePlugin({
           local.some(touchesFootnotes) ||
           // Text typed after the section: the section moves back to the end.
           (!!syncKey.getState(state)?.has && state.doc.lastChild?.type.name !== 'footnotes');
-        return needed ? syncFootnotes(state, focus) : null;
+        return needed ? safeSync(state, focus) : null;
       },
       props: {
         transformPasted: pastedIntoNote,
@@ -512,7 +532,7 @@ export default definePlugin({
       onAction: (e) => e.exec(updateFootnotes),
     });
     // Footnotes loaded with the content (before this part) get their numbers and notes in step.
-    const tr = syncFootnotes(editor.view.state);
+    const tr = safeSync(editor.view.state);
     if (tr) editor.view.dispatch(tr.setMeta('addToHistory', false));
   },
 });

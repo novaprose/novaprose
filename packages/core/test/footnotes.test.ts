@@ -260,6 +260,41 @@ function noteNode(editor: Editor, id: string) {
   return found;
 }
 
+describe('documents from elsewhere', () => {
+  it('a reference where it cannot be (a code block, from JSON) is left alone; the document loads', async () => {
+    const element = document.createElement('div');
+    document.body.append(element);
+    const editor = createEditor({ element, plugins: ['footnotes'] });
+    editors.push(editor);
+    await editor.ready;
+    const json = {
+      type: 'doc',
+      content: [
+        {
+          type: 'code_block',
+          content: [
+            { type: 'text', text: 'x' },
+            { type: 'footnote_ref', attrs: { id: 'bad', number: 9 } },
+          ],
+        },
+        {
+          type: 'paragraph',
+          content: [
+            { type: 'text', text: 'ok' },
+            { type: 'footnote_ref', attrs: { id: 'good', number: 5 } },
+          ],
+        },
+      ],
+    };
+    expect(() => editor.setContent(json)).not.toThrow();
+    // The valid reference is numbered and gets its note.
+    expect(footnotes(editor)).toEqual([
+      [9, '?'],
+      [1, ''],
+    ]);
+  });
+});
+
 describe('editing inside notes', () => {
   it('Enter in a note is a line break: the note stays one and keeps its text', async () => {
     const editor = await ready(`<p>a${ref('a', 1)}</p>${section(note('a', 'Note text'))}`);

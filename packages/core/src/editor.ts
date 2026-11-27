@@ -847,10 +847,18 @@ export class Editor {
     });
   }
 
-  /** Whether the command can run in the current state (for disabled buttons). */
+  /**
+   * Whether the command can run in the current state (for disabled buttons). A command that throws
+   * (a document with content its schema doesn't allow, from JSON) can't run: the buttons go on
+   * updating instead of breaking.
+   */
   can(command: CommandName | Command): boolean {
     const cmd = typeof command === 'string' ? this.resolveCommand(command) : command;
-    return cmd(this.view.state, undefined, this.view);
+    try {
+      return cmd(this.view.state, undefined, this.view);
+    } catch {
+      return false;
+    }
   }
 
   /** Whether a named command is active for the current selection (for your own toolbar buttons). */
