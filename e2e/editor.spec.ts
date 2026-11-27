@@ -34,6 +34,11 @@ async function open(page: Page, initial = '<p></p>', query = '?lang=en') {
     window.editor.setContent(value, { addToHistory: false });
   }, initial);
   await content(page).click();
+  // On focus ProseMirror starts a 20 ms timer: if the browser's cursor is still where focusing put it
+  // (the start of the document), it writes the editor's selection back. A key pressed sooner that lands
+  // on the same spot (Home in a one-line document) gets undone. A 20 ms timer started now runs after
+  // that one, so once it fires the focus has settled. A person never types within 20 ms of a click.
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 20)));
   await page.keyboard.press('ControlOrMeta+End');
 }
 
