@@ -124,7 +124,7 @@ describe('the search bar', () => {
   it('Mod-f opens it, selected text becomes the query, the counter, Esc closes it', async () => {
     const e = mount('<p>alpha beta alpha</p>');
     e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1, 6)));
-    e.openSearch();
+    await e.openSearch();
     const bar = e.root.querySelector<HTMLElement>('.nova-search')!;
     expect(bar.hidden).toBe(false);
     const input = bar.querySelector<HTMLInputElement>('input[type="search"]')!;
@@ -135,9 +135,9 @@ describe('the search bar', () => {
     expect(e.view.dom.querySelectorAll('.nova-search-match')).toHaveLength(0);
   });
 
-  it('"Replace all" from the bar', () => {
+  it('"Replace all" from the bar', async () => {
     const e = mount('<p>cat cat</p>');
-    e.openSearch();
+    await e.openSearch();
     const bar = e.root.querySelector<HTMLElement>('.nova-search')!;
     const [find, replace] = bar.querySelectorAll<HTMLInputElement>('input');
     find!.value = 'cat';

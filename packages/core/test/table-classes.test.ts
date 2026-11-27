@@ -1,5 +1,5 @@
 import { TextSelection } from 'prosemirror-state';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createEditor, type Editor, type EditorOptions } from '../src';
 import { getCellProps, getTableProps, setCellProps, setTableProps } from '../src/table';
 
@@ -90,7 +90,12 @@ describe('table and cell classes', () => {
     });
     inFirstCell(e);
     e.root.querySelector<HTMLButtonElement>('[data-control="tableprops"]')!.click();
-    const select = document.querySelector<HTMLSelectElement>('[role="dialog"] select')!;
+    // The dialog is a lazy part: it opens once its chunk has loaded.
+    const select = await vi.waitFor(() => {
+      const found = document.querySelector<HTMLSelectElement>('[role="dialog"] select');
+      if (!found) throw new Error('no dialog yet');
+      return found;
+    });
     expect([...select.options].map((o) => o.textContent)).toEqual([
       'Default',
       'With borders',

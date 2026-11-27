@@ -5,7 +5,6 @@ import { codeLanguage } from './code-language';
 import type { Editor } from './editor';
 import type * as PasteOffice from './paste-office';
 import type { PasteStyles } from './paste-office';
-import { extractRtfImages, hasLocalFileImages, replaceLocalImages } from './paste-rtf';
 
 /**
  * Office/Google paste cleanup (~11 KB) is a separate chunk: it is needed only at the moment of pasting.
@@ -13,6 +12,11 @@ import { extractRtfImages, hasLocalFileImages, replaceLocalImages } from './past
  * Ctrl+V it is usually ready. If a paste happens earlier, handleDOMEvents.paste below waits for it.
  */
 type PasteCleaner = typeof PasteOffice;
+
+/** Whether the HTML has images with local file: links (a sign of Word images, the data is in the RTF). */
+function hasLocalFileImages(html: string): boolean {
+  return /<img[^>]+src=["']?file:/i.test(html);
+}
 let cleaner: PasteCleaner | null = null;
 let loading: Promise<PasteCleaner | null> | null = null;
 
@@ -146,9 +150,10 @@ export function pastePlugin(editor: Editor): Plugin {
           event.preventDefault();
           void loadPasteCleaner().then(() => {
             if (view.isDestroyed) return;
+            // RTF images are read by the cleanup chunk (it has just loaded, or failed to).
             const withImages =
-              rtf && editor.isAllowed('image')
-                ? replaceLocalImages(html, extractRtfImages(rtf))
+              rtf && cleaner && editor.isAllowed('image')
+                ? cleaner.replaceLocalImages(html, cleaner.extractRtfImages(rtf))
                 : html;
             reentrant = true;
             try {
@@ -179,8 +184,9 @@ export function pastePlugin(editor: Editor): Plugin {
           // Images from desktop Word: the HTML has unreachable file: paths, the data is in the RTF.
           const rtf =
             html && hasLocalFileImages(html) ? event.clipboardData?.getData('text/rtf') : '';
-          if (!html || !rtf || !editor.isAllowed('image')) return false;
-          const withImages = replaceLocalImages(html, extractRtfImages(rtf));
+          // The cleanup chunk is loaded here (before it is, the paste handler above takes the paste).
+          if (!html || !rtf || !cleaner || !editor.isAllowed('image')) return false;
+          const withImages = cleaner.replaceLocalImages(html, cleaner.extractRtfImages(rtf));
           if (withImages === html) return false;
           reentrant = true;
           try {

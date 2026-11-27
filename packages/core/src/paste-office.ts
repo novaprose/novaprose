@@ -8,6 +8,9 @@
  * the applications, without anyone else's code (clean room, see CLAUDE.md).
  */
 
+// Images of desktop Word come in the RTF: read there, at paste time, with this chunk.
+export { extractRtfImages, replaceLocalImages } from './paste-rtf';
+
 export type PasteSource =
   | 'nova'
   | 'word'

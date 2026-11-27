@@ -56,7 +56,7 @@ import {
 } from './plugins';
 import { createChain, type CommandChain } from './chain';
 import { searchPlugin } from './search';
-import { createSearchBar, type SearchBarHandle } from './ui/search-bar';
+import type { SearchBarHandle } from './ui/search-bar';
 import { openHelp, toggleFullscreen } from './ui/views';
 import type { NovaSchema } from './schema';
 import { registerBuiltins, type FontOption } from './ui/builtins';
@@ -334,7 +334,10 @@ export class Editor {
   /** Formats: register / apply / remove / toggle / match. */
   readonly formatter: Formatter;
   private readonly statusbar: ReturnType<typeof createStatusbar> | null;
-  private readonly searchBar: SearchBarHandle;
+  /** The find and replace bar: a lazy part, there once editor.ready resolves (see loadSearchBar). */
+  private searchBar: SearchBarHandle | null = null;
+  private searchBarLoad: Promise<SearchBarHandle | null> | null = null;
+  private contentHost!: HTMLElement;
   private destroyed = false;
   private editable: boolean;
   private disabled: boolean;
@@ -412,7 +415,7 @@ export class Editor {
       'Alt-0': () => (openHelp(this), true),
       // Escape in the text closes the search bar if it is open.
       Escape: () => {
-        if (!this.searchBar.isOpen()) return false;
+        if (!this.searchBar?.isOpen()) return false;
         this.searchBar.close();
         return true;
       },
@@ -559,7 +562,10 @@ export class Editor {
     if (!this.toolbar) toolbarHost.remove();
     if (!this.toolbar && !this.menubar) header.remove();
 
-    this.searchBar = createSearchBar(this, contentHost);
+    // The find and replace bar is a separate chunk, loaded right away (and awaited by ready): it is
+    // there before anyone presses Ctrl+F, without weighing on the first load.
+    this.contentHost = contentHost;
+    const searchBar = this.loadSearchBar();
     // The statusbar is on by default only in classic: inline/distraction-free are part of the page.
     const statusbar = options.statusbar ?? this.mode === 'classic';
     this.statusbar = statusbar ? createStatusbar(this, statusbarHost) : null;
@@ -576,6 +582,7 @@ export class Editor {
       loadPasteCleaner(),
       // Table mechanics are a separate chunk (~10 KB gzip), loaded in the background (see tables.ts).
       this.installTables(tablesAnchor),
+      searchBar,
     ]).then(() => {
       if (!this.destroyed) this.emit('init');
     });
@@ -888,13 +895,29 @@ export class Editor {
     this.toolbar?.update();
   }
 
-  /** Open the find and replace bar (Ctrl/Cmd+F). */
-  openSearch(): void {
-    this.searchBar.open();
+  /** The find and replace bar, loaded once (a separate chunk: the first load stays smaller). */
+  private loadSearchBar(): Promise<SearchBarHandle | null> {
+    this.searchBarLoad ??= import('./ui/search-bar').then(
+      ({ createSearchBar }) => {
+        if (this.destroyed) return null;
+        this.searchBar = createSearchBar(this, this.contentHost);
+        return this.searchBar;
+      },
+      (error: unknown) => {
+        reportPluginError('The find and replace bar failed to load', error);
+        return null;
+      },
+    );
+    return this.searchBarLoad;
+  }
+
+  /** Open the find and replace bar (Ctrl/Cmd+F). Resolves once it is open. */
+  openSearch(): Promise<void> {
+    return this.loadSearchBar().then((bar) => bar?.open());
   }
 
   closeSearch(): void {
-    this.searchBar.close();
+    this.searchBar?.close();
   }
 
   /** Whether the text can be edited now: neither read-only nor disabled. */
@@ -983,7 +1006,7 @@ export class Editor {
         reportPluginError('Plugin cleanup failed', error);
       }
     }
-    this.searchBar.destroy();
+    this.searchBar?.destroy();
     if (this.root.classList.contains('nova-fullscreen')) toggleFullscreen(this, false);
     this.view.destroy();
     this.root.remove();

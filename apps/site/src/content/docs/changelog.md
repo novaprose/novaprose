@@ -310,6 +310,10 @@ All packages in this repository are versioned together. The format follows
 
 ### Performance
 
+- A smaller first load: the find and replace bar, the table and cell properties dialogs, and
+  reading the images of desktop Word on paste load when needed instead of with the editor (the bar
+  comes with `editor.ready`, so Ctrl+F is there before anyone presses it). `editor.openSearch()` now
+  returns a promise that resolves once the bar is open.
 - Speed is measured on every change, with limits: a 100-page document (about 50,000 words) on the
   production CDN build in Chromium — creating the editor, typing, Enter and Backspace, pasting from
   Word, formatting the whole document, typing with page layout and in suggesting mode, typing in a

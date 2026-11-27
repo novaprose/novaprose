@@ -94,11 +94,6 @@ export function extractRtfImages(rtf: string): RtfImage[] {
   return images;
 }
 
-/** Whether the HTML has images with local file: links (a sign of Word images). */
-export function hasLocalFileImages(html: string): boolean {
-  return /<img[^>]+src=["']?file:/i.test(html);
-}
-
 /**
  * Puts images from the RTF in place of file: links. Only when the counts match: otherwise
  * the matching is unreliable, and such images just aren't pasted (as before).
