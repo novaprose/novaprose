@@ -5,6 +5,12 @@ description: Install NovaProse from npm or load it from a CDN and create your fi
 
 NovaProse runs entirely in the browser. Install it from npm, or load a single script from a CDN.
 
+To try it first with nothing to install, open an example in StackBlitz:
+[React](https://stackblitz.com/github/novaprose/novaprose/tree/main/examples/react?file=src%2Fcallout.tsx),
+[Vue](https://stackblitz.com/github/novaprose/novaprose/tree/main/examples/vue?file=src%2FCallout.vue),
+[plain HTML from a CDN](https://stackblitz.com/github/novaprose/novaprose/tree/main/examples/cdn?file=index.html)
+or [rendering on a server](https://stackblitz.com/github/novaprose/novaprose/tree/main/examples/server-render?file=render.js).
+
 :::note[Preview release]
 NovaProse is in 0.x. The API may change between minor versions until 1.0. See the
 [changelog](/changelog/).
@@ -46,9 +52,9 @@ editor.on('change', () => console.log(editor.getHTML()));
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.7/dist/novaprose.css"
+  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.8/dist/novaprose.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.7/dist/novaprose.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.8/dist/novaprose.global.js"></script>
 
 <form method="post" action="/posts">
   <novaprose-editor name="body">

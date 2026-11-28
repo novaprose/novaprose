@@ -13,7 +13,7 @@ without rewriting it — then move to the native API when you are ready.
 <!-- before -->
 <script src="https://cdn.tiny.cloud/1/your-api-key/tinymce/7/tinymce.min.js"></script>
 <!-- after -->
-<script src="https://cdn.jsdelivr.net/npm/@novaprose/tinymce-compat@0.7/dist/tinymce.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@novaprose/tinymce-compat@0.8/dist/tinymce.global.js"></script>
 
 <script>
   tinymce.init({

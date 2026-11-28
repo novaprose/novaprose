@@ -4,7 +4,33 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
-## Unreleased
+## 0.8.0 — 2026-11-28
+
+The largest release so far. Suggested edits cover structure, formats and Word tracked changes; an
+AI assistant works with your own model; Word import and export, page layout with headers and
+footers, PDF export and printing as on screen; formulas, highlighted code, a code editor for the
+HTML, checklists, collapsible sections, a table of contents, footnotes and templates; image
+editing, link cards, embedded pages and a link checker; an accessibility checker, spell checking,
+autocorrect and typography; whole HTML pages and email output. For developers: `editor.selection`,
+`editor.chain()`, node views in React and Vue, rendering on a server and upload adapters for cloud
+storage. Screen readers hear what a shortcut changed.
+
+### Upgrading from 0.7
+
+Most code keeps working as it is. Check these:
+
+- **A language with the CDN build:** `NovaProse.createEditor({ language: 'ru' })` needs
+  `await NovaProse.loadLanguage('ru')` first, because languages are separate files now.
+  `<novaprose-editor language="…">` and `tinymce.init` wait for the language by themselves.
+- **React:** `react-dom` is a peer dependency. With `useEditor()` and node views, render the
+  `nodeViews` it returns next to the editor (`<NovaProseEditor>` does it by itself).
+- **Buttons of lazy plugins:** the buttons of `anchor`, `media`, `pagebreak`, `mentions`,
+  `mergetags` and `suggestions` exist after `await editor.ready`.
+- **Toolbar:** `toolbarMode: 'sliding'` is now a strip under the toolbar; the panel that opens from
+  **⋯** is `'floating'`, the default.
+- **Removed internals:** undocumented exports of `@novaprose/core` (`cssValue`, `createTranslator`,
+  `parseToolbar` and others, listed under API) and the types of `editor.resolveCommand()` and
+  `editor.contentRules`.
 
 ### Editing
 
@@ -464,6 +490,14 @@ format: 'italic' }`) and replacements (`{ start: '(c)', replacement: '©' }`, te
 - Multi-line fields in plugin dialogs (`editor.ui.dialog`, `type: 'textarea'`) are as tall as their
   `rows` — they used to be one line high. New `code: true` for code: monospace, no spell check.
 - Context toolbars accept `placement: 'top-end' | 'bottom-end'` or a function of the editor.
+- Checklists (`plugins: ['checklist']`, button `checklist`): tick an item with a click or Ctrl/Cmd+Enter,
+  type `[ ]` or `[x]` at the start of a line, Enter starts a new unticked item; nesting, indent and
+  paste work as in other lists. HTML uses the Tiptap task list format (`data-type="taskList"`,
+  `data-checked`); TinyMCE (`tox-checklist`) and GitHub checklists are converted on load and paste,
+  even without the plugin. Markdown: `- [ ]` / `- [x]` both ways. Keyboard and screen readers:
+  each box is a `role="checkbox"` with its state.
+- The numbered list button inside a bulleted list (and the other way round) now switches the list
+  type. It used to do nothing.
 
 ### API
 
@@ -526,8 +560,9 @@ format: 'italic' }`) and replacements (`{ start: '(c)', replacement: '©' }`, te
 ### Distribution
 
 - The size limit CI checks: the core's first load, ProseMirror included, may take up to 175 KB gzip
-  (it was 145; it is 144.8 now), the CDN main files up to 180 KB (web component) and 190 KB
-  (`tinymce.init`). Optional plugins keep loading lazily, outside these numbers.
+  (it was 145), the CDN main files up to 180 KB (web component) and 190 KB (`tinymce.init`). In
+  0.8.0 the first load is 157.4 KB (144.2 in 0.7.0), the CDN main files 161.4 and 174.6 KB.
+  Optional plugins keep loading lazily, outside these numbers.
 - Every ready-made language (Russian, German, Spanish, French, Italian, Portuguese) works in the
   CDN builds: each is a separate file next to the script. `<novaprose-editor language="de">` and
   `tinymce.init({ language: 'de' })` load it before the editor appears. **Changed:** Russian is no
@@ -538,15 +573,6 @@ format: 'italic' }`) and replacements (`{ start: '(c)', replacement: '©' }`, te
   pointing to it.
 - CDN builds: code that several lazy parts need (the Word export helpers, the comparison of
   versions) ships once, as a part of its own that they share, instead of a copy inside each part.
-
-- Checklists (`plugins: ['checklist']`, button `checklist`): tick an item with a click or Ctrl/Cmd+Enter,
-  type `[ ]` or `[x]` at the start of a line, Enter starts a new unticked item; nesting, indent and
-  paste work as in other lists. HTML uses the Tiptap task list format (`data-type="taskList"`,
-  `data-checked`); TinyMCE (`tox-checklist`) and GitHub checklists are converted on load and paste,
-  even without the plugin. Markdown: `- [ ]` / `- [x]` both ways. Keyboard and screen readers:
-  each box is a `role="checkbox"` with its state.
-- The numbered list button inside a bulleted list (and the other way round) now switches the list
-  type. It used to do nothing.
 
 ### Plugin UI
 
