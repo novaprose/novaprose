@@ -65,3 +65,60 @@ test('the dialog of a custom plugin (windowManager.open): typing, a choice, Ente
     '<blockquote><p><strong>Warning:</strong> Back up first &lt;now&gt;</p></blockquote>',
   );
 });
+
+// 1×1 PNG
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
+test('images_upload_url: the image is posted as a form, { location } is its address', async ({
+  page,
+  browserName,
+}) => {
+  const posted: { type: string; body: string }[] = [];
+  await page.route('**/api/upload', async (route) => {
+    const request = route.request();
+    posted.push({
+      type: request.headers()['content-type'] ?? '',
+      body: request.postDataBuffer()?.toString('latin1') ?? '',
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ location: 'https://images.example.test/dot.png' }),
+    });
+  });
+  await page.route('https://images.example.test/**', (route) =>
+    route.fulfill({ status: 200, contentType: 'image/png', body: PNG }),
+  );
+  await page.goto('/tinymce.html');
+  await expect(page.locator('#events')).toContainText('callback');
+  await page.locator('.nova-prosemirror').click();
+  await page.keyboard.press('ControlOrMeta+End');
+  const control = page.locator('.nova-toolbar [data-control="image"]').first();
+  if (await control.isVisible()) await control.click();
+  else {
+    await page.locator('.nova-tb-more').click();
+    await page.locator('.nova-tb-overflow-popover [data-control="image"]').click();
+  }
+  const dialog = page.getByRole('dialog', { name: 'Insert image' });
+  await dialog
+    .locator('input[type="file"]')
+    .setInputFiles({ name: 'dot.png', mimeType: 'image/png', buffer: PNG });
+  await expect(dialog).toBeHidden();
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        (
+          window as unknown as { tinymce: { activeEditor: { getContent(): string } } }
+        ).tinymce.activeEditor.getContent(),
+      ),
+    )
+    .toContain('<img src="https://images.example.test/dot.png"');
+  expect(posted).toHaveLength(1);
+  expect(posted[0]!.type).toMatch(/^multipart\/form-data; boundary=/);
+  // Playwright doesn't show WebKit's file bodies to a route.
+  if (browserName !== 'webkit')
+    expect(posted[0]!.body).toContain('name="file"; filename="dot.png"');
+});

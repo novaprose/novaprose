@@ -11,6 +11,7 @@ afterEach(() => {
   tinymce = createTinymce();
   document.body.innerHTML = '';
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
 
 function page(html: string) {
@@ -243,6 +244,75 @@ describe('tinymce.init', () => {
     await expect(upload(new File(['png'], 'a.png', { type: 'image/png' }), () => {})).resolves.toBe(
       'https://cdn.example.com/a.png',
     );
+  });
+
+  it('images_upload_url: a multipart POST, { location } back, the base path, credentials, progress', async () => {
+    const sent: Array<{ url: string; credentials: boolean; file: File | null }> = [];
+    let answer = { status: 200, body: '{"location":"uploads/a.png"}' };
+    class FakeRequest {
+      status = 0;
+      responseText = '';
+      withCredentials = false;
+      upload: { onprogress: ((e: ProgressEvent) => void) | null } = { onprogress: null };
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      private url = '';
+      open(_method: string, url: string) {
+        this.url = url;
+      }
+      send(form: FormData) {
+        sent.push({
+          url: this.url,
+          credentials: this.withCredentials,
+          file: form.get('file') as File,
+        });
+        this.upload.onprogress?.({ lengthComputable: true, loaded: 1, total: 4 } as ProgressEvent);
+        this.status = answer.status;
+        this.responseText = answer.body;
+        if (answer.status === 0) this.onerror?.();
+        else this.onload?.();
+      }
+    }
+    vi.stubGlobal('XMLHttpRequest', FakeRequest);
+    page('<textarea id="t"></textarea>');
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      images_upload_url: '/upload.php',
+      images_upload_base_path: 'https://cdn.example.com/',
+      images_upload_credentials: true,
+    });
+    const upload = editor!.core.options.uploadImage!;
+    const file = new File(['png'], 'a.png', { type: 'image/png' });
+    const progress = vi.fn();
+    await expect(upload(file, progress)).resolves.toBe('https://cdn.example.com/uploads/a.png');
+    expect(sent).toEqual([{ url: '/upload.php', credentials: true, file: expect.any(File) }]);
+    expect(sent[0]!.file!.name).toBe('a.png');
+    expect(progress).toHaveBeenCalledWith(25);
+    // An address of its own (absolute, or from the root) is kept as it is.
+    answer = { status: 201, body: '{"location":"/media/a.png"}' };
+    await expect(upload(file, () => {})).resolves.toBe('/media/a.png');
+    answer = { status: 200, body: '{"location":"https://img.example.org/a.png"}' };
+    await expect(upload(file, () => {})).resolves.toBe('https://img.example.org/a.png');
+    // A failure is an error the editor shows (the image is then kept with Retry and Remove).
+    answer = { status: 500, body: 'Server error' };
+    await expect(upload(file, () => {})).rejects.toThrow('the server answered 500');
+    answer = { status: 200, body: '{"url":"a.png"}' };
+    await expect(upload(file, () => {})).rejects.toThrow('no "location"');
+    answer = { status: 200, body: 'not json' };
+    await expect(upload(file, () => {})).rejects.toThrow('no "location"');
+    answer = { status: 0, body: '' };
+    await expect(upload(file, () => {})).rejects.toThrow('could not be reached');
+    // These options are understood: nothing about them in the warning.
+    const { unknown } = (await import('../src/options')).describeConfig(
+      [
+        'images_upload_url',
+        'images_upload_base_path',
+        'images_upload_credentials',
+        'images_reuse_filename',
+      ],
+      [],
+    );
+    expect(unknown).toEqual([]);
   });
 
   it('formats, style_formats, valid_classes and formatter.register, as in the TinyMCE documentation', async () => {

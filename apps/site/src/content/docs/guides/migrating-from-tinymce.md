@@ -62,6 +62,7 @@ When you're ready, move to the native API below — it is smaller, typed and fra
 | `directionality: 'rtl'`                 | `direction: 'rtl'` (automatic for Arabic, Hebrew, Persian)                                              |
 | read-only mode                          | `editable: false`, `editor.setEditable(false)`                                                          |
 | `images_upload_handler`                 | `uploadImage(file, progress) => Promise<url>`                                                           |
+| `images_upload_url`                     | the compatibility layer posts there (with `images_upload_base_path`, `_credentials`); or `uploadImage`  |
 | `font_family_formats`                   | `fontFamilies: [{ label, value }]`                                                                      |
 | `font_size_formats`                     | `fontSizes: ['12px', '14px', …]`                                                                        |
 | `line_height_formats`                   | `lineHeights: ['1', '1.5', '2']`                                                                        |

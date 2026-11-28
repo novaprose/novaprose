@@ -97,7 +97,9 @@ editor.on('change', () => console.log(editor.getContent()));
   (also `editor.options.set('disabled', …)`), `resize`, `block_formats`, `file_picker_callback`, `file_picker_types`, `formats`, `style_formats`,
   `style_formats_merge`, `valid_classes`, `table_class_list`, `table_cell_class_list` (without it all classes are kept, as in TinyMCE), `language`,
   `inline`, `height`/`min_height`/`max_height`/`width`, `content_style`, `content_css` (your files; skin names
-  like `default` or `dark` are ignored), `images_upload_handler`,
+  like `default` or `dark` are ignored), `images_upload_handler`, `images_upload_url` (a multipart
+  POST with the image as `file`; the answer `{ "location": "…" }`) with `images_upload_base_path`,
+  `images_upload_credentials` and `images_reuse_filename`,
   `paste_as_text`, `paste_preprocess`, `valid_elements` (with attribute rules)/`invalid_elements`/`valid_styles`,
   `extended_valid_elements`, `custom_elements`, `directionality`,
   `font_family_formats`, `font_size_formats`, `line_height_formats`, `color_map`, `toolbar_mode`,

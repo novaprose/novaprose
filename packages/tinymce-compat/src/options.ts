@@ -107,6 +107,12 @@ const IGNORED = new Set([
   'file_picker_types',
   'language',
   'images_upload_handler',
+  // images_upload_url: the image as `file` in a multipart POST, { location } back (uploadTo);
+  // the file goes under its own name, as images_reuse_filename asks.
+  'images_upload_url',
+  'images_upload_base_path',
+  'images_upload_credentials',
+  'images_reuse_filename',
   'paste_as_text',
   'paste_preprocess',
   'paste_postprocess',
@@ -337,6 +343,49 @@ function parseFormats(value: unknown): { label: string; value: string }[] | unde
     .map((item) => {
       const [label, css] = item.includes('=') ? item.split('=') : [item, item];
       return { label: label!.trim(), value: (css ?? label!).trim() };
+    });
+}
+
+/**
+ * images_upload_url, as the documentation describes it: the image goes to that address as a
+ * multipart POST (field `file`), and the server answers JSON `{ "location": "…" }`, the image's
+ * address; a relative one gets images_upload_base_path in front. `credentials`: cookies go along
+ * to another origin. Progress comes from the request.
+ */
+export function uploadTo(url: string, basePath: string, credentials: boolean): UploadImageHandler {
+  return (file, progress) =>
+    new Promise<string>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.withCredentials = credentials;
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable && event.total > 0) progress((event.loaded / event.total) * 100);
+      };
+      xhr.onload = () => {
+        if (xhr.status < 200 || xhr.status >= 300) {
+          reject(new Error(`The upload failed: the server answered ${xhr.status}`));
+          return;
+        }
+        let location: unknown;
+        try {
+          location = (JSON.parse(xhr.responseText) as { location?: unknown } | null)?.location;
+        } catch {
+          location = undefined;
+        }
+        if (typeof location !== 'string' || !location.trim()) {
+          reject(new Error('The upload failed: the answer has no "location"'));
+          return;
+        }
+        const address = location.trim();
+        const relative = basePath && !/^(?:[a-z][a-z\d+.-]*:|\/)/i.test(address);
+        resolve(
+          relative ? `${basePath.replace(/\/+$/, '')}/${address.replace(/^\.?\//, '')}` : address,
+        );
+      };
+      xhr.onerror = () => reject(new Error('The upload failed: the server could not be reached'));
+      const form = new FormData();
+      form.append('file', file, file.name || 'image');
+      xhr.send(form);
     });
 }
 
@@ -647,6 +696,12 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       return handler(info, progress);
     };
     options.uploadImage = upload;
+  } else if (typeof config.images_upload_url === 'string' && config.images_upload_url) {
+    options.uploadImage = uploadTo(
+      config.images_upload_url,
+      typeof config.images_upload_base_path === 'string' ? config.images_upload_base_path : '',
+      config.images_upload_credentials === true,
+    );
   }
 
   // file_picker_callback(callback, value, meta): your own file manager calls callback(url, { text, title, alt }).

@@ -16,6 +16,10 @@ All packages in this repository are versioned together. The format follows
   rename), imports without a counterpart, copies of TinyMCE of your own. A dry run unless you add
   `--write`; `--json` for the report as JSON. See
   [Migrating from TinyMCE](https://novaprose.com/guides/migrating-from-tinymce/#or-let-a-command-do-it).
+- The compatibility layer uploads images to `images_upload_url`: a multipart POST with the image as
+  `file`, and the answer `{ "location": "…" }` is the image's address (`images_upload_base_path` in
+  front of a relative one; `images_upload_credentials` sends cookies to another origin). Progress
+  shows on the image; a failure keeps it with Retry and Remove.
 
 ## 0.10.0 — 2026-11-28
 

@@ -185,7 +185,7 @@ const checks = {
     for (const expected of [
       'a dry run',
       "will change  line 1: import tinymce from 'tinymce'",
-      "options NovaProse doesn't have yet: images_upload_url",
+      "options NovaProse doesn't have yet: images_file_types",
       'tinycomments is comments in NovaProse',
     ])
       if (!report.includes(expected)) throw new Error(`the report lacks "${expected}":\n${report}`);

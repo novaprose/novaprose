@@ -72,6 +72,8 @@ void tinymce.init({
   height: 320,
   placeholder: 'Write your release notes…',
   content_style: 'body { font-size: 16px; }',
+  // Answered by the e2e test (page.route): { "location": "…" }.
+  images_upload_url: '/api/upload',
   setup: (editor) => {
     editor.on('init', () => log('init'));
     editor.on('input', () => log('input'));
