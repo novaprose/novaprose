@@ -45,7 +45,7 @@ export default defineConfig({
       // && and default values, so the same tests give lower statements and branches than Vitest 2
       // did (November 2026, the same code: Vitest 2 lines 91.5%, branches 85.6%, functions 83.4%;
       // Vitest 5 lines 88.9%, statements 85.9%, branches 76.8%, functions 83.5%).
-      thresholds: { lines: 88.5, statements: 85.5, branches: 76.5, functions: 83 },
+      thresholds: { lines: 89.5, statements: 86.5, branches: 77.5, functions: 84.5 },
     },
     include: [
       'packages/*/test/**/*.test.ts',
