@@ -333,6 +333,21 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'code editor');
     });
 
+    test('the Edit image dialog', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent('<p><img src="/edit-demo.png" alt="Halves"></p>');
+      });
+      await page.locator('.nova-prosemirror img[alt="Halves"]').click();
+      await page.locator('.nova-context-toolbar [data-control="editimage"]').click();
+      await expect(page.getByRole('dialog', { name: 'Edit image' })).toBeVisible();
+      await audit(page, 'edit image dialog');
+    });
+
     test('link checker: a broken link and its bubble with the note', async ({ page }) => {
       await open(page, theme, '&linkcheck=1');
       await page.evaluate(async () => {

@@ -1,0 +1,110 @@
+/* The Edit image dialog of the editimage plugin. Attached when the plugin starts. */
+.nova-editimage {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nova-editimage-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nova-editimage-tools .nova-button {
+  margin-inline-start: 6px;
+}
+
+/* The preview on a checkerboard (a transparent image shows as one); the crop dims the rest. */
+.nova-editimage-stage {
+  position: relative;
+  align-self: center;
+  max-width: 100%;
+  /* The crop's dimming stays on the image. */
+  overflow: hidden;
+  line-height: 0;
+  background: repeating-conic-gradient(var(--nova-hover) 0 25%, transparent 0 50%) 0 0 / 16px 16px;
+  cursor: crosshair;
+  touch-action: none;
+  user-select: none;
+}
+
+.nova-editimage-canvas {
+  display: block;
+  max-width: 100%;
+}
+
+.nova-editimage-crop {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid #ffffff;
+  outline: 1px solid rgb(0 0 0 / 0.6);
+  box-shadow: 0 0 0 9999px rgb(0 0 0 / 0.45);
+  cursor: move;
+  pointer-events: none;
+}
+
+.nova-editimage-crop[hidden] {
+  display: none;
+}
+
+.nova-editimage-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 8px 0 0;
+  border: 0;
+  border-top: 1px solid var(--nova-border);
+}
+
+.nova-editimage-group legend {
+  padding: 0 0 4px;
+  font-weight: 600;
+}
+
+.nova-editimage-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.nova-editimage-field .nova-input {
+  width: 96px;
+}
+
+.nova-editimage-field select.nova-input {
+  width: 140px;
+}
+
+.nova-editimage-range {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 8px;
+}
+
+.nova-editimage-range span {
+  flex-basis: 100%;
+}
+
+.nova-editimage-range input {
+  width: 150px;
+  accent-color: var(--nova-accent);
+}
+
+.nova-editimage-value {
+  min-width: 3ch;
+  color: var(--nova-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.nova-editimage-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+  font-size: 13px;
+}

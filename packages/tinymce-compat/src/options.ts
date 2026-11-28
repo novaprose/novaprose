@@ -196,6 +196,16 @@ const IGNORED = new Set([
   'advcode_prettify_editor',
   'advcode_prettify_getcontent',
   'advcode_inline',
+  // editimage: the toolbar, the hosts with cookies, your way to fetch an image (editimage_fetch_image
+  // gets an <img>). Images are read with CORS, so the CORS host list, the proxy and the upload timeout
+  // aren't needed: fetchImage goes through your server instead.
+  'editimage_toolbar',
+  'editimage_credentials_hosts',
+  'editimage_fetch_image',
+  'editimage_cors_hosts',
+  'editimage_proxy',
+  'editimage_proxy_service_url',
+  'editimage_upload_timeout',
   // autocorrect: corrections run in the browser, so Tiny's service address isn't needed.
   'autocorrect_autocorrect',
   'autocorrect_capitalize',
@@ -869,6 +879,24 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       };
     }
     if (Object.keys(series).length) pluginOptions.advtable = { series };
+  }
+  if (plugins.includes('editimage')) {
+    const editimage: Record<string, unknown> = {};
+    if (typeof config.editimage_toolbar === 'string') editimage.toolbar = config.editimage_toolbar;
+    if (Array.isArray(config.editimage_credentials_hosts))
+      editimage.credentialsHosts = config.editimage_credentials_hosts.filter(
+        (host): host is string => typeof host === 'string',
+      );
+    const fetchImage = config.editimage_fetch_image;
+    if (typeof fetchImage === 'function') {
+      // TinyMCE's gets the <img> element.
+      editimage.fetchImage = (src: string) => {
+        const img = document.createElement('img');
+        img.src = src;
+        return (fetchImage as (img: HTMLImageElement) => Promise<Blob>)(img);
+      };
+    }
+    if (Object.keys(editimage).length) pluginOptions.editimage = editimage;
   }
   if (plugins.includes('advcode') && typeof config.advcode_prettify_editor === 'boolean')
     pluginOptions.advcode = { prettify: config.advcode_prettify_editor };

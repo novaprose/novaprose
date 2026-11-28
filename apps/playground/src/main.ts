@@ -219,6 +219,7 @@ const editor = createEditor({
           'pageembed',
           'advtable',
           'advcode',
+          'editimage',
           'directionality',
           'advlist',
           'checklist',

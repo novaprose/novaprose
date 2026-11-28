@@ -196,6 +196,93 @@ test('advcode: the code editor colors HTML, finds with Ctrl+F, saves with the bu
   expect(await html(page)).toBe('<h2>Title</h2><p>Text more</p>');
 });
 
+test('editimage: rotating, flipping and cropping change the pixels; undo brings the image back', async ({
+  page,
+}) => {
+  await open(page);
+  await page.evaluate(() =>
+    (window as unknown as { editor: { setContent(h: string, o: object): void } }).editor.setContent(
+      '<p><img src="/edit-demo.png" alt="Halves"></p>',
+      { addToHistory: false },
+    ),
+  );
+  const img = page.locator('.nova-prosemirror img[alt="Halves"]');
+  // The image's size and the colors at the top and the bottom of its middle column.
+  const pixels = () =>
+    page.evaluate(async () => {
+      const image = document.querySelector<HTMLImageElement>(
+        '.nova-prosemirror img[alt="Halves"]',
+      )!;
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(image, 0, 0);
+      const at = (y: number) =>
+        Array.from(ctx.getImageData(Math.floor(canvas.width / 2), y, 1, 1).data.slice(0, 3));
+      return { size: [canvas.width, canvas.height], top: at(1), bottom: at(canvas.height - 2) };
+    });
+  const RED = [211, 47, 47];
+  const BLUE = [21, 101, 192];
+  const bar = page.locator('.nova-context-toolbar');
+  // After an edit the image stays selected with its toolbar; a click on a selected image would
+  // select around it instead (ProseMirror), so it is clicked only when its toolbar isn't there.
+  const select = async () => {
+    if (!(await bar.locator('[data-control="editimage"]').isVisible())) await img.click();
+  };
+  const act = async (name: string) => {
+    const before = await img.getAttribute('src');
+    await select();
+    await bar.locator(`[data-control="${name}"]`).click();
+    await expect(img).not.toHaveAttribute('src', before!);
+    await expect(img).toHaveAttribute('src', /^data:image\/png;base64,/);
+  };
+  // Clockwise: the red left half goes to the top.
+  await act('rotateright');
+  expect(await pixels()).toEqual({ size: [20, 40], top: RED, bottom: BLUE });
+  await act('flipv');
+  expect(await pixels()).toEqual({ size: [20, 40], top: BLUE, bottom: RED });
+  const flipped = await img.getAttribute('src');
+  // The Edit image dialog: the top square only.
+  await select();
+  await bar.locator('[data-control="editimage"]').click();
+  const dialog = page.getByRole('dialog', { name: 'Edit image' });
+  const crop = dialog.getByRole('group', { name: 'Crop' });
+  await crop.getByLabel('Height, px').fill('20');
+  await crop.getByLabel('Height, px').blur();
+  await dialog.getByRole('button', { name: 'Apply' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(img).not.toHaveAttribute('src', flipped!);
+  expect(await pixels()).toEqual({ size: [20, 20], top: BLUE, bottom: BLUE });
+  // One step back: the image before the crop.
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(img).toHaveAttribute('src', flipped!);
+});
+
+test('editimage: when the edited image fails to upload, the original comes back', async ({
+  page,
+}) => {
+  await page.goto('/?lang=en&parity=1&upload=fail');
+  await page.evaluate(async () => {
+    const editor = (
+      window as unknown as {
+        editor: { ready: Promise<void>; setContent(h: string, o: object): void };
+      }
+    ).editor;
+    await editor.ready;
+    editor.setContent('<p><img src="/edit-demo.png" alt="Halves"></p>', { addToHistory: false });
+  });
+  const img = page.locator('.nova-prosemirror img[alt="Halves"]');
+  await img.click();
+  await page.locator('.nova-context-toolbar [data-control="rotateright"]').click();
+  // Shown at once (a local copy) while it uploads…
+  await expect(img).toHaveAttribute('src', /^blob:/);
+  // …and the upload fails: the original is back, and the reason is said.
+  await expect(page.getByText('The edited image couldn’t be saved.')).toBeVisible();
+  await expect(img).toHaveAttribute('src', '/edit-demo.png');
+});
+
 test('anchor and pagebreak are inserted from the toolbar', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Intro');

@@ -124,6 +124,11 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mcespellcheckdialog: 'spellcheckdialog',
   mcetypography: 'typography',
   mcecodeeditor: 'code',
+  mceimagerotateleft: 'rotateleft',
+  mceimagerotateright: 'rotateright',
+  mceimageflipvertical: 'flipv',
+  mceimagefliphorizontal: 'fliph',
+  mceeditimage: 'editimage',
 };
 
 /**

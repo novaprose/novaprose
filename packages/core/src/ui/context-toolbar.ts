@@ -160,6 +160,8 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
       };
       window.addEventListener('scroll', reposition, true);
       window.addEventListener('resize', reposition);
+      // An image that finishes loading changes the layout (a new or edited image had no size yet).
+      view.dom.addEventListener('load', reposition, true);
       // A phone keyboard changes the visible part of the window without touching the window.
       window.visualViewport?.addEventListener('resize', reposition);
       window.visualViewport?.addEventListener('scroll', reposition);
@@ -172,6 +174,7 @@ export function contextToolbarPlugin(editor: Editor): Plugin {
           stopPointerUp();
           window.removeEventListener('scroll', reposition, true);
           window.removeEventListener('resize', reposition);
+          view.dom.removeEventListener('load', reposition, true);
           window.visualViewport?.removeEventListener('resize', reposition);
           window.visualViewport?.removeEventListener('scroll', reposition);
           container.remove();

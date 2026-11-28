@@ -13,6 +13,17 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Image editing: with the `editimage` plugin the image toolbar rotates and flips the picture, and
+  **Edit image** crops it (by dragging on a preview or with the fields, free or to a shape),
+  resizes it and changes its brightness, contrast and saturation, the same in every browser. The
+  edited picture is a new file through `uploadImage` (embedded without it), shown at once while it
+  uploads; one undo brings the previous picture back, and a failed upload brings back the original.
+  Images from other sites are read with CORS or through `fetchImage` on your server; SVG is never
+  edited. With `tinymce.init`, `editimage_toolbar`, `editimage_credentials_hosts`,
+  `editimage_fetch_image` and the `mceImageRotate*`, `mceImageFlip*` and `mceEditImage` commands
+  work.
+- A context toolbar moves to its place when an image in the text finishes loading (a new or edited
+  image had no size yet).
 - A code editor for the HTML: with the `advcode` plugin, **Source code** opens the HTML in
   CodeMirror (loaded when first opened): laid out with nested blocks indented and opened where the
   cursor is, colors for HTML, CSS and JavaScript in the editor's theme, matching brackets and tags,

@@ -1,4 +1,4 @@
-import { TextSelection } from 'prosemirror-state';
+import { NodeSelection, TextSelection } from 'prosemirror-state';
 import { registerLanguage } from '@novaprose/core';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createTinymce, type CompatEditor } from '../src';
@@ -987,6 +987,39 @@ describe('tinymce.init', () => {
       timeout: 5000,
     });
     expect(warn.mock.calls.flat().join(' ')).not.toContain('advcode');
+  });
+
+  it('editimage: mceImageRotateRight; editimage_fetch_image gets the <img>', async () => {
+    page('<textarea id="t"><p><img src="https://example.com/logo.svg" alt="Logo"></p></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetchImage = vi.fn(
+      async (_img: HTMLImageElement) => new Blob(['<svg/>'], { type: 'image/svg+xml' }),
+    );
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'image editimage',
+      editimage_fetch_image: fetchImage,
+      editimage_cors_hosts: ['example.com'],
+      editimage_toolbar: 'rotateleft rotateright',
+    });
+    const { core } = editor!;
+    await core.ready;
+    core.view.dispatch(
+      core.view.state.tr.setSelection(NodeSelection.create(core.view.state.doc, 1)),
+    );
+    const notify = vi.spyOn(core.ui, 'notify');
+    expect(editor!.execCommand('mceImageRotateRight')).toBe(true);
+    await vi.waitFor(() => expect(fetchImage).toHaveBeenCalled());
+    expect(fetchImage.mock.calls[0]![0].src).toBe('https://example.com/logo.svg');
+    // An SVG is never edited.
+    await vi.waitFor(() =>
+      expect(notify).toHaveBeenCalledWith(
+        expect.objectContaining({ text: expect.stringContaining('PNG, JPEG, WebP') }),
+      ),
+    );
+    const toolbar = core.ui.registry.getContextToolbars().find(([name]) => name === 'image')![1];
+    expect(toolbar.items).toMatch(/\| rotateleft rotateright$/);
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('editimage_');
   });
 
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
