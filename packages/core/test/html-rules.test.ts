@@ -61,6 +61,17 @@ describe('extendedValidElements: attributes of built-in elements', () => {
     expect(roundTrip({ extendedValidElements: '@[id]' }, html)).toBe(html);
   });
 
+  it('lang is kept once, as the passage, even when every attribute is allowed (found by a property test)', () => {
+    const all = { extendedValidElements: '@[*],span[*],p[*]' };
+    const e = mount(all, '<p lang="AA">!</p>');
+    expect(e.getHTML()).toBe('<p><span lang="aa">!</span></p>');
+    e.setContent(e.getHTML());
+    expect(e.getHTML()).toBe('<p><span lang="aa">!</span></p>');
+    expect(roundTrip(all, '<p><span lang="fr" data-x="1">mot</span></p>')).toBe(
+      '<p><span lang="fr"><span data-x="1">mot</span></span></p>',
+    );
+  });
+
   it("a built-in value isn't duplicated: a changed title doesn't go back to the old one", () => {
     const e = mount(
       { extendedValidElements: 'a[href|title|data-x]' },

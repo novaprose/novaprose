@@ -118,6 +118,9 @@ const IGNORED = new Set([
   'valid_styles',
   'toolbar_mode',
   'toolbar_sticky',
+  'toolbar_sticky_offset',
+  'content_language',
+  'content_langs',
   'font_family_formats',
   'font_size_formats',
   'line_height_formats',
@@ -161,7 +164,6 @@ const IGNORED = new Set([
   'spellchecker_languages',
   'spellchecker_ignore_list',
   'spellchecker_dialog',
-  'content_language',
   'spellchecker_languagetool_url',
   'spellchecker_check',
   // a11ychecker: the level, ignored rules, decorative images, the alt length, a filter. HTML 5 is
@@ -541,6 +543,20 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       .filter((f): f is BlockFormat => known.includes(f.block));
   }
   if (typeof config.language === 'string') options.language = config.language.replace('_', '-');
+  // The language of the text, and the languages the `language` button offers (without
+  // content_langs the button isn't available, as in TinyMCE). customCode has no equivalent.
+  if (typeof config.content_language === 'string' && config.content_language)
+    options.contentLanguage = config.content_language.replace(/_/g, '-');
+  options.contentLangs = Array.isArray(config.content_langs)
+    ? (config.content_langs as unknown[]).flatMap((entry) => {
+        const { code, title } = (entry ?? {}) as { code?: unknown; title?: unknown };
+        return typeof code === 'string'
+          ? [{ code, ...(typeof title === 'string' ? { title } : {}) }]
+          : [];
+      })
+    : [];
+  if (typeof config.toolbar_sticky_offset === 'number')
+    options.toolbarStickyOffset = config.toolbar_sticky_offset;
   if (
     config.toolbar_mode === 'floating' ||
     config.toolbar_mode === 'sliding' ||

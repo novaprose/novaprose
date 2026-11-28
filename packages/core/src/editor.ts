@@ -16,6 +16,8 @@ import type { MediaEmbedOptions } from './plugins/mediaembed';
 import type { FullPageHtmlOptions } from './plugins/fullpagehtml';
 import type { TypographyOptions } from './plugins/typography';
 import type { A11yCheckerOptions } from './plugins/a11ychecker';
+import { languageTag, type ContentLanguage } from './language';
+import { stickyHeader } from './sticky-header';
 import type { EmailOptions } from './email';
 import type { AutosaveOptions } from './plugins/autosave';
 import type { CodeSampleOptions } from './plugins/codesample';
@@ -254,6 +256,24 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   /** UI language (BCP 47): 'en', 'de'… Default 'en'. */
   language?: string;
   /**
+   * The language of the text (BCP 47: 'en', 'fr-CA') when it isn't the page's: screen readers read
+   * the text in it and browsers check its spelling in it (like content_language).
+   */
+  contentLanguage?: string;
+  /**
+   * Languages the `language` button offers for marking a passage in another language (WCAG 3.1.2),
+   * like content_langs: [{ code: 'fr' }, { code: 'de', title: 'Deutsch' }]. Without a title, the
+   * language's name in the interface language is shown. Default: 20 common languages; [] hides
+   * the button.
+   */
+  contentLangs?: ContentLanguage[];
+  /**
+   * How far from the top of the window the header (menu bar and toolbar) sticks while the page
+   * scrolls, in px: the height of your page's own fixed header (like toolbar_sticky_offset).
+   * Default 0.
+   */
+  toolbarStickyOffset?: number;
+  /**
    * Writing direction of the UI and the text. By default right-to-left for Arabic, Hebrew, Persian
    * and Urdu (from `language`), otherwise the page's direction.
    */
@@ -412,6 +432,9 @@ export class Editor {
     header.append(menubarHost, toolbarHost);
     this.root.append(header, contentHost, statusbarHost);
     this.toolbarHost = toolbarHost;
+    const stickyOffset = Number(options.toolbarStickyOffset);
+    if (Number.isFinite(stickyOffset) && stickyOffset > 0)
+      this.root.style.setProperty('--nova-sticky-offset', `${Math.min(stickyOffset, 1000)}px`);
 
     this.mode = options.mode ?? 'classic';
     this.root.classList.add(`nova-mode-${this.mode}`);
@@ -508,6 +531,7 @@ export class Editor {
     const initialDoc = parseContent(this.schema, options.content ?? '', page);
 
     const tablesAnchor = searchPlugin();
+    const sticky = stickyHeader(header, contentHost);
     const initialPlugins = [
       // First: while the list is open, Enter/Tab/arrows belong to the autocompleter, not the keymap.
       autocompleterPlugin(this),
@@ -545,6 +569,8 @@ export class Editor {
       firstClickPlugin(),
       // editor.selection's bookmarks move along with the changes.
       bookmarksPlugin(),
+      // The line with the caret is never left under the sticky header.
+      sticky.plugin,
       ...pluginPm,
       ...(options.prosemirrorPlugins ?? []),
     ];
@@ -559,14 +585,17 @@ export class Editor {
     this.disabled = options.disabled ?? false;
     this.pasteAsText = options.pasteAsText ?? false;
     const handleTransaction = this.handleTransaction.bind(this);
+    const contentLanguage = languageTag(options.contentLanguage);
     this.view = new EditorView(contentHost, {
       state,
       editable: () => this.isEditable(),
+      ...sticky.props,
       attributes: {
         class: 'nova-prosemirror',
         role: 'textbox',
         'aria-multiline': 'true',
         'aria-label': this.ui.t('editor.label'),
+        ...(contentLanguage ? { lang: contentLanguage } : {}),
         // The visible placeholder is CSS generated content with empty alternative text (style.css);
         // screen readers get it as aria-placeholder, not as text inside the document.
         ...(options.placeholder
@@ -987,7 +1016,10 @@ export class Editor {
     this.searchBarLoad ??= import('./ui/search-bar').then(
       ({ createSearchBar }) => {
         if (this.destroyed) return null;
-        this.searchBar = createSearchBar(this, this.contentHost);
+        const header = this.toolbarHost.parentElement;
+        this.searchBar = createSearchBar(this, (bar) =>
+          header ? header.append(bar) : this.contentHost.before(bar),
+        );
         return this.searchBar;
       },
       (error: unknown) => {

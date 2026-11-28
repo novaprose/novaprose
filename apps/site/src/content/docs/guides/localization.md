@@ -143,3 +143,42 @@ To see every key a plugin uses, load it and call `getPluginMessages()`: it retur
 all loaded plugins by language, English included — a ready template for a translator.
 
 Content is never translated; `language` only affects the editor interface.
+
+## Languages in the text
+
+The interface and the text can be in different languages. The interface says its own language to
+screen readers, and the text keeps the page's. When the text is in another language than the page,
+say so with `contentLanguage`: screen readers read the text with that language's voice and browsers
+check its spelling in it.
+
+```ts
+createEditor({ element, language: 'de', contentLanguage: 'en' }); // German interface, English text
+```
+
+A phrase in another language can be marked as such, so screen readers switch voices for it
+(WCAG 3.1.2, Language of Parts). The `language` button (and **Language…** in the **Format** menu)
+marks the selected words; **Default language** takes the mark off. In the HTML it is a
+`<span lang="…">`:
+
+```html
+<p>The French call it <span lang="fr">joie de vivre</span>.</p>
+```
+
+```ts
+createEditor({
+  element,
+  toolbar: 'undo redo | bold italic | language | link',
+  // Optional: the languages to offer. Without a title, the language's name is shown in the
+  // interface language ("French", "Französisch"). The default list has 20 common languages.
+  contentLangs: [{ code: 'en' }, { code: 'fr' }, { code: 'de', title: 'Deutsch' }],
+});
+```
+
+Language codes are BCP 47 (`fr`, `pt-BR`, `zh-Hant`); a broken one is dropped, never written to the
+HTML. `editor.exec(setTextLanguage('fr'))` does the same from code, and `getTextLanguage(state)`
+tells the language at the cursor.
+
+Content keeps its languages: `lang` on any element is read (`<p lang="es">` becomes a paragraph
+whose text is marked Spanish). When you paste, the language the text is already in is left out, so
+only real passages in another language stay marked; Word marks every run with a language, and its
+document language is left out the same way. A Word export keeps a passage's language.

@@ -197,6 +197,11 @@ Conventional Commits.
   its own (strong, em, s, code, sub, sup) gets `role="none"` in the editing view (`mark-views.ts`),
   otherwise NVDA reads the next word as "unselected" after its shortcut; a new shortcut or announcement →
   a check in `screen-reader/nvda.spec.ts` (runs on a Windows runner, see what NVDA said in the run's notices).
+  What isn't text is 3:1 too (WCAG 1.4.11): the edge of a field uses `--nova-control-border`, a pressed
+  state needs more than a faint tint (a ring), focus is the focus ring, not only a background; states
+  that rely on a background also need a `@media (forced-colors: active)` rule (Windows high contrast).
+  `e2e/wcag.spec.ts` measures these, text spacing (1.4.12) and the sticky header (2.4.11); the public
+  accessibility report (ACR, VPAT INT) lives in ../nova-internal/docs/ACR-DRAFT.md: keep it in step.
 - Every UI color comes from the `--nova-*` CSS variables in `style.css`; the light and dark themes must both work.
 - **Styles of lazy parts** (panels, dialogs, plugin views) don't go into `style.css` (12 KB budget) but into
   `<module>.css` next to the code: `import css from './x.css?raw'` + `editor.ui.addStyles('nova-x', css)` on first

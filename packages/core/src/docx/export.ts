@@ -6,6 +6,7 @@ import {
   type PageLayoutOptions,
 } from '../plugins/pagelayout';
 import { blockSuggestion, formatMarks } from '../plugins/suggestions';
+import { languageTag } from '../language';
 import { isSafeLinkUrl } from '../url';
 import { escapeXml } from './xml';
 import { zip, type ZipEntry } from './zip';
@@ -308,6 +309,7 @@ class DocxWriter {
     let underline = false;
     let shade = '';
     let vertical = '';
+    let lang = '';
     for (const mark of marks) {
       const name = mark.type.name;
       if (name === 'link') style = 'Hyperlink';
@@ -317,6 +319,7 @@ class DocxWriter {
       else if (name === 'strike') strike = true;
       else if (name === 'subscript') vertical = 'subscript';
       else if (name === 'superscript') vertical = 'superscript';
+      else if (name === 'language') lang = languageTag(mark.attrs.lang) ?? lang;
       else if (name === 'code') {
         fonts = 'Consolas';
         shade ||= 'F3F4F6';
@@ -340,7 +343,9 @@ class DocxWriter {
       size +
       (underline ? '<w:u w:val="single"/>' : '') +
       (shade ? `<w:shd w:val="clear" w:color="auto" w:fill="${shade}"/>` : '') +
-      (vertical ? `<w:vertAlign w:val="${vertical}"/>` : '');
+      (vertical ? `<w:vertAlign w:val="${vertical}"/>` : '') +
+      // A passage in another language: Word checks its spelling and reads it in that language.
+      (lang ? `<w:lang w:val="${lang}"/>` : '');
     return props;
   }
 

@@ -102,6 +102,7 @@ const REQUIREMENTS: Record<string, string[]> = {
   code: ['code'],
   subscript: ['sub'],
   superscript: ['sup'],
+  language: ['span'],
   link: ['a'],
   unlink: ['a'],
   quicklink: ['a'],
@@ -248,6 +249,8 @@ export class ContentRules {
         return this.isTagAllowed('span') && this.isStyleAllowed('font-family');
       case 'font_size':
         return this.isTagAllowed('span') && this.isStyleAllowed('font-size');
+      case 'language':
+        return this.isTagAllowed('span');
       default:
         return true;
     }

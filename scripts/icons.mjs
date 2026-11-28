@@ -91,6 +91,7 @@ const editor = {
   textColor: 'baseline',
   highlight: 'highlighter',
   lineHeight: 'line-height',
+  language: 'languages',
   upload: 'upload',
   externalLink: 'square-arrow-out-up-right',
   copy: 'copy',

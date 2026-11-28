@@ -15,6 +15,8 @@
   --nova-subtle: #8c959f;
   --nova-border: #d0d7de;
   --nova-border-strong: #afb8c1;
+  /* The edge of fields and of the editor: 3:1 on every surface (WCAG 1.4.11). */
+  --nova-control-border: #7d8590;
   --nova-toolbar-bg: #f6f8fa;
   --nova-surface: #ffffff;
   --nova-hover: #eaeef2;
@@ -67,6 +69,7 @@
   --nova-subtle: #6e7681;
   --nova-border: #30363d;
   --nova-border-strong: #484f58;
+  --nova-control-border: #6e7681;
   --nova-toolbar-bg: #161b22;
   --nova-surface: #161b22;
   --nova-hover: #21262d;
@@ -109,6 +112,7 @@
     --nova-subtle: #6e7681;
     --nova-border: #30363d;
     --nova-border-strong: #484f58;
+    --nova-control-border: #6e7681;
     --nova-toolbar-bg: #161b22;
     --nova-surface: #161b22;
     --nova-hover: #21262d;
@@ -152,7 +156,7 @@
   flex-direction: column;
   min-width: 0;
   max-width: 100%;
-  border: 1px solid var(--nova-border);
+  border: 1px solid var(--nova-control-border);
   border-radius: var(--nova-radius);
   background: var(--nova-bg);
   color: var(--nova-fg);
@@ -168,7 +172,7 @@
 }
 
 .nova-editor:focus-within {
-  border-color: var(--nova-border-strong);
+  border-color: var(--nova-focus);
 }
 
 .nova-icon {
@@ -199,7 +203,8 @@
 /* The header (menubar + toolbar) is sticky as a whole: a toolbar inside it couldn't stick. */
 .nova-header {
   position: sticky;
-  top: 0;
+  /* toolbarStickyOffset: below the page's own fixed header. */
+  top: var(--nova-sticky-offset, 0px);
   z-index: 2;
   border-bottom: 1px solid var(--nova-border);
   border-radius: var(--nova-radius) var(--nova-radius) 0 0;
@@ -379,6 +384,8 @@
 .nova-btn.is-active {
   background: var(--nova-active);
   color: var(--nova-active-fg);
+  /* The tint alone is too faint to tell a pressed button (WCAG 1.4.11): a ring in its color. */
+  box-shadow: inset 0 0 0 1px var(--nova-active-fg);
 }
 
 .nova-btn:disabled {
@@ -813,7 +820,8 @@
   flex-direction: column;
   gap: 6px;
   padding: 8px;
-  border-bottom: 1px solid var(--nova-border);
+  /* Under the toolbar, inside the header (whose own edge is at the bottom). */
+  border-top: 1px solid var(--nova-border);
   background: var(--nova-toolbar-bg);
 }
 
@@ -858,6 +866,7 @@
 .nova-search-toggle[aria-pressed='true'] {
   background: var(--nova-active);
   color: var(--nova-active-fg);
+  box-shadow: inset 0 0 0 1px var(--nova-active-fg);
 }
 
 .nova-prosemirror .nova-search-match {
@@ -1125,6 +1134,12 @@ html.nova-fullscreen-lock body {
   outline: none;
 }
 
+/* The hover tint is too faint for focus (WCAG 1.4.11): the focus ring, inside the item. */
+.nova-menu-item:focus-visible {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: -2px;
+}
+
 .nova-menu-item:disabled {
   opacity: 0.4;
   cursor: default;
@@ -1225,7 +1240,7 @@ html.nova-fullscreen-lock body {
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px solid rgba(127, 127, 127, 0.35);
+  border: 1px solid var(--nova-control-border);
   border-radius: 4px;
   background: var(--swatch);
   color: #fff;
@@ -1596,7 +1611,7 @@ html.nova-fullscreen-lock body {
   width: 100%;
   height: 36px;
   padding: 0 10px;
-  border: 1px solid var(--nova-border);
+  border: 1px solid var(--nova-control-border);
   border-radius: var(--nova-radius-sm);
   background: var(--nova-bg);
   color: inherit;
@@ -2342,4 +2357,39 @@ li > .nova-sugg-node::before {
 .nova-mergetag.is-selected {
   outline: 2px solid var(--nova-accent);
   outline-offset: 1px;
+}
+
+/* ======================= Windows high contrast (forced colors) ======================= */
+
+/* The system draws every background and drops shadows: states show in its own colors instead. */
+@media (forced-colors: active) {
+  .nova-btn.is-active,
+  .nova-search-toggle[aria-pressed='true'],
+  .nova-grid-cell.is-on {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  /* A color swatch is its color. */
+  .nova-swatch {
+    forced-color-adjust: none;
+  }
+
+  .nova-prosemirror .nova-search-match {
+    forced-color-adjust: none;
+    background: Mark;
+    color: MarkText;
+  }
+
+  .nova-prosemirror .nova-search-current,
+  .nova-prosemirror .selectedCell::after {
+    forced-color-adjust: none;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .nova-prosemirror .selectedCell::after {
+    opacity: 0.4;
+  }
 }

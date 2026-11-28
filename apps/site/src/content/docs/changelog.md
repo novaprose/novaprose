@@ -9,6 +9,35 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## Unreleased
+
+### Accessibility
+
+- A passage in another language (WCAG 3.1.2): the `language` button and **Format → Language…**
+  mark the selected words, so screen readers read them with that language's voice; in the HTML it
+  is a `<span lang="…">`. `contentLangs` lists the languages to offer (by default 20 common ones,
+  named in the interface language), `setTextLanguage()` and `getTextLanguage()` do it from code.
+  `lang` on any element of the content is kept, a broken one is dropped. A Word export keeps a
+  passage's language. With `tinymce.init`, `content_langs` works (without it the button isn't
+  there, as in TinyMCE).
+- `contentLanguage`: the language of the text when it isn't the page's (screen readers and the
+  browser's spell check use it); `content_language` with `tinymce.init`.
+- The line with the caret never stays under the sticky header (WCAG 2.4.11): moving with the arrow
+  keys or Page Up, typing at the top and jumping to a search match scroll it into view below the
+  header. `toolbarStickyOffset` sticks the header below your page's own fixed header
+  (`toolbar_sticky_offset` with `tinymce.init`).
+- **Fixed:** in a long document on a scrolling page, opening **Find and replace** took the page
+  back to the top, and going to a match didn't scroll to it while the find field had focus. The
+  find bar now sits in the sticky header, under the toolbar, and every match is scrolled into view
+  below it.
+- Contrast of what isn't text (WCAG 1.4.11): the edges of fields and of the editor stand out 3:1
+  on every surface (the new `--nova-control-border` color), a pressed button has a ring as well as
+  its tint, a focused menu item shows the focus ring, and a white color swatch has a visible edge.
+- Windows high contrast mode: pressed buttons, the table size grid, search matches and selected
+  cells show in the system's colors, and color swatches keep their colors.
+- **Changed:** pasted HTML keeps `lang` on a passage in another language than the text's; it used
+  to drop every `lang`. Word's own document language (on every run) is still left out.
+
 ## 0.8.0 — 2026-11-28
 
 The largest release so far. Suggested edits cover structure, formats and Word tracked changes; an

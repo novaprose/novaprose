@@ -851,6 +851,28 @@ describe('tinymce.init', () => {
     }
   });
 
+  it('content_langs, content_language and toolbar_sticky_offset', async () => {
+    page('<textarea id="t"></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      toolbar: 'bold language',
+      content_language: 'fr_CA',
+      content_langs: [{ title: 'English', code: 'en' }, { title: 'Deutsch', code: 'de' }, null],
+      toolbar_sticky_offset: 48,
+    });
+    expect(warn.mock.calls.flat().join(' ')).not.toMatch(/content_lang|toolbar_sticky_offset/);
+    expect(editor!.core.view.dom.getAttribute('lang')).toBe('fr-CA');
+    expect(editor!.core.root.style.getPropertyValue('--nova-sticky-offset')).toBe('48px');
+    expect(editor!.core.ui.registry.get('language')?.type).toBe('menu');
+    editor!.remove();
+    // Without content_langs the button isn't available, as in TinyMCE.
+    page('<textarea id="t"></textarea>');
+    const [plain] = await tinymce.init({ selector: '#t', toolbar: 'bold language' });
+    expect(plain!.core.ui.registry.get('language')).toBeUndefined();
+    plain!.remove();
+  });
+
   it('text_patterns: a list of TinyMCE patterns, its formats and commands; text_patterns_lookup', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

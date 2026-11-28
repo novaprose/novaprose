@@ -12,6 +12,7 @@ import { tableNodes } from './table-nodes';
 import { isSafeImageUrl, isSafeLinkUrl } from './url';
 import { codeLanguage } from './code-language';
 import { elementId } from './element-id';
+import { languageTag } from './language';
 
 /**
  * The base document schema of NovaProse. Every node and mark defines both HTML parsing (parseDOM)
@@ -775,6 +776,32 @@ const nodes = buildNodes(NO_CLASSES);
 
 const buildMarks = (allow: ClassFilter) =>
   ({
+    /**
+     * <span lang="…"> — a passage in another language (WCAG 3.1.2): screen readers read it with that
+     * language's voice. Any element's lang reaches its text: <p lang="fr"> stays a paragraph and its
+     * text is marked. The rule doesn't consume the element, so its own rules still apply.
+     */
+    language: {
+      // A JSON document can leave it out: no language, a plain span.
+      attrs: { lang: { default: null } },
+      parseDOM: [
+        {
+          tag: '[lang]',
+          // Before the rules of em, strong, a…: they consume their element.
+          priority: 60,
+          consuming: false,
+          getAttrs: (dom) => {
+            const lang = languageTag((dom as HTMLElement).getAttribute('lang'));
+            return lang ? { lang } : false;
+          },
+        },
+      ],
+      toDOM: (mark): DOMOutputSpec => {
+        const lang = languageTag(mark.attrs.lang);
+        return lang ? ['span', { lang }, 0] : ['span', 0];
+      },
+    },
+
     link: {
       attrs: { href: {}, title: { default: null }, target: { default: null } },
       inclusive: false,

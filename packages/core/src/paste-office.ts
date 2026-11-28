@@ -57,6 +57,7 @@ export function cleanPastedHTML(html: string, styles: PasteStyles = 'clean'): st
 
   inlineClassStyles(root);
   removeJunk(root);
+  if (source !== 'web') dropDocumentLanguage(root);
   if (source === 'word') convertWordLists(root);
   if (source === 'google-docs') unwrapGoogleDocsWrapper(root);
   normalizeLists(root);
@@ -181,6 +182,22 @@ function removeJunk(root: HTMLElement): void {
       '[style*="mso-element:footnote-list"], [style*="mso-element:comment-list"], [style*="mso-element:endnote-list"]',
     )
     .forEach((el) => el.remove());
+}
+
+/**
+ * Office tags every run and paragraph with a language (Word: lang=EN-US on each span). The
+ * document's own language, the one most of the text is in, says nothing and is dropped; a phrase in
+ * another language keeps its lang and stays a passage in that language (WCAG 3.1.2).
+ */
+function dropDocumentLanguage(root: HTMLElement): void {
+  const tagged = [...root.querySelectorAll<HTMLElement>('[lang]')];
+  if (!tagged.length) return;
+  const primary = (el: HTMLElement) => (el.getAttribute('lang') ?? '').split('-')[0]!.toLowerCase();
+  const amount = new Map<string, number>();
+  for (const el of tagged)
+    amount.set(primary(el), (amount.get(primary(el)) ?? 0) + (el.textContent?.length ?? 0));
+  const main = [...amount].sort((a, b) => b[1] - a[1])[0]![0];
+  for (const el of tagged) if (primary(el) === main) el.removeAttribute('lang');
 }
 
 // ---------- desktop Word lists: paragraphs with mso-list → <ul>/<ol> ----------
@@ -532,12 +549,14 @@ function stripLayoutAttributes(root: HTMLElement): void {
 function unwrapMeaningless(root: HTMLElement): void {
   for (const el of [...root.querySelectorAll<HTMLElement>('span, font')].reverse()) {
     if (!root.contains(el)) continue;
+    // A lang left on a span marks a passage in another language (the document's own is gone).
     const hasFormatting =
-      el.hasAttribute('style') || (el.tagName === 'FONT' && el.hasAttribute('color'));
+      el.hasAttribute('style') ||
+      el.hasAttribute('lang') ||
+      (el.tagName === 'FONT' && el.hasAttribute('color'));
     if (!hasFormatting) unwrap(el);
   }
   root.querySelectorAll('[class]').forEach((el) => el.removeAttribute('class'));
-  root.querySelectorAll('[lang]').forEach((el) => el.removeAttribute('lang'));
   // Google Docs puts dir="ltr" on every paragraph: that is the default; rtl is kept.
   root.querySelectorAll('[dir]').forEach((el) => {
     if (!/^rtl$/i.test(el.getAttribute('dir') ?? '')) el.removeAttribute('dir');

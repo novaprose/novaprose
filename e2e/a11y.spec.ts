@@ -640,5 +640,22 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(page.locator('[role="menu"]:visible').first()).toBeVisible();
       await audit(page, 'menu from the menubar');
     });
+
+    test('the language menu open, with a passage marked', async ({ page }) => {
+      await open(page, theme, '&langs=1');
+      await page.evaluate(() => {
+        const w = window as unknown as {
+          editor: { setContent(html: string): void };
+        };
+        w.editor.setContent('<p>One</p><p>Two</p><p>She said <span lang="fr">bonjour</span>.</p>');
+      });
+      await page.locator('.nova-prosemirror span[lang="fr"]').click();
+      await page.locator('.nova-toolbar [data-control="language"]').click();
+      await expect(page.getByRole('menuitemradio', { name: 'French' })).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+      await audit(page, 'language menu');
+    });
   });
 }

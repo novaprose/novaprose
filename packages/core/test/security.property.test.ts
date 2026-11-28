@@ -406,6 +406,8 @@ describe('HTML security and stability (property-based)', () => {
       lineHeight: anyValue,
       dir: anyValue,
       language: anyValue,
+      // A passage's language goes into lang: anything from JSON, or a tag that tries to break out.
+      lang: fc.oneof(anyValue, fc.constantFrom('fr', 'pt-BR', 'en" onclick="alert(1)')),
       level: anyValue,
       value: attrValue,
       id: attrValue,
@@ -447,6 +449,7 @@ describe('HTML security and stability (property-based)', () => {
       type: fc.constantFrom(
         'link',
         'span_class',
+        'language',
         'bold',
         'color',
         'background',

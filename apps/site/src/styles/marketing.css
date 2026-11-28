@@ -703,6 +703,7 @@ body.np-site::before {
   --nova-selection: rgb(124 92 196 / 22%);
   --nova-border: #e2dcf3;
   --nova-border-strong: #c9bfe8;
+  --nova-control-border: #857aa8;
   --nova-toolbar-bg: #faf8ff;
   --nova-hover: #f1edfb;
   --nova-pressed: #e7e0f8;
@@ -730,6 +731,7 @@ body.np-site::before {
   --nova-surface: #1a1630;
   --nova-border: #2f2948;
   --nova-border-strong: #463d6b;
+  --nova-control-border: #7a71a3;
   --nova-toolbar-bg: #17132a;
   --nova-hover: #241e3d;
   --nova-pressed: #2d2650;

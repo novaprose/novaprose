@@ -170,6 +170,9 @@ export const icons = {
   lineHeight: svg(
     '<path d="M15 14H9" /><path d="M21 21H3" /><path d="M21 3H3" /><path d="m8 16 3.453-7.648a.6.6 0 011.094.001L16 16" />',
   ),
+  language: svg(
+    '<path d="m5 8 6 6" /><path d="m4 14 6-6 2-3" /><path d="M2 5h12" /><path d="M7 2h1" /><path d="m22 22-5-10-5 10" /><path d="M14 18h6" />',
+  ),
   upload: svg(
     '<path d="M12 3v12" /><path d="m17 8-5-5-5 5" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />',
   ),

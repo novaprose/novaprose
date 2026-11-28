@@ -261,7 +261,8 @@ export class HtmlRules implements HtmlRulesInstance {
     for (const attr of Array.from(dom.attributes)) {
       let name = attr.name.toLowerCase();
       if (name === OWN_STYLE) name = 'style';
-      if (skip.includes(name) || !this.allows(tag, name)) continue;
+      // lang is the language mark's (a passage in another language): kept once, as the mark.
+      if (name === 'lang' || skip.includes(name) || !this.allows(tag, name)) continue;
       const value = safeAttr(name, attr.value);
       if (value !== null) (out ??= {})[name] = value;
     }
@@ -278,7 +279,7 @@ export class HtmlRules implements HtmlRulesInstance {
     if (extras && typeof extras === 'object' && !Array.isArray(extras)) {
       for (const [raw, value] of Object.entries(extras as Attrs)) {
         const name = raw.toLowerCase();
-        if (out[name] != null || !this.allows(tag, name)) continue;
+        if (out[name] != null || name === 'lang' || !this.allows(tag, name)) continue;
         if (!['string', 'number', 'boolean'].includes(typeof value)) continue;
         const safe = safeAttr(name, String(value));
         if (safe !== null) out[name] = safe;

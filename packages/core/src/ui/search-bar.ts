@@ -22,9 +22,14 @@ export interface SearchBarHandle {
 
 /**
  * The "Find and replace" bar under the toolbar (not modal: the text can be edited while it stays open).
+ * `place` puts it in the sticky header, so it stays in view while the page scrolls from match to
+ * match (above the text when there is no header).
  * Enter goes to the next match, Shift+Enter to the previous one, Esc closes it and returns to the text.
  */
-export function createSearchBar(editor: Editor, before: HTMLElement): SearchBarHandle {
+export function createSearchBar(
+  editor: Editor,
+  place: (bar: HTMLElement) => void,
+): SearchBarHandle {
   const { t } = editor.ui;
   const findId = uniqueId('nova-find');
   const replaceId = uniqueId('nova-replace');
@@ -130,7 +135,7 @@ export function createSearchBar(editor: Editor, before: HTMLElement): SearchBarH
     ),
     h('div', { className: 'nova-search-row' }, replaceInput, replaceOne, replaceAllBtn),
   );
-  before.parentElement!.insertBefore(bar, before);
+  place(bar);
 
   let timer: ReturnType<typeof setTimeout> | null = null;
   const run = () => {

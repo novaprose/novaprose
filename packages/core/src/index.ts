@@ -60,6 +60,7 @@ export {
   type CommandName,
 } from './commands';
 export { setStyle, getStyle, setLineHeight, getLineHeight, type StyleMark } from './styles';
+export { setTextLanguage, getTextLanguage, type ContentLanguage } from './language';
 export { applyLink, removeLink, normalizeUrl, openLinkDialog, type LinkAttrs } from './link';
 export {
   uploadImages,

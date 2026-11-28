@@ -3,6 +3,7 @@ import { Plugin, PluginKey } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import { codeLanguage } from './code-language';
 import type { Editor } from './editor';
+import { languageTag, primaryLanguage } from './language';
 import type * as PasteOffice from './paste-office';
 import type { PasteStyles } from './paste-office';
 
@@ -91,6 +92,33 @@ export function htmlToPlainText(html: string): string {
     .trim();
 }
 
+/** The language of the editor's text: the contentLanguage option, else the page's around the editor. */
+function textLanguage(editor: Editor): string | null {
+  return (
+    languageTag(editor.options.contentLanguage) ??
+    languageTag(editor.root.parentElement?.closest('[lang]')?.getAttribute('lang'))
+  );
+}
+
+/** Drops lang attributes in the text's own language from pasted HTML (other languages stay). */
+export function withoutTextLanguage(html: string, lang: string | null): string {
+  if (!lang || !/\slang\s*=/i.test(html)) return html;
+  const template = document.createElement('template');
+  template.innerHTML = html;
+  let changed = false;
+  for (const el of template.content.querySelectorAll('[lang]')) {
+    const tag = languageTag(el.getAttribute('lang'));
+    if (tag && primaryLanguage(tag) === primaryLanguage(lang)) {
+      el.removeAttribute('lang');
+      changed = true;
+    }
+  }
+  if (!changed) return html;
+  const container = document.createElement('div');
+  container.append(template.content);
+  return container.innerHTML;
+}
+
 export function pastePlugin(editor: Editor): Plugin {
   // A recursion guard flag: pasteText itself triggers paste handling.
   let reentrant = false;
@@ -122,6 +150,8 @@ export function pastePlugin(editor: Editor): Plugin {
         // Cleans up Word, Google Docs, Excel and similar markup (copying inside the editor is left alone).
         // The schema and the sanitizer work without it too: security doesn't depend on this chunk.
         if (cleaner) result = cleaner.cleanPastedHTML(result, pasteStyles ?? 'clean');
+        // Marked with the text's own language, a passage says nothing: other languages stay passages.
+        result = withoutTextLanguage(result, textLanguage(editor));
         if (pastePostprocess) {
           // Parsing in a <template> is inert: scripts don't run, images don't load.
           const template = document.createElement('template');

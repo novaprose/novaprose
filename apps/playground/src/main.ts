@@ -154,6 +154,14 @@ async function demoEmbed(url: string): Promise<EmbedInfo | null> {
   };
 }
 
+const stickyOffset = Number(new URLSearchParams(location.search).get('sticky'));
+if (stickyOffset > 0) {
+  const bar = document.createElement('div');
+  bar.className = 'pg-fixed-header';
+  bar.style.cssText = `position: fixed; inset: 0 0 auto; height: ${stickyOffset}px; background: #24292f; z-index: 10;`;
+  document.body.prepend(bar);
+}
+
 const editor = createEditor({
   element: $('#editor'),
   content: localStorage.getItem(STORAGE_KEY) ?? SAMPLE.trim(),
@@ -207,6 +215,12 @@ const editor = createEditor({
         ].join('\n'),
       }
     : {}),
+  // ?langs=1: the language button (e2e/wcag.spec.ts marks a passage in another language).
+  ...(new URLSearchParams(location.search).has('langs')
+    ? { toolbar: 'undo redo | bold italic | language | link' }
+    : {}),
+  // ?sticky=60: the page has its own fixed header that tall; the editor's header sticks below it.
+  ...(stickyOffset > 0 ? { toolbarStickyOffset: stickyOffset } : {}),
   // ?contentcss=1: content styles from a file (+ @import) and as a string (e2e/editor-options.spec.ts drives them).
   ...(new URLSearchParams(location.search).has('contentcss')
     ? { contentCss: '/test-css/content.css', contentStyle: 'h2 { color: rgb(0, 128, 0) }' }

@@ -20,6 +20,7 @@ import {
 import { openLinkDialog, removeLink } from '../link';
 import type { ImageAlign, MarkName, TextAlign } from '../schema';
 import { getLineHeight, getStyle, setLineHeight, setStyle } from '../styles';
+import { contentLanguages, getTextLanguage, languageName, setTextLanguage } from '../language';
 import { createColorPanel, defaultColors } from './color-panel';
 import { registerTableUi } from './table-ui';
 import { isFullscreen, openHelp, openPreview, openSourceCode, toggleFullscreen } from './views';
@@ -458,6 +459,42 @@ export function registerBuiltins(editor: Editor): void {
     },
   });
 
+  // ---------- the language of a passage (WCAG 3.1.2) ----------
+  const languages = () => contentLanguages(editor.options.contentLangs, editor.options.language);
+  if (languages().length) {
+    const canMark = (e: Editor) => e.can(setTextLanguage('en'));
+    registry.addMenuButton('language', {
+      icon: icons.language,
+      tooltip: t('language'),
+      isEnabled: canMark,
+      items: (e) => {
+        const value = getTextLanguage(e.view.state);
+        return [
+          {
+            id: 'default',
+            label: t('language.default'),
+            active: value === null,
+            onSelect: () => e.exec(setTextLanguage(null)),
+          },
+          { type: 'separator' },
+          ...languages().map<MenuEntry>(({ code, title }) => ({
+            id: code,
+            label: title,
+            active: value === code,
+            onSelect: () => e.exec(setTextLanguage(code)),
+          })),
+        ];
+      },
+    });
+    // The menu bar has no submenus: its item asks in a dialog.
+    registry.addMenuItem('language', {
+      text: `${t('language')}…`,
+      icon: icons.language,
+      isEnabled: canMark,
+      onAction: (e) => void chooseLanguage(e),
+    });
+  }
+
   // ---------- colors ----------
   const colorButton = (
     name: string,
@@ -661,4 +698,32 @@ export function registerBuiltins(editor: Editor): void {
       return dom?.getBoundingClientRect() ?? null;
     },
   });
+}
+
+/** The menu bar's Language… item: the language of the selected text, chosen in a dialog. */
+async function chooseLanguage(editor: Editor): Promise<void> {
+  const t = editor.ui.t;
+  const current = getTextLanguage(editor.view.state);
+  const list = contentLanguages(editor.options.contentLangs, editor.options.language);
+  // A language from the document that isn't in the list still shows as chosen.
+  if (current && !list.some((l) => l.code === current))
+    list.unshift({ code: current, title: languageName(current, editor.options.language) });
+  const data = await editor.ui.dialog({
+    title: t('language'),
+    submitLabel: t('dialog.save'),
+    initialData: { lang: current ?? '' },
+    fields: [
+      {
+        type: 'select',
+        name: 'lang',
+        label: t('language.field'),
+        options: [
+          { value: '', label: t('language.default') },
+          ...list.map(({ code, title }) => ({ value: code, label: title })),
+        ],
+      },
+    ],
+  });
+  if (!data) return;
+  editor.exec(setTextLanguage(String(data.lang ?? '') || null));
 }
