@@ -283,6 +283,29 @@ test('editimage: when the edited image fails to upload, the original comes back'
   await expect(img).toHaveAttribute('src', '/edit-demo.png');
 });
 
+test("views: a view takes the editor's place; Escape brings the text back", async ({ page }) => {
+  await open(page);
+  type Win = {
+    editor: { setContent(h: string, o: object): void; ui: { view: { toggle(n: string): void } } };
+  };
+  await page.evaluate(() => {
+    const { editor } = window as unknown as Win;
+    editor.setContent('<h2>Plan</h2><p>Three short words</p>', { addToHistory: false });
+    editor.ui.view.toggle('report');
+  });
+  const view = page.getByRole('region', { name: 'Report' });
+  await expect(view).toBeVisible();
+  await expect(view).toContainText('4 words, 1 headings');
+  // The editor's own parts are out of sight while the view is open.
+  await expect(page.locator('.nova-prosemirror')).toBeHidden();
+  await expect(page.locator('.nova-header')).toBeHidden();
+  await expect(view.getByRole('button', { name: 'Back to the text' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(view).toBeHidden();
+  await expect(page.locator('.nova-prosemirror')).toBeVisible();
+  await expect(page.locator('.nova-prosemirror')).toBeFocused();
+});
+
 test('anchor and pagebreak are inserted from the toolbar', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Intro');

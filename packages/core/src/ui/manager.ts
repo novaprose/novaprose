@@ -10,6 +10,7 @@ import { Notifications, type NotificationHandle, type NotificationOptions } from
 import { Popover, type PopoverOptions } from './popover';
 import { Registry } from './registry';
 import { Sidebars } from './sidebar';
+import { Views } from './editor-views';
 import { Tooltip } from './tooltip';
 
 /**
@@ -24,6 +25,8 @@ export class UiManager {
   readonly tooltip: Tooltip;
   /** Plugin sidebars: show / hide / toggle (register them with registry.addSidebar). */
   readonly sidebar: Sidebars;
+  /** Plugin views in place of the editor: show / hide / toggle (register them with registry.addView). */
+  readonly view: Views;
   private readonly notifications: Notifications;
   private popover: Popover | null = null;
   private currentDialog: DialogHandle | null = null;
@@ -46,6 +49,7 @@ export class UiManager {
     this.tooltip = new Tooltip(this.overlayHost);
     this.notifications = new Notifications(root, t('dialog.close'));
     this.sidebar = new Sidebars(editor);
+    this.view = new Views(editor);
     this.liveRegion = h('div', {
       className: 'nova-visually-hidden nova-announcer',
       role: 'status',
@@ -185,6 +189,7 @@ export class UiManager {
 
   destroy(): void {
     this.sidebar.destroy();
+    this.view.destroy();
     this.closePopover();
     this.currentDialog?.close();
     this.tooltip.destroy();

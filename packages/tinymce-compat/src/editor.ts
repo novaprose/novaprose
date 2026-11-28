@@ -435,9 +435,10 @@ export class CompatEditor {
 
   // ---------- commands ----------
 
-  /** The value of a command: for ToggleSidebar, the name of the open sidebar. */
+  /** The value of a command: for ToggleSidebar and ToggleView, the name of the open one. */
   queryCommandValue(command: string): string {
     if (command.toLowerCase() === 'togglesidebar') return this.core.ui.sidebar.active ?? '';
+    if (command.toLowerCase() === 'toggleview') return this.core.ui.view.active ?? '';
     return '';
   }
 
@@ -450,6 +451,10 @@ export class CompatEditor {
       done = block ? this.core.exec(block) : false;
     } else if (name === 'mceinsertcontent' || name === 'inserthtml') {
       this.insertContent(String(value ?? ''));
+      done = true;
+    } else if (name === 'toggleview') {
+      // A view from ui.registry.addView (value is its name).
+      this.core.ui.view.toggle(String(value ?? ''));
       done = true;
     } else if (name === 'togglesidebar') {
       // A sidebar from ui.registry.addSidebar (value is its name).
@@ -963,6 +968,30 @@ export class CompatEditor {
           },
           onShow: () => spec.onShow?.(api),
           onHide: () => spec.onHide?.(api),
+        });
+      },
+      /**
+       * A view in place of the editor: buttons at its top, onShow/onHide get api.getContainer(), where it
+       * draws; ToggleView is the command.
+       */
+      addView: (
+        name: string,
+        spec: {
+          buttons?: { type?: string; text?: string; buttonType?: string; onAction?: () => void }[];
+          onShow?: (api: { getContainer(): HTMLElement }) => void;
+          onHide?: (api: { getContainer(): HTMLElement }) => void;
+        },
+      ) => {
+        this.core.ui.registry.addView(name, {
+          buttons: (Array.isArray(spec.buttons) ? spec.buttons : [])
+            .filter((button) => typeof button?.text === 'string')
+            .map((button) => ({
+              text: button.text!,
+              buttonType: button.buttonType === 'primary' ? 'primary' : 'secondary',
+              onAction: () => button.onAction?.(),
+            })),
+          ...(spec.onShow ? { onShow: spec.onShow } : {}),
+          ...(spec.onHide ? { onHide: spec.onHide } : {}),
         });
       },
       addContextForm: () => {

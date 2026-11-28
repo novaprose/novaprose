@@ -13,6 +13,11 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Views for plugins: `editor.ui.registry.addView(name, { title, buttons, onShow, onHide })` puts a
+  screen of your own in place of the editor (a review, a report), with your buttons at its top;
+  `editor.ui.view.show/hide/toggle` and `active`. Focus moves into the view and back, Escape closes
+  it. With `tinymce.init`, `ui.registry.addView`, `ToggleView`, `queryCommandValue('ToggleView')`
+  and `view_show` (and `sidebar_show`) work.
 - Image editing: with the `editimage` plugin the image toolbar rotates and flips the picture, and
   **Edit image** crops it (by dragging on a preview or with the fields, free or to a shape),
   resizes it and changes its brightness, contrast and saturation, the same in every browser. The

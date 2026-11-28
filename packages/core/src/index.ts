@@ -91,6 +91,7 @@ export type {
   DialogSpec,
 } from './ui/form-dialog-types';
 export type { SidebarSpec, Sidebars } from './ui/sidebar';
+export type { ViewApi, ViewButton, ViewSpec, Views } from './ui/editor-views';
 export {
   registerHtmlRules,
   type HtmlRulesModule,

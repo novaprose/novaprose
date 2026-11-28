@@ -1,0 +1,51 @@
+/* Views (editor.ui.view): a plugin's screen in place of the editor. Attached when one is first shown. */
+
+/* While a view is open, the rest of the editor's box steps aside (the overlays stay). */
+.nova-editor.nova-view-open > :not(.nova-view):not(.nova-overlays) {
+  display: none;
+}
+
+.nova-view {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 240px;
+  background: var(--nova-surface);
+  color: var(--nova-fg);
+}
+
+.nova-view[hidden] {
+  display: none;
+}
+
+.nova-view:focus {
+  outline: none;
+}
+
+.nova-view-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--nova-border);
+  background: var(--nova-toolbar-bg);
+}
+
+.nova-view-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.nova-view-buttons {
+  display: flex;
+  gap: 8px;
+  margin-inline-start: auto;
+}
+
+.nova-view-body {
+  flex: 1;
+  min-height: 0;
+  padding: 12px;
+  overflow: auto;
+}

@@ -1022,6 +1022,34 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.flat().join(' ')).not.toContain('editimage_');
   });
 
+  it('views: ui.registry.addView, ToggleView and its value, view_show at the start', async () => {
+    page('<textarea id="t"><p>a</p></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const onAction = vi.fn();
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      view_show: 'notes',
+      setup: (ed: CompatEditor) => {
+        ed.ui.registry.addView('notes', {
+          buttons: [{ type: 'button', text: 'Close', buttonType: 'primary', onAction }],
+          onShow: (api: { getContainer(): HTMLElement }) => {
+            api.getContainer().textContent = 'Notes here';
+          },
+        });
+      },
+    });
+    const root = editor!.core.root;
+    expect(editor!.queryCommandValue('ToggleView')).toBe('notes');
+    const view = root.querySelector<HTMLElement>('.nova-view[data-view="notes"]')!;
+    expect(view.textContent).toContain('Notes here');
+    view.querySelector<HTMLButtonElement>('.nova-button-primary')!.click();
+    expect(onAction).toHaveBeenCalled();
+    expect(editor!.execCommand('ToggleView', false, 'notes')).toBe(true);
+    expect(editor!.queryCommandValue('ToggleView')).toBe('');
+    expect(view.hidden).toBe(true);
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('view_show');
+  });
+
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

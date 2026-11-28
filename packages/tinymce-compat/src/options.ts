@@ -196,6 +196,9 @@ const IGNORED = new Set([
   'advcode_prettify_editor',
   'advcode_prettify_getcontent',
   'advcode_inline',
+  // view_show and sidebar_show: opened when the editor is ready (index.ts).
+  'view_show',
+  'sidebar_show',
   // editimage: the toolbar, the hosts with cookies, your way to fetch an image (editimage_fetch_image
   // gets an <img>). Images are read with CORS, so the CORS host list, the proxy and the upload timeout
   // aren't needed: fetchImage goes through your server instead.

@@ -435,5 +435,28 @@ document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((button) => {
 
 render(editor);
 
+// ?parity=1: a view in place of the editor, a short report on the text (e2e/plugins-parity.spec.ts).
+if (new URLSearchParams(location.search).has('parity')) {
+  editor.ui.registry.addView('report', {
+    title: 'Report',
+    buttons: [
+      { text: 'Back to the text', buttonType: 'primary', onAction: (e) => e.ui.view.hide() },
+    ],
+    onShow: (api) => {
+      const words = editor.getText().split(/\s+/).filter(Boolean).length;
+      const headings = [...editor.view.dom.querySelectorAll('h1, h2, h3')];
+      const count = document.createElement('p');
+      count.textContent = `${words} words, ${headings.length} headings`;
+      const list = document.createElement('ul');
+      for (const heading of headings) {
+        const item = document.createElement('li');
+        item.textContent = heading.textContent ?? '';
+        list.append(item);
+      }
+      api.getContainer().replaceChildren(count, list);
+    },
+  });
+}
+
 // For debugging from the browser console: window.editor
 (window as unknown as { editor: Editor }).editor = editor;

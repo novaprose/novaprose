@@ -80,6 +80,8 @@ console and ignored.
 | `editor.windowManager.open(spec)`    | `editor.ui.dialog({ title, fields, onSubmit })`            |
 | `editor.ui.registry.addSidebar(…)`   | `editor.ui.registry.addSidebar(name, { title, render })`   |
 | `execCommand('ToggleSidebar', …)`    | `editor.ui.sidebar.toggle(name)`                           |
+| `editor.ui.registry.addView(…)`      | `editor.ui.registry.addView(name, { buttons, onShow })`    |
+| `execCommand('ToggleView', …)`       | `editor.ui.view.toggle(name)`                              |
 | `editor.focus()`, `editor.destroy()` | `editor.focus()`, `editor.destroy()`                       |
 
 ## Content

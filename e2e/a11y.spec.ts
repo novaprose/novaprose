@@ -348,6 +348,17 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'edit image dialog');
     });
 
+    test('a view in place of the editor', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(() =>
+        (
+          window as unknown as { editor: { ui: { view: { show(n: string): void } } } }
+        ).editor.ui.view.show('report'),
+      );
+      await expect(page.getByRole('region', { name: 'Report' })).toBeVisible();
+      await audit(page, 'view');
+    });
+
     test('link checker: a broken link and its bubble with the note', async ({ page }) => {
       await open(page, theme, '&linkcheck=1');
       await page.evaluate(async () => {

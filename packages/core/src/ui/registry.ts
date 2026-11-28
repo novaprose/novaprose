@@ -4,6 +4,7 @@ import type { AutocompleterSpec } from './autocompleter';
 import type { MenuEntry } from './menu';
 import { icons } from './icons';
 import type { SidebarSpec } from './sidebar';
+import type { ViewSpec } from './editor-views';
 
 const sidebarIcon = icons.sidebar;
 
@@ -197,6 +198,17 @@ export class Registry {
 
   getSidebar(name: string): SidebarSpec | undefined {
     return this.sidebars.get(name);
+  }
+
+  private readonly views = new Map<string, ViewSpec>();
+
+  /** A view: a plugin's screen in place of the editor (shown with editor.ui.view). */
+  addView(name: string, spec: ViewSpec): void {
+    this.views.set(name, spec);
+  }
+
+  getView(name: string): ViewSpec | undefined {
+    return this.views.get(name);
   }
 
   addAutocompleter(name: string, spec: AutocompleterSpec): void {

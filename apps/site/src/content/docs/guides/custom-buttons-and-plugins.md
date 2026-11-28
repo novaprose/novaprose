@@ -149,6 +149,38 @@ unless you pass `button: false`. From code: `editor.ui.sidebar.show('outline', {
 `hide()`, `toggle(name)`, `active`. The panel has a heading and a close button, Escape closes it
 and returns focus to the text.
 
+## A view
+
+A screen of your own in place of the editor: a review, a report, a history. While a view is open,
+the toolbar, the text and the status bar are out of sight (and out of the <kbd>Tab</kbd> order), and
+the view has your buttons at its top. One view is open at a time.
+
+```ts
+editor.ui.registry.addView('report', {
+  title: 'Report',
+  buttons: [
+    { text: 'Export', onAction: (editor) => exportReport(editor) },
+    {
+      text: 'Back to the text',
+      buttonType: 'primary',
+      onAction: (editor) => editor.ui.view.hide(),
+    },
+  ],
+  onShow: (api) => api.getContainer().replaceChildren(renderReport(editor)), // every time it opens
+  onHide: (api) => {},
+});
+editor.ui.registry.addButton('report', {
+  text: 'Report',
+  tooltip: 'Report',
+  onAction: (editor) => editor.ui.view.toggle('report'),
+});
+```
+
+`editor.ui.view.show(name)`, `hide()`, `toggle(name)` and `active` work from code. Focus moves into
+the view when it opens, and back to the text when it closes; <kbd>Esc</kbd> closes it too. With
+`tinymce.init()`: `ui.registry.addView` with the same `buttons`, `ToggleView` and
+`queryCommandValue('ToggleView')`, and `view_show` (or `sidebar_show`) opens one at the start.
+
 ## Plugin styles
 
 Ship a plugin's CSS with its code: `editor.ui.addStyles(id, css)` adds it once per page (or shadow

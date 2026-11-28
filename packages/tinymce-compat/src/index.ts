@@ -281,6 +281,11 @@ export function createTinymce(): TinyMCECompat {
     compat.initialized = true;
     compat.fire('init');
     (config.init_instance_callback as ((e: CompatEditor) => void) | undefined)?.(compat);
+    // A view or a sidebar open from the start (registered by then, in setup or by plugins); a view wins.
+    if (typeof config.view_show === 'string' && config.view_show)
+      core.ui.view.show(config.view_show);
+    else if (typeof config.sidebar_show === 'string' && config.sidebar_show)
+      void core.ui.sidebar.show(config.sidebar_show);
     return compat;
   }
 
