@@ -3,7 +3,7 @@ import { ContentRules, type ContentRulesOptions } from './content-rules';
 import type { EditorOptions } from './editor';
 import { formatClasses } from './formats';
 import { htmlRulesFor } from './html-rules-api';
-import { orderPlugins, resolveEntries, type NovaPlugin } from './plugins';
+import { orderPlugins, pageHandlerOf, resolveEntries, type NovaPlugin } from './plugins';
 import { createSchema, type ClassFilter, type NodeAttribute, type NovaSchema } from './schema';
 import { HTMLSerializer } from './serializer';
 
@@ -166,8 +166,11 @@ export interface DocumentRenderer {
   readonly schema: NovaSchema;
   /** A ProseMirror document from JSON, with attributes checked and content rules applied. */
   doc(json: Record<string, unknown>): PMNode;
-  /** The document's HTML — the same as getHTML() of an editor with these options. */
-  html(json: Record<string, unknown>): string;
+  /**
+   * The document's HTML — the same as getHTML() of an editor with these options: with fullpagehtml
+   * the whole page, `fullPage: false` only the content.
+   */
+  html(json: Record<string, unknown>, options?: { fullPage?: boolean }): string;
   /** The document's text: blocks separated by a blank line, like getText(). */
   text(json: Record<string, unknown>): string;
 }
@@ -196,10 +199,16 @@ export function createRenderer(options: DocumentOptions = {}): DocumentRenderer 
     const node = PMNode.fromJSON(schema, sanitizeJSON(schema, json));
     return rules ? rules.normalizeDoc(node) : node;
   };
+  // Plugins read only the options the document depends on, as their `nodes` do.
+  const page = pageHandlerOf(ordered, { options: options as EditorOptions });
   return {
     schema,
     doc,
-    html: (json) => htmlSerializer.serializeFragment(doc(json).content),
+    html: (json, { fullPage = true } = {}) => {
+      const node = doc(json);
+      const content = htmlSerializer.serializeFragment(node.content);
+      return page && fullPage ? page.write(content, node.attrs) : content;
+    },
     text: (json) => {
       const node = doc(json);
       return node.textBetween(0, node.content.size, '\n\n');

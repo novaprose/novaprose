@@ -37,6 +37,15 @@ async function open(page: Page, theme: 'light' | 'dark', query = '') {
 }
 
 async function audit(page: Page, label: string) {
+  // Opening animations (a dialog fading in) end first: axe measures colors as they are drawn, and a
+  // half-transparent dialog shows the page behind it. Endless ones (a pulse) don't count.
+  await page.waitForFunction(() =>
+    document
+      .getAnimations()
+      .every(
+        (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity,
+      ),
+  );
   const result = await new AxeBuilder({ page })
     .include('.nova-editor')
     // The editor's overlays mount into body: menus, dialogs, tooltips, panels.
@@ -346,6 +355,16 @@ for (const theme of ['light', 'dark'] as const) {
       await page.locator('.nova-context-toolbar [data-control="editimage"]').click();
       await expect(page.getByRole('dialog', { name: 'Edit image' })).toBeVisible();
       await audit(page, 'edit image dialog');
+    });
+
+    test('the Document properties dialog (a whole page)', async ({ page }) => {
+      await open(page, theme, '&fullpage=1');
+      await page.evaluate(
+        () => (window as unknown as { editor: { ready: Promise<void> } }).editor.ready,
+      );
+      await control(page, 'fullpagehtml');
+      await expect(page.getByRole('dialog', { name: 'Document properties' })).toBeVisible();
+      await audit(page, 'document properties dialog');
     });
 
     test("a page's card, selected, with its toolbar", async ({ page }) => {

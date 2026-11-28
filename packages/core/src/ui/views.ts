@@ -1,6 +1,7 @@
 import { DOMSerializer, type Node as PMNode } from 'prosemirror-model';
 import type { Editor } from '../editor';
 import type { MessageKey } from '../i18n';
+import { setSourceHTML, sourceHTML } from '../page';
 import { formatShortcut, h } from './dom';
 
 // ---------- fullscreen ----------
@@ -59,7 +60,7 @@ export function formatHTML(html: string): string {
 /** View and edit the HTML (the code plugin). Saving goes through the schema, with the same cleanup. */
 export function openSourceCode(editor: Editor): void {
   const { t } = editor.ui;
-  const original = formatHTML(editor.getHTML());
+  const original = formatHTML(sourceHTML(editor));
   const textarea = h('textarea', {
     className: 'nova-input nova-source',
     spellcheck: 'false',
@@ -75,7 +76,7 @@ export function openSourceCode(editor: Editor): void {
     submitLabel: t('dialog.save'),
     initialFocus: textarea,
     onSubmit: () => {
-      if (textarea.value !== original) editor.setContent(textarea.value);
+      if (textarea.value !== original) setSourceHTML(editor, textarea.value);
       return true;
     },
   });

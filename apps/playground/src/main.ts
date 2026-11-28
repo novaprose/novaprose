@@ -287,6 +287,8 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('email') ? ['email'] : []),
     // ?linkcheck=1: broken links found by an offline demo service (e2e/linkchecker.spec.ts).
     ...(new URLSearchParams(location.search).has('linkcheck') ? ['linkchecker'] : []),
+    // ?fullpage=1: a whole HTML page, its head kept, with the menu bar (e2e/fullpage.spec.ts).
+    ...(new URLSearchParams(location.search).has('fullpage') ? ['fullpagehtml'] : []),
   ],
   pluginOptions: {
     // &complete=1 turns on autocomplete (e2e/ai.spec.ts).
@@ -379,7 +381,9 @@ const editor = createEditor({
   // Modes and the menubar: ?mode=inline | distraction-free, ?menubar=1
   mode: (new URLSearchParams(location.search).get('mode') ?? 'classic') as
     'classic' | 'inline' | 'distraction-free',
-  menubar: new URLSearchParams(location.search).has('menubar'),
+  menubar:
+    new URLSearchParams(location.search).has('menubar') ||
+    new URLSearchParams(location.search).has('fullpage'),
   // Content restrictions for manual checks: ?invalid=h1,table&styles=color
   ...(new URLSearchParams(location.search).has('invalid')
     ? { invalidElements: new URLSearchParams(location.search).get('invalid')! }

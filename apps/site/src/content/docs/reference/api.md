@@ -8,13 +8,13 @@ packages wrap the same object.
 
 ## Content
 
-| Method                                  | Description                                                                                |
-| --------------------------------------- | ------------------------------------------------------------------------------------------ |
-| `getHTML(): string`                     | the document as clean, deterministic HTML                                                  |
-| `getJSON(): object`                     | the document as JSON (can be passed back as `content`)                                     |
-| `getText(): string`                     | plain text                                                                                 |
-| `isEmpty(): boolean`                    | `true` when the document has no content                                                    |
-| `setContent(content, { addToHistory })` | replace the document with HTML or JSON; `addToHistory: false` keeps it out of undo history |
+| Method                                            | Description                                                                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getHTML({ fullPage }): string`                   | the document as clean, deterministic HTML; with the fullpagehtml plugin the [whole page](/guides/full-page/), `fullPage: false` only the content |
+| `getJSON(): object`                               | the document as JSON (can be passed back as `content`)                                                                                           |
+| `getText(): string`                               | plain text                                                                                                                                       |
+| `isEmpty(): boolean`                              | `true` when the document has no content                                                                                                          |
+| `setContent(content, { addToHistory, fullPage })` | replace the document with HTML or JSON; `addToHistory: false` keeps it out of undo history, `fullPage: false` keeps a whole page's head as it is |
 
 ## Documents without an editor
 
@@ -25,10 +25,10 @@ server, in a worker, at build time. See [Rendering on the server](/guides/server
 import { createRenderer, renderHTML } from '@novaprose/core';
 ```
 
-| Function                    | Description                                                                                           |
-| --------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `createRenderer(options)`   | `{ html(json), text(json), doc(json), schema }` for the editor's options; reuse it for many documents |
-| `renderHTML(json, options)` | HTML of one document                                                                                  |
+| Function                    | Description                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `createRenderer(options)`   | `{ html(json, { fullPage }), text(json), doc(json), schema }` for the editor's options; reuse it for many documents |
+| `renderHTML(json, options)` | HTML of one document                                                                                                |
 
 ## Commands
 

@@ -8,6 +8,20 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Whole HTML pages: with the `fullpagehtml` plugin the editor holds a whole HTML document. The
+  doctype, the head (title, meta tags, style sheets) and the attributes of `<html>` and `<body>` are
+  kept around the content; `getHTML()` gives the whole page and `setContent()` of a whole page
+  reads its head, while `{ fullPage: false }` works with the content only. The page lives in the
+  document, so `getJSON()`, undo and the server renderer keep it. **Document properties** (a button
+  and an item in the **File** menu) edits the title, description, keywords, author, language, search
+  engines and encoding, as one undo step; the **Source code** view shows the whole page
+  (`hideInSourceView` for the content only). Scripts, `<base>`, a refreshing or cookie-setting
+  `<meta>`, event handlers and unsafe addresses are never kept, and a style sheet can't close its
+  element. Settings fill in a default doctype, title, encoding and body style. With `tinymce.init`,
+  `getContent/setContent({ fullpagehtml: false })`, the `fullpagehtml_*` options and
+  `mceFullPageHtmlProperties` work. See [Whole HTML pages](https://novaprose.com/guides/full-page/).
+- Plugins: a plugin can keep a whole page around the content (`page` in `definePlugin`:
+  `read` and `write`), and markup rules (`validElements`) keep the document's own attributes.
 - Link cards: with the `mediaembed` plugin, a link alone on its line becomes a card on Enter, with
   the page's title, description, picture and site, from your server (`serviceUrl` or your own
   `resolve`); the Video dialog takes any page, and a link to a picture shows the picture. The card

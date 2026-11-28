@@ -132,7 +132,8 @@ function openPreview(editor: Editor, labels: Labels): void {
       const settings = emailSettings(editor);
       const contentCss = await editorContentCss(editor, settings.fileFilter);
       if (closed) return;
-      const html = editor.getHTML();
+      // The content only (not a whole page, with fullpagehtml): the email builds its own page.
+      const html = editor.getHTML({ fullPage: false });
       // The whole email for the preview and for email services; the content alone to paste into a mail client.
       const whole = toEmailHTML(html, {
         ...settings,

@@ -604,5 +604,6 @@ export function emailSettings(
 export async function emailHTML(editor: Editor, options: EmailOptions = {}): Promise<string> {
   const settings = emailSettings(editor, options);
   const contentCss = await editorContentCss(editor, settings.fileFilter);
-  return toEmailHTML(editor.getHTML(), { ...settings, contentCss });
+  // The content only: the email builds its own page around it.
+  return toEmailHTML(editor.getHTML({ fullPage: false }), { ...settings, contentCss });
 }

@@ -6,6 +6,7 @@ import { EditorView, keymap } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { basicSetup } from 'codemirror';
 import type { Editor } from '../editor';
+import { setSourceHTML, sourceHTML } from '../page';
 import { prettyHTML } from '../pretty-html';
 import { h, icon } from '../ui/dom';
 import { icons } from '../ui/icons';
@@ -142,7 +143,8 @@ export function openCodeEditor(editor: Editor, labels: AdvCodeLabels): void {
   const { t } = editor.ui;
   editor.ui.addStyles('nova-advcode', css);
   const prettify = options.prettify !== false;
-  const original = prettify ? prettyHTML(editor.getHTML()) : formatHTML(editor.getHTML());
+  const source = sourceHTML(editor);
+  const original = prettify ? prettyHTML(source) : formatHTML(source);
   let size = lastSize ?? clampSize(Number(options.fontSize) || 14);
   let wrapOn = lastWrap ?? options.wrap !== false;
   // The code editor opens where the cursor is in the text.
@@ -246,7 +248,7 @@ export function openCodeEditor(editor: Editor, labels: AdvCodeLabels): void {
     initialFocus: view.contentDOM,
     onSubmit: () => {
       const value = view.state.doc.toString();
-      if (value !== original) editor.setContent(value);
+      if (value !== original) setSourceHTML(editor, value);
       return true;
     },
     onClose: () => view.destroy(),

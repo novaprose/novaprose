@@ -377,7 +377,11 @@ export class ContentRules {
   normalizeDoc(doc: PMNode): PMNode {
     const content = this.normalizeChildren(doc.content);
     const schema = doc.type.schema as NovaSchema;
-    return doc.type.createAndFill(null, content.size ? content : schema.nodes.paragraph.create())!;
+    // The document's own attributes (a whole page's head) stay.
+    return doc.type.createAndFill(
+      doc.attrs,
+      content.size ? content : schema.nodes.paragraph.create(),
+    )!;
   }
 }
 

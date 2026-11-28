@@ -13,6 +13,7 @@ import type { AdvTableOptions } from './plugins/advtable-ui';
 import type { AdvCodeOptions } from './plugins/advcode';
 import type { EditImageOptions } from './plugins/editimage';
 import type { MediaEmbedOptions } from './plugins/mediaembed';
+import type { FullPageHtmlOptions } from './plugins/fullpagehtml';
 import type { TypographyOptions } from './plugins/typography';
 import type { A11yCheckerOptions } from './plugins/a11ychecker';
 import type { EmailOptions } from './email';
@@ -61,11 +62,14 @@ import { ContentRules, contentRulesPlugin, type ContentRulesOptions } from './co
 import {
   loadPlugin,
   orderPlugins,
+  pageHandlerOf,
   resolveEntries,
   type NovaPlugin,
+  type PageHandler,
   type PluginEntry,
 } from './plugins';
 import { createChain, type CommandChain } from './chain';
+import { pages } from './page';
 import { searchPlugin } from './search';
 import type { SearchBarHandle } from './ui/search-bar';
 import { openHelp, toggleFullscreen } from './ui/views';
@@ -151,6 +155,7 @@ export interface PluginOptions {
   advcode?: AdvCodeOptions;
   editimage?: EditImageOptions;
   mediaembed?: MediaEmbedOptions;
+  fullpagehtml?: FullPageHtmlOptions;
   /** The email plugin's options; emailHTML() from @novaprose/core/email uses them too. */
   email?: EmailOptions;
   [plugin: string]: unknown;
@@ -493,7 +498,10 @@ export class Editor {
     for (const [name, spec] of Object.entries(options.formats ?? {}))
       this.formatter.register(name, spec);
     syncPlugins.forEach((plugin) => this.registerCommands(plugin));
-    const initialDoc = parseContent(this.schema, options.content ?? '');
+    // A whole page around the content (fullpagehtml): its head lives in the document's attributes.
+    const page = pageHandlerOf(syncPlugins, this);
+    if (page) pages.set(this, page);
+    const initialDoc = parseContent(this.schema, options.content ?? '', page);
 
     const tablesAnchor = searchPlugin();
     const initialPlugins = [
@@ -821,9 +829,15 @@ export class Editor {
 
   // ---------- content ----------
 
-  /** The document's HTML. Deterministic: the same in every browser and in Node. */
-  getHTML(): string {
-    return htmlSerializer.serializeFragment(this.view.state.doc.content);
+  /**
+   * The document's HTML. Deterministic: the same in every browser and in Node. With the fullpagehtml
+   * plugin it is the whole page (doctype, head, body); `fullPage: false` gives only the content.
+   */
+  getHTML({ fullPage = true }: { fullPage?: boolean } = {}): string {
+    const doc = this.view.state.doc;
+    const content = htmlSerializer.serializeFragment(doc.content);
+    const page = fullPage ? pages.get(this) : undefined;
+    return page ? page.write(content, doc.attrs) : content;
   }
 
   getJSON(): Record<string, unknown> {
@@ -834,12 +848,26 @@ export class Editor {
     return this.view.state.doc.textBetween(0, this.view.state.doc.content.size, '\n\n');
   }
 
-  /** Replace the content. By default it can be undone. */
-  setContent(content: string | Record<string, unknown>, { addToHistory = true } = {}): void {
+  /**
+   * Replace the content. By default it can be undone. With the fullpagehtml plugin, HTML that is a
+   * whole page (or JSON) replaces the page too; HTML that is only content, or `fullPage: false`,
+   * keeps the page as it is.
+   */
+  setContent(
+    content: string | Record<string, unknown>,
+    { addToHistory = true, fullPage = true }: { addToHistory?: boolean; fullPage?: boolean } = {},
+  ): void {
     const detail = { content };
     this.emit('beforeSetContent', detail);
-    const doc = parseContent(this.schema, detail.content);
+    const page = fullPage ? pages.get(this) : undefined;
+    const doc = parseContent(this.schema, detail.content, page);
     const tr = this.view.state.tr.replaceWith(0, this.view.state.doc.content.size, doc.content);
+    // The page's attributes come from JSON or from HTML that is a whole page; only content keeps them.
+    if (page && (typeof detail.content !== 'string' || wholePages.has(doc))) {
+      for (const [name, value] of Object.entries(doc.attrs)) {
+        if (value !== this.view.state.doc.attrs[name]) tr.setDocAttribute(name, value);
+      }
+    }
     tr.setMeta(API_CHANGE_META, true).setMeta(SET_CONTENT_META, true);
     if (!addToHistory) tr.setMeta('addToHistory', false);
     this.view.dispatch(tr);
@@ -1071,18 +1099,28 @@ function reportPluginError(message: string, error?: unknown): void {
   console.error(`[nova] ${message}`, ...(error === undefined ? [] : [error]));
 }
 
+/** Documents read from HTML that was a whole page: their attributes are that page's. */
+const wholePages = new WeakSet<PMNode>();
+
 export function parseContent(
   schema: NovaSchema,
   content: string | Record<string, unknown>,
+  page?: PageHandler | null,
 ): PMNode {
   if (typeof content !== 'string') return PMNode.fromJSON(schema, sanitizeJSON(schema, content));
+  // A whole page: its head goes into the document's attributes, its body is the content.
+  const parts = page ? page.read(content) : null;
   const container = document.createElement('div');
   // Parsing through <template>: scripts and handlers don't run while parsing.
   // A full sanitizer will come as a separate module.
   const template = document.createElement('template');
-  template.innerHTML = content;
+  template.innerHTML = parts ? parts.content : content;
   container.appendChild(template.content);
-  return parserFor(schema).parse(container);
+  const doc = parserFor(schema).parse(container);
+  if (!parts) return doc;
+  const whole = doc.type.create(parts.attrs, doc.content);
+  wholePages.add(whole);
+  return whole;
 }
 
 export function createEditor(options: EditorOptions): Editor {

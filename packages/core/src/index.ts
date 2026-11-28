@@ -124,6 +124,7 @@ export {
   registerPlugin,
   isPluginRegistered,
   type NovaPlugin,
+  type PageHandler,
   type PluginEntry,
 } from './plugins';
 export { defaultSlashCommands, type SlashCommand } from './ui/slash';
@@ -188,6 +189,7 @@ export type { AdvTableOptions, TableSeries } from './plugins/advtable-ui';
 export type { AdvCodeOptions } from './plugins/advcode';
 export type { EditImageOptions } from './plugins/editimage';
 export type { EmbedInfo, MediaEmbedOptions } from './plugins/mediaembed';
+export type { FullPageHtmlOptions, HeadElement, PageData } from './plugins/fullpagehtml';
 export type { SortOptions } from './table';
 export type { CorrectionKind } from './plugins/autocorrect-rules';
 export type { TypographyOptions } from './plugins/typography';

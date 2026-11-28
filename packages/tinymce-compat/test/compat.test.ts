@@ -921,6 +921,51 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.flat().join(' ')).not.toContain('pageembed');
   });
 
+  it('fullpagehtml: the whole page, the body with { fullpagehtml: false }, the defaults, the dialog command', async () => {
+    page(
+      '<textarea id="t"><!DOCTYPE html><html lang="en"><head><title>Old</title></head>' +
+        '<body><p>Hi</p></body></html></textarea>',
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'fullpagehtml',
+      fullpagehtml_default_encoding: 'UTF-8',
+      fullpagehtml_default_body_style: 'margin: 0; color: #222222',
+      fullpagehtml_hide_in_source_view: true,
+    });
+    await editor!.core.ready;
+    expect(editor!.getContent()).toBe(
+      [
+        '<!DOCTYPE html>',
+        '<html lang="en">',
+        '<head>',
+        '<meta charset="UTF-8">',
+        '<title>Old</title>',
+        '</head>',
+        '<body style="margin: 0; color: #222222">',
+        '<p>Hi</p>',
+        '</body>',
+        '</html>',
+      ].join('\n'),
+    );
+    expect(editor!.getContent({ fullpagehtml: false })).toBe('<p>Hi</p>');
+    editor!.setContent('<p>New</p>', { fullpagehtml: false });
+    expect(editor!.getContent()).toContain('<title>Old</title>');
+    editor!.setContent('<html><head><title>Second</title></head><body><p>B</p></body></html>');
+    expect(editor!.getContent()).toContain('<title>Second</title>');
+    expect(editor!.getContent({ fullpagehtml: false })).toBe('<p>B</p>');
+    expect(
+      (editor!.core.options.pluginOptions?.fullpagehtml as { hideInSourceView?: boolean })
+        .hideInSourceView,
+    ).toBe(true);
+    editor!.execCommand('mceFullPageHtmlProperties');
+    await vi.waitFor(() =>
+      expect(document.querySelector('.nova-dialog')?.textContent).toContain('Document properties'),
+    );
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('fullpagehtml');
+  });
+
   it('mediaembed: summary cards keep their classes; the service, the width and the media button', async () => {
     page(
       '<textarea id="t"><a class="ephox-summary-card" href="https://example.com/post">' +

@@ -129,6 +129,7 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mceimageflipvertical: 'flipv',
   mceimagefliphorizontal: 'fliph',
   mceeditimage: 'editimage',
+  mcefullpagehtmlproperties: 'fullpagehtml',
 };
 
 /**
@@ -373,9 +374,13 @@ export class CompatEditor {
 
   // ---------- content ----------
 
-  getContent(args: { format?: string; prettify?: boolean } = {}): string {
+  getContent(args: { format?: string; prettify?: boolean; fullpagehtml?: boolean } = {}): string {
     const event = { format: args.format ?? 'html', content: '' };
-    event.content = event.format === 'text' ? this.core.getText() : this.core.getHTML();
+    // With fullpagehtml, the whole page; { fullpagehtml: false }: only the body's content.
+    event.content =
+      event.format === 'text'
+        ? this.core.getText()
+        : this.core.getHTML({ fullPage: args.fullpagehtml !== false });
     // getContent({ prettify: true }), or every time with advcode_prettify_getcontent: laid out on lines.
     const prettify =
       args.prettify === true ||
@@ -388,7 +393,8 @@ export class CompatEditor {
   setContent(content: string, args: Record<string, unknown> = {}): string {
     const event = { content, ...args };
     this.fire('BeforeSetContent', event);
-    this.core.setContent(event.content);
+    // { fullpagehtml: false }: only the body's content, the page's head stays.
+    this.core.setContent(event.content, { fullPage: args.fullpagehtml !== false });
     this.fire('SetContent', event);
     return event.content;
   }

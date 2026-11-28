@@ -15,7 +15,7 @@ export interface MenuDefinition {
 export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
   file: {
     title: 'menu.file',
-    items: 'save cancel | importword exportword exportpdf | preview | print',
+    items: 'save cancel | fullpagehtml | importword exportword exportpdf | preview | print',
   },
   edit: { title: 'menu.edit', items: 'undo redo | selectall | searchreplace pastetext' },
   view: { title: 'menu.view', items: 'code preview | fullscreen | visualblocks visualchars' },

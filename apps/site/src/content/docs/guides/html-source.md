@@ -5,7 +5,8 @@ description: The Source code dialog, and the advcode plugin's code editor with c
 
 The **Source code** button (`code`) opens the document's HTML for editing. Saving reads it back
 through the editor's schema, with the same cleanup and checks as any HTML the editor loads, so the
-dialog can't put a script or a `javascript:` link into the document.
+dialog can't put a script or a `javascript:` link into the document. With the `fullpagehtml` plugin
+it shows the [whole page](/guides/full-page/), its head included.
 
 ## The code editor
 

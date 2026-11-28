@@ -65,12 +65,48 @@ export interface NovaPlugin {
    */
   transformTransaction?: (tr: Transaction, state: EditorState, editor: Editor) => Transaction;
   /**
+   * The whole page around the content (the fullpagehtml plugin): how HTML that is a whole document
+   * is taken apart, and how getHTML() puts the content back into its page. The page itself lives in
+   * the document's attributes (declare them with `nodeAttributes`, `nodes: ['doc']`), so undo,
+   * JSON and the server renderer keep it. A function gets the options, as `nodes` does.
+   */
+  page?: PageHandler | ((context: { options: Editor['options'] }) => PageHandler);
+  /**
    * The lazy part of a plugin with nodes: buttons, dialogs, commands, keys. The schema is created
    * right away, so the nodes and everything that draws them (nodeViews) stay in the plugin itself
    * (first load), and the rest is a separate chunk loaded after the editor is created (part of
    * `editor.ready`). The part is an ordinary plugin without nodes.
    */
   load?: Loader;
+}
+
+/** A whole HTML document around the content: see `NovaPlugin.page`. */
+export interface PageHandler {
+  /**
+   * HTML that is a whole document (a doctype, `<html>`, `<head>` or `<body>`), taken apart: the
+   * content's HTML and the document's attributes. null when the HTML is only content.
+   */
+  read(html: string): { content: string; attrs: Record<string, unknown> } | null;
+  /** The whole document: the content's HTML inside the page the document's attributes describe. */
+  write(content: string, attrs: Readonly<Record<string, unknown>>): string;
+  /** The source code view shows the whole document (true) or only the content. */
+  inSource?: boolean;
+}
+
+/** The page handler of a set of plugins (the first one that has it), for these options. */
+export function pageHandlerOf(
+  plugins: readonly NovaPlugin[],
+  context: { options: Editor['options'] },
+): PageHandler | null {
+  for (const plugin of plugins) {
+    if (!plugin.page) continue;
+    try {
+      return typeof plugin.page === 'function' ? plugin.page(context) : plugin.page;
+    } catch (error) {
+      console.error(`[nova] Plugin "${plugin.name}" failed to set up its page`, error);
+    }
+  }
+  return null;
 }
 
 type Loader = () => Promise<NovaPlugin | { default: NovaPlugin }>;

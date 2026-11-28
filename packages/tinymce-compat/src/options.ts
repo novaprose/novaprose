@@ -189,6 +189,13 @@ const IGNORED = new Set([
   // pageembed: the sizes (classes) and inline styles; the wrapper keeps TinyMCE's class.
   'tiny_pageembed_classes',
   'tiny_pageembed_inline_styles',
+  // fullpagehtml: what a page that doesn't say gets (doctype, title, encoding, body style), and
+  // whether the source code view shows the whole page.
+  'fullpagehtml_default_doctype',
+  'fullpagehtml_default_title',
+  'fullpagehtml_default_encoding',
+  'fullpagehtml_default_body_style',
+  'fullpagehtml_hide_in_source_view',
   // mediaembed: the service address (a server that answers our protocol, see the embeds guide),
   // the widest a card gets and inline styles; cards keep TinyMCE's summary card classes.
   'mediaembed_service_url',
@@ -857,6 +864,18 @@ export function mapOptions(config: TinyConfig): MappedOptions {
           })),
       inlineStyles: config.tiny_pageembed_inline_styles === true,
     };
+  }
+  if (plugins.includes('fullpagehtml')) {
+    const fullpagehtml: Record<string, unknown> = {};
+    const pick = (option: string, key: string) => {
+      if (typeof config[option] === 'string') fullpagehtml[key] = config[option];
+    };
+    pick('fullpagehtml_default_doctype', 'doctype');
+    pick('fullpagehtml_default_title', 'title');
+    pick('fullpagehtml_default_encoding', 'encoding');
+    pick('fullpagehtml_default_body_style', 'bodyStyle');
+    if (config.fullpagehtml_hide_in_source_view === true) fullpagehtml.hideInSourceView = true;
+    if (Object.keys(fullpagehtml).length) pluginOptions.fullpagehtml = fullpagehtml;
   }
   // mediaembed: TinyMCE's summary card classes, so its cards and the page's CSS for them keep
   // working; inline styles are off there by default, as in TinyMCE.
