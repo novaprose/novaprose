@@ -606,6 +606,12 @@ const de: LanguagePack = {
   'advtable.few':
     'Es gibt nichts zu sortieren: Dafür braucht es mindestens zwei Zeilen (oder Spalten).',
   'advtable.apply': 'Sortieren',
+  'advcode.find': 'Suchen und ersetzen',
+  'advcode.smaller': 'Kleinere Schrift',
+  'advcode.larger': 'Größere Schrift',
+  'advcode.wrap': 'Lange Zeilen umbrechen',
+  'advcode.fullscreen': 'Vollbild',
+  'advcode.failed': 'Der Code-Editor konnte nicht geladen werden: Der einfache wurde geöffnet.',
   'suggestions.formatted': 'Formatiert von {name}',
   'suggestions.kindFormat': 'Formatiert',
   'suggestions.kindSplit': 'Neuer Absatz',

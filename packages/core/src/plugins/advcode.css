@@ -1,0 +1,89 @@
+/*
+ * The code editor of the advcode plugin (CodeMirror in the Source code dialog). Attached when it
+ * first opens. The colors of the code are --nova-code-* tokens with a contrast of at least 4.5:1 on
+ * --nova-code-bg in the light and dark themes (the same as code blocks).
+ */
+.nova-advcode {
+  --nova-code-keyword: #b3245a;
+  --nova-code-string: #0b6640;
+  --nova-code-comment: #59636e;
+  --nova-code-number: #0a58b0;
+  --nova-code-function: #7537c4;
+  --nova-code-type: #94500a;
+  --nova-code-attr: #0d6b80;
+  --nova-code-meta: #4547b8;
+  --nova-code-deleted: #a1152b;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+[data-theme='dark'] .nova-advcode {
+  --nova-code-keyword: #ff7fa6;
+  --nova-code-string: #7ddc9f;
+  --nova-code-comment: #9198a1;
+  --nova-code-number: #7cbcff;
+  --nova-code-function: #d1a6ff;
+  --nova-code-type: #f2b26b;
+  --nova-code-attr: #6dd0e3;
+  --nova-code-meta: #a5a8ff;
+  --nova-code-deleted: #ffa198;
+}
+
+@media (prefers-color-scheme: dark) {
+  .nova-advcode:not([data-theme='light'] *) {
+    --nova-code-keyword: #ff7fa6;
+    --nova-code-string: #7ddc9f;
+    --nova-code-comment: #9198a1;
+    --nova-code-number: #7cbcff;
+    --nova-code-function: #d1a6ff;
+    --nova-code-type: #f2b26b;
+    --nova-code-attr: #6dd0e3;
+    --nova-code-meta: #a5a8ff;
+    --nova-code-deleted: #ffa198;
+  }
+}
+
+.nova-advcode-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nova-advcode-code {
+  height: min(60vh, 560px);
+  overflow: hidden;
+  border: 1px solid var(--nova-border);
+  border-radius: var(--nova-radius-sm);
+}
+
+.nova-advcode-code .cm-editor {
+  height: 100%;
+}
+
+/* Full screen: the dialog takes the whole window, the code all of its height. */
+.nova-dialog-backdrop:has(> .nova-advcode-full) {
+  padding: 0;
+}
+
+.nova-dialog.nova-advcode-full {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+}
+
+.nova-advcode-full .nova-dialog-body,
+.nova-advcode-full .nova-advcode {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.nova-advcode-full .nova-advcode-code {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}

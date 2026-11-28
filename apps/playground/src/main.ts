@@ -218,6 +218,7 @@ const editor = createEditor({
           'media',
           'pageembed',
           'advtable',
+          'advcode',
           'directionality',
           'advlist',
           'checklist',

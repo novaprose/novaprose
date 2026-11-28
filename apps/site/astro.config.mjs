@@ -67,6 +67,7 @@ export default defineConfig({
             { slug: 'guides/markdown' },
             { slug: 'guides/server-rendering' },
             { slug: 'guides/code-blocks' },
+            { slug: 'guides/html-source' },
             { slug: 'guides/math' },
             { slug: 'guides/pages-and-printing' },
             { slug: 'guides/word' },

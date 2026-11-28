@@ -970,6 +970,25 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.flat().join(' ')).not.toContain('advtable');
   });
 
+  it('advcode: mceCodeEditor opens the code editor; getContent laid out on request', async () => {
+    page('<textarea id="t"><ul><li><p>a</p></li></ul></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'advcode',
+      advcode_prettify_getcontent: true,
+      advcode_prettify_editor: true,
+      advcode_inline: false,
+    });
+    await editor!.core.ready;
+    expect(editor!.getContent()).toBe('<ul>\n  <li>\n    <p>a</p>\n  </li>\n</ul>');
+    expect(editor!.execCommand('mceCodeEditor')).toBe(true);
+    await vi.waitFor(() => expect(editor!.core.root.querySelector('.cm-editor')).not.toBeNull(), {
+      timeout: 5000,
+    });
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('advcode');
+  });
+
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

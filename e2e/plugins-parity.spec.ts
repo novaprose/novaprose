@@ -158,6 +158,44 @@ test('advtable: row numbers follow the rows; the Sort dialog sorts by a chosen c
   await expect(numbers).toHaveText(['1', '2', '3', '4']);
 });
 
+test('advcode: the code editor colors HTML, finds with Ctrl+F, saves with the button', async ({
+  page,
+}) => {
+  await open(page);
+  await page.evaluate(() =>
+    (window as unknown as { editor: { setContent(h: string, o: object): void } }).editor.setContent(
+      '<h2>Title</h2><p>Text</p>',
+      { addToHistory: false },
+    ),
+  );
+  await clickControl(page, 'code');
+  const dialog = page.getByRole('dialog', { name: 'Source code' });
+  const code = dialog.locator('.cm-content');
+  await expect(code).toContainText('<h2>Title</h2>');
+  // A tag has a color of its own.
+  const colors = await code.evaluate((el) => {
+    const span = el.querySelector('.cm-line span')!;
+    return [getComputedStyle(span).color, getComputedStyle(el).color];
+  });
+  expect(colors[0]).not.toBe(colors[1]);
+  // Ctrl+F opens the search; Escape closes it, and the dialog stays open.
+  await code.click();
+  await page.keyboard.press('ControlOrMeta+f');
+  const search = dialog.locator('.cm-search');
+  await expect(search).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(search).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  // Before the end of the paragraph: " more".
+  await code.click();
+  await page.keyboard.press('ControlOrMeta+End');
+  for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowLeft');
+  await page.keyboard.type(' more');
+  await dialog.getByRole('button', { name: 'Save' }).click();
+  await expect(dialog).toBeHidden();
+  expect(await html(page)).toBe('<h2>Title</h2><p>Text more</p>');
+});
+
 test('anchor and pagebreak are inserted from the toolbar', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Intro');

@@ -32,6 +32,7 @@ registerPlugin('autocorrect', () => import('./autocorrect'));
 registerPlugin('typography', () => import('./typography'));
 registerPlugin('a11ychecker', () => import('./a11ychecker'));
 registerPlugin('linkchecker', () => import('./linkchecker'));
+registerPlugin('advcode', () => import('./advcode'));
 registerPlugin('email', () => import('./email'));
 registerPlugin('quickbars', () => import('./quickbars'));
 registerPlugin('charmap', () => import('./charmap'));

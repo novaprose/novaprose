@@ -215,6 +215,32 @@ describe('links', () => {
     dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(e.root.querySelector('.nova-dialog')).toBeNull();
   });
+
+  it('an Escape a field inside used itself keeps the dialog open', () => {
+    const e = mount('<p>text</p>');
+    control(e, 'link').click();
+    const input = e.root.querySelector<HTMLInputElement>('.nova-dialog input')!;
+    input.addEventListener('keydown', (event) => event.preventDefault());
+    input.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    );
+    expect(e.root.querySelector('.nova-dialog')).not.toBeNull();
+  });
+
+  it("two editors' dialogs open at once don't pull the focus back and forth", () => {
+    const first = mount('<p>one</p>');
+    const element = document.createElement('div');
+    document.body.appendChild(element);
+    const second = createEditor({ element, content: '<p>two</p>' });
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    control(first, 'link').click();
+    control(second, 'link').click();
+    // The newest dialog keeps the focus.
+    expect(second.root.contains(document.activeElement)).toBe(true);
+    expect(errors).not.toHaveBeenCalled();
+    second.destroy();
+    errors.mockRestore();
+  });
 });
 
 describe('toolbar', () => {

@@ -106,7 +106,8 @@ export function openDialog(options: DialogOptions): DialogHandle {
   });
 
   form.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
+    // An Escape a field inside used itself (the code editor closing its search) leaves the dialog open.
+    if (event.key === 'Escape' && !event.defaultPrevented) {
       event.preventDefault();
       event.stopPropagation();
       close();
@@ -137,7 +138,9 @@ export function openDialog(options: DialogOptions): DialogHandle {
   // If focus still leaves (a click outside, programmatic focus), it is returned to the dialog.
   // The real target, inside a shadow root too (for a listener on document it is replaced by the host).
   const stopKeepFocus = listenDocument(form, 'focusin', (_event, target) => {
-    if (!form.contains(target)) {
+    // Another dialog (of another editor on the page) keeps its focus: two would pull it back and forth.
+    const other = target instanceof Element && target.closest('.nova-dialog') !== null;
+    if (!form.contains(target) && !other) {
       (form.querySelector<HTMLElement>(FOCUSABLE) ?? form).focus();
     }
   });

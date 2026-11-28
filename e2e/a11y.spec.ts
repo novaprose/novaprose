@@ -326,6 +326,13 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'sort dialog');
     });
 
+    test('the code editor (advcode) with colored HTML', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await control(page, 'code');
+      await expect(page.locator('.nova-dialog .cm-content')).toBeVisible();
+      await audit(page, 'code editor');
+    });
+
     test('link checker: a broken link and its bubble with the note', async ({ page }) => {
       await open(page, theme, '&linkcheck=1');
       await page.evaluate(async () => {

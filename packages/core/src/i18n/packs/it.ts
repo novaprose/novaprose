@@ -595,6 +595,13 @@ const it: LanguagePack = {
   'advtable.merged': 'Una tabella con celle unite non può essere ordinata.',
   'advtable.few': 'Non c’è niente da ordinare: servono almeno due righe (o colonne).',
   'advtable.apply': 'Ordina',
+  'advcode.find': 'Trova e sostituisci',
+  'advcode.smaller': 'Testo più piccolo',
+  'advcode.larger': 'Testo più grande',
+  'advcode.wrap': 'Manda a capo le righe lunghe',
+  'advcode.fullscreen': 'Schermo intero',
+  'advcode.failed':
+    'Non è stato possibile caricare l’editor di codice: si è aperto quello semplice.',
   'suggestions.formatted': 'Formattato da {name}',
   'suggestions.kindFormat': 'Formattato',
   'suggestions.kindSplit': 'Nuovo paragrafo',

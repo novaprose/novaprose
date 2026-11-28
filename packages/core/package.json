@@ -116,6 +116,13 @@
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@codemirror/lang-html": "^6",
+    "@codemirror/language": "^6",
+    "@codemirror/search": "^6",
+    "@codemirror/state": "^6",
+    "@codemirror/view": "^6",
+    "@lezer/highlight": "^1",
+    "codemirror": "^6",
     "highlight.js": "^11",
     "markdown-it": "^15",
     "prosemirror-commands": "^1.6.2",

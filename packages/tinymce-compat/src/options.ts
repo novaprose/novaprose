@@ -191,6 +191,11 @@ const IGNORED = new Set([
   'tiny_pageembed_inline_styles',
   // advtable: your series for the numbers column (their generators give each row's value).
   'advtable_value_series',
+  // advcode: the code laid out on open, getContent laid out too (index.ts); the code editor opens
+  // in a dialog with a full screen button, so advcode_inline isn't needed.
+  'advcode_prettify_editor',
+  'advcode_prettify_getcontent',
+  'advcode_inline',
   // autocorrect: corrections run in the browser, so Tiny's service address isn't needed.
   'autocorrect_autocorrect',
   'autocorrect_capitalize',
@@ -865,6 +870,8 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     }
     if (Object.keys(series).length) pluginOptions.advtable = { series };
   }
+  if (plugins.includes('advcode') && typeof config.advcode_prettify_editor === 'boolean')
+    pluginOptions.advcode = { prettify: config.advcode_prettify_editor };
   const typography = typographyOptions(config);
   if (Object.keys(typography).length) pluginOptions.typography = typography;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;

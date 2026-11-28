@@ -3,6 +3,7 @@ import {
   getStyle,
   HTMLSerializer,
   icons,
+  prettyHTML,
   setStyle,
   type CommandName,
   type Editor,
@@ -122,6 +123,7 @@ const PLUGIN_COMMANDS: Record<string, string> = {
   mceupdatefootnotes: 'footnotesupdate',
   mcespellcheckdialog: 'spellcheckdialog',
   mcetypography: 'typography',
+  mcecodeeditor: 'code',
 };
 
 /**
@@ -366,9 +368,14 @@ export class CompatEditor {
 
   // ---------- content ----------
 
-  getContent(args: { format?: string } = {}): string {
+  getContent(args: { format?: string; prettify?: boolean } = {}): string {
     const event = { format: args.format ?? 'html', content: '' };
     event.content = event.format === 'text' ? this.core.getText() : this.core.getHTML();
+    // getContent({ prettify: true }), or every time with advcode_prettify_getcontent: laid out on lines.
+    const prettify =
+      args.prettify === true ||
+      (this.settings.advcode_prettify_getcontent === true && this.core.hasPlugin('advcode'));
+    if (prettify && event.format !== 'text') event.content = prettyHTML(event.content);
     this.fire('GetContent', event);
     return event.content;
   }

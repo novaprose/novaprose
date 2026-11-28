@@ -13,6 +13,17 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- A code editor for the HTML: with the `advcode` plugin, **Source code** opens the HTML in
+  CodeMirror (loaded when first opened): laid out with nested blocks indented and opened where the
+  cursor is, colors for HTML, CSS and JavaScript in the editor's theme, matching brackets and tags,
+  folding, several cursors, search and replace, tags closed as you type, text size, line wrapping,
+  full screen and <kbd>Ctrl</kbd>+<kbd>S</kbd> to save. The layout is a helper too,
+  `prettyHTML()`: reading it back gives the same document (a property-based test checks it). With
+  `tinymce.init`, `mceCodeEditor`, `advcode_prettify_editor`, `advcode_prettify_getcontent` and
+  `getContent({ prettify: true })` work. See [Editing the
+  HTML](https://novaprose.com/guides/html-source/).
+- Dialogs: an Escape a field inside uses itself (a code editor closing its search) no longer closes
+  the dialog, and the dialogs of two editors on one page no longer pull the focus back and forth.
 - Advanced tables: the `advtable` plugin adds a column of row numbers (**Row numbers**: numbers,
   letters or your own `series`) that stays in order as rows are added, deleted and sorted; the
   column is found by its cells (`data-series`), so a number is never written over your text. Its

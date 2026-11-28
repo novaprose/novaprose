@@ -149,6 +149,7 @@ export {
   openHelp,
   formatHTML,
 } from './ui/views';
+export { prettyHTML } from './pretty-html';
 export {
   createTable,
   insertTable,
@@ -183,6 +184,7 @@ export type { AutocorrectCorrection, AutocorrectOptions } from './plugins/autoco
 export type { LinkCheckerOptions, LinkStatus } from './plugins/linkchecker';
 export type { PageEmbedOptions, PageEmbedSize } from './plugins/pageembed';
 export type { AdvTableOptions, TableSeries } from './plugins/advtable-ui';
+export type { AdvCodeOptions } from './plugins/advcode';
 export type { SortOptions } from './table';
 export type { CorrectionKind } from './plugins/autocorrect-rules';
 export type { TypographyOptions } from './plugins/typography';
