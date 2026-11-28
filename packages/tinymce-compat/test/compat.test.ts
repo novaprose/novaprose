@@ -898,6 +898,29 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.flat().join(' ')).not.toContain('linkchecker');
   });
 
+  it('pageembed: TinyMCE classes stay, sizes from tiny_pageembed_classes, without a warning', async () => {
+    page(
+      '<textarea id="t"><div class="tiny-pageembed tiny-pageembed--16by9">' +
+        '<iframe src="https://example.com/map" title="Map"></iframe></div></textarea>',
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'pageembed',
+      tiny_pageembed_classes: [
+        { text: 'Wide', value: 'tiny-pageembed--16by9' },
+        { text: 'Square', value: 'tiny-pageembed--1by1' },
+      ],
+      tiny_pageembed_inline_styles: false,
+    });
+    const html = editor!.getContent();
+    expect(html).toContain(
+      '<div class="tiny-pageembed tiny-pageembed--16by9"><iframe src="https://example.com/map" title="Map" sandbox=',
+    );
+    expect(html).not.toContain('padding-top');
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('pageembed');
+  });
+
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

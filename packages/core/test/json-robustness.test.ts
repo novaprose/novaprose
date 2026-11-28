@@ -15,6 +15,7 @@ const PLUGINS = [
   'anchor',
   'pagebreak',
   'media',
+  'pageembed',
   'comments',
   'mentions',
   'mergetags',
@@ -66,6 +67,9 @@ const ATTR_NAMES = [
   'number',
   'before',
   'suggestion',
+  'size',
+  'border',
+  'scrolling',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));
@@ -95,6 +99,7 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
   mergetag: (attrs) => para({ type: 'mergetag', attrs }),
   anchor: (attrs) => para({ type: 'anchor', attrs }),
   media: (attrs) => ({ type: 'media', attrs }),
+  pageembed: (attrs) => ({ type: 'pageembed', attrs }),
   figure: (attrs) => ({
     type: 'figure',
     attrs,

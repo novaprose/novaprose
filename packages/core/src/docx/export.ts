@@ -810,7 +810,9 @@ class DocxWriter {
             .join('')
         );
       }
-      case 'media': {
+      // Word has no frames: a video or an embedded page is a link to it.
+      case 'media':
+      case 'pageembed': {
         const src = String(node.attrs.src ?? '');
         if (!isSafeLinkUrl(src)) return '';
         return this.paragraph(null, ctx, {

@@ -1965,6 +1965,26 @@ html.nova-fullscreen-lock body {
   inset: 0;
   cursor: pointer;
 }
+/* An embedded page: at full width with its ratio, or at its own size; a border on request. */
+.nova-pageembed-view.is-responsive {
+  display: block;
+}
+.nova-pageembed-view.is-responsive iframe {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.nova-pageembed-view.has-border iframe {
+  border: 1px solid var(--nova-border);
+}
+.nova-pageembed-missing {
+  padding: 1em;
+  border: 1px dashed var(--nova-border);
+  border-radius: 6px;
+  color: var(--nova-muted);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
 .nova-prosemirror .ProseMirror-selectednode.nova-media,
 .nova-prosemirror .ProseMirror-selectednode.nova-pagebreak,
 .nova-prosemirror a[id]:not([href]).ProseMirror-selectednode {

@@ -61,6 +61,7 @@ export default defineConfig({
             { slug: 'guides/toolbar-and-menus' },
             { slug: 'guides/headless' },
             { slug: 'guides/images' },
+            { slug: 'guides/embeds' },
             { slug: 'guides/pasting-from-office' },
             { slug: 'guides/markdown' },
             { slug: 'guides/server-rendering' },

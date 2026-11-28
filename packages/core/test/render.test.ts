@@ -81,6 +81,7 @@ describe('HTML without an editor, like getHTML()', () => {
       '<div data-type="block-math" data-latex="\\frac{a}{b}"></div>',
       '<div class="nova-pagebreak" style="break-after: page;"></div>',
       '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>',
+      '<div class="embed embed--4by3"><iframe src="https://example.com/map" title="Map"></iframe></div>',
     ].join('');
     const options: DocumentOptions = {
       plugins: [
@@ -92,12 +93,14 @@ describe('HTML without an editor, like getHTML()', () => {
         'anchor',
         'pagebreak',
         'media',
+        'pageembed',
         'codesample',
       ],
       pluginOptions: {
         accordion: { serializedState: 'collapsed' },
         mergetags: { attribute: 'data-var' },
         tableofcontents: { depth: 2, titleTag: 'h2' },
+        pageembed: { className: 'embed', sizes: [{ value: 'embed--4by3' }], inlineStyles: false },
       },
     };
     const e = await expectSame(content, options);
@@ -112,6 +115,7 @@ describe('HTML without an editor, like getHTML()', () => {
       'anchor',
       'pagebreak',
       'media',
+      'pageembed',
     ])
       expect(types, type).toContain(type);
     // Plugin settings affect the renderer's HTML too: the block is saved collapsed,

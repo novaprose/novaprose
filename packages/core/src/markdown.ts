@@ -258,7 +258,18 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
     },
     media(state, node) {
       const src = String(node.attrs.src ?? '');
-      state.write(`[${state.esc(String(node.attrs.title || src))}](${src})`);
+      state.write(
+        `[${state.esc(String(node.attrs.title || src))}](${src.replace(/[()]/g, '\\$&')})`,
+      );
+      state.closeBlock(node);
+    },
+    // An embedded page: a link to it (Markdown has no frames).
+    pageembed(state, node) {
+      const src = String(node.attrs.src ?? '').trim();
+      if (/^https?:\/\/\S+$/i.test(src)) {
+        const text = state.esc(String(node.attrs.title || src));
+        state.write(`[${text}](${src.replace(/[()]/g, '\\$&')})`);
+      }
       state.closeBlock(node);
     },
     anchor() {},

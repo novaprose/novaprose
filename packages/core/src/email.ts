@@ -417,11 +417,17 @@ function emailSafe(root: Element, base: string): void {
     const link = doc.createElement('a');
     link.setAttribute('href', href);
     link.textContent = media.getAttribute('title') || href;
-    if (media.parentElement?.closest('p, li, td, th, figcaption')) media.replaceWith(link);
+    // An embedded page's wrapper (sized by its padding) goes along with its frame.
+    const parent = media.parentElement;
+    const target =
+      parent && parent !== root && parent.tagName === 'DIV' && parent.children.length === 1
+        ? parent
+        : media;
+    if (target.parentElement?.closest('p, li, td, th, figcaption')) target.replaceWith(link);
     else {
       const p = doc.createElement('p');
       p.append(link);
-      media.replaceWith(p);
+      target.replaceWith(p);
     }
   }
   // Page breaks mean nothing in an email.

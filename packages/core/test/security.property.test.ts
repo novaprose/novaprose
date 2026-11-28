@@ -30,6 +30,7 @@ const SCHEMA_PLUGINS = [
   'anchor',
   'pagebreak',
   'media',
+  'pageembed',
   'comments',
   'mentions',
   'mergetags',
@@ -473,7 +474,14 @@ describe('HTML security and stability (property-based)', () => {
       content: fc.array(fc.oneof(text, atom), { maxLength: 4 }),
     });
     const blockAtom = fc.record({
-      type: fc.constantFrom('media', 'pagebreak', 'horizontal_rule', 'toc', 'math_block'),
+      type: fc.constantFrom(
+        'media',
+        'pageembed',
+        'pagebreak',
+        'horizontal_rule',
+        'toc',
+        'math_block',
+      ),
       attrs,
     });
     const cell = fc.record({

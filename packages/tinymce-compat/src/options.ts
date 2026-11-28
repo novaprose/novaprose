@@ -186,6 +186,9 @@ const IGNORED = new Set([
   'linkchecker_service_url',
   'linkchecker_preprocess',
   'linkchecker_content_css',
+  // pageembed: the sizes (classes) and inline styles; the wrapper keeps TinyMCE's class.
+  'tiny_pageembed_classes',
+  'tiny_pageembed_inline_styles',
   // autocorrect: corrections run in the browser, so Tiny's service address isn't needed.
   'autocorrect_autocorrect',
   'autocorrect_capitalize',
@@ -805,6 +808,27 @@ export function mapOptions(config: TinyConfig): MappedOptions {
     };
   }
   if (Object.keys(linkchecker).length) pluginOptions.linkchecker = linkchecker;
+  // pageembed: TinyMCE's classes, so its content and the page's CSS for them keep working.
+  if (plugins.includes('pageembed')) {
+    const classes = config.tiny_pageembed_classes;
+    pluginOptions.pageembed = {
+      className: 'tiny-pageembed',
+      sizes: Array.isArray(classes)
+        ? classes
+            .filter(
+              (size): size is { value: string; text?: unknown } =>
+                !!size && typeof (size as { value?: unknown }).value === 'string',
+            )
+            .map((size) => ({
+              value: size.value,
+              ...(typeof size.text === 'string' ? { text: size.text } : {}),
+            }))
+        : ['21by9', '16by9', '4by3', '1by1'].map((ratio) => ({
+            value: `tiny-pageembed--${ratio}`,
+          })),
+      inlineStyles: config.tiny_pageembed_inline_styles === true,
+    };
+  }
   const typography = typographyOptions(config);
   if (Object.keys(typography).length) pluginOptions.typography = typography;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;

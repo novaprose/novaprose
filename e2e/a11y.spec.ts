@@ -289,6 +289,23 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'typography menu');
     });
 
+    test('the embedded page dialog, with a page in the document', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async (src) => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          `<div class="nova-pageembed nova-pageembed--16by9"><iframe src="${src}" title="Demo page"></iframe></div><p>After</p>`,
+        );
+      }, new URL('/embed-demo.html', page.url()).href);
+      await expect(page.locator('.nova-pageembed-view iframe')).toBeVisible();
+      await control(page, 'pageembed');
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await audit(page, 'embedded page dialog');
+    });
+
     test('link checker: a broken link and its bubble with the note', async ({ page }) => {
       await open(page, theme, '&linkcheck=1');
       await page.evaluate(async () => {

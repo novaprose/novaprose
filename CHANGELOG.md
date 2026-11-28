@@ -8,6 +8,16 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Embedded pages: the `pageembed` plugin shows a web page (a map, a form, a calendar) in the
+  document, at full width with a ratio (21:9, 16:9, 4:3, 1:1, or your own classes) or at a fixed
+  size, with a title for screen readers. The frame is sandboxed (`sandbox` to change it), only
+  absolute http(s) addresses are embedded, and `allowUrl` limits them to your sites; an `<iframe>`
+  on its own is never embedded, so pasting a web page brings no frames along. The sizes are inline
+  styles too (`inlineStyles: false` for classes only). In Word, Markdown and email an embedded page
+  is a link. With `tinymce.init`, `tiny_pageembed_classes` and `tiny_pageembed_inline_styles`
+  work and content keeps its classes. The new [Video and web
+  pages](https://novaprose.com/guides/embeds/) guide covers both plugins. The **Insert** menu has
+  **Video** and **Embedded page**, and a disabled dialog field now looks disabled.
 - Link checker: with the `linkchecker` plugin, links are checked as the document changes, and a
   broken one gets a wavy red underline (`aria-invalid` for screen readers); its bubble says
   **This link seems broken**, with **Ignore**. The check runs on your server: `serviceUrl` answers

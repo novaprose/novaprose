@@ -80,6 +80,44 @@ test('media: a video from a YouTube link, a click on the player selects the bloc
   expect(await html(page)).not.toContain('<iframe');
 });
 
+test('pageembed: a page at full width, a click selects it, the dialog changes its size', async ({
+  page,
+}) => {
+  await open(page);
+  await clickControl(page, 'pageembed');
+  const dialog = page.getByRole('dialog');
+  const address = new URL('/embed-demo.html', page.url()).href;
+  await dialog.getByLabel('Page address').fill(address);
+  await dialog.getByLabel('Title (for screen readers)').fill('Demo page');
+  await dialog.getByRole('button', { name: 'Insert' }).click();
+  await expect(dialog).toBeHidden();
+  expect(await html(page)).toContain(`<iframe src="${address}" title="Demo page" sandbox=`);
+  // The page shows in its frame, which fills the width at 16:9.
+  const frame = page.locator('.nova-pageembed-view iframe');
+  await expect(
+    page
+      .frameLocator('.nova-pageembed-view iframe')
+      .getByRole('heading', { name: 'An embedded page' }),
+  ).toBeVisible();
+  const box = (await frame.boundingBox())!;
+  expect(Math.round((box.width / box.height) * 9)).toBe(16);
+  // A click on it selects the block (a layer covers the frame); the button edits it.
+  await page.locator('.nova-pageembed-view .nova-media-overlay').click();
+  await expect(page.locator('.nova-pageembed-view.ProseMirror-selectednode')).toBeVisible();
+  await clickControl(page, 'pageembed');
+  await expect(dialog.getByLabel('Page address')).toHaveValue(address);
+  await dialog.getByLabel('Size').selectOption({ label: 'Fixed size' });
+  await dialog.getByLabel('Width, px').fill('300');
+  await dialog.getByLabel('Height, px').fill('200');
+  await dialog.getByRole('button', { name: 'Save' }).click();
+  await expect(dialog).toBeHidden();
+  expect(await html(page)).toContain('width="300" height="200"');
+  // Delete removes the selected page.
+  await page.locator('.nova-pageembed-view .nova-media-overlay').click();
+  await page.keyboard.press('Delete');
+  expect(await html(page)).not.toContain('<iframe');
+});
+
 test('anchor and pagebreak are inserted from the toolbar', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Intro');

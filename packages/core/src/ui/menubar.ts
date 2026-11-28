@@ -21,7 +21,7 @@ export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
   view: { title: 'menu.view', items: 'code preview | fullscreen | visualblocks visualchars' },
   insert: {
     title: 'menu.insert',
-    items: 'image link inserttable hr | insertdatetime template footnotes',
+    items: 'image link media pageembed inserttable hr | insertdatetime template footnotes',
   },
   format: {
     title: 'menu.format',

@@ -15,6 +15,12 @@
 .nova-input[aria-invalid='true'] {
   border-color: var(--nova-danger);
 }
+/* A field that doesn't apply now (a page's width and height when it fills the width). */
+.nova-input:disabled {
+  background: var(--nova-toolbar-bg);
+  color: var(--nova-muted);
+  cursor: not-allowed;
+}
 /* A multi-line field: the height comes from rows (.nova-input has one line). textarea is for specificity. */
 textarea.nova-textarea {
   height: auto;
