@@ -459,6 +459,40 @@ export interface MappedOptions {
   missingPlugins: string[];
 }
 
+export interface ConfigDescription {
+  /** Options NovaProse doesn't know (mapOptions would list them in its warning). */
+  unknown: string[];
+  /** Plugins that are part of the core: they needn't be listed. */
+  builtIn: string[];
+  /** Plugins that NovaProse has, `as` its own name (tinycomments → comments). */
+  available: Array<{ name: string; as: string }>;
+  /** Plugins found neither in the core nor in the catalog. */
+  missing: string[];
+}
+
+/**
+ * What the compatibility layer makes of a configuration read without running it (the migration
+ * report): the options it doesn't know, and each plugin — built in, available or missing.
+ */
+export function describeConfig(
+  keys: readonly string[],
+  plugins: readonly string[],
+): ConfigDescription {
+  const out: ConfigDescription = {
+    unknown: keys.filter((key) => !IGNORED.has(key)),
+    builtIn: [],
+    available: [],
+    missing: [],
+  };
+  for (const name of plugins) {
+    const target = RENAMED[name] ?? name;
+    if (BUILT_IN.has(name)) out.builtIn.push(name);
+    else if (isPluginRegistered(target)) out.available.push({ name, as: target });
+    else out.missing.push(name);
+  }
+  return out;
+}
+
 export function mapOptions(config: TinyConfig): MappedOptions {
   const unknown = Object.keys(config).filter((key) => !IGNORED.has(key));
   const plugins: string[] = [];

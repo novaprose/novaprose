@@ -7,6 +7,27 @@ without rewriting it — then move to the native API when you are ready.
 > TinyMCE is a trademark of Tiny Technologies Inc. NovaProse is an independent project, not affiliated
 > with Tiny Technologies; compatibility is implemented from public API documentation.
 
+## Migrate a project with one command
+
+```bash
+npx @novaprose/tinymce-compat migrate          # a dry run: the report, nothing is changed
+npx @novaprose/tinymce-compat migrate --write  # make the changes
+```
+
+The command reads the project (the current folder, or the one you name) and makes the changes that
+are safe to make by itself:
+
+- script tags that load TinyMCE from Tiny Cloud or a public CDN load the drop-in below;
+- `import tinymce from 'tinymce'` (and `require`) becomes the compatibility layer, with the
+  NovaProse stylesheet; imports of TinyMCE's theme, model, icons, skins and plugins go;
+- `package.json` depends on `@novaprose/tinymce-compat` and `@novaprose/core` instead of `tinymce`.
+
+It reports the rest, file by file and line by line: options and plugins of each `tinymce.init()`
+that NovaProse doesn't have, components of TinyMCE's React, Vue and Angular integrations to move
+to NovaProse's (with the props to rename), imports without a counterpart, and copies of TinyMCE
+of your own. `--json` gives the report as JSON. Run it on a clean working tree, so the changes are
+easy to review.
+
 ## Script tag: replace one line
 
 ```html

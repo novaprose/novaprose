@@ -4,7 +4,8 @@
  * are replaced with archives from .release/ (pnpm release:pack), then npm install and the checks:
  *   react, vue      type checks (tsc, vue-tsc) and a Vite build;
  *   server-render   a run in Node (ESM) and importing the core through require (CJS);
- *   cdn             CDN links point to the current minor (@X.Y).
+ *   cdn             CDN links point to the current minor (@X.Y);
+ *   migrate         the migration command on a small TinyMCE project: the report, then --write.
  *
  * Run: pnpm verify:examples (after pnpm release:pack). --strict: the @novaprose/* ranges in the
  * examples must match the package version (as in a release); without it, a warning.
@@ -178,6 +179,32 @@ const checks = {
       server.stop();
     }
   },
+  /** The migration command from the archive: the report of a dry run, then the changes made. */
+  migrate: (dir) => {
+    const report = run('npm run --silent migrate', dir);
+    for (const expected of [
+      'a dry run',
+      "will change  line 1: import tinymce from 'tinymce'",
+      "options NovaProse doesn't have yet: images_upload_url",
+      'tinycomments is comments in NovaProse',
+    ])
+      if (!report.includes(expected)) throw new Error(`the report lacks "${expected}":\n${report}`);
+    run('npm run --silent migrate:write', dir);
+    const html = readFileSync(join(dir, 'project/index.html'), 'utf8');
+    const dropIn = `https://cdn.jsdelivr.net/npm/@novaprose/tinymce-compat@${minor}/dist/tinymce.global.js`;
+    if (!html.includes(`src="${dropIn}"`) || html.includes('tiny.cloud'))
+      throw new Error(`project/index.html:\n${html}`);
+    const js = readFileSync(join(dir, 'project/src/editor.js'), 'utf8');
+    if (
+      !js.startsWith(
+        "import '@novaprose/core/style.css';\nimport { tinymce } from '@novaprose/tinymce-compat';\n\nexport",
+      )
+    )
+      throw new Error(`project/src/editor.js:\n${js}`);
+    const deps = JSON.parse(readFileSync(join(dir, 'project/package.json'), 'utf8')).dependencies;
+    if (deps.tinymce || deps['@novaprose/tinymce-compat'] !== `^${version}`)
+      throw new Error(`project/package.json: ${JSON.stringify(deps)}`);
+  },
   'server-render': (dir) => {
     const output = run('node render.js', dir);
     for (const expected of [
@@ -213,10 +240,12 @@ for (const name of readdirSync(join(root, 'examples'), { withFileTypes: true })
     problems.push(`${name}: no check in scripts/verify-examples.mjs`);
     continue;
   }
-  const { dir } = prepare(
-    name,
-    name === 'cdn' ? ['@novaprose/web-component', '@novaprose/core'] : [],
-  );
+  // Packages an example gets through another one: from the archives too, not from npm.
+  const extra = {
+    cdn: ['@novaprose/web-component', '@novaprose/core'],
+    migrate: ['@novaprose/core'],
+  };
+  const { dir } = prepare(name, extra[name] ?? []);
   try {
     run('npm install --no-audit --no-fund --loglevel=error', dir);
     await check(dir);

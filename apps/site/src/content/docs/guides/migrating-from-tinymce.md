@@ -25,6 +25,20 @@ With a bundler: `npm install @novaprose/tinymce-compat @novaprose/core` and
 are listed in a console warning instead of breaking the page. The
 [package README](https://www.npmjs.com/package/@novaprose/tinymce-compat) lists what works.
 
+### Or let a command do it
+
+```bash
+npx @novaprose/tinymce-compat migrate          # a dry run: the report, nothing is changed
+npx @novaprose/tinymce-compat migrate --write  # make the changes
+```
+
+The command changes the script tags that load TinyMCE from Tiny Cloud or a public CDN, the imports
+of the `tinymce` package (its theme, model, icons, skins and plugin imports go) and
+`package.json`. Everything else is in its report, line by line: options and plugins NovaProse
+doesn't have, components of TinyMCE's React, Vue and Angular integrations to move by hand (with
+the props to rename), and copies of TinyMCE of your own. Run it on a clean working tree, so the
+changes are easy to review.
+
 When you're ready, move to the native API below — it is smaller, typed and framework-friendly.
 
 ## Options

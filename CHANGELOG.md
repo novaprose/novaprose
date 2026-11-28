@@ -4,6 +4,19 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## Unreleased
+
+### Migrating from TinyMCE
+
+- `npx @novaprose/tinymce-compat migrate` moves a TinyMCE project to the compatibility layer: script
+  tags that load TinyMCE from Tiny Cloud or a public CDN load the drop-in, imports of the `tinymce`
+  package become the compatibility layer's (with the stylesheet; the theme, model, icon, skin and
+  plugin imports go), and `package.json` depends on NovaProse. The rest is reported line by line:
+  options and plugins NovaProse doesn't have, framework components to move (with the props to
+  rename), imports without a counterpart, copies of TinyMCE of your own. A dry run unless you add
+  `--write`; `--json` for the report as JSON. See
+  [Migrating from TinyMCE](https://novaprose.com/guides/migrating-from-tinymce/#or-let-a-command-do-it).
+
 ## 0.10.0 — 2026-11-28
 
 Templates you can lock, AI that reviews and restructures, and a sharper look: locked content with

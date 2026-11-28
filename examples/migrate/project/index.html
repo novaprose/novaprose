@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Post editor</title>
+    <script
+      src="https://cdn.tiny.cloud/1/your-api-key/tinymce/7/tinymce.min.js"
+      referrerpolicy="origin"
+    ></script>
+  </head>
+  <body>
+    <textarea id="post"><p>Hello from the editor.</p></textarea>
+    <script>
+      tinymce.init({
+        selector: '#post',
+        plugins: 'lists link image table code tinycomments',
+        toolbar: 'undo redo | blocks | bold italic | bullist numlist | link image | code',
+        images_upload_url: '/upload',
+      });
+    </script>
+  </body>
+</html>

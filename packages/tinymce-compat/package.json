@@ -38,6 +38,9 @@
     },
     "./cdn": "./dist/tinymce.global.js"
   },
+  "bin": {
+    "novaprose-migrate": "./dist/migrate.js"
+  },
   "unpkg": "./dist/tinymce.global.js",
   "jsdelivr": "./dist/tinymce.global.js",
   "files": [

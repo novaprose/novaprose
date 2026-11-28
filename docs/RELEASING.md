@@ -14,7 +14,8 @@ to npm.
    differ, a `workspace:` range is left or a package is marked `private`.
 4. `pnpm verify:examples --strict`: the examples from `examples/` are installed from `.release/*.tgz` into clean
    folders: a Vite build with type checks (React 19, Vue + vue-tsc) and a run in Chromium, the web component CDN
-   file in a form, server rendering in Node (ESM and CJS). `--strict` means the versions in the examples match
+   file in a form, server rendering in Node (ESM and CJS), the migration command (`novaprose-migrate`) on a
+   small TinyMCE project. `--strict` means the versions in the examples match
    the one being released. ESM/CJS types (`node16`, `bundler`) are checked by `pnpm check:packages`. The Angular
    AOT build (`ng build`) is still checked by hand.
 5. Publish (see below), then tag `vX.Y.Z` in git.

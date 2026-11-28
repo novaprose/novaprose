@@ -61,7 +61,9 @@ packages/web-component  <novaprose-editor>: a form-associated element + CDN buil
 packages/angular    @novaprose/angular: standalone component + ControlValueAccessor; built with ng-packagr,
                     its own TypeScript 6 (Angular 22 requires it), tests run JIT in vitest
 packages/tinymce-compat  @novaprose/tinymce-compat: tinymce.init() on top of Editor (+ a CDN drop-in for
-                    tinymce.min.js)
+                    tinymce.min.js); src/migrate/: `npx @novaprose/tinymce-compat migrate` (bin
+                    novaprose-migrate, dist/migrate.js) moves a TinyMCE project: imports, script tags,
+                    package.json; reports options/plugins it lacks (describeConfig in options.ts)
 packages/collab     @novaprose/collab: real-time collaboration (Yjs, y-prosemirror, Hocuspocus client)
 apps/sync-server    sync server: Hocuspocus + node:sqlite + JWT from your backend, Dockerfile
 apps/playground     Vite playground (from sources). ?lang=en|ru, ?upload=slow|fail simulates uploads;
@@ -76,7 +78,7 @@ screen-reader/      NVDA reads the playground (guidepup, Windows runner): what i
 perf/               speed measurements (pnpm perf) on the CDN build in Chromium: 100 pages, typing, paste,
                     leaks; limits are ~5× a developer machine. Keystroke time is keydown→keyup: Chrome defers
                     timers while keys stream in (measuring with setTimeout gave "500 ms")
-examples/           examples for StackBlitz (react, vue, cdn, server-render): outside the workspace, on the npm
+examples/           examples for StackBlitz (react, vue, cdn, server-render, migrate): outside the workspace, on the npm
                     version; they are also clean projects for checking the archives: pnpm verify:examples
                     (CI and release)
 docs/               RELEASING.md: how releases are made (public)

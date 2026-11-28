@@ -1,0 +1,13 @@
+{
+  "name": "novaprose-example-migrate",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "migrate": "novaprose-migrate migrate project",
+    "migrate:write": "novaprose-migrate migrate project --write"
+  },
+  "dependencies": {
+    "@novaprose/tinymce-compat": "^0.10.0"
+  }
+}

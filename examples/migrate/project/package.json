@@ -1,0 +1,7 @@
+{
+  "name": "my-tinymce-app",
+  "private": true,
+  "dependencies": {
+    "tinymce": "^7.6.0"
+  }
+}
