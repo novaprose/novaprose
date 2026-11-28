@@ -98,6 +98,13 @@ const EDITABLE = /^image\/(png|jpe?g|gif|webp|avif|bmp)$/;
 class UnreadableImage extends Error {}
 class UnsupportedImage extends Error {}
 
+const isBlob = (value: unknown): value is Blob =>
+  !!value &&
+  typeof value === 'object' &&
+  typeof (value as Blob).slice === 'function' &&
+  typeof (value as Blob).type === 'string' &&
+  typeof (value as Blob).size === 'number';
+
 /** The type of an image from its first bytes, when the server didn't say (or said something generic). */
 async function sniffType(blob: Blob): Promise<string> {
   const bytes = new Uint8Array(await blob.slice(0, 12).arrayBuffer());
@@ -144,7 +151,8 @@ async function loadImage(src: string, options: EditImageOptions): Promise<Blob> 
     if (!response.ok) throw new UnreadableImage(`${response.status}`);
     blob = await response.blob();
   }
-  if (!(blob instanceof Blob)) throw new UnreadableImage('no file');
+  // By its shape, not instanceof: a file from another window (an iframe) is a Blob too.
+  if (!isBlob(blob)) throw new UnreadableImage('no file');
   const declared = blob.type.toLowerCase();
   // An SVG is never edited, whatever its bytes; a generic type is checked by the bytes.
   if (declared.includes('svg')) throw new UnsupportedImage('svg');

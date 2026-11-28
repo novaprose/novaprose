@@ -152,8 +152,9 @@ describe('editimage: reading the image', () => {
     );
     expect(fetchImage).toHaveBeenCalledWith('https://example.com/logo.svg');
     // Bytes that are no image, sent as a generic type: refused too.
+    // A text body with the type in the header: a jsdom Blob inside Node's Response breaks on Node 22.
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      new Response(new Blob(['<html>'], { type: 'application/octet-stream' })),
+      new Response('<html>', { headers: { 'Content-Type': 'application/octet-stream' } }),
     );
     const plain = await mount('https://example.com/file.bin');
     const notifyPlain = vi.spyOn(plain.ui, 'notify');
