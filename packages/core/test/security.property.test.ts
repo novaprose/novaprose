@@ -13,6 +13,7 @@
  * turn it into a regular regression test.
  */
 import fc from 'fast-check';
+import { JSDOM } from 'jsdom';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { createEditor, createRenderer, registerHtmlRules, type Editor } from '../src';
 import { htmlRules } from '../src/html-rules';
@@ -389,6 +390,24 @@ describe('HTML security and stability (property-based)', () => {
     );
   });
 
+  it('HTML cleaned on a server (renderer.sanitize, its own DOM) is safe and is what the editor keeps', async () => {
+    // A DOM of its own, as on a server: nothing may lean on the page's document.
+    const server = createRenderer({
+      plugins: SCHEMA_PLUGINS,
+      document: new JSDOM('').window.document,
+    });
+    await fc.assert(
+      fc.asyncProperty(htmlDocument, async (input) => {
+        const clean = await server.sanitize(input);
+        expect(xssViolations(clean), `input: ${input}`).toEqual([]);
+        editor.setContent(input, { addToHistory: false });
+        expect(clean, `input: ${input}`).toBe(editor.getHTML());
+        expect(await server.sanitize(clean), `input: ${input}`).toBe(clean);
+      }),
+      { numRuns: RUNS },
+    );
+  });
+
   it('a JSON document with dangerous attributes gives no XSS on output', () => {
     // Every attribute of every node and mark of the schema (ProseMirror ignores extra ones). Values include
     // the wrong types: JSON comes from outside (a database, an API), and nobody has to check it before us.
@@ -620,6 +639,26 @@ describe("element and attribute rules don't open holes (property-based)", () => 
       fc.property(htmlDocument, (input) => {
         ruled.setContent(input, { addToHistory: false });
         expect(renderer.html(ruled.getJSON()), `input: ${input}`).toBe(ruled.getHTML());
+      }),
+      { numRuns: RUNS },
+    );
+  });
+
+  it('HTML cleaned on a server with "allow everything" rules is safe and is what the editor keeps', async () => {
+    const warn = console.warn;
+    console.warn = () => {};
+    const server = createRenderer({
+      plugins: SCHEMA_PLUGINS,
+      ...PERMISSIVE,
+      document: new JSDOM('').window.document,
+    });
+    console.warn = warn;
+    await fc.assert(
+      fc.asyncProperty(htmlDocument, async (input) => {
+        const clean = await server.sanitize(input);
+        expect(xssViolations(clean), `input: ${input}`).toEqual([]);
+        ruled.setContent(input, { addToHistory: false });
+        expect(clean, `input: ${input}`).toBe(ruled.getHTML());
       }),
       { numRuns: RUNS },
     );

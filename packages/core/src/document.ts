@@ -3,14 +3,16 @@ import { ContentRules, type ContentRulesOptions } from './content-rules';
 import type { EditorOptions } from './editor';
 import { formatClasses } from './formats';
 import { htmlRulesFor } from './html-rules-api';
+import { parseHTMLDocument } from './parse-html';
 import { orderPlugins, pageHandlerOf, resolveEntries, type NovaPlugin } from './plugins';
 import { createSchema, type ClassFilter, type NodeAttribute, type NovaSchema } from './schema';
 import { HTMLSerializer } from './serializer';
 
 /**
  * A document without an editor: the same schema the editor builds (plugins, classes, markup rules,
- * writing direction) and the same HTML as getHTML(). No DOM, so it works on the server: e-mails,
- * previews, rendering pages from saved JSON.
+ * writing direction) and the same HTML as getHTML(). No DOM for JSON, so it works on the server:
+ * e-mails, previews, rendering pages from saved JSON. HTML from outside is read with the editor's
+ * parse rules through a DOM: the page's in a browser, one you pass on a server.
  */
 
 /** The options the schema and the HTML depend on (a subset of the editor's options). */
@@ -26,7 +28,13 @@ export type DocumentOptions = Pick<
   | 'direction'
   | 'language'
 > &
-  ContentRulesOptions;
+  ContentRulesOptions & {
+    /**
+     * The DOM that reads HTML (fromHTML, sanitize) where there is no browser, for example jsdom:
+     * `new JSDOM('').window.document`. In a browser the page's document is used.
+     */
+    document?: Document;
+  };
 
 /** The shared serializer: it keeps its own mark output cache per mark type (schema). */
 export const htmlSerializer = new HTMLSerializer();
@@ -173,6 +181,27 @@ export interface DocumentRenderer {
   html(json: Record<string, unknown>, options?: { fullPage?: boolean }): string;
   /** The document's text: blocks separated by a blank line, like getText(). */
   text(json: Record<string, unknown>): string;
+  /**
+   * The document the editor makes of HTML (setContent), as JSON to store or to render: the same
+   * parse rules, the same checks of addresses and styles, the same content rules, broken tables
+   * repaired the same way. Needs a DOM: on a server, pass `document` to createRenderer.
+   */
+  fromHTML(html: string): Promise<Record<string, unknown>>;
+  /**
+   * HTML from outside (a form, an API, an import), as the editor would keep it: only what the
+   * schema allows, addresses and styles checked. The same as `html(await fromHTML(html))`.
+   */
+  sanitize(html: string, options?: { fullPage?: boolean }): Promise<string>;
+}
+
+/** Whether a document has a table (the table repair then loads). */
+function hasTable(node: PMNode): boolean {
+  let found = false;
+  node.descendants((child) => {
+    if (child.type.spec.tableRole === 'table') found = true;
+    return !found;
+  });
+  return found;
 }
 
 /**
@@ -201,18 +230,37 @@ export function createRenderer(options: DocumentOptions = {}): DocumentRenderer 
   };
   // Plugins read only the options the document depends on, as their `nodes` do.
   const page = pageHandlerOf(ordered, { options: options as EditorOptions });
+  const html = (node: PMNode, fullPage = true) => {
+    const content = htmlSerializer.serializeFragment(node.content);
+    return page && fullPage ? page.write(content, node.attrs) : content;
+  };
+  const fromHTML = async (source: string) => {
+    const dom = options.document ?? (typeof document === 'undefined' ? undefined : document);
+    if (!dom) {
+      throw new Error(
+        "[nova] reading HTML needs a DOM: pass one to createRenderer, for example { document: new JSDOM('').window.document }",
+      );
+    }
+    const { doc: parsed } = parseHTMLDocument(schema, String(source ?? ''), page, dom);
+    let node = rules ? rules.normalizeDoc(parsed) : parsed;
+    // The editor repairs a broken table with its first change; the table code is a separate chunk.
+    if (hasTable(node)) {
+      const { repairTables } = await import('./table-fix');
+      node = repairTables(node);
+      if (rules) node = rules.normalizeDoc(node);
+    }
+    return node;
+  };
   return {
     schema,
     doc,
-    html: (json, { fullPage = true } = {}) => {
-      const node = doc(json);
-      const content = htmlSerializer.serializeFragment(node.content);
-      return page && fullPage ? page.write(content, node.attrs) : content;
-    },
+    html: (json, { fullPage = true } = {}) => html(doc(json), fullPage),
     text: (json) => {
       const node = doc(json);
       return node.textBetween(0, node.content.size, '\n\n');
     },
+    fromHTML: async (source) => (await fromHTML(source)).toJSON() as Record<string, unknown>,
+    sanitize: async (source, { fullPage = true } = {}) => html(await fromHTML(source), fullPage),
   };
 }
 

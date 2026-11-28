@@ -84,9 +84,10 @@ export interface NovaPlugin {
 export interface PageHandler {
   /**
    * HTML that is a whole document (a doctype, `<html>`, `<head>` or `<body>`), taken apart: the
-   * content's HTML and the document's attributes. null when the HTML is only content.
+   * content's HTML and the document's attributes. null when the HTML is only content. `dom` is the
+   * DOM the content is parsed with (on a server, the one passed to createRenderer).
    */
-  read(html: string): { content: string; attrs: Record<string, unknown> } | null;
+  read(html: string, dom?: Document): { content: string; attrs: Record<string, unknown> } | null;
   /** The whole document: the content's HTML inside the page the document's attributes describe. */
   write(content: string, attrs: Readonly<Record<string, unknown>>): string;
   /** The source code view shows the whole document (true) or only the content. */

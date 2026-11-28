@@ -101,6 +101,25 @@ describe('security', () => {
     expect(e.getHTML()).toBe('<p>ab</p>');
   });
 
+  // Found by a property-based test (security.property.test.ts, 3000 runs): <font color> takes
+  // words that CSS doesn't read as colors; written as `color: aaa` they vanished on the next read.
+  it('keeps from <font color> only what CSS reads as a color, so the HTML is stable', () => {
+    const e = mount('<p><font color="AAA">!</font></p>');
+    expect(e.getHTML()).toBe('<p>!</p>');
+    for (const [color, css] of [
+      ['red', 'red'],
+      ['#C00', '#cc0000'],
+      ['#00ff00', '#00ff00'],
+      ['rgb(0, 0, 255)', '#0000ff'],
+    ]) {
+      e.setContent(`<p><font color="${color}">x</font></p>`);
+      const first = e.getHTML();
+      expect(first, color).toBe(`<p><span style="color: ${css};">x</span></p>`);
+      e.setContent(first);
+      expect(e.getHTML(), color).toBe(first);
+    }
+  });
+
   it('drops javascript: links when parsing HTML', () => {
     expect(mount('<p><a href="javascript:alert(1)">x</a></p>').getHTML()).toBe('<p>x</p>');
     expect(mount('<p><a href=" java\tscript:alert(1)">x</a></p>').getHTML()).toBe('<p>x</p>');

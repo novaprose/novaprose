@@ -327,9 +327,18 @@ function pageHandler(context: { options: Editor['options'] }): PageHandler {
   const settings = fullPageOptions(context);
   return {
     inSource: !settings.hideInSourceView,
-    read(html) {
+    read(html, from) {
       if (!WHOLE_PAGE.test(html)) return null;
-      const dom = new DOMParser().parseFromString(html, 'text/html');
+      // The DOM that reads the content reads the page too (on a server, the one you pass).
+      const Parser =
+        (from?.defaultView as (Window & typeof globalThis) | null)?.DOMParser ??
+        globalThis.DOMParser;
+      if (!Parser) {
+        throw new Error(
+          '[nova] reading a whole HTML page needs a DOM with DOMParser (jsdom has one)',
+        );
+      }
+      const dom = new Parser().parseFromString(html, 'text/html');
       return { content: dom.body.innerHTML, attrs: { page: pageOf(dom) } };
     },
     // Checked every time: a page from JSON may have been changed since it was last written.

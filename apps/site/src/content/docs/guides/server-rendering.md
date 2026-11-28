@@ -59,6 +59,37 @@ Rendering a document from your database goes through the same checks as in the e
 A node type the schema doesn't know (for example, from a plugin you no longer use) throws, as
 `setContent` does. Catch the error if documents may come from older configurations.
 
+## HTML from outside
+
+HTML that reaches your server from a form, an API or an import can carry anything. The renderer
+reads it with the editor's own rules and gives back what the editor would keep: only the elements
+and attributes the schema allows, addresses and styles checked, your content rules applied, broken
+tables repaired. It needs a DOM to read HTML with; on a server, pass one (jsdom here):
+
+```ts
+import { JSDOM } from 'jsdom';
+import { createRenderer } from '@novaprose/core';
+
+const renderer = createRenderer({
+  plugins: ['mentions'], // the same options as the editor
+  document: new JSDOM('').window.document,
+});
+
+const html = await renderer.sanitize(untrustedHtml); // what setContent + getHTML would give
+const json = await renderer.fromHTML(untrustedHtml); // the same document as JSON, to store
+```
+
+Both are async: a document with a table loads the table code the first time. The HTML is parsed
+in an inert `<template>`, so nothing in it runs or loads while it is read. With the
+`fullpagehtml` plugin, a whole page keeps its head (title, meta, styles) and loses its scripts, as
+in the editor; `sanitize(html, { fullPage: false })` gives only the content.
+
+In a browser the page's document is used, and `document` can be left out.
+
+jsdom reads styles as a browser does. A lighter DOM such as linkedom works too and is just as
+safe, but it doesn't expand shorthand styles: a table centered with `margin: 0 auto` loses its
+centering, and an unusual `<font color>` value is kept as it is.
+
 ## Things to know
 
 - **Formulas** (`math`) render as their LaTeX source in `\( \)` and `\[ \]`; KaTeX or MathJax
@@ -67,5 +98,5 @@ A node type the schema doesn't know (for example, from a plugin you no longer us
   editor saved them.
 - **Own plugins**: when `nodes` is a function, on the server it receives an object with `options`
   only — read your settings from `options.pluginOptions`.
-- Input is JSON. HTML needs a browser parser: to clean up HTML on the server, load it into an
-  editor in the browser first and save its JSON.
+- Input can be JSON or HTML. JSON needs nothing else; HTML needs a DOM (see
+  [HTML from outside](#html-from-outside)).

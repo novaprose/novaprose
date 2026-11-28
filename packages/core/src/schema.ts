@@ -898,7 +898,10 @@ const buildMarks = (allow: ClassFilter) =>
         { style: 'color', getAttrs: (v) => styleAttr(cssValue.color(v)) },
         {
           tag: 'font[color]',
-          getAttrs: (dom) => styleAttr(cssValue.color((dom as HTMLElement).getAttribute('color'))),
+          getAttrs: (dom) => {
+            const el = dom as HTMLElement;
+            return styleAttr(asCss(el, 'color', cssValue.color(el.getAttribute('color'))));
+          },
         },
       ],
       toDOM: (mark): DOMOutputSpec => styleSpan('color', cssValue.color(mark.attrs.value)),
@@ -949,6 +952,19 @@ const marks = buildMarks(NO_CLASSES);
 
 function styleAttr(value: string | null): { value: string } | false {
   return value ? { value } : false;
+}
+
+/**
+ * A value from an HTML attribute (`<font color>`) as a CSS property value, or null when CSS
+ * doesn't take it: the attribute accepts words CSS doesn't know ("AAA"), and the style written
+ * from it would vanish on the next read (styles are read through CSS). The element's own DOM
+ * decides, the one that reads the HTML back.
+ */
+function asCss(el: HTMLElement, property: string, value: string | null): string | null {
+  if (!value) return null;
+  const probe = el.ownerDocument.createElement('span').style;
+  probe.setProperty(property, value);
+  return probe.getPropertyValue(property) ? value : null;
 }
 
 function styleSpan(property: string, value: string | null): DOMOutputSpec {

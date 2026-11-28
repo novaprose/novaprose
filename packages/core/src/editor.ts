@@ -52,6 +52,7 @@ import { loadTables } from './tables';
 import { activeElement } from './ui/dom';
 import { htmlSerializer, isRtlLanguage, sanitizeJSON, schemaFromOptions } from './document';
 import { keepPluginViews, reconfigurePlugins } from './plugin-views';
+import { parseHTMLDocument } from './parse-html';
 import { parserFor } from './parser';
 import {
   createMenubar,
@@ -1159,19 +1160,9 @@ export function parseContent(
   page?: PageHandler | null,
 ): PMNode {
   if (typeof content !== 'string') return PMNode.fromJSON(schema, sanitizeJSON(schema, content));
-  // A whole page: its head goes into the document's attributes, its body is the content.
-  const parts = page ? page.read(content) : null;
-  const container = document.createElement('div');
-  // Parsing through <template>: scripts and handlers don't run while parsing.
-  // A full sanitizer will come as a separate module.
-  const template = document.createElement('template');
-  template.innerHTML = parts ? parts.content : content;
-  container.appendChild(template.content);
-  const doc = parserFor(schema).parse(container);
-  if (!parts) return doc;
-  const whole = doc.type.create(parts.attrs, doc.content);
-  wholePages.add(whole);
-  return whole;
+  const { doc, whole } = parseHTMLDocument(schema, content, page, document);
+  if (whole) wholePages.add(doc);
+  return doc;
 }
 
 export function createEditor(options: EditorOptions): Editor {

@@ -11,6 +11,17 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Security
+
+- HTML from outside can be cleaned on a server with the editor's own rules:
+  `createRenderer({ ...yourOptions, document })` takes a DOM (for example jsdom's), and
+  `await renderer.sanitize(html)` gives exactly what `setContent` + `getHTML()` would give: only
+  what the schema allows, addresses and styles checked, content rules applied, broken tables
+  repaired. `renderer.fromHTML(html)` gives the same document as JSON. See
+  [HTML from outside](https://novaprose.com/guides/server-rendering/#html-from-outside).
+- A color written `<font color="AAA">` (a word CSS doesn't read as a color) is no longer kept: written
+  as a style, it vanished the next time the HTML was read.
+
 ### Themes and icons
 
 - Icon packs: `icons` takes SVGs by icon name over the built-in ones. Two packs come ready, each

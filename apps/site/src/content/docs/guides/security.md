@@ -26,9 +26,12 @@ is designed to be safe by default.
 ## What you still need to do
 
 - **Sanitize on the server.** The editor protects users of the editor; it cannot protect your
-  API from someone who sends HTML directly. Sanitize stored HTML with a server-side allowlist
-  (for example DOMPurify on Node.js, Bleach in Python or the HTML Sanitizer in .NET) before
-  rendering it to other users.
+  API from someone who sends HTML directly. On Node.js, `renderer.sanitize(html)` cleans it with
+  the editor's own rules, so what you store is exactly what the editor would keep (see
+  [HTML from outside](/guides/server-rendering/#html-from-outside)). Elsewhere, use a server-side
+  allowlist (Bleach in Python, the HTML Sanitizer in .NET) before rendering HTML to other users.
+  Storing the editor's JSON instead of HTML avoids the question: the renderer turns it into safe
+  HTML.
 - **Use a Content Security Policy.** NovaProse never uses `eval()` or `new Function()`, so it works
   with a CSP that forbids `unsafe-eval`. Formatting such as colors and alignment is stored in
   `style` attributes, so `style-src` must allow inline style attributes (`'unsafe-inline'` or

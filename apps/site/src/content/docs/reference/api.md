@@ -50,7 +50,8 @@ if (choice === 'quote') editor.exec('blockquote');
 ## Documents without an editor
 
 Turn a saved JSON document into the same HTML as `getHTML()` without an editor or a DOM: on a
-server, in a worker, at build time. See [Rendering on the server](/guides/server-rendering/).
+server, in a worker, at build time. Clean HTML from outside with the editor's rules. See
+[Rendering on the server](/guides/server-rendering/).
 
 ```ts
 import { createRenderer, renderHTML } from '@novaprose/core';
@@ -59,6 +60,8 @@ import { createRenderer, renderHTML } from '@novaprose/core';
 | Function                    | Description                                                                                                         |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `createRenderer(options)`   | `{ html(json, { fullPage }), text(json), doc(json), schema }` for the editor's options; reuse it for many documents |
+| `renderer.sanitize(html)`   | HTML from outside, as the editor would keep it (async); on a server pass `document` (jsdom) in the options          |
+| `renderer.fromHTML(html)`   | the same document as JSON (async)                                                                                   |
 | `renderHTML(json, options)` | HTML of one document                                                                                                |
 
 ## Commands
