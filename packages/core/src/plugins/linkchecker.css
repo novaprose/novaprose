@@ -1,0 +1,10 @@
+/* A link that seems broken: a wavy underline in the danger color instead of the link's own. */
+.nova-prosemirror a:has(.nova-link-broken) {
+  text-decoration: none;
+}
+.nova-link-broken {
+  text-decoration: underline wavy var(--nova-danger);
+  text-decoration-thickness: 1.5px;
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}

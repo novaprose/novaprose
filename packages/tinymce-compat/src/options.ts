@@ -181,6 +181,11 @@ const IGNORED = new Set([
   // inlinecss → the email plugin: the filters of what is put inline.
   'inlinecss_selector_filter',
   'inlinecss_file_filter',
+  // linkchecker: the service address (a server that answers our protocol, see the link checker
+  // guide) and preprocess; the highlight's look comes from the theme's CSS variables.
+  'linkchecker_service_url',
+  'linkchecker_preprocess',
+  'linkchecker_content_css',
   // autocorrect: corrections run in the browser, so Tiny's service address isn't needed.
   'autocorrect_autocorrect',
   'autocorrect_capitalize',
@@ -788,6 +793,18 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (typeof config.autocorrect_capitalize === 'boolean')
     autocorrect.capitalize = config.autocorrect_capitalize;
   if (Object.keys(autocorrect).length) pluginOptions.autocorrect = autocorrect;
+  const linkchecker: Record<string, unknown> = {};
+  if (typeof config.linkchecker_service_url === 'string')
+    linkchecker.serviceUrl = config.linkchecker_service_url;
+  const preprocess = config.linkchecker_preprocess;
+  if (typeof preprocess === 'function') {
+    // TinyMCE's gets { url } and gives { url } back.
+    linkchecker.preprocess = (url: string) => {
+      const out = (preprocess as (data: { url: string }) => { url?: unknown } | undefined)({ url });
+      return typeof out?.url === 'string' ? out.url : url;
+    };
+  }
+  if (Object.keys(linkchecker).length) pluginOptions.linkchecker = linkchecker;
   const typography = typographyOptions(config);
   if (Object.keys(typography).length) pluginOptions.typography = typography;
   if (Object.keys(pluginOptions).length) options.pluginOptions = pluginOptions;

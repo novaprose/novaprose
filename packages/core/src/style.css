@@ -1330,11 +1330,11 @@ html.nova-fullscreen-lock body {
   display: none;
 }
 
-.nova-bubble > .nova-icon {
+.nova-bubble-row > .nova-icon {
   color: var(--nova-muted);
 }
 
-.nova-bubble > .nova-icon svg {
+.nova-bubble-row > .nova-icon svg {
   width: 14px;
   height: 14px;
 }
@@ -1348,6 +1348,32 @@ html.nova-fullscreen-lock body {
   white-space: nowrap;
   color: var(--nova-accent);
   font-size: 13px;
+}
+
+/* The link bubble: the address with its buttons, and under it a plugin's note (the link checker). */
+.nova-link-bubble {
+  flex-direction: column;
+  align-items: stretch;
+}
+.nova-bubble-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+}
+.nova-bubble-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--nova-border);
+  font-size: 13px;
+}
+.nova-bubble-note[hidden],
+.nova-bubble-note-action[hidden] {
+  display: none;
 }
 
 .nova-context-toolbar {

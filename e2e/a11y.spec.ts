@@ -289,6 +289,21 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'typography menu');
     });
 
+    test('link checker: a broken link and its bubble with the note', async ({ page }) => {
+      await open(page, theme, '&linkcheck=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent('<p>See <a href="https://example.com/broken">the old page</a> here.</p>');
+      });
+      await expect(page.locator('.nova-link-broken')).toHaveCount(1);
+      await page.locator('.nova-link-broken').click();
+      await expect(page.locator('.nova-bubble-note')).toBeVisible();
+      await audit(page, 'link checker bubble');
+    });
+
     test('the suggestions panel with cards by two authors', async ({ page }) => {
       await open(page, theme, '&comments=1');
       await page.evaluate(async () => {

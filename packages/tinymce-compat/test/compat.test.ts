@@ -873,6 +873,31 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toContain('<hr>');
   });
 
+  it('linkchecker: the service address and preprocess, without a warning', async () => {
+    page('<textarea id="t"><p><a href="https://example.com/gone?k=1">x</a></p></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(
+        new Response(JSON.stringify({ results: { 'https://example.com/gone': 'invalid' } })),
+      );
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'linkchecker',
+      linkchecker_service_url: '/check-links',
+      linkchecker_preprocess: (data: { url: string }) => ({ url: data.url.split('?')[0] }),
+      linkchecker_content_css: '/linkchecker.css',
+    });
+    await vi.waitFor(() =>
+      expect(editor!.core.view.dom.querySelector('.nova-link-broken')).not.toBeNull(),
+    );
+    expect(fetch.mock.calls[0]![0]).toBe('/check-links');
+    expect(JSON.parse(String(fetch.mock.calls[0]![1]!.body))).toEqual({
+      urls: ['https://example.com/gone'],
+    });
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('linkchecker');
+  });
+
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

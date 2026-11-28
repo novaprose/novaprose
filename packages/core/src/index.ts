@@ -180,6 +180,7 @@ export {
 } from './plugins/pagelayout';
 export type { AiAction, AiMessage, AiOptions, AiRequest, AiShortcut } from './plugins/ai-core';
 export type { AutocorrectCorrection, AutocorrectOptions } from './plugins/autocorrect';
+export type { LinkCheckerOptions, LinkStatus } from './plugins/linkchecker';
 export type { CorrectionKind } from './plugins/autocorrect-rules';
 export type { TypographyOptions } from './plugins/typography';
 export type {

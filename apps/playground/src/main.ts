@@ -122,6 +122,17 @@ async function demoSpellCheck(request: SpellCheckRequest): Promise<SpellCheckMat
   return matches;
 }
 
+/**
+ * An offline demo link checker (?linkcheck=1): an address with "broken" in it doesn't answer. In a
+ * real application the addresses go to your server, which asks each site (see the "Link checker" guide).
+ */
+async function demoLinkCheck(urls: string[]) {
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  return Object.fromEntries(
+    urls.map((url) => [url, url.includes('broken') ? ('invalid' as const) : ('valid' as const)]),
+  );
+}
+
 const editor = createEditor({
   element: $('#editor'),
   content: localStorage.getItem(STORAGE_KEY) ?? SAMPLE.trim(),
@@ -249,6 +260,8 @@ const editor = createEditor({
     ...(new URLSearchParams(location.search).has('a11y') ? ['a11ychecker'] : []),
     // ?email=1: Email preview, the content as an email (e2e/email.spec.ts).
     ...(new URLSearchParams(location.search).has('email') ? ['email'] : []),
+    // ?linkcheck=1: broken links found by an offline demo service (e2e/linkchecker.spec.ts).
+    ...(new URLSearchParams(location.search).has('linkcheck') ? ['linkchecker'] : []),
   ],
   pluginOptions: {
     // &complete=1 turns on autocomplete (e2e/ai.spec.ts).
@@ -267,6 +280,7 @@ const editor = createEditor({
       ],
       addToDictionary: (word: string) => console.info('[playground] added to dictionary:', word),
     },
+    linkchecker: { check: demoLinkCheck, delay: 200 },
     // Templates for "Insert template" (e2e/formatting-tools.spec.ts).
     template: {
       templates: [

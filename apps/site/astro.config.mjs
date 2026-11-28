@@ -80,6 +80,7 @@ export default defineConfig({
             { slug: 'guides/autocorrect' },
             { slug: 'guides/typography' },
             { slug: 'guides/accessibility-checker' },
+            { slug: 'guides/link-checker' },
             { slug: 'guides/email' },
             { slug: 'guides/custom-buttons-and-plugins' },
             { slug: 'guides/node-views' },

@@ -8,9 +8,29 @@ import { activeElement, h, icon } from './dom';
 import { icons } from './icons';
 import { positionFloating } from './popover';
 
+/** A note a plugin adds to a link's bubble (the link checker: "This link seems broken"). */
+export interface LinkNote {
+  text: string;
+  /** One action next to it ("Ignore"). */
+  action?: { label: string; run(): void };
+}
+
+const noteProviders = new WeakMap<Editor, Set<(href: string) => LinkNote | null>>();
+
+/** A note on links in the bubble, from a plugin: the first one that has something to say is shown. */
+export function addLinkNote(
+  editor: Editor,
+  provider: (href: string) => LinkNote | null,
+): () => void {
+  const set = noteProviders.get(editor) ?? new Set();
+  noteProviders.set(editor, set);
+  set.add(provider);
+  return () => set.delete(provider);
+}
+
 /**
  * The link context bubble (as in Google Docs): appears when the cursor is in a link.
- * Shows the address and the "edit / copy / remove" actions.
+ * Shows the address and the "edit / copy / remove" actions, and a plugin's note about the link.
  */
 export function linkBubblePlugin(editor: Editor): Plugin {
   return new Plugin({
@@ -32,9 +52,9 @@ export function linkBubblePlugin(editor: Editor): Plugin {
         editor.ui.tooltip.attach(b);
         return b;
       };
-      const el = h(
+      const row = h(
         'div',
-        { className: 'nova-bubble', role: 'toolbar', 'aria-label': t('link'), hidden: true },
+        { className: 'nova-bubble-row' },
         icon(icons.externalLink),
         anchor,
         h('span', { className: 'nova-bubble-sep' }),
@@ -48,6 +68,26 @@ export function linkBubblePlugin(editor: Editor): Plugin {
         }),
         button(icons.unlink, t('unlink'), () => editor.exec(removeLink())),
       );
+      // A plugin's note about the link: a line under the address, with its action.
+      const noteText = h('span', { className: 'nova-bubble-note-text' });
+      const noteAction = h('button', {
+        type: 'button',
+        className: 'nova-button nova-bubble-note-action',
+      });
+      const note = h('div', { className: 'nova-bubble-note', hidden: true }, noteText, noteAction);
+      const el = h(
+        'div',
+        {
+          className: 'nova-bubble nova-link-bubble',
+          role: 'toolbar',
+          'aria-label': t('link'),
+          hidden: true,
+        },
+        row,
+        note,
+      );
+      let noteRun: (() => void) | null = null;
+      noteAction.addEventListener('click', () => noteRun?.());
       el.addEventListener('mousedown', (e) => {
         if ((e.target as HTMLElement).closest('button')) e.preventDefault();
       });
@@ -75,6 +115,16 @@ export function linkBubblePlugin(editor: Editor): Plugin {
         if (!range) return hide();
         anchor.textContent = link.href;
         anchor.title = link.href;
+        let found: LinkNote | null = null;
+        for (const provider of noteProviders.get(editor) ?? []) {
+          found = provider(link.href);
+          if (found) break;
+        }
+        note.hidden = !found;
+        noteText.textContent = found?.text ?? '';
+        noteAction.hidden = !found?.action;
+        noteAction.textContent = found?.action?.label ?? '';
+        noteRun = found?.action?.run ?? null;
         if (isSafeLinkUrl(link.href)) anchor.setAttribute('href', link.href);
         else anchor.removeAttribute('href');
         el.hidden = false;

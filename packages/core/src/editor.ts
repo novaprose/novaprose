@@ -7,6 +7,7 @@ import type { ImportWordOptions } from './plugins/importword';
 import type { AiOptions } from './plugins/ai-core';
 import type { SpellCheckerOptions } from './plugins/spellchecker';
 import type { AutocorrectOptions } from './plugins/autocorrect';
+import type { LinkCheckerOptions } from './plugins/linkchecker';
 import type { TypographyOptions } from './plugins/typography';
 import type { A11yCheckerOptions } from './plugins/a11ychecker';
 import type { EmailOptions } from './email';
@@ -139,6 +140,7 @@ export interface PluginOptions {
   autocorrect?: AutocorrectOptions;
   typography?: TypographyOptions;
   a11ychecker?: A11yCheckerOptions;
+  linkchecker?: LinkCheckerOptions;
   /** The email plugin's options; emailHTML() from @novaprose/core/email uses them too. */
   email?: EmailOptions;
   [plugin: string]: unknown;

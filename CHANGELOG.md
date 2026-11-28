@@ -8,6 +8,15 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Link checker: with the `linkchecker` plugin, links are checked as the document changes, and a
+  broken one gets a wavy red underline (`aria-invalid` for screen readers); its bubble says
+  **This link seems broken**, with **Ignore**. The check runs on your server: `serviceUrl` answers
+  `POST { urls }` with `{ results }`, or `check` is your own function; `preprocess` changes an
+  address before it is sent. The [Link checker](https://novaprose.com/guides/link-checker/) guide
+  has a Node.js server that keeps your own network out of reach (private and loopback addresses,
+  redirects, DNS rebinding). With `tinymce.init`, `linkchecker_service_url` and
+  `linkchecker_preprocess` work. The link bubble shortens a long address on a narrow screen
+  instead of moving its buttons to a second line.
 - Your own typing shortcuts: `textPatterns` takes a list that replaces the built-in ones, of three
   kinds: at the start of a block (`{ start: '#', format: 'h1' }`, `{ start: '1.', command:
 'orderedList' }`, with `trigger: 'enter'` on Enter), between two markers (`{ start: '*', end: '*',
