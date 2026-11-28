@@ -175,6 +175,42 @@ test('a narrow screen: extra groups move into "⋯"', async ({ page }) => {
   expect(await html(page)).toBe('<ul><li><p>text</p></li></ul>');
 });
 
+test('a narrow screen, toolbarMode sliding: "⋯" opens a strip under the toolbar', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 420, height: 800 });
+  await open(page, '<p>text</p>', '?lang=en&toolbar=sliding');
+  const more = page.locator('.nova-tb-more');
+  const strip = page.locator('.nova-tb-strip');
+  await expect(strip).toBeHidden();
+  const textTop = await content(page).evaluate((el) => el.getBoundingClientRect().top);
+  await more.click();
+  await expect(strip).toBeVisible();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  // The strip is in the flow: the text moves down, nothing covers it.
+  expect(await content(page).evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThan(
+    textTop,
+  );
+  await strip.locator('[data-control="bullist"]').click();
+  expect(await html(page)).toBe('<ul><li><p>text</p></li></ul>');
+  await more.click();
+  await expect(strip).toBeHidden();
+});
+
+test('a narrow screen, toolbarMode scrolling: one row that scrolls, no "⋯"', async ({ page }) => {
+  await page.setViewportSize({ width: 420, height: 800 });
+  await open(page, '<p>text</p>', '?lang=en&toolbar=scrolling');
+  const bar = page.locator('.nova-toolbar[role="toolbar"]');
+  await expect(page.locator('.nova-tb-more')).toHaveCount(0);
+  expect(await bar.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+  // The last button is reachable from the keyboard: it scrolls into view.
+  await page.keyboard.press('Alt+F10');
+  await page.keyboard.press('End');
+  const last = bar.locator('button').last();
+  await expect(last).toBeFocused();
+  await expect(last).toBeInViewport();
+});
+
 test('HTML pasted from Google Docs: the <b style="font-weight:normal"> wrapper doesn\'t make the text bold', async ({
   page,
 }) => {

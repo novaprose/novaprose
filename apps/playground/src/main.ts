@@ -131,6 +131,15 @@ const editor = createEditor({
     ? { resize: new URLSearchParams(location.search).get('resize') === 'both' ? 'both' : true }
     : {}),
   disabled: new URLSearchParams(location.search).has('disabled'),
+  // ?toolbar=sliding | scrolling | wrap: what the toolbar does when it doesn't fit (floating by default).
+  ...(['sliding', 'scrolling', 'wrap'].includes(
+    new URLSearchParams(location.search).get('toolbar') ?? '',
+  )
+    ? {
+        toolbarMode: new URLSearchParams(location.search).get('toolbar') as
+          'sliding' | 'scrolling' | 'wrap',
+      }
+    : {}),
   // ?mergetags=1: template variables (e2e/editor-options.spec.ts drives them).
   ...(new URLSearchParams(location.search).has('mergetags')
     ? { toolbar: 'undo redo | mergetags | bold italic' }

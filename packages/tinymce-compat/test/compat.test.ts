@@ -814,6 +814,65 @@ describe('tinymce.init', () => {
     localStorage.removeItem('novaprose-typography');
   });
 
+  it('toolbar_mode: floating, sliding, scrolling and wrap, each as it is', async () => {
+    for (const mode of ['floating', 'sliding', 'scrolling', 'wrap'] as const) {
+      page('<textarea id="t"></textarea>');
+      const [editor] = await tinymce.init({ selector: '#t', toolbar_mode: mode });
+      expect(
+        editor!.core.root.querySelector('.nova-toolbar[role="toolbar"]')!.classList,
+        mode,
+      ).toContain(`nova-toolbar-${mode}`);
+      editor!.remove();
+    }
+  });
+
+  it('text_patterns: a list of TinyMCE patterns, its formats and commands; text_patterns_lookup', async () => {
+    page('<textarea id="t"></textarea>');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      text_patterns: [
+        { start: '*', end: '*', format: 'italic' },
+        { start: '#', format: 'h1', trigger: 'space' },
+        { start: '>', cmd: 'mceBlockQuote' },
+        { start: '---', cmd: 'InsertHorizontalRule' },
+        { start: '(c)', replacement: '©' },
+        { start: 'sig', replacement: '<strong>Ann</strong>' },
+      ],
+      text_patterns_lookup: (ctx: { text: string }) =>
+        ctx.text.endsWith('@today') ? [{ start: '@today', replacement: '28.11.2026' }] : [],
+    });
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('text_patterns');
+    const view = editor!.core.view;
+    const type = (text: string) => {
+      for (const ch of text) {
+        const { from, to } = view.state.selection;
+        const handled = view.someProp('handleTextInput', (f) =>
+          f(view, from, to, ch, () => view.state.tr.insertText(ch, from, to)),
+        );
+        if (!handled) view.dispatch(view.state.tr.insertText(ch, from, to));
+      }
+    };
+    const fresh = () => {
+      editor!.setContent('<p></p>');
+      editor!.selection.setCursorLocation(editor!.getBody().firstChild as Node, 0);
+    };
+    fresh();
+    type('# Title');
+    expect(editor!.getContent()).toBe('<h1>Title</h1>');
+    fresh();
+    type('a *b* (c) sig @today ');
+    expect(editor!.getContent()).toBe(
+      '<p>a <em>b</em> © <strong>Ann</strong> 28.11.2026&nbsp;</p>',
+    );
+    fresh();
+    type('> quote');
+    expect(editor!.getContent()).toBe('<blockquote><p>quote</p></blockquote>');
+    fresh();
+    type('--- ');
+    expect(editor!.getContent()).toContain('<hr>');
+  });
+
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

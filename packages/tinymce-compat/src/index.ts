@@ -1,4 +1,10 @@
-import { createEditor, loadLanguage, registerHtmlRules, type AiRequest } from '@novaprose/core';
+import {
+  createEditor,
+  loadLanguage,
+  registerHtmlRules,
+  type AiRequest,
+  type TextPattern,
+} from '@novaprose/core';
 import { htmlRules } from '@novaprose/core/html-rules';
 import type { TinyAiHandler } from './ai';
 import { CompatEditor } from './editor';
@@ -94,6 +100,48 @@ export function createTinymce(): TinyMCECompat {
     }
 
     let compat!: CompatEditor;
+    // text_patterns: TinyMCE's patterns, their formats and commands through this editor's formatter
+    // and execCommand (so its own formats and commands work as well).
+    const tinyPattern = (raw: unknown): unknown => {
+      const p = raw as {
+        start?: unknown;
+        end?: unknown;
+        format?: unknown;
+        cmd?: unknown;
+        value?: unknown;
+        replacement?: unknown;
+        trigger?: unknown;
+      } | null;
+      if (!p || typeof p.start !== 'string') return null;
+      if (typeof p.replacement === 'string') return { start: p.start, replacement: p.replacement };
+      const formats = (Array.isArray(p.format) ? p.format : [p.format]).filter(
+        (f): f is string => typeof f === 'string',
+      );
+      const cmd = typeof p.cmd === 'string' ? p.cmd : null;
+      if (!cmd && !formats.length) return null;
+      return {
+        start: p.start,
+        ...(typeof p.end === 'string' && p.end ? { end: p.end } : {}),
+        ...(p.trigger === 'enter' ? { trigger: 'enter' } : {}),
+        value: p.value,
+        command: (_editor: unknown, value: unknown) => {
+          if (cmd) compat.execCommand(cmd, false, value);
+          else for (const format of formats) compat.formatter.apply(format);
+        },
+      };
+    };
+    if (Array.isArray(config.text_patterns)) {
+      // Malformed entries come back as null: the core leaves them out.
+      options.textPatterns = config.text_patterns.map(tinyPattern) as TextPattern[];
+    }
+    const lookup = config.text_patterns_lookup;
+    if (typeof lookup === 'function') {
+      options.textPatternsLookup = (context) => {
+        const extra = (lookup as (ctx: unknown) => unknown)(context);
+        return (Array.isArray(extra) ? extra.map(tinyPattern) : []) as TextPattern[];
+      };
+      if (!options.textPatterns) options.textPatterns = [];
+    }
     // The save plugin: the callbacks get the TinyMCE-style editor; before saving, the content goes
     // into the <textarea>, as in TinyMCE.
     const onSave = config.save_onsavecallback;

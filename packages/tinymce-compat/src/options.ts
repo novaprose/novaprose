@@ -190,8 +190,10 @@ const IGNORED = new Set([
   'typography_langs',
   'typography_rules',
   'typography_ignore',
-  // text_patterns: false turns the patterns off; custom pattern lists aren't supported.
+  // text_patterns: false turns the patterns off; a list (and text_patterns_lookup) is TinyMCE's
+  // patterns, run through this editor's formatter and execCommand (index.ts).
   'text_patterns',
+  'text_patterns_lookup',
   'template_replace_values',
   'template_preview_replace_values',
   'template_selected_content_classes',
@@ -495,10 +497,13 @@ export function mapOptions(config: TinyConfig): MappedOptions {
       .filter((f): f is BlockFormat => known.includes(f.block));
   }
   if (typeof config.language === 'string') options.language = config.language.replace('_', '-');
-  if (config.toolbar_mode === 'sliding' || config.toolbar_mode === 'wrap') {
+  if (
+    config.toolbar_mode === 'floating' ||
+    config.toolbar_mode === 'sliding' ||
+    config.toolbar_mode === 'scrolling' ||
+    config.toolbar_mode === 'wrap'
+  ) {
     options.toolbarMode = config.toolbar_mode;
-  } else if (config.toolbar_mode === 'floating' || config.toolbar_mode === 'scrolling') {
-    options.toolbarMode = 'sliding';
   }
   if (config.inline === true) options.mode = 'inline';
   if (config.paste_as_text === true) options.pasteAsText = true;

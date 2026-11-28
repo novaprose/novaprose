@@ -18,9 +18,48 @@ You can also pass an array of groups, or `false` to hide the toolbar and build y
 [`editor.exec()`](/reference/api/) (the [React](/frameworks/react/) and [Vue](/frameworks/vue/)
 packages include hooks for that).
 
-When the toolbar does not fit, extra controls move into a **⋯** overflow menu
-(`toolbarMode: 'sliding'`, the default). Use `toolbarMode: 'wrap'` to wrap onto several rows.
-Controls are moved from the end, so put the most important groups first.
+When the toolbar does not fit, `toolbarMode` decides what happens to the groups that don't:
+
+| `toolbarMode`          | What happens                                                                           |
+| ---------------------- | -------------------------------------------------------------------------------------- |
+| `'floating'` (default) | they open from **⋯** in a panel over the text                                          |
+| `'sliding'`            | they open from **⋯** in a strip under the toolbar, which moves the text down           |
+| `'scrolling'`          | the toolbar is one row that scrolls sideways (a swipe, Shift+wheel), for touch screens |
+| `'wrap'`               | the toolbar wraps onto several rows                                                    |
+
+Groups move from the end, so put the most important ones first. From the keyboard every control
+stays reachable: **⋯** opens the panel or the strip (<kbd>Esc</kbd> closes it), and in a scrolling
+toolbar the focused control scrolls into view.
+
+## Your own typing shortcuts
+
+Typed shortcuts are on by default: `# ` makes a heading, `- ` a list, `> ` a quote, ` ``` ` a
+code block, `--` a dash. `textPatterns: false` turns them off (for people who dictate or type those
+characters as text). A list of your own replaces them; there are three kinds:
+
+```ts
+createEditor({
+  element,
+  textPatterns: [
+    // At the start of a block, when a space follows (or Enter: trigger: 'enter').
+    { start: '#', format: 'h1' },
+    { start: '1.', command: 'orderedList' },
+    { start: '- ', command: 'bulletList', trigger: 'enter' },
+    // Between two markers, when a space or Enter follows the end one.
+    { start: '*', end: '*', format: 'italic' },
+    { start: '**', end: '**', format: 'bold' },
+    // A replacement, when a space or Enter follows it (text, or HTML through the schema).
+    { start: '(c)', replacement: '©' },
+  ],
+});
+```
+
+`format` is one of your [formats](/reference/options/) or a built-in one (`bold`, `italic`,
+`underline`, `strikethrough`, `code`, `subscript`, `superscript`, `p`, `h1`–`h6`,
+`blockquote`, `pre`); `command` is a [named command](/reference/api/#commands) or a function that gets the
+editor and `value`. `textPatternsLookup` adds patterns on every attempt, from the text before the
+cursor: `({ text }) => (text.endsWith('@today') ? [{ start: '@today', replacement: today }] : [])`.
+Nothing fires in code. The longest start is tried first, so `**` wins over `*`.
 
 The default toolbar is:
 

@@ -34,6 +34,7 @@ import { firstClickPlugin } from './first-click';
 import { announcePlugin } from './announce';
 import { currentName, renameOptions } from './deprecations';
 import { buildInputRules, codeFenceKeymap } from './inputrules';
+import { textPatternsPlugin, type TextPattern, type TextPatternContext } from './text-patterns';
 import { buildKeymap } from './keymap';
 import { openLinkDialog } from './link';
 import { loadPasteCleaner, pastePlugin, type PasteOptions } from './paste';
@@ -153,7 +154,11 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
    * the UI). Defaults to the standard set.
    */
   toolbar?: false | ToolbarConfig;
-  /** What the toolbar does when it runs out of width. Default 'sliding' (the rest goes into "⋯"). */
+  /**
+   * What the toolbar does when it runs out of width: 'floating' (default: the groups that don't fit
+   * open from "⋯" over the text), 'sliding' (they open in a strip under the toolbar), 'scrolling'
+   * (one row that scrolls sideways), 'wrap' (more rows).
+   */
   toolbarMode?: ToolbarMode;
   /**
    * classic — a frame with bars (default); inline — no frame, the toolbar appears above the text on
@@ -165,9 +170,13 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   /**
    * Shortcuts that react to typed characters: Markdown ("# " a heading, "- " a list, "```" a code
    * block) and typography ("--" a dash, "..." an ellipsis). On by default; false turns them off,
-   * for people who dictate or type those characters as text (WCAG 2.1.4).
+   * for people who dictate or type those characters as text (WCAG 2.1.4). A list of patterns
+   * replaces the built-in ones: `[{ start: '*', end: '*', format: 'italic' }, { start: '#', format:
+   * 'h1' }, { start: '(c)', replacement: '©' }]`.
    */
-  textPatterns?: boolean;
+  textPatterns?: boolean | TextPattern[];
+  /** More patterns on every attempt (from the text before the cursor and its block): added to textPatterns. */
+  textPatternsLookup?: (context: TextPatternContext) => TextPattern[];
   /** Your own menus, or overrides of the standard ones: { insert: { title: 'Insert', items: 'image link | hr' } }. */
   menu?: Record<string, MenuDefinition>;
   /** Status bar with the element path and the word count. On by default. */
@@ -480,10 +489,18 @@ export class Editor {
       autocompleterPlugin(this),
       ...(options.textPatterns === false
         ? []
-        : [
-            buildInputRules((name) => this.isAllowed(name), this.schema),
-            codeFenceKeymap((name) => this.isAllowed(name), this.schema),
-          ]),
+        : Array.isArray(options.textPatterns) || options.textPatternsLookup
+          ? [
+              textPatternsPlugin(
+                this,
+                Array.isArray(options.textPatterns) ? options.textPatterns : [],
+                options.textPatternsLookup,
+              ),
+            ]
+          : [
+              buildInputRules((name) => this.isAllowed(name), this.schema),
+              codeFenceKeymap((name) => this.isAllowed(name), this.schema),
+            ]),
       editorKeys,
       // The table plugins go here (before the general keymap) once the mechanics load: Tab in a table is
       // the next cell, not a list indent. See installTables().
@@ -579,7 +596,7 @@ export class Editor {
             this,
             toolbarHost,
             this.toolbarConfig(),
-            options.toolbarMode ?? 'sliding',
+            options.toolbarMode ?? 'floating',
             // Until lazy plugins load, their buttons aren't registered yet, so no warning.
             { warnUnknown: resolved.loaders.length === 0 },
           );
@@ -748,7 +765,7 @@ export class Editor {
       this,
       this.toolbarHost,
       this.toolbarConfig(),
-      this.options.toolbarMode ?? 'sliding',
+      this.options.toolbarMode ?? 'floating',
     );
   }
 

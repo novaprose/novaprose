@@ -13,6 +13,19 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Your own typing shortcuts: `textPatterns` takes a list that replaces the built-in ones, of three
+  kinds: at the start of a block (`{ start: '#', format: 'h1' }`, `{ start: '1.', command:
+'orderedList' }`, with `trigger: 'enter'` on Enter), between two markers (`{ start: '*', end: '*',
+format: 'italic' }`) and replacements (`{ start: '(c)', replacement: '©' }`, text or HTML).
+  `format` is one of your formats or a built-in one, `command` a named command or your function;
+  `textPatternsLookup` adds patterns on every attempt from the text before the cursor. With
+  `tinymce.init`, `text_patterns` lists and `text_patterns_lookup` work as they are, their formats
+  and commands (`InsertHorizontalRule`, `mceBlockQuote`, your own) run through the editor.
+- The toolbar's four ways of fitting: `toolbarMode: 'floating'` (the default, as before: the groups
+  that don't fit open from **⋯** in a panel), `'sliding'` (they open in a strip under the toolbar,
+  which moves the text down), `'scrolling'` (one row that scrolls sideways, for touch screens; the
+  focused control scrolls into view) and `'wrap'`. **Changed:** `'sliding'` is now the strip; the
+  panel, the default, is `'floating'`. With `tinymce.init`, every `toolbar_mode` works as it is.
 - Suggested edits cover structure. Whole things inserted or deleted are suggestions: a table, a
   row, a column (one suggestion, a cell in every row), an image, a horizontal line, a page break, a
   paragraph; a deleted one stays, dashed or faded, until the deletion is accepted. So are the

@@ -182,6 +182,14 @@ export type { AiAction, AiMessage, AiOptions, AiRequest, AiShortcut } from './pl
 export type { AutocorrectCorrection, AutocorrectOptions } from './plugins/autocorrect';
 export type { CorrectionKind } from './plugins/autocorrect-rules';
 export type { TypographyOptions } from './plugins/typography';
+export type {
+  TextPattern,
+  TextPatternCommand,
+  TextPatternContext,
+  InlinePattern,
+  BlockPattern,
+  ReplacementPattern,
+} from './text-patterns';
 export type { TypographyRule } from './plugins/typography-rules';
 export type { ExportPdfOptions, PdfRequest } from './plugins/exportpdf';
 export type { ExportWordOptions } from './plugins/exportword';

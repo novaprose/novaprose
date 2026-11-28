@@ -298,12 +298,30 @@
   flex: 1;
 }
 
-.nova-toolbar-sliding {
+.nova-toolbar-floating,
+.nova-toolbar-sliding,
+.nova-toolbar-scrolling {
   flex-wrap: nowrap;
   overflow: hidden;
   /* The toolbar width must not stretch the customer's container (grid/flex): otherwise when groups
      move into "⋯" the container shrinks, ResizeObserver restarts the layout, and it loops. */
   contain: inline-size;
+}
+
+/* One row that scrolls sideways (a swipe, Shift+wheel); the focused button scrolls into view. */
+.nova-toolbar-scrolling {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+}
+
+/* "Sliding": the groups that don't fit, in a strip under the toolbar. */
+.nova-tb-strip {
+  flex-wrap: wrap;
+  border-top: 1px solid var(--nova-border);
+}
+.nova-tb-strip[hidden] {
+  display: none;
 }
 
 .nova-tb-group {

@@ -1,5 +1,5 @@
 import type { Editor } from '../editor';
-import { activeElement, h, icon, logicalKey } from './dom';
+import { activeElement, h, icon, logicalKey, uniqueId } from './dom';
 import { icons } from './icons';
 import { createMenu, focusMenu } from './menu';
 import { Popover } from './popover';
@@ -11,8 +11,12 @@ import type { ControlSpec, SplitButtonSpec } from './registry';
  */
 export type ToolbarConfig = string | string[];
 
-/** What to do when the width runs out: wrap to a new line, or "⋯" with the remaining groups. */
-export type ToolbarMode = 'wrap' | 'sliding';
+/**
+ * What the toolbar does when it runs out of width: 'floating' (the groups that don't fit open from
+ * "⋯" in a panel over the text), 'sliding' (they open from "⋯" in a strip under the toolbar), 'scrolling'
+ * (one row that scrolls sideways, for touch screens), 'wrap' (more rows).
+ */
+export type ToolbarMode = 'floating' | 'sliding' | 'scrolling' | 'wrap';
 
 // Order = priority: when space runs out, groups from the end move into "⋯",
 // so frequent actions (style, B/I/U, color, links) come first.
@@ -82,18 +86,27 @@ export function createToolbar(
     }
   }
 
-  // ---------- overflow (sliding) ----------
-  const overflowBox = h('div', { className: 'nova-toolbar nova-tb-overflow', role: 'group' });
+  // ---------- overflow: "⋯" with the groups that don't fit (floating, sliding) ----------
+  const overflows = mode === 'floating' || mode === 'sliding';
+  const strip = mode === 'sliding';
+  const overflowBox = h('div', {
+    className: strip ? 'nova-toolbar nova-tb-strip' : 'nova-toolbar nova-tb-overflow',
+    role: 'group',
+    id: uniqueId('nova-tb-more'),
+    'aria-label': t('more'),
+    hidden: strip,
+  });
   const moreButton = h(
     'button',
     {
       type: 'button',
       className: 'nova-btn nova-tb-more',
       'aria-label': t('more'),
-      'aria-haspopup': 'true',
       'aria-expanded': 'false',
       'data-tooltip': t('more'),
       hidden: true,
+      // The strip is right under the toolbar; the panel floats.
+      ...(strip ? { 'aria-controls': overflowBox.id } : { 'aria-haspopup': 'true' }),
     },
     icon(icons.more),
   );
@@ -103,11 +116,26 @@ export function createToolbar(
   const closeOverflow = () => {
     overflowPopover?.close();
     overflowPopover = null;
+    if (strip && !overflowBox.hidden) {
+      overflowBox.hidden = true;
+      moreButton.setAttribute('aria-expanded', 'false');
+    }
   };
 
-  const offDialog = ui.onDialogOpen(closeOverflow);
+  const offDialog = ui.onDialogOpen(() => {
+    if (!strip) closeOverflow();
+  });
 
   moreButton.addEventListener('click', (event) => {
+    if (strip) {
+      // The strip opens under the toolbar and stays open until "⋯" again or Escape in it.
+      const open = overflowBox.hidden;
+      overflowBox.hidden = !open;
+      moreButton.setAttribute('aria-expanded', String(open));
+      if (open && event.detail === 0)
+        overflowBox.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+      return;
+    }
     if (overflowPopover) return closeOverflow();
     moreButton.setAttribute('aria-expanded', 'true');
     const popover: Popover = new Popover({
@@ -129,10 +157,20 @@ export function createToolbar(
       overflowBox.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
   });
 
-  if (mode === 'sliding') host.append(moreButton);
+  if (overflows) host.append(moreButton);
+  if (strip) host.after(overflowBox);
+  // Scrolling: the button that gets focus (Tab, arrows) scrolls into view.
+  if (mode === 'scrolling') {
+    host.addEventListener(
+      'focusin',
+      (event) =>
+        (event.target as HTMLElement).scrollIntoView?.({ block: 'nearest', inline: 'nearest' }),
+      { signal },
+    );
+  }
 
   const layout = () => {
-    if (mode !== 'sliding') return;
+    if (!overflows) return;
     for (const group of groups) host.insertBefore(group, moreButton);
     moreButton.hidden = true;
     if (host.scrollWidth <= host.clientWidth + 1) {
@@ -145,7 +183,10 @@ export function createToolbar(
       visible -= 1;
       overflowBox.prepend(groups[visible]!);
     }
-    if (!overflowBox.childElementCount) moreButton.hidden = true;
+    if (!overflowBox.childElementCount) {
+      moreButton.hidden = true;
+      closeOverflow();
+    }
     overflowPopover?.reposition();
     resetRoving();
   };
@@ -153,7 +194,7 @@ export function createToolbar(
   // Re-layout only when the width changes: moving groups around must not trigger it by itself.
   let lastWidth = -1;
   const resizeObserver =
-    typeof ResizeObserver !== 'undefined' && mode === 'sliding'
+    typeof ResizeObserver !== 'undefined' && overflows
       ? new ResizeObserver(() => {
           if (host.clientWidth === lastWidth) return;
           lastWidth = host.clientWidth;
@@ -217,7 +258,15 @@ export function createToolbar(
   host.addEventListener('mousedown', keepFocus, { signal });
   overflowBox.addEventListener('mousedown', keepFocus);
   overflowBox.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') return; // Popover handles it
+    if (event.key === 'Escape') {
+      // The panel closes itself; the strip closes here and the focus goes back to "⋯".
+      if (strip) {
+        event.preventDefault();
+        closeOverflow();
+        moreButton.focus();
+      }
+      return;
+    }
     const list = [...overflowBox.querySelectorAll<HTMLButtonElement>('button')].filter(
       (b) => !b.disabled,
     );
@@ -252,6 +301,7 @@ export function createToolbar(
       closeOverflow();
       listeners.abort();
       host.replaceChildren();
+      if (strip) overflowBox.remove();
     },
   };
 }
