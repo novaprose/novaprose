@@ -123,6 +123,31 @@ describe('tinymce.init', () => {
     expect(editor!.getContent()).toBe('<p>Hello world</p><p>Signature</p>');
   });
 
+  it('editor.selection: its content, node, select, ranges and bookmarks across a change', async () => {
+    page('<textarea id="t"><p>Alpha <strong>beta</strong> gamma</p></textarea>');
+    const [editor] = await tinymce.init({ selector: '#t' });
+    const selection = editor!.selection;
+    const strong = editor!.getBody().querySelector('strong')!;
+    selection.select(strong);
+    expect(selection.getContent()).toBe('<p><strong>beta</strong></p>');
+    expect(selection.getContent({ format: 'text' })).toBe('beta');
+    expect(selection.getNode().tagName).toBe('STRONG');
+    expect(selection.isCollapsed()).toBe(false);
+    // A DOM range out and back in.
+    const range = selection.getRng()!;
+    expect(range.toString()).toBe('beta');
+    selection.collapse(true);
+    expect(selection.isCollapsed()).toBe(true);
+    selection.setRng(range);
+    expect(selection.getContent({ format: 'text' })).toBe('beta');
+    // A bookmark survives text inserted before it.
+    const bookmark = selection.getBookmark();
+    selection.setCursorLocation(editor!.getBody().querySelector('p')!.firstChild!, 0);
+    editor!.insertContent('New ');
+    expect(selection.moveToBookmark(bookmark)).toBe(true);
+    expect(selection.getContent({ format: 'text' })).toBe('beta');
+  });
+
   it('PluginManager.add: a plugin registers a button and a command, as in TinyMCE', async () => {
     tinymce.PluginManager.add('signature', (editor) => {
       editor.addCommand('insertSignature', () => editor.insertContent('<p>— Anna</p>'));

@@ -118,6 +118,7 @@ export type {
 } from './ui/registry';
 export type { MenuEntry, MenuItem } from './ui/menu';
 export type { UiManager } from './ui/manager';
+export type { EditorSelection, SelectionBookmark } from './selection';
 export { countWords } from './ui/statusbar';
 export {
   definePlugin,

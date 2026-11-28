@@ -200,17 +200,15 @@ toolbar.addEventListener('click', (event) => {
 
 ## A menu over the selection
 
-A floating menu needs the position of the selection. `editor.view` (ProseMirror's view) gives
-screen coordinates of any document position:
+A floating menu needs the position of the selection: `editor.selection.getRect()` gives where it is
+on the screen (see [Selection](/reference/api/#selection)):
 
 ```tsx
 function SelectionMenu({ editor }: { editor: Editor | null }) {
   const at = useEditorState(editor, (e) => {
-    const { from, to, empty } = e.view.state.selection;
-    if (empty || !e.view.hasFocus()) return null;
-    const start = e.view.coordsAtPos(from);
-    const end = e.view.coordsAtPos(to);
-    return { top: Math.min(start.top, end.top), left: (start.left + end.right) / 2 };
+    if (e.selection.isCollapsed() || !e.view.hasFocus()) return null;
+    const rect = e.selection.getRect();
+    return rect ? { top: rect.top, left: rect.left + rect.width / 2 } : null;
   });
   if (!at) return null;
   return (

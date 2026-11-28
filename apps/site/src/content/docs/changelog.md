@@ -13,6 +13,12 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Selection API: `editor.selection` gives the selected content as HTML or text, replaces it,
+  reads and sets its range, collapses it, selects all, an element or what is inside it, puts the
+  cursor in a node, gives the element where it is, a DOM `Range` and its place on screen, and keeps
+  bookmarks that move along with later changes (`getBookmark()` / `moveToBookmark()`). With
+  `tinymce.init`, `editor.selection` is built on it and gains `getRng()`, `setRng()`,
+  `getBookmark()`, `moveToBookmark()` and `scrollIntoView()`.
 - Whole HTML pages: with the `fullpagehtml` plugin the editor holds a whole HTML document. The
   doctype, the head (title, meta tags, style sheets) and the attributes of `<html>` and `<body>` are
   kept around the content; `getHTML()` gives the whole page and `setContent()` of a whole page

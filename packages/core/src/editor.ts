@@ -70,6 +70,7 @@ import {
 } from './plugins';
 import { createChain, type CommandChain } from './chain';
 import { pages } from './page';
+import { bookmarksPlugin, createSelection, type EditorSelection } from './selection';
 import { searchPlugin } from './search';
 import type { SearchBarHandle } from './ui/search-bar';
 import { openHelp, toggleFullscreen } from './ui/views';
@@ -374,6 +375,8 @@ export class Editor {
   readonly schema: NovaSchema;
   /** Formats: register / apply / remove / toggle / match. */
   readonly formatter: Formatter;
+  /** The selection: its HTML and text, its range and place on screen, moving it, bookmarks. */
+  readonly selection: EditorSelection;
   private readonly statusbar: ReturnType<typeof createStatusbar> | null;
   /** The find and replace bar: a lazy part, there once editor.ready resolves (see loadSearchBar). */
   private searchBar: SearchBarHandle | null = null;
@@ -495,6 +498,7 @@ export class Editor {
     );
     this.schema = schema;
     this.formatter = new Formatter(this, allowedClasses);
+    this.selection = createSelection(this);
     for (const [name, spec] of Object.entries(options.formats ?? {}))
       this.formatter.register(name, spec);
     syncPlugins.forEach((plugin) => this.registerCommands(plugin));
@@ -539,6 +543,8 @@ export class Editor {
       ...(this.contentRules ? [contentRulesPlugin(this.contentRules)] : []),
       // After plugins with their own clicks (link, panels): the first click without focus lands where you clicked.
       firstClickPlugin(),
+      // editor.selection's bookmarks move along with the changes.
+      bookmarksPlugin(),
       ...pluginPm,
       ...(options.prosemirrorPlugins ?? []),
     ];

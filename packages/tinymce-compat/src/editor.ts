@@ -1,19 +1,17 @@
 import { toFormatSpecs } from './options';
 import {
   getStyle,
-  HTMLSerializer,
   icons,
   prettyHTML,
   setStyle,
   type CommandName,
   type Editor,
+  type SelectionBookmark,
   type StyleMark,
 } from '@novaprose/core';
 import type * as DialogModule from './dialog';
 import type { DialogApi, DialogSpec } from './dialog';
-import { AllSelection, NodeSelection, TextSelection } from 'prosemirror-state';
-
-const serializer = new HTMLSerializer();
+import { AllSelection } from 'prosemirror-state';
 
 type Dialogs = typeof DialogModule;
 let dialogs: Dialogs | null = null;
@@ -796,47 +794,38 @@ export class CompatEditor {
     ignore: (callback: () => void) => callback(),
   };
 
+  /** TinyMCE's editor.selection, on top of the core's editor.selection. */
   readonly selection = {
-    getContent: (args: { format?: string } = {}) => {
-      const { state } = this.core.view;
-      const { from, to } = state.selection;
-      if (args.format === 'text') return state.doc.textBetween(from, to, '\n');
-      return serializer.serializeFragment(state.selection.content().content);
-    },
+    getContent: (args: { format?: string } = {}) =>
+      args.format === 'text' ? this.core.selection.getText() : this.core.selection.getHTML(),
     setContent: (content: string) => this.insertContent(content),
-    getNode: () => {
-      const { from } = this.core.view.state.selection;
-      const { node } = this.core.view.domAtPos(from);
-      return node instanceof Element ? node : node.parentElement;
-    },
+    getNode: () => this.core.selection.getNode() ?? this.core.view.dom,
     getStart: () => this.selection.getNode(),
     getEnd: () => this.selection.getNode(),
-    isCollapsed: () => this.core.view.state.selection.empty,
-    collapse: (toStart = false) => {
-      const { state, dispatch } = this.core.view;
-      const pos = toStart ? state.selection.from : state.selection.to;
-      dispatch(state.tr.setSelection(TextSelection.near(state.doc.resolve(pos))));
-    },
+    isCollapsed: () => this.core.selection.isCollapsed(),
+    collapse: (toStart = false) => this.core.selection.collapse(toStart),
     /** Put the cursor in a DOM node of the editor (at its start by default). */
     setCursorLocation: (node?: Node, offset = 0) => {
-      const { view } = this.core;
-      if (!node || !view.dom.contains(node)) return;
-      const pos = view.posAtDOM(node, offset);
-      view.dispatch(view.state.tr.setSelection(TextSelection.near(view.state.doc.resolve(pos))));
+      if (node) this.core.selection.setCursorLocation(node, offset);
     },
     /** Select an element: content = true — only its content. */
-    select: (node: Node, content = false) => {
+    select: (node: Node, content = false) => this.core.selection.select(node, content),
+    /** The selection as a DOM Range. */
+    getRng: () => this.core.selection.getDOMRange(),
+    /** Select a DOM Range of the editing area. */
+    setRng: (range: Range) => {
       const { view } = this.core;
-      if (!view.dom.contains(node)) return;
-      const from = view.posAtDOM(node, 0);
-      const to = view.posAtDOM(node, node.childNodes.length);
-      const { doc } = view.state;
-      const selection =
-        !content && node instanceof HTMLImageElement
-          ? NodeSelection.create(doc, Math.max(0, from - (doc.resolve(from).nodeAfter ? 0 : 1)))
-          : TextSelection.between(doc.resolve(from), doc.resolve(to));
-      view.dispatch(view.state.tr.setSelection(selection));
+      if (!range || !view.dom.contains(range.startContainer)) return;
+      const from = view.posAtDOM(range.startContainer, range.startOffset);
+      const to = view.dom.contains(range.endContainer)
+        ? view.posAtDOM(range.endContainer, range.endOffset)
+        : from;
+      this.core.selection.setRange(from, to);
     },
+    /** Remember the selection; moveToBookmark() puts it back, wherever later changes moved it. */
+    getBookmark: () => this.core.selection.getBookmark(),
+    moveToBookmark: (bookmark: SelectionBookmark) => this.core.selection.moveToBookmark(bookmark),
+    scrollIntoView: () => this.core.selection.scrollIntoView(),
   };
 
   readonly notificationManager = {

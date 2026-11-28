@@ -16,6 +16,37 @@ packages wrap the same object.
 | `isEmpty(): boolean`                              | `true` when the document has no content                                                                                                          |
 | `setContent(content, { addToHistory, fullPage })` | replace the document with HTML or JSON; `addToHistory: false` keeps it out of undo history, `fullPage: false` keeps a whole page's head as it is |
 
+## Selection
+
+`editor.selection` reads and moves the selection. Positions are document positions: `0` is before
+the first block, and every character and block boundary counts one.
+
+| Method                                       | Description                                                                                                                                      |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getHTML(): string`                          | the selected content as HTML, as `getHTML()` writes it; `''` for a cursor                                                                        |
+| `getText(): string`                          | the selected text, blocks on separate lines                                                                                                      |
+| `setHTML(html): boolean`                     | replace the selection with HTML, read and checked like `insertContent()`                                                                         |
+| `getRange(): { from, to }`                   | where the selection starts and ends                                                                                                              |
+| `setRange(from, to?)`                        | select from `from` to `to`; without `to`, a cursor at `from`                                                                                     |
+| `isCollapsed(): boolean`                     | whether it is only a cursor                                                                                                                      |
+| `collapse(toStart?)`                         | collapse it to its end, or to its start                                                                                                          |
+| `selectAll()`                                | select the whole document                                                                                                                        |
+| `getNode(): HTMLElement`                     | the element of the editing area where the selection is: all of a bold word gives its `<strong>`, a selection across elements their common parent |
+| `select(element, content?)`                  | select an element of the editing area, or (`content: true`) what is inside it                                                                    |
+| `setCursorLocation(node, offset?)`           | put the cursor in a node of the editing area                                                                                                     |
+| `getDOMRange(): Range`                       | the selection as a DOM `Range`, to measure it                                                                                                    |
+| `getRect(): DOMRect`                         | where the selection is on the screen, for a popup of your own                                                                                    |
+| `getBookmark()` / `moveToBookmark(bookmark)` | remember the selection and put it back later: changes made in between move it along; `false` when its text was deleted                           |
+| `scrollIntoView()`                           | scroll the selection into view                                                                                                                   |
+
+```ts
+// Your own dialog: the selection is put back after it, wherever changes moved it meanwhile.
+const bookmark = editor.selection.getBookmark();
+const choice = await openYourDialog(editor.selection.getText());
+editor.selection.moveToBookmark(bookmark);
+if (choice === 'quote') editor.exec('blockquote');
+```
+
 ## Documents without an editor
 
 Turn a saved JSON document into the same HTML as `getHTML()` without an editor or a DOM: on a
