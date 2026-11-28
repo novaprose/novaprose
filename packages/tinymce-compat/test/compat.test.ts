@@ -921,6 +921,55 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.flat().join(' ')).not.toContain('pageembed');
   });
 
+  it('mediaembed: summary cards keep their classes; the service, the width and the media button', async () => {
+    page(
+      '<textarea id="t"><a class="ephox-summary-card" href="https://example.com/post">' +
+        '<span class="ephox-summary-card-title">Post</span>' +
+        '<span class="ephox-summary-card-website">example.com</span></a>' +
+        '<p>https://example.com/page</p></textarea>',
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const fetch = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify({ title: 'The page', site: 'Example' })));
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'mediaembed',
+      toolbar: 'media',
+      mediaembed_service_url: '/embed',
+      mediaembed_max_width: 450,
+      mediaembed_inline_styles: false,
+    });
+    const core = editor!.core;
+    await core.ready;
+    // Saved as TinyMCE's classes, without inline styles (TinyMCE's default).
+    expect(editor!.getContent()).toContain(
+      '<a class="ephox-summary-card" href="https://example.com/post" rel="noopener noreferrer"><span>' +
+        '<span class="ephox-summary-card-title">Post</span><span class="ephox-summary-card-website">example.com</span></span></a>',
+    );
+    expect(editor!.getContent()).not.toContain('style=');
+    expect(core.view.dom.querySelector<HTMLElement>('.nova-card-view')!.style.maxWidth).toBe(
+      '450px',
+    );
+    // The media plugin comes along: its button opens the dialog that takes any page.
+    expect(core.hasPlugin('media')).toBe(true);
+    expect(core.ui.registry.get('media')?.type).toBe('button');
+    // A link alone on its line, then Enter: the service (our protocol) describes the page.
+    core.view.dispatch(core.view.state.tr.setSelection(TextSelection.atEnd(core.view.state.doc)));
+    core.view.dom.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    );
+    await vi.waitFor(() => expect(core.view.state.doc.child(1).type.name).toBe('link_card'));
+    expect(fetch.mock.calls[0]![0]).toBe('/embed');
+    expect(JSON.parse(String(fetch.mock.calls[0]![1]!.body))).toEqual({
+      url: 'https://example.com/page',
+    });
+    expect(editor!.getContent()).toContain(
+      '<span class="ephox-summary-card-title">The page</span>',
+    );
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('mediaembed');
+  });
+
   it('advtable: the numbers column and sorting through TinyMCE commands, your series', async () => {
     page(
       '<textarea id="t"><table><tbody><tr><th><p>Fruit</p></th><th><p>Price</p></th></tr>' +

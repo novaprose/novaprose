@@ -1,4 +1,4 @@
-import { createEditor, registerLanguage, type Editor } from '@novaprose/core';
+import { createEditor, registerLanguage, type Editor, type EmbedInfo } from '@novaprose/core';
 import type { AiRequest } from '../../../packages/core/src/plugins/ai';
 import type {
   SpellCheckMatch,
@@ -133,6 +133,26 @@ async function demoLinkCheck(urls: string[]) {
   );
 }
 
+/**
+ * An offline demo of page cards (?parity=1, mediaembed): a page gets a title from its address, a
+ * description and a picture; "photo" in the address is a picture, "nothing" has no card. In a real
+ * application your server reads the page's Open Graph tags (see the "Embeds" guide).
+ */
+async function demoEmbed(url: string): Promise<EmbedInfo | null> {
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  if (url.includes('nothing')) return null;
+  const image = new URL('/edit-demo.png', location.href).href;
+  if (url.includes('photo')) return { type: 'photo', image, title: 'A demo photo' };
+  const { hostname, pathname } = new URL(url);
+  const words = pathname.split('/').filter(Boolean).pop()?.replace(/[-_]+/g, ' ') ?? '';
+  return {
+    title: words ? words[0]!.toUpperCase() + words.slice(1) : hostname,
+    description: `A page on ${hostname}, described by the playground's demo service.`,
+    image,
+    site: hostname.replace(/^www\./, ''),
+  };
+}
+
 const editor = createEditor({
   element: $('#editor'),
   content: localStorage.getItem(STORAGE_KEY) ?? SAMPLE.trim(),
@@ -217,6 +237,7 @@ const editor = createEditor({
           'pagebreak',
           'media',
           'pageembed',
+          'mediaembed',
           'advtable',
           'advcode',
           'editimage',
@@ -285,6 +306,7 @@ const editor = createEditor({
       addToDictionary: (word: string) => console.info('[playground] added to dictionary:', word),
     },
     linkchecker: { check: demoLinkCheck, delay: 200 },
+    mediaembed: { resolve: demoEmbed },
     // Templates for "Insert template" (e2e/formatting-tools.spec.ts).
     template: {
       templates: [

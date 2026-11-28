@@ -189,6 +189,11 @@ const IGNORED = new Set([
   // pageembed: the sizes (classes) and inline styles; the wrapper keeps TinyMCE's class.
   'tiny_pageembed_classes',
   'tiny_pageembed_inline_styles',
+  // mediaembed: the service address (a server that answers our protocol, see the embeds guide),
+  // the widest a card gets and inline styles; cards keep TinyMCE's summary card classes.
+  'mediaembed_service_url',
+  'mediaembed_max_width',
+  'mediaembed_inline_styles',
   // advtable: your series for the numbers column (their generators give each row's value).
   'advtable_value_series',
   // advcode: the code laid out on open, getContent laid out too (index.ts); the code editor opens
@@ -456,6 +461,10 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   // The AI assistant's edits arrive as suggestions: the ai plugin needs the suggestions plugin.
   if (plugins.includes('ai') && !plugins.includes('suggestions')) {
     plugins.splice(plugins.indexOf('ai'), 0, 'suggestions');
+  }
+  // mediaembed's button is the media plugin's: its dialog then takes any address.
+  if (plugins.includes('mediaembed') && !plugins.includes('media')) {
+    plugins.splice(plugins.indexOf('mediaembed'), 0, 'media');
   }
 
   const options: Omit<EditorOptions, 'element'> = { plugins };
@@ -848,6 +857,20 @@ export function mapOptions(config: TinyConfig): MappedOptions {
           })),
       inlineStyles: config.tiny_pageembed_inline_styles === true,
     };
+  }
+  // mediaembed: TinyMCE's summary card classes, so its cards and the page's CSS for them keep
+  // working; inline styles are off there by default, as in TinyMCE.
+  if (plugins.includes('mediaembed')) {
+    const mediaembed: Record<string, unknown> = {
+      className: 'ephox-summary-card',
+      inlineStyles: config.mediaembed_inline_styles === true,
+    };
+    if (typeof config.mediaembed_service_url === 'string' && config.mediaembed_service_url)
+      mediaembed.serviceUrl = config.mediaembed_service_url;
+    const maxWidth = Number(config.mediaembed_max_width);
+    if (config.mediaembed_max_width !== undefined && Number.isFinite(maxWidth))
+      mediaembed.maxWidth = maxWidth;
+    pluginOptions.mediaembed = mediaembed;
   }
   // advtable: TinyMCE's series generators give the values of the numbered rows (rowIndex counts
   // them from 0; header rows get no number).

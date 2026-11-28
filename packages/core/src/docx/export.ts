@@ -812,8 +812,9 @@ class DocxWriter {
       }
       // Word has no frames: a video or an embedded page is a link to it.
       case 'media':
-      case 'pageembed': {
-        const src = String(node.attrs.src ?? '');
+      case 'pageembed':
+      case 'link_card': {
+        const src = String(node.attrs.src ?? node.attrs.href ?? '');
         if (!isSafeLinkUrl(src)) return '';
         return this.paragraph(null, ctx, {
           content: `<w:hyperlink r:id="${this.rel('hyperlink', src, true)}">${this.run(String(node.attrs.title || src), [], ctx)}</w:hyperlink>`,

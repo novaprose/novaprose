@@ -263,6 +263,15 @@ const serializer: MarkdownSerializer = new MarkdownSerializer(
       );
       state.closeBlock(node);
     },
+    // A page's card: a link to it.
+    link_card(state, node) {
+      const src = String(node.attrs.href ?? '').trim();
+      if (/^https?:\/\/\S+$/i.test(src)) {
+        const text = state.esc(String(node.attrs.title || src));
+        state.write(`[${text}](${src.replace(/[()]/g, '\\$&')})`);
+      }
+      state.closeBlock(node);
+    },
     // An embedded page: a link to it (Markdown has no frames).
     pageembed(state, node) {
       const src = String(node.attrs.src ?? '').trim();

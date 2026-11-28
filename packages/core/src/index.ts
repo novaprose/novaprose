@@ -187,6 +187,7 @@ export type { PageEmbedOptions, PageEmbedSize } from './plugins/pageembed';
 export type { AdvTableOptions, TableSeries } from './plugins/advtable-ui';
 export type { AdvCodeOptions } from './plugins/advcode';
 export type { EditImageOptions } from './plugins/editimage';
+export type { EmbedInfo, MediaEmbedOptions } from './plugins/mediaembed';
 export type { SortOptions } from './table';
 export type { CorrectionKind } from './plugins/autocorrect-rules';
 export type { TypographyOptions } from './plugins/typography';

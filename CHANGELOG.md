@@ -8,6 +8,19 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Link cards: with the `mediaembed` plugin, a link alone on its line becomes a card on Enter, with
+  the page's title, description, picture and site, from your server (`serviceUrl` or your own
+  `resolve`); the Video dialog takes any page, and a link to a picture shows the picture. The card
+  is its own undo step, so Ctrl+Z brings the link back; its toolbar opens the page, turns the card
+  back into a link or removes it. Nothing from the server is put in as HTML, and the card's address
+  and picture are checked like any link and image. The card is a link with inline styles, so the
+  page that shows it needs no CSS, and on a narrow screen its text goes under the picture; in Word
+  and Markdown it is a link. With `tinymce.init`, `mediaembed_service_url`, `mediaembed_max_width`
+  and `mediaembed_inline_styles` work, and cards keep the `ephox-summary-card` classes. The
+  [Link cards](https://novaprose.com/guides/embeds/#link-cards) guide has a server that reads
+  pages' Open Graph tags safely.
+- **Fixed:** image editing takes a file that your `fetchImage` gets from another window (an
+  iframe); before, such a file was called unreadable.
 - **Fixed:** a `<pre>` holding blocks (lines as `<p>` or `<div>`, as some sites copy code) keeps
   their text in the code block, one per line; before, the text left the code block and the
   paragraphs after it kept tabs that the next save turned into spaces. Found by a property-based
@@ -54,8 +67,8 @@ All packages in this repository are versioned together. The format follows
   on its own is never embedded, so pasting a web page brings no frames along. The sizes are inline
   styles too (`inlineStyles: false` for classes only). In Word, Markdown and email an embedded page
   is a link. With `tinymce.init`, `tiny_pageembed_classes` and `tiny_pageembed_inline_styles`
-  work and content keeps its classes. The new [Video and web
-  pages](https://novaprose.com/guides/embeds/) guide covers both plugins. The **Insert** menu has
+  work and content keeps its classes. The new [Video, web pages and link
+  cards](https://novaprose.com/guides/embeds/) guide covers them. The **Insert** menu has
   **Video** and **Embedded page**, and a disabled dialog field now looks disabled.
 - Link checker: with the `linkchecker` plugin, links are checked as the document changes, and a
   broken one gets a wavy red underline (`aria-invalid` for screen readers); its bubble says

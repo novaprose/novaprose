@@ -14,6 +14,12 @@ import { h } from '../ui/dom';
 
 export type MediaKind = 'youtube' | 'vimeo' | 'video';
 
+/** Turns an address the media plugin doesn't play into a block (a page's card): the mediaembed plugin. */
+export type EmbedResolver = (url: string, signal: AbortSignal) => Promise<PMNode | null>;
+
+/** The resolver of each editor that has one: the Video dialog then takes any address. */
+export const embedResolvers = new WeakMap<object, EmbedResolver>();
+
 export interface MediaSource {
   kind: MediaKind;
   /** The canonical address for embedding. */

@@ -1985,6 +1985,40 @@ html.nova-fullscreen-lock body {
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
+/* A page's card (mediaembed) in the editor: the picture, the title, the description, the site. */
+.nova-card-view {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0.5em 0;
+  padding: 12px;
+  border: 1px solid var(--nova-border);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+/* Stronger than ".nova-prosemirror img" (height: auto), which stretched it to the text. */
+.nova-card-view > .nova-card-view-image {
+  flex: none;
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+/* Narrower than 180px beside the picture (a phone), the text goes under it, as on the page. */
+.nova-card-view-text {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.nova-card-view-title {
+  font-weight: 600;
+}
+.nova-card-view-description,
+.nova-card-view-site {
+  color: var(--nova-muted);
+  font-size: 0.875em;
+}
+.nova-prosemirror .ProseMirror-selectednode.nova-card-view,
 .nova-prosemirror .ProseMirror-selectednode.nova-media,
 .nova-prosemirror .ProseMirror-selectednode.nova-pagebreak,
 .nova-prosemirror a[id]:not([href]).ProseMirror-selectednode {

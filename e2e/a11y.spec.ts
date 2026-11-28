@@ -348,6 +348,24 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'edit image dialog');
     });
 
+    test("a page's card, selected, with its toolbar", async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async (image) => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          `<a class="nova-card" href="https://example.com/post"><img class="nova-card-thumbnail" src="${image}">` +
+            '<span class="nova-card-title">A post</span><span class="nova-card-description">What it is about</span>' +
+            '<span class="nova-card-website">example.com</span><span class="nova-card-author">Ann</span></a><p>After</p>',
+        );
+      }, new URL('/edit-demo.png', page.url()).href);
+      await page.locator('.nova-card-view').click();
+      await expect(page.getByRole('toolbar', { name: 'Card' })).toBeVisible();
+      await audit(page, 'link card');
+    });
+
     test('a view in place of the editor', async ({ page }) => {
       await open(page, theme, '&parity=1');
       await page.evaluate(() =>

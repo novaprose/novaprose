@@ -357,6 +357,9 @@ const de: LanguagePack = {
   'media.name': 'Titel (für Screenreader)',
   'media.invalid': 'Diese Videoadresse wird nicht unterstützt',
   'media.save': 'Einfügen',
+  'media.hintAny':
+    'YouTube, Vimeo, eine Videodatei oder eine beliebige Seite: Sie wird als Karte gezeigt',
+  'media.failed': 'Für diese Seite konnte keine Karte erstellt werden',
   'mentions.list': 'Personen',
   'mentions.empty': 'Keine Treffer',
   'mergetags.insert': 'Variable einfügen',
@@ -641,6 +644,10 @@ const de: LanguagePack = {
   'editimage.unsupported':
     'Nur PNG-, JPEG-, WebP-, GIF-, AVIF- und BMP-Bilder können bearbeitet werden.',
   'editimage.failed': 'Das bearbeitete Bild konnte nicht gespeichert werden.',
+  'mediaembed.open': 'Seite öffnen',
+  'mediaembed.unwrap': 'Als Link anzeigen',
+  'mediaembed.remove': 'Karte entfernen',
+  'mediaembed.toolbar': 'Karte',
   'suggestions.formatted': 'Formatiert von {name}',
   'suggestions.kindFormat': 'Formatiert',
   'suggestions.kindSplit': 'Neuer Absatz',

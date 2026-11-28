@@ -16,6 +16,7 @@ const editor = createEditor({
     'pagebreak',
     'media',
     'pageembed',
+    'mediaembed',
     'advtable',
     'anchor',
   ],
@@ -75,6 +76,8 @@ describe('prettyHTML', () => {
     '<p>a</p><div class="nova-pagebreak" style="break-after: page;"></div><p>b</p>',
     '<table><tbody><tr><td data-series="numeric"><p>1</p></td><td><p>a</p></td></tr></tbody></table>',
     '<ol start="3"><li><p>c</p></li></ol><p><span data-type="inline-math" data-latex="x^2"></span></p>',
+    '<p>a</p><a class="nova-card" href="https://example.com/post"><span class="nova-card-title">Post</span>' +
+      '<span class="nova-card-description">About</span></a><p>b</p>',
   ])('reads back as the same document: %s', (html) => {
     const { before, after } = roundTrip(html);
     expect(after).toBe(before);

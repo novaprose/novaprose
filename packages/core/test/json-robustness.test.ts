@@ -17,6 +17,7 @@ const PLUGINS = [
   'media',
   'pageembed',
   'advtable',
+  'mediaembed',
   'comments',
   'mentions',
   'mergetags',
@@ -72,6 +73,9 @@ const ATTR_NAMES = [
   'border',
   'scrolling',
   'series',
+  'description',
+  'image',
+  'site',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));
@@ -102,6 +106,7 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
   anchor: (attrs) => para({ type: 'anchor', attrs }),
   media: (attrs) => ({ type: 'media', attrs }),
   pageembed: (attrs) => ({ type: 'pageembed', attrs }),
+  link_card: (attrs) => ({ type: 'link_card', attrs }),
   figure: (attrs) => ({
     type: 'figure',
     attrs,

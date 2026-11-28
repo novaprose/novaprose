@@ -12,6 +12,7 @@ import type { PageEmbedOptions } from './plugins/pageembed';
 import type { AdvTableOptions } from './plugins/advtable-ui';
 import type { AdvCodeOptions } from './plugins/advcode';
 import type { EditImageOptions } from './plugins/editimage';
+import type { MediaEmbedOptions } from './plugins/mediaembed';
 import type { TypographyOptions } from './plugins/typography';
 import type { A11yCheckerOptions } from './plugins/a11ychecker';
 import type { EmailOptions } from './email';
@@ -149,6 +150,7 @@ export interface PluginOptions {
   advtable?: AdvTableOptions;
   advcode?: AdvCodeOptions;
   editimage?: EditImageOptions;
+  mediaembed?: MediaEmbedOptions;
   /** The email plugin's options; emailHTML() from @novaprose/core/email uses them too. */
   email?: EmailOptions;
   [plugin: string]: unknown;

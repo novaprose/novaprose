@@ -82,6 +82,8 @@ describe('HTML without an editor, like getHTML()', () => {
       '<div class="nova-pagebreak" style="break-after: page;"></div>',
       '<iframe src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" width="640" height="360"></iframe>',
       '<div class="embed embed--4by3"><iframe src="https://example.com/map" title="Map"></iframe></div>',
+      '<a class="card" href="https://example.com/post"><img class="card-thumbnail" src="https://example.com/c.jpg">' +
+        '<span class="card-title">Post</span><span class="card-author">Ann</span></a>',
     ].join('');
     const options: DocumentOptions = {
       plugins: [
@@ -94,6 +96,7 @@ describe('HTML without an editor, like getHTML()', () => {
         'pagebreak',
         'media',
         'pageembed',
+        'mediaembed',
         'codesample',
       ],
       pluginOptions: {
@@ -101,6 +104,7 @@ describe('HTML without an editor, like getHTML()', () => {
         mergetags: { attribute: 'data-var' },
         tableofcontents: { depth: 2, titleTag: 'h2' },
         pageembed: { className: 'embed', sizes: [{ value: 'embed--4by3' }], inlineStyles: false },
+        mediaembed: { className: 'card', maxWidth: 500 },
       },
     };
     const e = await expectSame(content, options);
@@ -116,8 +120,12 @@ describe('HTML without an editor, like getHTML()', () => {
       'pagebreak',
       'media',
       'pageembed',
+      'link_card',
     ])
       expect(types, type).toContain(type);
+    // The card's settings reach the renderer: your class, the width.
+    expect(e.getHTML()).toContain('<a class="card" href="https://example.com/post"');
+    expect(e.getHTML()).toContain('max-width: 500px');
     // Plugin settings affect the renderer's HTML too: the block is saved collapsed,
     // the table of contents has only h2 (depth: 2).
     expect(e.getHTML()).toContain('<details><summary>Title</summary>');

@@ -32,6 +32,7 @@ const SCHEMA_PLUGINS = [
   'media',
   'pageembed',
   'advtable',
+  'mediaembed',
   'comments',
   'mentions',
   'mergetags',
@@ -434,6 +435,10 @@ describe('HTML security and stability (property-based)', () => {
         fc.array(fc.record({ level: anyValue, id: attrValue, text: attrValue }), { maxLength: 3 }),
       ),
       rowspan: anyValue,
+      // A page's card: its texts and its picture's address.
+      description: anyValue,
+      image: anyValue,
+      site: anyValue,
       // The numbers column of advanced tables: the series' name goes into data-series.
       series: fc.oneof(anyValue, attrValue, fc.constantFrom('numeric', 'alpha')),
       colwidth: fc.oneof(anyValue, fc.array(fc.integer({ min: -5, max: 900 }), { maxLength: 2 })),
@@ -481,6 +486,7 @@ describe('HTML security and stability (property-based)', () => {
       type: fc.constantFrom(
         'media',
         'pageembed',
+        'link_card',
         'pagebreak',
         'horizontal_rule',
         'toc',

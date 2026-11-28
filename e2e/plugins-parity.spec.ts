@@ -118,6 +118,54 @@ test('pageembed: a page at full width, a click selects it, the dialog changes it
   expect(await html(page)).not.toContain('<iframe');
 });
 
+test('mediaembed: a link alone on its line becomes a card on Enter; undo, its toolbar, the dialog', async ({
+  page,
+}) => {
+  await open(page);
+  const address = 'https://example.com/blog/hello-world';
+  await page.keyboard.type(address);
+  await page.keyboard.press('Enter');
+  const card = page.locator('.nova-card-view');
+  await expect(card).toContainText('Hello world');
+  await expect(card).toContainText('example.com');
+  await expect(card.locator('img')).toHaveJSProperty('complete', true);
+  // Its own undo step: the link comes back, the new line stays; redo brings the card back.
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(card).toHaveCount(0);
+  expect(await html(page)).toMatch(
+    /^<p>(<a href="[^"]+">)?https:\/\/example\.com\/blog\/hello-world(<\/a>)?<\/p><p><\/p>$/,
+  );
+  await page.keyboard.press('ControlOrMeta+Shift+z');
+  await expect(card).toHaveCount(1);
+  // The cursor is on the line after the card.
+  await page.keyboard.type('After');
+  expect(await html(page)).toMatch(
+    /^<a class="nova-card" href="https:\/\/example\.com\/blog\/hello-world" rel="noopener noreferrer"[^>]*>.*<\/a><p>After<\/p>$/,
+  );
+  // A click selects the card; its toolbar turns it back into a link.
+  await card.click();
+  const toolbar = page.getByRole('toolbar', { name: 'Card' });
+  await expect(toolbar).toBeVisible();
+  await toolbar.getByRole('button', { name: 'Show as a link' }).click();
+  expect(await html(page)).toBe(`<p><a href="${address}">${address}</a></p><p>After</p>`);
+  // A page the service knows nothing about stays a link.
+  await page.keyboard.press('ControlOrMeta+End');
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('https://example.com/nothing');
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(300);
+  await expect(card).toHaveCount(0);
+  expect(await html(page)).toContain('https://example.com/nothing');
+  // The Video dialog takes any page.
+  await clickControl(page, 'media');
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('any page');
+  await dialog.getByLabel('Video URL').fill('https://example.com/docs/getting-started');
+  await dialog.getByRole('button', { name: 'Insert' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(card).toContainText('Getting started');
+});
+
 test('advtable: row numbers follow the rows; the Sort dialog sorts by a chosen column', async ({
   page,
 }) => {
