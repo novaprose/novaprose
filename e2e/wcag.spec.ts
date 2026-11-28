@@ -323,6 +323,26 @@ test('1.4.12 Text Spacing: the toolbar, menus, a dialog and the status bar keep 
   expect(await overflowing(page), 'the link dialog').toEqual([]);
 });
 
+test('1.4.10 Reflow: at 320 CSS pixels nothing scrolls sideways, the toolbar and a dialog fit', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await open(page, '&menubar=1', '<h2>A heading that is fairly long</h2><p>Some text to edit</p>');
+  const fits = () =>
+    page.evaluate(() => {
+      const wide = [
+        document.scrollingElement!,
+        ...document.querySelectorAll('.nova-header, .nova-toolbar, .nova-menubar, [role="dialog"]'),
+      ].filter((el) => el.getBoundingClientRect().right > innerWidth + 1 || el.scrollWidth > 321);
+      return wide.map((el) => `${el.tagName.toLowerCase()}.${[...el.classList].join('.')}`);
+    });
+  expect(await fits(), 'the page and the bars').toEqual([]);
+  await page.locator('.nova-prosemirror p').click();
+  await page.keyboard.press('Control+k');
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await fits(), 'the link dialog').toEqual([]);
+});
+
 test('Windows high contrast: focus, pressed buttons, icons and fields stay visible', async ({
   page,
 }) => {

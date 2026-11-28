@@ -76,16 +76,29 @@ export interface CollabOptions {
   onUsers?: (users: CollabParticipant[]) => void;
 }
 
+// Dark enough for the white name label on a cursor: at least 4.5:1 (WCAG 1.4.3).
 const PALETTE = [
-  '#2563eb',
-  '#db2777',
-  '#16a34a',
-  '#ea580c',
-  '#7c3aed',
-  '#0891b2',
-  '#ca8a04',
-  '#dc2626',
+  '#1d4ed8',
+  '#be185d',
+  '#15803d',
+  '#c2410c',
+  '#6d28d9',
+  '#0e7490',
+  '#a16207',
+  '#b91c1c',
 ];
+
+/** Black or white, whichever reads better on a #rgb / #rrggbb(aa) color (your own cursor colors too). */
+export function labelColorOn(color: string): '#ffffff' | '#111111' {
+  const hex = color.slice(1);
+  const full = hex.length <= 4 ? [...hex.slice(0, 3)].map((c) => c + c).join('') : hex.slice(0, 6);
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(full.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  const light = 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
+  return 1.05 / (light + 0.05) >= (light + 0.05) / 0.05 ? '#ffffff' : '#111111';
+}
 
 /** A stable color for a name: one person gets the same color in every tab. */
 export function colorFor(name: string): string {
@@ -106,6 +119,7 @@ function cursorBuilder(user: { name?: string; color?: string }): HTMLElement {
   const label = document.createElement('span');
   label.className = 'nova-collab-label';
   label.style.backgroundColor = color;
+  label.style.color = labelColorOn(color);
   label.textContent = String(user.name ?? '').slice(0, 40) || '…';
   caret.append(label);
   return caret;

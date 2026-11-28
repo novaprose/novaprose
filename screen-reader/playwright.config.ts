@@ -8,6 +8,7 @@ import { devices } from '@playwright/test';
  */
 export default withGuidepup({
   testDir: '.',
+  testMatch: 'nvda.spec.ts',
   outputDir: 'test-results',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

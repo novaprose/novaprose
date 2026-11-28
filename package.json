@@ -22,12 +22,14 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "sr": "playwright test -c screen-reader/playwright.config.ts",
+    "sr:voiceover": "playwright test -c screen-reader/playwright.voiceover.config.ts",
     "perf": "playwright test -c perf/playwright.config.ts",
     "release:pack": "pnpm build && node scripts/release-pack.mjs",
     "size": "node scripts/size.mjs",
     "check:packages": "node scripts/check-packages.mjs",
     "verify:release": "pnpm release:pack && pnpm size && pnpm check:packages",
     "verify:examples": "node scripts/verify-examples.mjs",
+    "site:a11y": "node scripts/site-a11y.mjs",
     "icons": "node scripts/icons.mjs && prettier --write packages/core/src/ui/icons.ts apps/site/src/components/site/icons.ts"
   },
   "devDependencies": {

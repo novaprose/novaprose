@@ -30,6 +30,11 @@ All packages in this repository are versioned together. The format follows
   its tint, a focused menu item shows the focus ring, and a white color swatch has a visible edge.
 - Windows high contrast mode: pressed buttons, the table size grid, search matches and selected
   cells show in the system's colors, and color swatches keep their colors.
+- **Fixed (screen readers):** the resize handle in the status bar said its value (the editor's
+  height) only after the first resize; it says it from the start, with its range.
+- Collaboration: the cursor colors are darker, so the white name labels are at least 4.5:1, and a
+  color of your own gets a black or white label, whichever reads better (`labelColorOn()` in
+  `@novaprose/collab`). **Changed:** the default colors of collaborators.
 - **Changed:** pasted HTML keeps `lang` on a passage in another language than the text's; it used
   to drop every `lang`. Word's own document language (on every run) is still left out.
 

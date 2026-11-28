@@ -86,6 +86,10 @@ describe('resize', () => {
     expect(handle.getAttribute('aria-label')).toBe('Resize editor');
     expect(handle.tabIndex).toBe(0);
     expect(handle.querySelector('svg')).not.toBeNull();
+    // A focusable separator has a value from the start (axe: aria-required-attr): the height.
+    expect(handle.getAttribute('aria-valuenow')).toBe('100');
+    expect(handle.getAttribute('aria-valuemin')).toBe('100');
+    expect(handle.getAttribute('aria-valuemax')).toBe('4000');
     handle.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
     // jsdom doesn't compute layout (height 0), so the minimum applies.
     expect(e.root.style.height).toBe('100px');

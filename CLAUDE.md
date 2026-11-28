@@ -113,6 +113,7 @@ pnpm perf           # speed measurements with limits (needs a build); the table 
 pnpm check:packages # publint + ESM/CJS types in the .release/ archives (needs release:pack)
 pnpm verify:release # build + archives + size + check:packages: the same as CI and the release
 pnpm verify:examples # examples from the .release/ archives: Vite build, run in Chromium, Node (--strict on release)
+pnpm site:a11y       # axe on every page of the built site (apps/site/dist), light and dark, phone too (CI)
 ```
 
 CI (`.github/workflows`): ci.yml: check with coverage, build/size/packages/speed, e2e in all browsers + a11y;

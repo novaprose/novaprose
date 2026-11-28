@@ -242,7 +242,8 @@ a.np-collab-btn[hidden] {
 .np-tiny-btn.is-primary {
   border-color: var(--sl-color-accent);
   background: var(--sl-color-accent);
-  color: var(--sl-color-white, #fff);
+  /* White in both themes (Starlight's --sl-color-white is the darkest color in the light theme). */
+  color: #fff;
 }
 .np-tiny-controls input:focus-visible,
 .np-tiny-btn:focus-visible {

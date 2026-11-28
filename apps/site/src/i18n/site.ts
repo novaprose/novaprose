@@ -328,6 +328,7 @@ export const t = {
     migrate: 'Migration guides',
     testing: 'How it’s tested',
     security: 'Security',
+    accessibility: 'Accessibility',
     privacy: 'Privacy',
     contact: 'Contact',
     rights: 'An independent open-source project.',

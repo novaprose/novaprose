@@ -60,6 +60,10 @@ jobs:
       # Examples (examples/) from these archives: Vite build (React, Vue), the CDN file, Node; checked in Chromium.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm verify:examples
+      # The documentation site's accessibility (the accessibility report states it): every page
+      # through axe, light and dark, the main pages on a phone too.
+      - run: pnpm --filter "@novaprose/site" build
+      - run: pnpm site:a11y
       # Speed measurements on the same CDN build (Chromium): limits catch regressions, the table goes to the summary.
       - run: pnpm perf
       - name: Size in the run summary

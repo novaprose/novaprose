@@ -104,6 +104,8 @@ export function createStatusbar(editor: Editor, host: HTMLElement) {
 const MIN_HEIGHT = 100;
 const MIN_WIDTH = 200;
 const KEY_STEP = 20;
+/** The top of the handle's range for assistive technology (a focusable separator needs one). */
+const MAX_HEIGHT = 4000;
 
 /**
  * The resize handle in the statusbar corner: drag it with a mouse or a finger, arrows from the keyboard.
@@ -117,10 +119,20 @@ function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): (
     tabIndex: 0,
     'aria-orientation': 'horizontal',
     'aria-label': editor.ui.t('status.resize'),
+    'aria-valuemin': String(MIN_HEIGHT),
   });
   handle.append(icon(both ? icons.resizeHandleBoth : icons.resizeHandle));
   root.dataset.resize = both ? 'both' : 'vertical';
   host.append(handle);
+  // A focusable separator says its value (WCAG 4.1.2): the editor's height in pixels.
+  const sayHeight = () => {
+    const height = Math.max(MIN_HEIGHT, root.offsetHeight);
+    handle.setAttribute('aria-valuenow', String(height));
+    handle.setAttribute('aria-valuemax', String(Math.max(MAX_HEIGHT, height)));
+  };
+  sayHeight();
+  // The text may have grown the editor since: the value is fresh when the handle gets focus.
+  handle.addEventListener('focus', sayHeight);
 
   const setSize = (height: number, width?: number) => {
     // The size is measured by the border box (offsetHeight), so it is set by the border box too, without a jump of the border width.
@@ -130,7 +142,7 @@ function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): (
       const max = root.parentElement?.clientWidth || Infinity;
       root.style.width = `${Math.min(max, Math.max(MIN_WIDTH, Math.round(width)))}px`;
     }
-    handle.setAttribute('aria-valuenow', String(root.offsetHeight));
+    sayHeight();
   };
 
   let start: { x: number; y: number; height: number; width: number } | null = null;

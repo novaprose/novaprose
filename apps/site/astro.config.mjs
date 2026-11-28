@@ -35,6 +35,28 @@ export default defineConfig({
   window.npThemeFade = setTimeout(() => root.classList.remove('np-theme-fade'), 500);
 }, true);`,
         },
+        // Accessibility of the documentation (checked on every page by scripts/site-a11y.mjs): the
+        // search button's name includes the shortcut it shows (WCAG 2.5.3), and code blocks, which
+        // scroll sideways when lines are long, can be scrolled from the keyboard (WCAG 2.1.1).
+        {
+          tag: 'script',
+          content: `addEventListener('DOMContentLoaded', () => requestAnimationFrame(() => {
+  const search = document.querySelector('button[data-open-modal]');
+  if (search) {
+    // Keys apart ("Ctrl K", not "CtrlK"), so the name can match what is shown.
+    search.querySelectorAll('kbd').forEach((key) => {
+      if (key.previousSibling && key.previousSibling.nodeType !== 3) key.before(' ');
+    });
+    const shown = [...search.querySelectorAll('span, kbd kbd')]
+      .filter((el) => el.getClientRects().length)
+      .map((el) => el.textContent.trim())
+      .filter(Boolean);
+    if (shown.length) search.setAttribute('aria-label', shown.join(' '));
+  }
+  for (const pre of document.querySelectorAll('pre:not([tabindex])'))
+    if (!pre.closest('.nova-editor')) pre.tabIndex = 0;
+}));`,
+        },
       ],
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/novaprose/novaprose' },
@@ -104,7 +126,12 @@ export default defineConfig({
         },
         {
           label: 'Project',
-          items: [{ slug: 'project/versioning' }, { slug: 'project/testing' }],
+          items: [
+            { slug: 'project/versioning' },
+            { slug: 'project/testing' },
+            { slug: 'project/accessibility' },
+            { slug: 'project/accessibility-report' },
+          ],
         },
         { label: 'Pricing', link: '/pricing/' },
         { label: 'NovaProse Cloud', link: '/cloud/' },

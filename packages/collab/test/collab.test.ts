@@ -2,7 +2,7 @@ import { TextSelection } from 'prosemirror-state';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createEditor, REMOTE_CHANGE_META, type Editor } from '@novaprose/core';
 import { applyAwarenessUpdate, encodeAwarenessUpdate } from 'y-protocols/awareness';
-import { Awareness, collab, colorFor, Y, type CollabParticipant } from '../src';
+import { Awareness, collab, colorFor, labelColorOn, Y, type CollabParticipant } from '../src';
 
 /**
  * Two editors with their own Y.Doc, linked in memory (as through a server, but without a network).
@@ -203,5 +203,22 @@ describe('real-time collaboration', () => {
   it('colorFor gives the same color for the same name', () => {
     expect(colorFor('Anna')).toBe(colorFor('Anna'));
     expect(colorFor('Anna')).toMatch(/^#[0-9a-f]{6}$/);
+  });
+
+  it('every palette color takes the white name label at 4.5:1; other colors get black or white', () => {
+    const lum = (hex: string) =>
+      [0, 2, 4]
+        .map((i) => parseInt(hex.slice(1 + i, 3 + i), 16) / 255)
+        .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+        .reduce((sum, c, i) => sum + c * [0.2126, 0.7152, 0.0722][i]!, 0);
+    const colors = new Set(Array.from({ length: 200 }, (_, i) => colorFor(`person ${i}`)));
+    expect(colors.size).toBe(8);
+    for (const color of colors) {
+      expect(1.05 / (lum(color) + 0.05), color).toBeGreaterThanOrEqual(4.5);
+      expect(labelColorOn(color), color).toBe('#ffffff');
+    }
+    expect(labelColorOn('#ffe066')).toBe('#111111');
+    expect(labelColorOn('#fff')).toBe('#111111');
+    expect(labelColorOn('#000a')).toBe('#ffffff');
   });
 });

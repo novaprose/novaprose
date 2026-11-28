@@ -31,7 +31,7 @@
 
 <script>
   import { createEditor, type Editor } from '@novaprose/core';
-  import { collab, type CollabParticipant } from '@novaprose/collab';
+  import { collab, labelColorOn, type CollabParticipant } from '@novaprose/collab';
   import '@novaprose/core/style.css';
   import '@novaprose/collab/style.css';
 
@@ -90,6 +90,8 @@ see each other's cursors and changes instantly.</p>
         const li = document.createElement('li');
         li.className = 'np-collab-user';
         li.style.setProperty('--np-user', user.color);
+        // Initials stay readable on any color a visitor may have (WCAG 1.4.3).
+        li.style.color = labelColorOn(user.color);
         li.title = user.self ? `${user.name} (you)` : user.name;
         li.textContent = initials(user.name);
         return li;

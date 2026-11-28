@@ -641,6 +641,12 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'menu from the menubar');
     });
 
+    test('the resize handle in the status bar', async ({ page }) => {
+      await open(page, theme, '&resize=both');
+      await page.locator('.nova-resize-handle').focus();
+      await audit(page, 'resize handle');
+    });
+
     test('the language menu open, with a passage marked', async ({ page }) => {
       await open(page, theme, '&langs=1');
       await page.evaluate(() => {
