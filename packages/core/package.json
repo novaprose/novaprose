@@ -84,6 +84,16 @@
         "default": "./dist/email.cjs"
       }
     },
+    "./upload": {
+      "import": {
+        "types": "./dist/upload.d.ts",
+        "default": "./dist/upload.js"
+      },
+      "require": {
+        "types": "./dist/upload.d.cts",
+        "default": "./dist/upload.cjs"
+      }
+    },
     "./html-rules": {
       "import": {
         "types": "./dist/html-rules.d.ts",

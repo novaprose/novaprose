@@ -13,6 +13,14 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Upload adapters: `@novaprose/core/upload` has ready `uploadImage` functions for cloud storage.
+  `signedUpload` sends an image to the address your server signs (Amazon S3 and storage that speaks
+  its protocol, such as Cloudflare R2, MinIO, DigitalOcean Spaces or Backblaze B2, and Google Cloud
+  Storage; a presigned PUT or an S3 presigned POST), `azureBlobUpload` to Azure Blob Storage,
+  `cloudinaryUpload` to Cloudinary with an unsigned preset or a signature, and `uploadcareUpload`
+  to Uploadcare. Keys never reach the browser, progress is reported, and only an `http(s)` address
+  comes back as the image. The [Images](https://novaprose.com/guides/images/#cloud-storage) guide
+  has server code that signs uploads of one image type and size, run against all three SDKs.
 - Selection API: `editor.selection` gives the selected content as HTML or text, replaces it,
   reads and sets its range, collapses it, selects all, an element or what is inside it, puts the
   cursor in a node, gives the element where it is, a DOM `Range` and its place on screen, and keeps

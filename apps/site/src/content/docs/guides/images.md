@@ -34,6 +34,150 @@ The returned URL must pass the image allowlist: `https:`, `http:` and relative U
 base64 `data:` URLs of raster formats (PNG, JPEG, GIF, WebP, AVIF, BMP). Anything else, including
 `data:image/svg+xml`, is refused.
 
+## Cloud storage
+
+`@novaprose/core/upload` has ready `uploadImage` functions for cloud storage. Keys never reach the
+browser: your server signs each upload, or the service takes a key or preset made for browsers.
+
+```ts
+import { signedUpload } from '@novaprose/core/upload';
+
+createEditor({
+  element,
+  uploadImage: signedUpload(async (file) => {
+    const response = await fetch('/api/sign-upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: file.type, size: file.size }),
+    });
+    if (!response.ok) throw new Error('The image can’t be uploaded');
+    return response.json();
+  }),
+});
+```
+
+| Function                                        | For                                                                                                                                                                           |
+| ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `signedUpload(sign)`                            | Amazon S3 and storage that speaks its protocol (Cloudflare R2, MinIO, DigitalOcean Spaces, Backblaze B2), and Google Cloud Storage: your server answers with a signed address |
+| `azureBlobUpload(sign)`                         | Azure Blob Storage: your server answers with a SAS address for the blob                                                                                                       |
+| `cloudinaryUpload({ cloudName, uploadPreset })` | Cloudinary, with an unsigned upload preset, or `sign` for parameters your server signs                                                                                        |
+| `uploadcareUpload({ publicKey })`               | Uploadcare, with the project's public key; `sign` for signed uploads, `cdnBase` for your delivery address                                                                     |
+
+What `sign` gives back: `{ url, method, headers, fields, publicUrl }`. `url` is the signed address
+the file is sent to. `method: 'POST'` with `fields` is an S3 presigned POST: the fields go first and
+the file last. `headers` are the ones the signature covers. `publicUrl` is where the image is shown
+from; without it, the address without its query, or for a POST the address and the key. Progress is
+reported while the file goes, and an address that isn't `http(s)` is refused.
+
+The storage must accept uploads from your site: in its CORS settings, your origin, `PUT` or `POST`,
+and the headers the upload sends. Anyone with an image's address can see it, as with any image on a
+page.
+
+### Signing on your server
+
+Your server chooses the image's name and checks its type and size before signing, so a browser
+can't overwrite other files or upload anything else. The example is for Node.js; storage libraries
+for other languages sign the same way.
+
+```js
+// sign-upload.js: your server decides where an image goes and signs one upload of it.
+import { randomUUID } from 'node:crypto';
+import { S3Client } from '@aws-sdk/client-s3';
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { Storage } from '@google-cloud/storage';
+import {
+  BlobSASPermissions,
+  generateBlobSASQueryParameters,
+  StorageSharedKeyCredential,
+} from '@azure/storage-blob';
+
+// Only images, at most 10 MB; the name is chosen here, never by the browser.
+const TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
+const MAX_BYTES = 10 * 1024 * 1024;
+
+function keyFor({ type, size }) {
+  const ext = TYPES[type];
+  if (!ext || !Number.isInteger(size) || size < 1 || size > MAX_BYTES) return null;
+  return `images/${randomUUID()}.${ext}`;
+}
+
+/** Amazon S3 (and R2, MinIO, Spaces…): a presigned POST that only takes this type and size. */
+export async function signS3(s3, bucket, file) {
+  const key = keyFor(file);
+  if (!key) return null;
+  const { url, fields } = await createPresignedPost(s3, {
+    Bucket: bucket,
+    Key: key,
+    Conditions: [
+      ['content-length-range', 1, MAX_BYTES],
+      ['eq', '$Content-Type', file.type],
+    ],
+    Fields: { 'Content-Type': file.type },
+    Expires: 300,
+  });
+  return { url, method: 'POST', fields };
+}
+
+/** Google Cloud Storage: a V4 signed URL for one PUT of this type and size. */
+export async function signGcs(bucket, file) {
+  const key = keyFor(file);
+  if (!key) return null;
+  const headers = { 'x-goog-content-length-range': `0,${MAX_BYTES}` };
+  const [url] = await bucket.file(key).getSignedUrl({
+    version: 'v4',
+    action: 'write',
+    expires: Date.now() + 5 * 60 * 1000,
+    contentType: file.type,
+    extensionHeaders: headers,
+  });
+  return {
+    url,
+    headers: { ...headers, 'Content-Type': file.type },
+    publicUrl: `https://storage.googleapis.com/${bucket.name}/${key}`,
+  };
+}
+
+/** Azure Blob Storage: a SAS for creating this one blob, for five minutes. */
+export function signAzure(credential, container, file) {
+  const key = keyFor(file);
+  if (!key) return null;
+  const sas = generateBlobSASQueryParameters(
+    {
+      containerName: container,
+      blobName: key,
+      permissions: BlobSASPermissions.parse('cw'),
+      expiresOn: new Date(Date.now() + 5 * 60 * 1000),
+      contentType: file.type,
+    },
+    credential,
+  );
+  const url = `https://${credential.accountName}.blob.core.windows.net/${container}/${key}`;
+  return { url: `${url}?${sas}`, headers: { 'Content-Type': file.type } };
+}
+
+// The clients, created once:
+export const clients = () => ({
+  s3: new S3Client({ region: process.env.AWS_REGION }),
+  gcs: new Storage().bucket(process.env.GCS_BUCKET),
+  azure: new StorageSharedKeyCredential(process.env.AZURE_ACCOUNT, process.env.AZURE_KEY),
+});
+```
+
+Then the route, behind your sign-in (here with Express):
+
+```js
+const { s3 } = clients();
+
+app.post('/api/sign-upload', requireSignedIn, express.json({ limit: '1kb' }), async (req, res) => {
+  const signed = await signS3(s3, process.env.S3_BUCKET, req.body ?? {});
+  if (!signed) return res.status(400).end();
+  res.json(signed);
+});
+```
+
+`signGcs(clients().gcs, req.body)` and `signAzure(clients().azure, container, req.body)` answer the
+same way; use `azureBlobUpload` in the browser for Azure.
+
 ## Editing images
 
 Select an image to open its context toolbar: alignment (`imagealignleft`, `imagealigncenter`,

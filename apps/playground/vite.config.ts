@@ -69,6 +69,9 @@ export default defineConfig({
       '@novaprose/core/email': fileURLToPath(
         new URL('../../packages/core/src/email.ts', import.meta.url),
       ),
+      '@novaprose/core/upload': fileURLToPath(
+        new URL('../../packages/core/src/upload.ts', import.meta.url),
+      ),
       '@novaprose/core': fileURLToPath(
         new URL('../../packages/core/src/index.ts', import.meta.url),
       ),

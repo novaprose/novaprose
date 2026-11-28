@@ -26,6 +26,8 @@ export default defineConfig({
     a11y: 'src/a11y.ts',
     // Email HTML: content styles put inline, markup email clients understand (a browser or jsdom).
     email: 'src/email.ts',
+    // Upload adapters for cloud storage (S3, Google Cloud Storage, Azure, Cloudinary, Uploadcare).
+    upload: 'src/upload.ts',
     ...packs,
   },
   format: ['esm', 'cjs'],

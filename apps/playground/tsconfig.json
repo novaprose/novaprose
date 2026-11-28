@@ -7,6 +7,7 @@
       "@novaprose/core": ["../../packages/core/src/index.ts"],
       "@novaprose/core/html-rules": ["../../packages/core/src/html-rules.ts"],
       "@novaprose/core/email": ["../../packages/core/src/email.ts"],
+      "@novaprose/core/upload": ["../../packages/core/src/upload.ts"],
       "@novaprose/core/i18n/*": ["../../packages/core/src/i18n/packs/*"],
       "@novaprose/react": ["../../packages/react/src/index.ts"],
       "@novaprose/vue": ["../../packages/vue/src/index.ts"],
