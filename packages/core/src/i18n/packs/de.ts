@@ -476,6 +476,10 @@ const de: LanguagePack = {
   'ai.autocomplete': 'KI-Autovervollständigung',
   'ai.completion': 'Vorschlag: {text}. Mit Tab übernehmen.',
   'ai.completionHint': 'Tab oder Klick übernimmt, Esc verwirft',
+  'ai.describeImage': 'Mit KI beschreiben',
+  'ai.describing': 'Wird beschrieben…',
+  'ai.describeFailed':
+    'Die KI konnte das Bild nicht beschreiben. Versuchen Sie es erneut oder schreiben Sie den Text selbst.',
   'email.preview': 'E-Mail-Vorschau',
   'email.view': 'Bildschirm',
   'email.desktop': 'Desktop',

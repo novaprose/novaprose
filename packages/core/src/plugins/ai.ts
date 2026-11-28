@@ -2,6 +2,7 @@ import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
 import type { DialogHandle } from '../ui/dialog';
 import { h } from '../ui/dom';
+import { setAltTextSuggester } from '../image';
 import type { MenuEntry } from '../ui/menu';
 import css from './ai.css?raw';
 import { contextPlugin, createChatPanel } from './ai-chat';
@@ -10,10 +11,12 @@ import {
   aiOptions,
   around,
   askModel,
+  DESCRIBE_INSTRUCTION,
   failureKind,
   INSTRUCTIONS,
   NEEDS_SELECTION,
   type AiAction,
+  type AiImage,
   type AiShortcut,
   type QuickAction,
 } from './ai-core';
@@ -21,7 +24,7 @@ import { hasEditableText, rangeText, suggestInsert, suggestRewrite } from './ai-
 import { pickLabels } from './shared';
 import type { SuggestionAuthor } from './suggestions';
 
-export type { AiAction, AiMessage, AiOptions, AiRequest, AiShortcut } from './ai-core';
+export type { AiAction, AiImage, AiMessage, AiOptions, AiRequest, AiShortcut } from './ai-core';
 export { INSTRUCTIONS } from './ai-core';
 
 /**
@@ -109,8 +112,45 @@ export const LABELS = {
     autocomplete: 'AI autocomplete',
     completion: 'Suggestion: {text}. Press Tab to accept.',
     completionHint: 'Tab or a click accepts, Esc dismisses',
+    describeImage: 'Describe with AI',
+    describing: 'Describing…',
+    describeFailed: 'AI could not describe the image. Try again, or write the text yourself.',
   },
 };
+
+/** The image for a describe request: its address, and its bytes when the browser can read them. */
+export async function imageForModel(src: string): Promise<AiImage> {
+  const embedded = /^data:(image\/[a-z0-9.+-]+);base64,(.+)$/i.exec(src);
+  if (embedded) return { mimeType: embedded[1]!.toLowerCase(), data: embedded[2]! };
+  const image: AiImage = /^https?:/i.test(src) ? { src } : {};
+  if (!/^(blob:|https?:)/i.test(src)) return image;
+  try {
+    // A blob: preview of an upload, or an address the page may read (same site, or allowed by CORS).
+    const blob = await (await fetch(src)).blob();
+    if (!blob.type.startsWith('image/') || blob.size > 5_000_000) return image;
+    const url = await new Promise<string>((done, fail) => {
+      const reader = new FileReader();
+      reader.onload = () => done(String(reader.result));
+      reader.onerror = () => fail(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    return { ...image, mimeType: blob.type, data: url.slice(url.indexOf(',') + 1) };
+  } catch {
+    return image;
+  }
+}
+
+/** The model's answer as alternative text: one line, no quotes around it, at most 250 characters. */
+export function cleanAltText(answer: string): string {
+  const text = answer
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/^["'“”«»„]+|["'“”«»„]+$/g, '')
+    .trim();
+  if (text.length <= 250) return text;
+  const cut = text.slice(0, 250);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), 200))}…`;
+}
 
 type Labels = (typeof LABELS)['en'];
 
@@ -392,6 +432,28 @@ export default definePlugin({
     editor.ui.addStyles('nova-ai', css);
     const labels = pickLabels(editor, 'ai', LABELS);
     const enabled = (e: Editor) => e.isEditable();
+
+    // ---------- alternative text for images ----------
+    if (typeof aiOptions(editor).request === 'function')
+      setAltTextSuggester(editor, {
+        label: labels.describeImage,
+        busy: labels.describing,
+        failed: labels.describeFailed,
+        run: async (image, signal) =>
+          cleanAltText(
+            await askModel(
+              editor,
+              {
+                action: 'describe',
+                instruction: DESCRIBE_INSTRUCTION,
+                before: image.before,
+                after: image.after,
+                image: await imageForModel(image.src),
+              },
+              signal,
+            ),
+          ),
+      });
 
     // ---------- the assistant window ----------
     let dialog: DialogHandle | null = null;

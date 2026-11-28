@@ -1624,6 +1624,12 @@ html.nova-fullscreen-lock body {
   outline-offset: 0;
 }
 
+/* "Describe with AI" under the alternative text field (the ai plugin). */
+.nova-alt-suggest {
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
 .nova-input[aria-invalid='true'] {
   border-color: var(--nova-danger);
 }

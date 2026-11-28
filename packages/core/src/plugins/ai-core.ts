@@ -20,7 +20,18 @@ export type AiAction =
   | 'custom'
   | 'chat'
   | 'edit'
-  | 'complete';
+  | 'complete'
+  | 'describe';
+
+/** describe: the image to write alternative text for. Send it to the model as an image. */
+export interface AiImage {
+  /** Its address (http or https), when it has one; an embedded image has only `data`. */
+  src?: string;
+  /** The image itself, base64, when the browser could read it (embedded, uploaded, or allowed by CORS). */
+  data?: string;
+  /** The type of `data`: image/png, image/jpeg… */
+  mimeType?: string;
+}
 
 /** A message of the chat panel's conversation. */
 export interface AiMessage {
@@ -34,9 +45,12 @@ export interface AiRequest {
   /**
    * Who asks: a quick action (improve, fix, shorter, longer, simplify, formal, friendly, summarize,
    * continue), custom (the user's own request in the assistant window), chat (a message in the chat
-   * panel), edit (changes to the document from the chat panel) or complete (autocomplete).
+   * panel), edit (changes to the document from the chat panel), complete (autocomplete) or describe
+   * (alternative text for `image`).
    */
   action: AiAction;
+  /** describe: the image; send it to the model with the prompt (a model that reads images). */
+  image?: AiImage;
   /**
    * The text to work on: the selected text, paragraphs separated by a blank line (empty: the model
    * writes at the cursor). For edit, the blocks to change, each as `<block id="N">text</block>` on its
@@ -127,6 +141,9 @@ export const NEEDS_SELECTION: readonly AiAction[] = [
   'summarize',
 ];
 
+/** The instruction of describe (alternative text for an image). */
+export const DESCRIBE_INSTRUCTION = 'Write the alternative text of the image.';
+
 /** The instruction of autocomplete. */
 export const COMPLETE_INSTRUCTION = 'Continue the text at the cursor with a few words.';
 
@@ -169,9 +186,10 @@ export interface AiFields {
   after?: string;
   document?: string;
   messages?: AiMessage[];
+  image?: AiImage;
 }
 
-type PromptFields = Required<AiFields> & { language: string };
+type PromptFields = Required<Omit<AiFields, 'image'>> & { image?: AiImage; language: string };
 
 const tag = (name: string, value: string) => `<${name}>\n${value}\n</${name}>`;
 
@@ -225,6 +243,16 @@ export function buildPrompt(f: PromptFields): { prompt: string; rules: string[] 
       `Keep line breaks inside a block. No Markdown. ${objects}`,
       language,
       'If nothing needs to change, reply with NO CHANGES.',
+    ];
+  } else if (f.action === 'describe') {
+    parts = [tag('before', f.before), tag('after', f.after)];
+    rules = [
+      data,
+      'The image comes with this request. Write its alternative text for people who cannot see it: what it shows and, when the text in <before> and <after> tells why it is there, what matters about it.',
+      'One or two short sentences, at most 150 characters. Do not begin with "Image of", "Picture of" or "Photo of".',
+      'If the image is only decoration, reply with nothing.',
+      plain,
+      `Write in the language of <before> and <after>.${fallback}`,
     ];
   } else if (f.action === 'complete') {
     parts = [tag('before', f.before), tag('after', f.after)];

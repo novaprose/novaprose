@@ -143,3 +143,22 @@ test('autocomplete: grey text after a pause, Tab accepts it, Esc dismisses it', 
     '<p>Start here and a little more. Then</p>',
   );
 });
+
+test('Describe with AI writes the alternative text of an image for the author to keep', async ({
+  page,
+}) => {
+  const png =
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+  await open(page, `<p>A photo:</p><p><img src="${png}" width="120" height="120"></p>`);
+  await page.locator('.nova-prosemirror img[src^="data:"]').click();
+  await page.locator('[data-control="imagealt"]:visible').first().click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Describe with AI' }).click();
+  const field = dialog.getByRole('textbox', { name: 'Alternative text' });
+  // The demo model says whether the image itself came with the request.
+  await expect(field).toHaveValue('A small blue square, sent as image data.');
+  await dialog.getByRole('button', { name: 'Save' }).click();
+  await expect
+    .poll(() => page.evaluate(() => window.editor.getHTML()))
+    .toContain('alt="A small blue square, sent as image data."');
+});

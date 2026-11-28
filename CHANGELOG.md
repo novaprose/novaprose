@@ -8,6 +8,12 @@ All packages in this repository are versioned together. The format follows
 
 ### Images
 
+- AI for images: with the `ai` plugin, the **Alternative text** dialog has **Describe with AI**. It
+  sends the image and the text around it to your model (`action: 'describe'`, the image as base64
+  or its address in `request.image`), and the model's one or two sentences go into the field for
+  the author to review and save. The server example in the
+  [AI assistant](https://novaprose.com/guides/ai-assistant/#describing-images) guide sends the
+  image to Claude.
 - Images are prepared in the browser before they are uploaded or embedded: a photo larger than
   2560 pixels is scaled down, keeps its orientation and loses what the camera wrote into it (EXIF
   and XMP: the place it was taken, the camera, the date). A file that needs none of this goes as it

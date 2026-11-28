@@ -62,27 +62,32 @@ async function* demoModel(request: AiRequest): AsyncGenerator<string> {
       ? rewrite.formal!
       : rewrite.improve!;
   const result =
-    request.action === 'continue'
-      ? 'This sentence was written by the demo model.'
-      : request.action === 'summarize'
-        ? 'A short summary from the demo model.'
-        : request.action === 'complete'
-          ? // Autocomplete: a short continuation of the text at the cursor.
-            `${/\s$/.test(request.before) ? '' : ' '}and a little more.`
-          : request.action === 'chat'
-            ? /title/i.test(request.instruction)
-              ? 'A Demo Title'
-              : `The document has ${request.document.split(/\s+/).filter(Boolean).length} words.`
-            : request.action === 'edit'
-              ? // Edits of the document: only the blocks that change, in the editor's block format.
-                [...request.text.matchAll(/<block id="(\d+)">([\s\S]*?)<\/block>/g)]
-                  .filter(([, , text]) => edit(text!) !== text)
-                  .map(([, id, text]) => `<block id="${id}">${edit(text!)}</block>\n`)
-                  .join('') || 'NO CHANGES'
-              : request.action === 'custom' && !request.text
-                ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
-                  'Once upon a time, the demo model told a story. '.repeat(40)
-                : (rewrite[request.action] ?? ((t: string) => t))(request.text);
+    request.action === 'describe'
+      ? // Alternative text for an image (e2e/ai.spec.ts): it says whether the image itself came along.
+        request.image?.data
+        ? 'A small blue square, sent as image data.'
+        : 'A small blue square.'
+      : request.action === 'continue'
+        ? 'This sentence was written by the demo model.'
+        : request.action === 'summarize'
+          ? 'A short summary from the demo model.'
+          : request.action === 'complete'
+            ? // Autocomplete: a short continuation of the text at the cursor.
+              `${/\s$/.test(request.before) ? '' : ' '}and a little more.`
+            : request.action === 'chat'
+              ? /title/i.test(request.instruction)
+                ? 'A Demo Title'
+                : `The document has ${request.document.split(/\s+/).filter(Boolean).length} words.`
+              : request.action === 'edit'
+                ? // Edits of the document: only the blocks that change, in the editor's block format.
+                  [...request.text.matchAll(/<block id="(\d+)">([\s\S]*?)<\/block>/g)]
+                    .filter(([, , text]) => edit(text!) !== text)
+                    .map(([, id, text]) => `<block id="${id}">${edit(text!)}</block>\n`)
+                    .join('') || 'NO CHANGES'
+                : request.action === 'custom' && !request.text
+                  ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
+                    'Once upon a time, the demo model told a story. '.repeat(40)
+                  : (rewrite[request.action] ?? ((t: string) => t))(request.text);
   for (const word of result.split(/(?<= )/)) {
     await new Promise((resolve) => setTimeout(resolve, 15));
     if (request.signal.aborted) return;

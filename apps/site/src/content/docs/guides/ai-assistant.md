@@ -147,20 +147,35 @@ the same letters keeps the rest of it. Screen readers announce the suggestion. T
 Autocomplete sends a request on every pause, so give it a fast model (see the server example
 below) and check your limits.
 
+## Describing images
+
+With the plugin on, the **Alternative text** dialog of an image (the image toolbar's
+`imagealt`) gets a **Describe with AI** button. It sends the image and the text around it to your
+model, which writes one or two sentences of alternative text, at most 150 characters, in the
+language of the surrounding text. The answer goes into the field, not into the document: the author
+reads it, changes what is wrong and saves. A purely decorative image gets an empty answer, and the
+dialog says so.
+
+The request has `action: 'describe'` and an `image`: its bytes as base64 (`data`, with its
+`mimeType`) when the browser can read them — embedded images, uploads, and addresses on your site or
+allowed by CORS — and its address (`src`) when it has one. Your server sends the image to a model
+that reads images, as in the example below.
+
 ## What a request contains
 
-| Field             | Description                                                                                                                                                                                              |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prompt`          | a ready prompt with everything below and the rules for the answer: send it to the model as the user's message                                                                                            |
-| `rules`           | the rules alone (the format of the answer, the language), for when you build your own prompt from the fields                                                                                             |
-| `instruction`     | what to do: the user's own words, or, for a quick action, a ready instruction in English                                                                                                                 |
-| `action`          | a quick action (`improve`, `fix`, `shorter`, `longer`, `simplify`, `formal`, `friendly`, `summarize`, `continue`), `custom` (a request typed in the window), `chat`, `edit` or `complete` (autocomplete) |
-| `text`            | the selected text, paragraphs separated by a blank line; empty when nothing is selected. For `edit`, the paragraphs to change, each as `<block id="N">text</block>`                                      |
-| `before`, `after` | up to 1,500 characters before and after the text or the cursor, for context                                                                                                                              |
-| `document`        | for `chat`, the whole document as text (up to `maxDocument` characters)                                                                                                                                  |
-| `messages`        | for `chat`, the conversation so far: `[{ role: 'user' \| 'assistant', text }]`                                                                                                                           |
-| `language`        | the editor's language, such as `en`                                                                                                                                                                      |
-| `signal`          | an `AbortSignal`, aborted when the user closes the window, presses **Stop** or types on                                                                                                                  |
+| Field             | Description                                                                                                                                                                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prompt`          | a ready prompt with everything below and the rules for the answer: send it to the model as the user's message                                                                                                                                        |
+| `rules`           | the rules alone (the format of the answer, the language), for when you build your own prompt from the fields                                                                                                                                         |
+| `instruction`     | what to do: the user's own words, or, for a quick action, a ready instruction in English                                                                                                                                                             |
+| `action`          | a quick action (`improve`, `fix`, `shorter`, `longer`, `simplify`, `formal`, `friendly`, `summarize`, `continue`), `custom` (a request typed in the window), `chat`, `edit`, `complete` (autocomplete) or `describe` (alternative text for an image) |
+| `text`            | the selected text, paragraphs separated by a blank line; empty when nothing is selected. For `edit`, the paragraphs to change, each as `<block id="N">text</block>`                                                                                  |
+| `before`, `after` | up to 1,500 characters before and after the text or the cursor, for context                                                                                                                                                                          |
+| `document`        | for `chat`, the whole document as text (up to `maxDocument` characters)                                                                                                                                                                              |
+| `messages`        | for `chat`, the conversation so far: `[{ role: 'user' \| 'assistant', text }]`                                                                                                                                                                       |
+| `image`           | for `describe`, the image: `{ src?, data?, mimeType? }` — its address, and its bytes as base64 when the browser could read them                                                                                                                      |
+| `language`        | the editor's language, such as `en`                                                                                                                                                                                                                  |
+| `signal`          | an `AbortSignal`, aborted when the user closes the window, presses **Stop** or types on                                                                                                                                                              |
 
 The answer is plain text, with paragraphs separated by a blank line. It goes into the document as
 text, never as HTML, so a model can't add markup or scripts. For `edit`, the model answers with the
@@ -185,11 +200,15 @@ Follow the rules in the user's message about the form of your answer.`;
 
 export async function POST(request: Request): Promise<Response> {
   // Check here that the user is signed in and within their limits: each request is billed.
-  const { prompt, action } = await request.json();
+  const { prompt, action, image } = await request.json();
   if (typeof prompt !== 'string' || typeof action !== 'string' || prompt.length > 200_000) {
     return new Response('Bad request', { status: 400 });
   }
   const complete = action === 'complete';
+  // describe: the image goes to the model as an image, before the prompt.
+  const picture = action === 'describe' ? imageBlock(image) : null;
+  if (action === 'describe' && !picture) return new Response('Bad image', { status: 400 });
+  const content = picture ? [picture, { type: 'text' as const, text: prompt }] : prompt;
 
   const stream = client.beta.messages.stream(
     complete
@@ -199,7 +218,7 @@ export async function POST(request: Request): Promise<Response> {
           max_tokens: 100,
           thinking: { type: 'disabled' },
           system: SYSTEM,
-          messages: [{ role: 'user', content: prompt }],
+          messages: [{ role: 'user', content }],
         }
       : {
           model: 'claude-opus-5-5',
@@ -209,7 +228,7 @@ export async function POST(request: Request): Promise<Response> {
           betas: ['server-side-fallback-2026-07-01'],
           fallbacks: 'default',
           system: SYSTEM,
-          messages: [{ role: 'user', content: prompt }],
+          messages: [{ role: 'user', content }],
         },
   );
 
@@ -237,6 +256,23 @@ export async function POST(request: Request): Promise<Response> {
     },
   });
   return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
+
+/** The image of a describe request as an image block: its bytes, or else its https address. */
+function imageBlock(image: unknown) {
+  const { data, mimeType, src } = (image ?? {}) as Record<string, unknown>;
+  const types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'] as const;
+  const type = types.find((t) => t === mimeType);
+  if (
+    typeof data === 'string' &&
+    type &&
+    data.length <= 7_000_000 &&
+    /^[A-Za-z0-9+/=]+$/.test(data)
+  )
+    return { type: 'image' as const, source: { type: 'base64' as const, media_type: type, data } };
+  if (typeof src === 'string' && src.startsWith('https://') && src.length <= 2000)
+    return { type: 'image' as const, source: { type: 'url' as const, url: src } };
+  return null;
 }
 ```
 

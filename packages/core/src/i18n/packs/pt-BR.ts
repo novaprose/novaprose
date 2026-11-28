@@ -468,6 +468,10 @@ const ptBR: LanguagePack = {
   'ai.autocomplete': 'Preenchimento automático com IA',
   'ai.completion': 'Sugestão: {text}. Pressione Tab para aceitar.',
   'ai.completionHint': 'Tab ou um clique aceita, Esc descarta',
+  'ai.describeImage': 'Descrever com IA',
+  'ai.describing': 'Descrevendo…',
+  'ai.describeFailed':
+    'A IA não conseguiu descrever a imagem. Tente de novo ou escreva o texto você mesmo.',
   'email.preview': 'Pré-visualização do e-mail',
   'email.view': 'Tela',
   'email.desktop': 'Computador',

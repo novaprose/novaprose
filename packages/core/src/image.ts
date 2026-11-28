@@ -522,6 +522,85 @@ export function setImageWidthFraction(editor: Editor, fraction: number | null): 
   return editor.exec(setImageAttrs({ width, height: ratio ? Math.round(width * ratio) : null }));
 }
 
+/** An image to describe and the text around it in the document. */
+export interface DescribedImage {
+  src: string;
+  before: string;
+  after: string;
+}
+
+/** Something that writes alternative text for an image (the ai plugin registers one). */
+export interface AltTextSuggester {
+  /** The button's label and what it says while it works. */
+  label: string;
+  busy: string;
+  /** Said when nothing came back. */
+  failed: string;
+  run: (image: DescribedImage, signal: AbortSignal) => Promise<string>;
+}
+
+const altSuggesters = new WeakMap<Editor, AltTextSuggester>();
+
+/** Puts a "describe" button next to the alternative text field of the image dialogs. */
+export function setAltTextSuggester(editor: Editor, suggester: AltTextSuggester | null): void {
+  if (suggester) altSuggesters.set(editor, suggester);
+  else altSuggesters.delete(editor);
+}
+
+/** The suggester's button for an alt field: fills the field, the author reviews it. */
+function suggestAltButton(
+  editor: Editor,
+  image: SelectedImage,
+  field: HTMLInputElement,
+  setError: (message: string | null) => void,
+): HTMLElement | null {
+  const suggester = altSuggesters.get(editor);
+  if (!suggester) return null;
+  const doc = editor.view.state.doc;
+  const button = h(
+    'button',
+    { type: 'button', className: 'nova-button nova-alt-suggest' },
+    suggester.label,
+  );
+  let running: AbortController | null = null;
+  button.addEventListener('click', async () => {
+    if (running) return;
+    running = new AbortController();
+    button.disabled = true;
+    button.textContent = suggester.busy;
+    setError(null);
+    try {
+      const text = await suggester.run(
+        {
+          src: String(image.attrs.src ?? ''),
+          before: doc.textBetween(Math.max(0, image.pos - 600), image.pos, '\n\n', ' '),
+          after: doc.textBetween(
+            image.pos + image.node.nodeSize,
+            Math.min(doc.content.size, image.pos + image.node.nodeSize + 600),
+            '\n\n',
+            ' ',
+          ),
+        },
+        running.signal,
+      );
+      if (!button.isConnected) return;
+      if (text) {
+        field.value = text;
+        field.focus();
+        field.select();
+        editor.ui.announce(text);
+      } else setError(suggester.failed);
+    } catch {
+      if (button.isConnected) setError(suggester.failed);
+    } finally {
+      running = null;
+      button.disabled = false;
+      button.textContent = suggester.label;
+    }
+  });
+  return button;
+}
+
 /** The alternative text dialog — the most important accessibility setting of an image. */
 export function openImageAltDialog(editor: Editor): void {
   const image = getSelectedImage(editor.view.state);
@@ -533,7 +612,12 @@ export function openImageAltDialog(editor: Editor): void {
     hint: t('image.altHint'),
   });
   const title = textField({ label: t('link.tooltip'), value: String(image.attrs.title ?? '') });
-  editor.ui.openDialog({
+  let handle: { setError(message: string | null): void } | null = null;
+  const describe = suggestAltButton(editor, image, alt.input, (message) =>
+    handle?.setError(message),
+  );
+  if (describe) alt.el.append(describe);
+  handle = editor.ui.openDialog({
     title: t('image.editAlt'),
     body: h('div', { className: 'nova-form' }, alt.el, title.el),
     submitLabel: t('dialog.save'),

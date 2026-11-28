@@ -184,7 +184,14 @@ export {
   type PageMargins,
   type PageSizeName,
 } from './plugins/pagelayout';
-export type { AiAction, AiMessage, AiOptions, AiRequest, AiShortcut } from './plugins/ai-core';
+export type {
+  AiAction,
+  AiImage,
+  AiMessage,
+  AiOptions,
+  AiRequest,
+  AiShortcut,
+} from './plugins/ai-core';
 export type { AutocorrectCorrection, AutocorrectOptions } from './plugins/autocorrect';
 export type { LinkCheckerOptions, LinkStatus } from './plugins/linkchecker';
 export type { PageEmbedOptions, PageEmbedSize } from './plugins/pageembed';

@@ -467,6 +467,10 @@ const es: LanguagePack = {
   'ai.autocomplete': 'Autocompletado con IA',
   'ai.completion': 'Sugerencia: {text}. Pulsa Tab para aceptarla.',
   'ai.completionHint': 'Tab o un clic acepta, Esc descarta',
+  'ai.describeImage': 'Describir con IA',
+  'ai.describing': 'Describiendo…',
+  'ai.describeFailed':
+    'La IA no pudo describir la imagen. Inténtalo de nuevo o escribe el texto tú mismo.',
   'email.preview': 'Vista previa del correo',
   'email.view': 'Pantalla',
   'email.desktop': 'Escritorio',

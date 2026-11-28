@@ -641,6 +641,22 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'menu from the menubar');
     });
 
+    test('the alternative text dialog with Describe with AI, after an answer', async ({ page }) => {
+      await open(page, theme, '&ai=1');
+      await page.evaluate(() => {
+        const w = window as unknown as { editor: { setContent(html: string): void } };
+        w.editor.setContent(
+          '<p>Text</p><p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" width="80" height="80" alt="A square"></p>',
+        );
+      });
+      await page.locator('.nova-prosemirror img[src^="data:"]').click();
+      await page.locator('[data-control="imagealt"]:visible').first().click();
+      const dialog = page.getByRole('dialog');
+      await dialog.getByRole('button', { name: 'Describe with AI' }).click();
+      await expect(dialog.getByRole('textbox', { name: 'Alternative text' })).not.toHaveValue('');
+      await audit(page, 'alternative text dialog with AI');
+    });
+
     test('the resize handle in the status bar', async ({ page }) => {
       await open(page, theme, '&resize=both');
       await page.locator('.nova-resize-handle').focus();

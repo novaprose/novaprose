@@ -467,6 +467,10 @@ const ru: LanguagePack = {
   'ai.autocomplete': 'Автодополнение ИИ',
   'ai.completion': 'Подсказка: {text}. Нажмите Tab, чтобы принять.',
   'ai.completionHint': 'Tab или щелчок — принять, Esc — убрать',
+  'ai.describeImage': 'Описать с помощью ИИ',
+  'ai.describing': 'Описываю…',
+  'ai.describeFailed':
+    'ИИ не смог описать изображение. Попробуйте ещё раз или напишите текст сами.',
   'email.preview': 'Предпросмотр письма',
   'email.view': 'Экран',
   'email.desktop': 'Компьютер',
