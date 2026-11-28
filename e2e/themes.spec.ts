@@ -18,7 +18,22 @@ const CONTENT =
   '<ul><li><p>item</p></li></ul>';
 
 async function open(page: Page, query: string) {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(`/?lang=en&${query}`);
+  // As in a11y.spec.ts: wait for the playground to put its editor on window (until then
+  // window.editor is the #editor element), and say what the page reported if it never comes.
+  await page
+    .waitForFunction(
+      () =>
+        typeof (window as unknown as { editor?: { setContent?: unknown } }).editor?.setContent ===
+        'function',
+      null,
+      { timeout: 15_000 },
+    )
+    .catch(() => {
+      throw new Error(`the playground has no editor: ${errors.join('; ') || 'no page errors'}`);
+    });
   await page.evaluate(async (html) => {
     await window.editor.ready;
     window.editor.setContent(html);

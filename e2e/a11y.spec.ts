@@ -24,7 +24,23 @@ const CONTENT =
   '<ul><li><p>item</p></li></ul><table><tbody><tr><td><p>a</p></td><td><p>b</p></td></tr></tbody></table>';
 
 async function open(page: Page, theme: 'light' | 'dark', query = '') {
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(`/?lang=en${query}`);
+  // The playground puts its editor on window once main.ts has run; until then window.editor is the
+  // #editor element (named access). Rarely, under a full parallel run, it isn't there yet: wait, and
+  // if it never comes, say what the page reported.
+  await page
+    .waitForFunction(
+      () =>
+        typeof (window as unknown as { editor?: { setContent?: unknown } }).editor?.setContent ===
+        'function',
+      null,
+      { timeout: 15_000 },
+    )
+    .catch(() => {
+      throw new Error(`the playground has no editor: ${errors.join('; ') || 'no page errors'}`);
+    });
   await page.evaluate(
     async ([html, t]) => {
       await window.editor.ready;
