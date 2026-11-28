@@ -5,6 +5,7 @@ import type TemmlEngine from 'temml';
 import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
 import css from './math.css?raw';
+import { isDisplayMath, mathmlToLatex } from './mathml';
 import { pickLabels } from './shared';
 
 /**
@@ -15,6 +16,9 @@ import { pickLabels } from './shared';
  * the browser renders it itself, without fonts and styles.
  *
  * Here are the nodes and their view (needed from the first render); the dialog, `$…$` input and the button are in math-ui.ts.
+ *
+ * MathML from other editors and sites (<math>, inline or display="block") is read as LaTeX
+ * (mathml.ts): its TeX source when it carries one, otherwise its structure.
  */
 
 export const LABELS = { en: { empty: 'Formula' } };
@@ -79,7 +83,26 @@ function mathSpec(block: boolean): NodeSpec {
         tag: `${tag}[data-type="${type}"]`,
         getAttrs: (dom) => ({ latex: mathLatex((dom as HTMLElement).getAttribute('data-latex')) }),
       },
+      // A formula pasted from a page often comes twice: as MathML and as its picture (KaTeX's
+      // HTML, Wikipedia's image). The MathML is read; the picture goes (above the rules for
+      // spans and images, which would take it first).
+      ...(block
+        ? []
+        : [
+            { tag: 'span.katex-html', ignore: true, priority: 70 },
+            { tag: 'img.mwe-math-fallback-image-inline', ignore: true, priority: 70 },
+            { tag: 'img.mwe-math-fallback-image-display', ignore: true, priority: 70 },
+          ]),
     ],
+    // <math> from other editors and sites: the formula in this node's own HTML, read as LaTeX
+    // (see parser.ts: MathML doesn't reach the parse rules).
+    fromForeign: (el: Element): Element | null => {
+      if (el.localName !== 'math' || isDisplayMath(el) !== block) return null;
+      const out = el.ownerDocument.createElement(tag);
+      out.setAttribute('data-type', type);
+      out.setAttribute('data-latex', mathLatex(mathmlToLatex(el)));
+      return out;
+    },
     toDOM: (node): DOMOutputSpec => {
       const latex = mathLatex(node.attrs.latex);
       return [

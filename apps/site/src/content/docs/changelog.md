@@ -11,6 +11,16 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Formulas
+
+- The math plugin reads MathML: `<math>` from other editors, Word and web pages becomes a formula
+  in LaTeX — its TeX source when it carries one (MathJax, KaTeX, Temml, Wikipedia), otherwise its
+  structure (fractions, roots, scripts, accents, sums, brackets, matrices, Greek letters and
+  operators). A formula pasted from a page comes once, without the picture next to it. See
+  [Formulas](https://novaprose.com/guides/math/#formulas-from-elsewhere).
+- A node of a plugin can read elements of another namespace (`fromForeign` in its spec), which
+  the parser otherwise turns into text (MathML) or drops (SVG).
+
 ### AI
 
 - AI review: the chat panel's **Review** mode lists the model's remarks on the document (or the

@@ -40,5 +40,16 @@ renderMathInElement(document.querySelector('.article')!);
 
 Markdown export writes formulas as `$…$` and `$$…$$`.
 
+## Formulas from elsewhere
+
+MathML, the format other editors, Word and many sites use for formulas, becomes LaTeX when it is
+loaded or pasted: `<math>` in a line, `<math display="block">` on its own line. A formula that
+carries its TeX source — as MathJax, KaTeX, Temml and Wikipedia write it — keeps that source
+exactly. Otherwise its structure is read: letters and numbers, operators and symbols, fractions,
+roots, sub- and superscripts, accents, sums and limits, brackets and matrices. A formula pasted
+from a page comes once, without the picture some sites put next to it (KaTeX's drawn copy,
+Wikipedia's image). Only the formula's text and structure are read, never its markup. Without the
+plugin, a formula is kept as its text.
+
 LaTeX commands that could run code or open links (`\href`, `\url`, `\includegraphics`, `\html…`)
 are not executed in the editor.

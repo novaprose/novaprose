@@ -15,19 +15,41 @@ const HTML_NS = 'http://www.w3.org/1999/xhtml';
 const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
 
 /**
- * The schema doesn't support MathML and SVG. Inside them there are elements with HTML tag names
+ * A node's way to read an element of another namespace (a node spec's `fromForeign`): the HTML its
+ * own parse rules read, or null when the element isn't its kind. The math plugin turns <math> into
+ * its formula this way.
+ */
+export type ForeignReader = (el: Element) => Element | null;
+
+/**
+ * The schema doesn't parse MathML and SVG. Inside them there are elements with HTML tag names
  * (`<math><td>`), but without `style` and the rest of the HTML API, and the parse rules crashed on them.
- * A formula (MathML, including from Word) is replaced with its text so the text isn't lost; SVG is removed.
+ * A node that reads such an element (`fromForeign`) gets it first; otherwise a formula (MathML,
+ * including from Word) is replaced with its text so the text isn't lost, and SVG is removed.
  * Found by a property-based test (packages/core/test/security.property.test.ts).
  */
-function replaceForeignElements(root: ParentNode): void {
+function replaceForeignElements(root: ParentNode, readers: readonly ForeignReader[]): void {
   const foreign = [...root.querySelectorAll('*')].filter(
     // Only the outermost ones: the parent is an HTML element or the fragment itself (parentElement = null).
     (el) => el.namespaceURI !== HTML_NS && (el.parentElement?.namespaceURI ?? HTML_NS) === HTML_NS,
   );
   for (const el of foreign) {
-    const text = el.namespaceURI === MATHML_NS ? (el.textContent ?? '') : '';
-    el.replaceWith(el.ownerDocument.createTextNode(text));
+    let read: Element | null = null;
+    for (const reader of readers) {
+      try {
+        read = reader(el);
+      } catch {
+        read = null;
+      }
+      if (read) break;
+    }
+    if (read) el.replaceWith(read);
+    else
+      el.replaceWith(
+        el.ownerDocument.createTextNode(
+          el.namespaceURI === MATHML_NS ? (el.textContent ?? '') : '',
+        ),
+      );
   }
 }
 
@@ -38,8 +60,8 @@ function replaceForeignElements(root: ParentNode): void {
  * `<td style="background-color">` would otherwise also become a "highlight" mark on all the cell text.
  * The value moves into a service attribute and is removed from style.
  */
-export function preprocessDOM(root: ParentNode): void {
-  replaceForeignElements(root);
+export function preprocessDOM(root: ParentNode, readers: readonly ForeignReader[] = []): void {
+  replaceForeignElements(root, readers);
   root.querySelectorAll<HTMLElement>('td, th').forEach((cell) => {
     // Inside <math>/<svg> a "td" is an element of a foreign namespace and may have no style.
     if (!cell.style) return;
@@ -61,9 +83,13 @@ export function preprocessDOM(root: ParentNode): void {
 class NovaDOMParser extends DOMParser {
   private atomSelector: string | undefined;
   private ownStyleSelector: string | undefined;
+  private foreignReaders: ForeignReader[] | undefined;
 
   private prepare(dom: globalThis.Node): void {
-    preprocessDOM(dom as ParentNode);
+    this.foreignReaders ??= Object.values(this.schema.nodes)
+      .map((type) => (type.spec as { fromForeign?: ForeignReader }).fromForeign)
+      .filter((reader): reader is ForeignReader => typeof reader === 'function');
+    preprocessDOM(dom as ParentNode, this.foreignReaders);
     // Elements from extendedValidElements (div, abbr…) keep style themselves. Otherwise ProseMirror would turn
     // it into formatting marks on the content as well, and the style would double on every save.
     this.ownStyleSelector ??= Object.values(this.schema.nodes)
