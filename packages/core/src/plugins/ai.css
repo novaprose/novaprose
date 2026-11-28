@@ -217,6 +217,7 @@
 .nova-ai-msg-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
   margin-top: 4px;
 }
@@ -224,6 +225,33 @@
 .nova-ai-msg-action {
   min-height: 28px;
   font-size: 12px;
+}
+
+.nova-ai-findings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 0;
+  padding-inline-start: 20px;
+}
+
+.nova-ai-finding-change {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.nova-ai-finding-change del {
+  color: var(--nova-danger);
+}
+
+.nova-ai-finding-change ins {
+  color: var(--nova-success);
+  text-decoration: none;
+}
+
+.nova-ai-finding-why {
+  margin: 2px 0 0;
+  color: var(--nova-muted);
 }
 
 .nova-ai-composer {

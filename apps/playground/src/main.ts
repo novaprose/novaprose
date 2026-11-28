@@ -89,10 +89,25 @@ async function* demoModel(request: AiRequest): AsyncGenerator<string> {
                     .filter(([, , text]) => edit(text!) !== text)
                     .map(([, id, text]) => `<block id="${id}">${edit(text!)}</block>\n`)
                     .join('') || 'NO CHANGES'
-                : request.action === 'custom' && !request.text
-                  ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
-                    'Once upon a time, the demo model told a story. '.repeat(40)
-                  : (rewrite[request.action] ?? ((t: string) => t))(request.text);
+                : request.action === 'review'
+                  ? // Remarks on the document: two known misspellings with fixes, a vague word without one.
+                    [...request.text.matchAll(/<block id="(\d+)">([\s\S]*?)<\/block>/g)]
+                      .flatMap(([, id, text]) => [
+                        ...[...text!.matchAll(/\b(teh|recieve)\b/g)].map(
+                          ([word]) =>
+                            `<finding block="${id}"><quote>${word}</quote><fix>${word === 'teh' ? 'the' : 'receive'}</fix><why>A spelling mistake.</why></finding>\n`,
+                        ),
+                        ...(/\bgood\b/.test(text!)
+                          ? [
+                              `<finding block="${id}"><quote>good</quote><fix></fix><why>Say what exactly is good.</why></finding>\n`,
+                            ]
+                          : []),
+                      ])
+                      .join('') || 'NO PROBLEMS'
+                  : request.action === 'custom' && !request.text
+                    ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
+                      'Once upon a time, the demo model told a story. '.repeat(40)
+                    : (rewrite[request.action] ?? ((t: string) => t))(request.text);
   for (const word of result.split(/(?<= )/)) {
     await new Promise((resolve) => setTimeout(resolve, 15));
     if (request.signal.aborted) return;

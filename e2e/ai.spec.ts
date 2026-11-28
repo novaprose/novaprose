@@ -118,6 +118,50 @@ test('the chat in Edit mode: the whole document changed as suggestions, then "Ac
   );
 });
 
+test('the chat in Review mode: remarks with reasons, each fix accepted or rejected on its own', async ({
+  page,
+}) => {
+  await open(page, '<p>We recieve teh results.</p><p>The plan is good.</p>');
+  await page.locator('.nova-prosemirror p').first().click();
+  await clickControl(page, 'aichat');
+  const panel = page.locator('.nova-sidebar[data-sidebar="aichat"]');
+  await panel.getByRole('radio', { name: 'Review' }).check();
+  await expect(panel.getByText('Review: the whole document')).toBeVisible();
+  await panel.getByRole('button', { name: 'Review the document' }).click();
+  await expect(panel.getByText('Remarks: 3')).toBeVisible();
+  const items = panel.locator('.nova-ai-finding');
+  await expect(items).toHaveCount(3);
+  await expect(items.nth(0)).toContainText('recieve → receive');
+  await expect(items.nth(0)).toContainText('A spelling mistake.');
+  await expect(items.nth(2)).toContainText('Say what exactly is good.');
+  await expect(items.nth(2)).toContainText('No change proposed');
+  // Each fix on its own: the second accepted, the first rejected.
+  await items.nth(1).getByRole('button', { name: 'Accept' }).click();
+  await expect(items.nth(1)).toContainText('Reviewed');
+  await items.nth(0).getByRole('button', { name: 'Reject' }).click();
+  await expect(items.nth(0)).toContainText('Reviewed');
+  expect(await page.evaluate(() => window.editor.getHTML())).toBe(
+    '<p>We recieve the results.</p><p>The plan is good.</p>',
+  );
+  // A remark without a fix shows its place in the text.
+  await items.nth(2).getByRole('button', { name: 'Show in the text' }).click();
+  expect(
+    await page.evaluate(() => {
+      const { state } = (
+        window.editor as unknown as {
+          view: {
+            state: {
+              selection: { from: number; to: number };
+              doc: { textBetween(a: number, b: number): string };
+            };
+          };
+        }
+      ).view;
+      return state.doc.textBetween(state.selection.from, state.selection.to);
+    }),
+  ).toBe('good');
+});
+
 test('autocomplete: grey text after a pause, Tab accepts it, Esc dismisses it', async ({
   page,
 }) => {

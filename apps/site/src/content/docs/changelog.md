@@ -11,6 +11,17 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### AI
+
+- AI review: the chat panel's **Review** mode lists the model's remarks on the document (or the
+  selected paragraphs), each with the reason. A remark with a fix arrives as a suggestion where its
+  words are, accepted or rejected on its own from the panel or in the text; a remark without a fix
+  shows its place. It works in read-only documents too (the remarks are listed, nothing changes).
+  The request has `action: 'review'`; see
+  [AI assistant](https://novaprose.com/guides/ai-assistant/#the-chat).
+- The chat panel no longer redraws an edit's buttons when nothing it shows has changed: a click on
+  **Accept all** right after the edit arrived could be lost.
+
 ### Locked content
 
 - The `noneditable` plugin locks parts of a document: an element with the class

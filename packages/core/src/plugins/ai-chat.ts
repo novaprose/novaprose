@@ -27,6 +27,7 @@ import {
   suggestInsert,
   suggestRewrite,
 } from './ai-edit';
+import { REVIEW_INSTRUCTION, runReview, type Finding, type ReviewResult } from './ai-review';
 import {
   listSuggestions,
   OWN,
@@ -39,7 +40,8 @@ import {
  * The AI chat panel (the aichat sidebar). Ask: questions about the document, answered in the panel,
  * and an answer goes into the text with Insert or Replace selection. Edit: the model changes the
  * document (or the selected paragraphs) block by block, and its changes arrive as suggestions,
- * accepted or rejected all at once from the panel or one by one in the text.
+ * accepted or rejected all at once from the panel or one by one in the text. Review: the model lists
+ * its remarks, each with the reason; a fix arrives as a suggestion where the words are.
  */
 
 export type Labels = (typeof LABELS)['en'];
@@ -182,7 +184,7 @@ export function contextPlugin(): Plugin<boolean> {
 
 interface Entry {
   role: 'user' | 'assistant';
-  mode: 'ask' | 'edit';
+  mode: Mode;
   /** The user's message as shown, or the answer. */
   text: string;
   /** What a user message sent: a suggestion of the edit mode sends a ready instruction in English. */
@@ -191,13 +193,26 @@ interface Entry {
   error?: string;
   progress?: number;
   edit?: EditResult;
+  /** Review: the remarks so far (while writing), then the result. */
+  findings?: Finding[];
+  review?: ReviewResult;
+  /** What the panel shows of an edit or review, to draw it again only when that changes. */
+  shown?: string;
   el: HTMLElement;
 }
 
-type Mode = 'ask' | 'edit';
+type Mode = 'ask' | 'edit' | 'review';
 
 const ASK_SUGGESTIONS = ['askSummarize', 'askKeyPoints', 'askTitle', 'askUnclear'] as const;
 const EDIT_SUGGESTIONS: QuickAction[] = ['fix', 'improve', 'formal', 'simplify', 'shorter'];
+/** Review's examples and the requests they send (in English: the model answers in the text's language). */
+const REVIEW_SUGGESTIONS = {
+  reviewAll: REVIEW_INSTRUCTION,
+  reviewClarity:
+    'Find sentences that are unclear, too long or hard to follow, and suggest clearer wording.',
+  reviewConsistency:
+    'Find inconsistencies: names, numbers, dates and terms written differently in different places.',
+} as const;
 /** The conversation sent with a message: the latest messages, up to this many characters. */
 const HISTORY = 20_000;
 
@@ -228,12 +243,13 @@ export function createChatPanel(
   };
   const askRadio = radio('ask', labels.modeAsk);
   const editRadio = radio('edit', labels.modeEdit);
+  const reviewRadio = radio('review', labels.modeReview);
+  const radios = [askRadio, editRadio, reviewRadio];
   const modes = h(
     'fieldset',
     { className: 'nova-ai-modes' },
     h('legend', { className: 'nova-visually-hidden' }, labels.mode),
-    askRadio,
-    editRadio,
+    ...radios,
   );
   const scope = h('p', { className: 'nova-ai-scope' });
 
@@ -277,17 +293,28 @@ export function createChatPanel(
     mode = next;
     askRadio.querySelector('input')!.checked = next === 'ask';
     editRadio.querySelector('input')!.checked = next === 'edit';
-    input.placeholder = next === 'ask' ? labels.askPlaceholder : labels.editPlaceholder;
+    reviewRadio.querySelector('input')!.checked = next === 'review';
+    input.placeholder =
+      next === 'ask'
+        ? labels.askPlaceholder
+        : next === 'edit'
+          ? labels.editPlaceholder
+          : labels.reviewPlaceholder;
     renderEmpty();
     refresh();
   }
 
   function renderEmpty(): void {
-    hint.textContent = mode === 'ask' ? labels.askHint : labels.editHint;
+    hint.textContent =
+      mode === 'ask' ? labels.askHint : mode === 'edit' ? labels.editHint : labels.reviewHint;
     chips.replaceChildren(
       ...(mode === 'ask'
         ? ASK_SUGGESTIONS.map((key) => chip(labels[key], labels[key]))
-        : EDIT_SUGGESTIONS.map((id) => chip(labels[id], INSTRUCTIONS[id]))),
+        : mode === 'edit'
+          ? EDIT_SUGGESTIONS.map((id) => chip(labels[id], INSTRUCTIONS[id]))
+          : Object.entries(REVIEW_SUGGESTIONS).map(([key, instruction]) =>
+              chip(labels[key as keyof typeof REVIEW_SUGGESTIONS], instruction),
+            )),
     );
     empty.hidden = entries.length > 0;
   }
@@ -307,14 +334,19 @@ export function createChatPanel(
         ? selection.empty
           ? labels.scopeDocument
           : labels.scopeSelection
-        : selection.empty
-          ? labels.editScopeDocument
-          : labels.editScopeSelection;
+        : mode === 'edit'
+          ? selection.empty
+            ? labels.editScopeDocument
+            : labels.editScopeSelection
+          : selection.empty
+            ? labels.reviewScopeDocument
+            : labels.reviewScopeSelection;
     const busy = controller !== null;
     send.disabled = busy;
     send.hidden = busy;
     stop.hidden = !busy;
-    for (const radio of [askRadio, editRadio]) radio.querySelector('input')!.disabled = busy;
+    // Review works in a read-only document too: it lists its remarks, without fixes in the text.
+    for (const radio of radios) radio.querySelector('input')!.disabled = busy;
     if (!editable && mode === 'edit') setMode('ask');
     editRadio.querySelector('input')!.disabled = busy || !editable;
     for (const button of el.querySelectorAll<HTMLButtonElement>('[data-ai-needs]')) {
@@ -363,9 +395,12 @@ export function createChatPanel(
           body.push(h('p', { className: 'nova-ai-note' }, labels.stopped));
         if (entry.status !== 'writing' && entry.text.trim()) body.push(answerActions(entry));
       }
-    } else {
+    } else if (entry.mode === 'edit') {
       body.push(...editSummary(entry));
+    } else {
+      body.push(...reviewSummary(entry));
     }
+    entry.shown = shownState(entry);
     entry.el.replaceChildren(who, ...body.filter((node): node is Node => node !== null));
     refresh();
     // The newest message stays in view as it is written, unless the user scrolled up to read.
@@ -445,12 +480,194 @@ export function createChatPanel(
     return lines;
   }
 
+  /**
+   * What an edit or review shows that changes when suggestions are accepted or rejected in the text:
+   * the panel is drawn again only when this changes (drawing it again replaces its buttons, and a
+   * button replaced between the press and the release of a click loses the click).
+   */
+  function shownState(entry: Entry): string {
+    if (entry.role !== 'assistant' || entry.mode === 'ask') return '';
+    const ids =
+      entry.mode === 'edit'
+        ? (entry.edit?.ids ?? [])
+        : (entry.review?.findings ?? entry.findings ?? []).flatMap((f) => f.ids);
+    return `${entry.status}|${entry.progress ?? ''}|${remaining(ids).join(',')}`;
+  }
+
+  function reviewLines(result: ReviewResult): string[] {
+    if (result.status === 'tooLong') return [labels.tooLong];
+    if (result.status === 'noText') return [labels.noText];
+    if (result.status === 'notConfigured' || result.status === 'failed')
+      return [labels[result.status]];
+    if (result.unmatched) return [labels.reviewUnmatched];
+    const count = result.findings.length;
+    return [
+      count ? label(labels.reviewFound, count) : labels.reviewNone,
+      ...(result.status === 'stopped' ? [labels.stopped] : []),
+    ];
+  }
+
+  function reviewSummary(entry: Entry): HTMLElement[] {
+    const result = entry.review;
+    const findings = result?.findings ?? entry.findings ?? [];
+    const lines: HTMLElement[] = [];
+    if (entry.status === 'writing' || !result) {
+      lines.push(h('p', { className: 'nova-ai-pending' }, labels.reviewing));
+      if (findings.length)
+        lines.push(
+          h('p', { className: 'nova-ai-note' }, label(labels.reviewProgress, findings.length)),
+        );
+    } else {
+      const [first, ...rest] = reviewLines(result);
+      const failed =
+        result.status === 'failed' || result.status === 'notConfigured' || result.unmatched;
+      lines.push(h('p', failed ? { className: 'nova-ai-error' } : {}, first!));
+      for (const note of rest) lines.push(h('p', { className: 'nova-ai-note' }, note));
+    }
+    if (findings.length) {
+      lines.push(
+        h(
+          'ol',
+          { className: 'nova-ai-findings' },
+          ...findings.map((finding) => findingItem(finding)),
+        ),
+      );
+    }
+    const open = remaining(findings.flatMap((f) => f.ids));
+    if (entry.status !== 'writing' && open.length > 1) {
+      lines.push(
+        h(
+          'div',
+          { className: 'nova-ai-msg-actions' },
+          actionButton(labels.acceptAll, () => resolve('accept', open)),
+          actionButton(labels.rejectAll, () => resolve('reject', open)),
+        ),
+      );
+    }
+    return lines;
+  }
+
+  function actionButton(
+    text: string,
+    onClick: () => void,
+    describedBy?: string,
+  ): HTMLButtonElement {
+    const b = h(
+      'button',
+      {
+        type: 'button',
+        className: 'nova-button nova-ai-msg-action',
+        ...(describedBy ? { 'aria-describedby': describedBy } : {}),
+      },
+      text,
+    );
+    b.dataset.aiNeeds = 'editable';
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  /** One remark: the words, the fix, the reason, and what can be done with it. */
+  function findingItem(finding: Finding): HTMLElement {
+    const id = uniqueId('nova-ai-finding');
+    const words = finding.fix
+      ? h(
+          'p',
+          { className: 'nova-ai-finding-change', id },
+          h('del', {}, finding.quote),
+          ' → ',
+          h('ins', {}, finding.fix),
+        )
+      : h('p', { className: 'nova-ai-finding-change', id }, h('q', {}, finding.quote));
+    const item = h('li', { className: 'nova-ai-finding' }, words);
+    if (finding.why) item.append(h('p', { className: 'nova-ai-finding-why' }, finding.why));
+    const open = remaining(finding.ids);
+    const show = h(
+      'button',
+      { type: 'button', className: 'nova-button nova-ai-msg-action', 'aria-describedby': id },
+      labels.show,
+    );
+    show.addEventListener('click', () => showFinding(finding));
+    const actions = h('div', { className: 'nova-ai-msg-actions' }, show);
+    if (open.length) {
+      actions.append(
+        actionButton(labels.accept, () => resolve('accept', open), id),
+        actionButton(labels.reject, () => resolve('reject', open), id),
+      );
+    } else {
+      const state = finding.ids.length
+        ? labels.findingDone
+        : finding.from === null
+          ? labels.findingLost
+          : finding.fix
+            ? labels.findingDone
+            : labels.findingRemark;
+      actions.append(h('span', { className: 'nova-ai-note' }, state));
+    }
+    item.append(actions);
+    return item;
+  }
+
+  /** Selects a remark's place: its suggestions, or the quoted words where they are now. */
+  function showFinding(finding: Finding): void {
+    if (remaining(finding.ids).length) {
+      showChange(finding.ids);
+      return;
+    }
+    const { doc } = editor.view.state;
+    let found: { from: number; to: number } | null = null;
+    doc.descendants((node, pos) => {
+      if (found || !node.isTextblock) return !found;
+      const index = node.textContent.indexOf(finding.quote);
+      if (index >= 0) {
+        // Text positions inside the block: count characters of its text nodes.
+        let offset = 0;
+        node.forEach((child, childOffset) => {
+          if (found || !child.isText) {
+            offset += child.isText ? child.text!.length : child.textContent.length;
+            return;
+          }
+          const length = child.text!.length;
+          if (index >= offset && index < offset + length) {
+            const start = pos + 1 + childOffset + (index - offset);
+            found = { from: start, to: start + finding.quote.length };
+          }
+          offset += length;
+        });
+      }
+      return false;
+    });
+    if (!found) {
+      editor.ui.announce(labels.findingLost);
+      return;
+    }
+    const range = found as { from: number; to: number };
+    editor.view.dispatch(
+      editor.view.state.tr
+        .setSelection(TextSelection.create(doc, range.from, Math.min(range.to, doc.content.size)))
+        .scrollIntoView(),
+    );
+    editor.focus();
+  }
+
   /** What an entry says in the conversation sent to the model. */
   function asMessage(entry: Entry): AiMessage | null {
     if (entry.role === 'user') return { role: 'user', text: entry.instruction ?? entry.text };
     if (entry.status === 'failed' || entry.status === 'writing') return null;
     if (entry.mode === 'ask')
       return entry.text.trim() ? { role: 'assistant', text: entry.text } : null;
+    if (entry.mode === 'review') {
+      const findings = entry.review?.findings ?? [];
+      const listed = findings
+        .map(
+          (f, i) =>
+            `${i + 1}. "${f.quote}"${f.fix ? ` → "${f.fix}"` : ''}${f.why ? `: ${f.why}` : ''}`,
+        )
+        .join('\n');
+      const text = entry.review
+        ? [...reviewLines(entry.review), listed].filter(Boolean).join('\n')
+        : '';
+      return text ? { role: 'assistant', text } : null;
+    }
     const text = entry.edit
       ? editLines(entry.edit)
           .map((line) => line.text)
@@ -492,11 +709,14 @@ export function createChatPanel(
     const current = new AbortController();
     controller = current;
     refresh();
-    editor.ui.announce(sentMode === 'ask' ? labels.writing : labels.editing);
+    editor.ui.announce(
+      sentMode === 'ask' ? labels.writing : sentMode === 'edit' ? labels.editing : labels.reviewing,
+    );
     const messages = history(user);
     try {
       if (sentMode === 'ask') await ask(reply, instruction.trim(), messages, current.signal);
-      else await edit(reply, instruction.trim(), messages, current.signal);
+      else if (sentMode === 'edit') await edit(reply, instruction.trim(), messages, current.signal);
+      else await review(reply, instruction.trim(), messages, current.signal);
     } finally {
       if (controller === current) controller = null;
       render(reply);
@@ -568,6 +788,26 @@ export function createChatPanel(
         .map((line) => line.text)
         .join(' '),
     );
+  }
+
+  async function review(
+    reply: Entry,
+    instruction: string,
+    messages: AiMessage[],
+    signal: AbortSignal,
+  ): Promise<void> {
+    reply.findings = [];
+    const result = await runReview(editor, instruction, author(), signal, {
+      messages,
+      onFinding: (finding) => {
+        reply.findings!.push(finding);
+        render(reply);
+      },
+    });
+    reply.review = result;
+    reply.status = result.status === 'stopped' ? 'stopped' : 'done';
+    render(reply);
+    editor.ui.announce(reviewLines(result).join(' '));
   }
 
   // ---------- what an answer does in the text ----------
@@ -682,7 +922,12 @@ export function createChatPanel(
     clearTimeout(timer);
     timer = setTimeout(() => {
       for (const entry of entries)
-        if (entry.mode === 'edit' && entry.role === 'assistant' && entry.edit) render(entry);
+        if (
+          entry.role === 'assistant' &&
+          (entry.edit || entry.review) &&
+          entry.shown !== shownState(entry)
+        )
+          render(entry);
     }, 150);
   });
   const offSelection = editor.on('selectionChange', () => refresh());

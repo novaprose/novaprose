@@ -20,6 +20,7 @@ export type AiAction =
   | 'custom'
   | 'chat'
   | 'edit'
+  | 'review'
   | 'complete'
   | 'describe';
 
@@ -45,15 +46,15 @@ export interface AiRequest {
   /**
    * Who asks: a quick action (improve, fix, shorter, longer, simplify, formal, friendly, summarize,
    * continue), custom (the user's own request in the assistant window), chat (a message in the chat
-   * panel), edit (changes to the document from the chat panel), complete (autocomplete) or describe
-   * (alternative text for `image`).
+   * panel), edit (changes to the document from the chat panel), review (remarks on the document from
+   * the chat panel), complete (autocomplete) or describe (alternative text for `image`).
    */
   action: AiAction;
   /** describe: the image; send it to the model with the prompt (a model that reads images). */
   image?: AiImage;
   /**
    * The text to work on: the selected text, paragraphs separated by a blank line (empty: the model
-   * writes at the cursor). For edit, the blocks to change, each as `<block id="N">text</block>` on its
+   * writes at the cursor). For edit and review, the blocks, each as `<block id="N">text</block>` on its
    * own line.
    */
   text: string;
@@ -243,6 +244,22 @@ export function buildPrompt(f: PromptFields): { prompt: string; rules: string[] 
       `Keep line breaks inside a block. No Markdown. ${objects}`,
       language,
       'If nothing needs to change, reply with NO CHANGES.',
+    ];
+  } else if (f.action === 'review') {
+    parts = [
+      ...(f.before ? [tag('before', f.before)] : []),
+      tag('blocks', f.text),
+      ...(f.after ? [tag('after', f.after)] : []),
+    ];
+    rules = [
+      data,
+      `The blocks are the paragraphs, headings, list items and table cells of the document, each as <block id="N">its text</block>${f.before || f.after ? '; <before> and <after> are the text around them' : ''}.`,
+      'Review the blocks as the instruction asks. Do not rewrite them: list the remarks, the most important first, at most 30, in the order of the blocks.',
+      'Write each remark on its own line as <finding block="N"><quote>the exact words of that block the remark is about</quote><fix>the words to put in their place</fix><why>the reason, in one short sentence</why></finding>, and nothing else.',
+      'Quote the words exactly as they are in the block, only as many as needed to find them. Leave <fix></fix> empty when there is no simple fix (for example, a claim that needs a source).',
+      `No Markdown. ${objects}`,
+      `Write the reasons in the language of the document's text.${fallback}`,
+      'If there is nothing to remark on, reply with NO PROBLEMS.',
     ];
   } else if (f.action === 'describe') {
     parts = [tag('before', f.before), tag('after', f.after)];

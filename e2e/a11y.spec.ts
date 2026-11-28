@@ -579,6 +579,16 @@ for (const theme of ['light', 'dark'] as const) {
       await panel.getByRole('textbox', { name: 'Message to AI' }).focus();
       await expect(page.locator('.nova-prosemirror .nova-ai-context')).toBeVisible();
       await audit(page, 'AI chat with an answer and edits');
+      // Review: remarks with their reasons, fixes as suggestions, a remark without a fix.
+      await page.evaluate(() =>
+        window.editor.setContent('<p>We recieve teh results.</p><p>The plan is good.</p>'),
+      );
+      await panel.getByRole('radio', { name: 'Review' }).check();
+      // The examples are in an empty chat.
+      await panel.getByRole('button', { name: 'New chat' }).click();
+      await panel.getByRole('button', { name: 'Review the document' }).click();
+      await expect(panel.locator('.nova-ai-finding')).toHaveCount(3);
+      await audit(page, 'AI chat review');
       // Autocomplete: the grey suggestion after the cursor.
       await page.locator('.nova-prosemirror p').first().click();
       await page.keyboard.press('End');
