@@ -1,4 +1,5 @@
 import {
+  Fragment,
   Schema,
   type Attrs,
   type DOMOutputSpec,
@@ -372,6 +373,45 @@ function readCodeLanguage(pre: HTMLElement): string | null {
   return null;
 }
 
+const PRE_BLOCKS =
+  /^(?:P|DIV|H[1-6]|LI|UL|OL|DL|DT|DD|TABLE|TR|BLOCKQUOTE|PRE|SECTION|ARTICLE|HEADER|FOOTER)$/;
+
+/**
+ * The text of a <pre>, exactly: its text as it is, a new line for <br> and between the blocks some
+ * sources put inside it (lines as <div> or <p>). Its children aren't parsed as blocks: a block in
+ * a code block used to leave it and carry its "keep spaces" mode into the paragraphs after it.
+ */
+export function preText(pre: Node): string {
+  let out = '';
+  // After a block, the next text starts on a new line (and the code doesn't end with an empty line).
+  let pendingLine = false;
+  const add = (text: string) => {
+    if (!text) return;
+    if (pendingLine) out += '\n';
+    pendingLine = false;
+    out += text;
+  };
+  const walk = (node: Node) => {
+    for (const child of node.childNodes) {
+      if (child.nodeType === 3) add((child as Text).data);
+      else if (child.nodeType === 1) {
+        const tag = (child as Element).tagName;
+        if (tag === 'BR') {
+          pendingLine = false;
+          out += '\n';
+        } else if (PRE_BLOCKS.test(tag)) {
+          if (out && (pendingLine || !out.endsWith('\n'))) out += '\n';
+          pendingLine = false;
+          walk(child);
+          pendingLine = true;
+        } else walk(child);
+      }
+    }
+  };
+  walk(pre);
+  return out;
+}
+
 /** A checklist in someone else's markup: Tiptap, TinyMCE (the checklist plugin), GitHub/Markdown. */
 function isChecklistElement(dom: HTMLElement): boolean {
   return (
@@ -500,6 +540,11 @@ const buildNodes = (allow: ClassFilter, rtl = false) =>
           tag: 'pre',
           preserveWhitespace: 'full',
           getAttrs: (dom) => ({ language: readCodeLanguage(dom as HTMLElement) }),
+          // The text, read as it is (see preText).
+          getContent: (dom, schema) => {
+            const text = preText(dom);
+            return text ? Fragment.from(schema.text(text)) : Fragment.empty;
+          },
         },
       ],
       toDOM: (node): DOMOutputSpec => {

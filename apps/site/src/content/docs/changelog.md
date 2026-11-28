@@ -13,6 +13,10 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- **Fixed:** a `<pre>` holding blocks (lines as `<p>` or `<div>`, as some sites copy code) keeps
+  their text in the code block, one per line; before, the text left the code block and the
+  paragraphs after it kept tabs that the next save turned into spaces. Found by a property-based
+  test.
 - Views for plugins: `editor.ui.registry.addView(name, { title, buttons, onShow, onHide })` puts a
   screen of your own in place of the editor (a review, a report), with your buttons at its top;
   `editor.ui.view.show/hide/toggle` and `active`. Focus moves into the view and back, Escape closes
