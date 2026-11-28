@@ -155,10 +155,11 @@ describe('cell properties', () => {
 });
 
 describe('interface', () => {
-  it('the sort and properties buttons are in the table context toolbar', () => {
+  it('the sort, row numbers and properties buttons are in the table context toolbar', () => {
     const editor = mount(table(row('a')));
     const items = editor.ui.registry.getContextToolbars().find(([name]) => name === 'table')![1]
       .items;
-    expect(String(items)).toContain('advtablesort tablecellprops tableprops');
+    // Row numbers come with advanced tables (advtable): without the plugin the name is skipped.
+    expect(String(items)).toContain('advtablesort advtablerownumbering tablecellprops tableprops');
   });
 });

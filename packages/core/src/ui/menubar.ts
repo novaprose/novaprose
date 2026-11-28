@@ -34,7 +34,8 @@ export const DEFAULT_MENUS: Record<string, MenuDefinition> = {
     title: 'menu.table',
     items:
       'inserttable | tableinsertrowbefore tableinsertrowafter tabledeleterow | ' +
-      'tableinsertcolbefore tableinsertcolafter tabledeletecol | tablemergecells tablesplitcells | tabledelete',
+      'tableinsertcolbefore tableinsertcolafter tabledeletecol | tablemergecells tablesplitcells | ' +
+      'advtablesort advtablerownumbering | tabledelete',
   },
   // Not in the default menu bar: its items come from plugins (spellchecker, autocorrect, a11ychecker).
   tools: {

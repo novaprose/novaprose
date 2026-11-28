@@ -16,6 +16,7 @@ const PLUGINS = [
   'pagebreak',
   'media',
   'pageembed',
+  'advtable',
   'comments',
   'mentions',
   'mergetags',
@@ -70,6 +71,7 @@ const ATTR_NAMES = [
   'size',
   'border',
   'scrolling',
+  'series',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));

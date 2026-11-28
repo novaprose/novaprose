@@ -182,6 +182,8 @@ export type { AiAction, AiMessage, AiOptions, AiRequest, AiShortcut } from './pl
 export type { AutocorrectCorrection, AutocorrectOptions } from './plugins/autocorrect';
 export type { LinkCheckerOptions, LinkStatus } from './plugins/linkchecker';
 export type { PageEmbedOptions, PageEmbedSize } from './plugins/pageembed';
+export type { AdvTableOptions, TableSeries } from './plugins/advtable-ui';
+export type { SortOptions } from './table';
 export type { CorrectionKind } from './plugins/autocorrect-rules';
 export type { TypographyOptions } from './plugins/typography';
 export type {

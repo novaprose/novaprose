@@ -118,6 +118,46 @@ test('pageembed: a page at full width, a click selects it, the dialog changes it
   expect(await html(page)).not.toContain('<iframe');
 });
 
+test('advtable: row numbers follow the rows; the Sort dialog sorts by a chosen column', async ({
+  page,
+}) => {
+  await open(page);
+  await page.evaluate(() =>
+    (window as unknown as { editor: { setContent(h: string, o: object): void } }).editor.setContent(
+      '<table><tbody><tr><th><p>Fruit</p></th><th><p>Price</p></th></tr>' +
+        '<tr><td><p>Pear</p></td><td><p>3</p></td></tr>' +
+        '<tr><td><p>Apple</p></td><td><p>12</p></td></tr>' +
+        '<tr><td><p>Fig</p></td><td><p>7</p></td></tr></tbody></table>',
+      { addToHistory: false },
+    ),
+  );
+  const numbers = page.locator('.nova-prosemirror td[data-series]');
+  await page.locator('.nova-prosemirror td').first().click();
+  const bar = page.locator('.nova-context-toolbar');
+  await bar.locator('[data-control="advtablerownumbering"]').click();
+  await expect(numbers).toHaveText(['1', '2', '3']);
+  // Tab in the last cell adds a row, and it gets its number.
+  await page.locator('.nova-prosemirror td').last().click();
+  await page.keyboard.press('Tab');
+  await expect(numbers).toHaveText(['1', '2', '3', '4']);
+  // Tab selects the next cell's text (the formatting bar shows then): a click puts the cursor back.
+  await page.locator('.nova-prosemirror td', { hasText: 'Pear' }).click();
+  await bar.locator('[data-control="advtablesort"]').click();
+  await page.getByRole('menuitem', { name: 'Sort…' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Sort the table' });
+  await dialog.getByLabel('Column', { exact: true }).selectOption({ label: 'Column 3: Price' });
+  await dialog.getByLabel('Order').selectOption('desc');
+  await dialog.getByRole('button', { name: 'Sort', exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator('.nova-prosemirror tr td:nth-child(2)')).toHaveText([
+    'Apple',
+    'Fig',
+    'Pear',
+    '',
+  ]);
+  await expect(numbers).toHaveText(['1', '2', '3', '4']);
+});
+
 test('anchor and pagebreak are inserted from the toolbar', async ({ page }) => {
   await open(page);
   await page.keyboard.type('Intro');

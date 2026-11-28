@@ -189,6 +189,8 @@ const IGNORED = new Set([
   // pageembed: the sizes (classes) and inline styles; the wrapper keeps TinyMCE's class.
   'tiny_pageembed_classes',
   'tiny_pageembed_inline_styles',
+  // advtable: your series for the numbers column (their generators give each row's value).
+  'advtable_value_series',
   // autocorrect: corrections run in the browser, so Tiny's service address isn't needed.
   'autocorrect_autocorrect',
   'autocorrect_capitalize',
@@ -828,6 +830,40 @@ export function mapOptions(config: TinyConfig): MappedOptions {
           })),
       inlineStyles: config.tiny_pageembed_inline_styles === true,
     };
+  }
+  // advtable: TinyMCE's series generators give the values of the numbered rows (rowIndex counts
+  // them from 0; header rows get no number).
+  const valueSeries = config.advtable_value_series;
+  if (plugins.includes('advtable') && valueSeries && typeof valueSeries === 'object') {
+    const series: Record<string, unknown> = {};
+    for (const [name, def] of Object.entries(valueSeries as Record<string, unknown>)) {
+      const { title, generator } = (def ?? {}) as { title?: unknown; generator?: unknown };
+      if (typeof title !== 'string' || typeof generator !== 'function') continue;
+      let prev: unknown;
+      series[name] = {
+        title,
+        value: (index: number) => {
+          if (index === 0) prev = undefined;
+          const info = {
+            sectionType: 'tbody',
+            cellType: 'td',
+            getRowType: () => 'body',
+            classes: [],
+            direction: 'column',
+            prev,
+          };
+          const out = (generator as (i: unknown, row: number, col: number) => unknown)(
+            info,
+            index,
+            0,
+          );
+          prev = out;
+          const value = (out as { value?: unknown } | undefined)?.value;
+          return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
+        },
+      };
+    }
+    if (Object.keys(series).length) pluginOptions.advtable = { series };
   }
   const typography = typographyOptions(config);
   if (Object.keys(typography).length) pluginOptions.typography = typography;

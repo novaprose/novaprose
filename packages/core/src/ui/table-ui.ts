@@ -95,12 +95,18 @@ export function registerTableUi(editor: Editor): void {
     icon: icons.sort,
     tooltip: t('table.sort'),
     isEnabled: (e) => e.can(sortTable('asc')),
-    items: (e) =>
-      (['asc', 'desc'] as const).map((direction) => ({
+    items: (e) => {
+      const quick = (['asc', 'desc'] as const).map((direction) => ({
         id: direction,
         label: t(direction === 'asc' ? 'table.sortAsc' : 'table.sortDesc'),
         onSelect: () => e.exec(sortTable(direction, e.options.language)),
-      })),
+      }));
+      // With advanced tables: their "Sort…" dialog (any column or row, the selected cells).
+      const advanced = e.ui.registry.getMenuItem('advtablesort');
+      return advanced
+        ? [...quick, { id: 'advanced', label: advanced.text, onSelect: () => advanced.onAction(e) }]
+        : quick;
+    },
   });
 
   registry.addButton('tableprops', {
@@ -126,6 +132,6 @@ export function registerTableUi(editor: Editor): void {
       'tableinsertrowbefore tableinsertrowafter tabledeleterow | ' +
       'tableinsertcolbefore tableinsertcolafter tabledeletecol | ' +
       'tablemergecells tablesplitcells | tablerowheader tablecolheader tablecellbackground | ' +
-      'advtablesort tablecellprops tableprops | tabledelete',
+      'advtablesort advtablerownumbering tablecellprops tableprops | tabledelete',
   });
 }

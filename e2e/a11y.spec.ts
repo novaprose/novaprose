@@ -306,6 +306,26 @@ for (const theme of ['light', 'dark'] as const) {
       await audit(page, 'embedded page dialog');
     });
 
+    test('advanced tables: the Sort dialog, a table with row numbers', async ({ page }) => {
+      await open(page, theme, '&parity=1');
+      await page.evaluate(async () => {
+        const e = (
+          window as unknown as { editor: { ready: Promise<void>; setContent(h: string): void } }
+        ).editor;
+        await e.ready;
+        e.setContent(
+          '<table><tbody><tr><th data-series="numeric"><p></p></th><th><p>Fruit</p></th></tr>' +
+            '<tr><td data-series="numeric"><p>1</p></td><td><p>Pear</p></td></tr>' +
+            '<tr><td data-series="numeric"><p>2</p></td><td><p>Apple</p></td></tr></tbody></table>',
+        );
+      });
+      await page.locator('.nova-prosemirror td').last().click();
+      await page.locator('.nova-context-toolbar [data-control="advtablesort"]').click();
+      await page.getByRole('menuitem', { name: 'Sort…' }).click();
+      await expect(page.getByRole('dialog', { name: 'Sort the table' })).toBeVisible();
+      await audit(page, 'sort dialog');
+    });
+
     test('link checker: a broken link and its bubble with the note', async ({ page }) => {
       await open(page, theme, '&linkcheck=1');
       await page.evaluate(async () => {

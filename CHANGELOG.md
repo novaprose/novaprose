@@ -8,6 +8,14 @@ All packages in this repository are versioned together. The format follows
 
 ### Editing
 
+- Advanced tables: the `advtable` plugin adds a column of row numbers (**Row numbers**: numbers,
+  letters or your own `series`) that stays in order as rows are added, deleted and sorted; the
+  column is found by its cells (`data-series`), so a number is never written over your text. Its
+  **Sort…** dialog sorts the rows by any column or the columns by any row, the whole table or the
+  selected cells; header rows and columns stay in place. Sorting rows moves whole rows, with their
+  own attributes. With `tinymce.init`, `mceTableToggleSeries`, `mceSortTableAdvanced` and the
+  other sort commands and `advtable_value_series` work. The new
+  [Tables](https://novaprose.com/guides/tables/) guide covers tables as a whole.
 - Embedded pages: the `pageembed` plugin shows a web page (a map, a form, a calendar) in the
   document, at full width with a ratio (21:9, 16:9, 4:3, 1:1, or your own classes) or at a fixed
   size, with a title for screen readers. The frame is sandboxed (`sandbox` to change it), only

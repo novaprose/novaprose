@@ -62,6 +62,7 @@ export default defineConfig({
             { slug: 'guides/headless' },
             { slug: 'guides/images' },
             { slug: 'guides/embeds' },
+            { slug: 'guides/tables' },
             { slug: 'guides/pasting-from-office' },
             { slug: 'guides/markdown' },
             { slug: 'guides/server-rendering' },

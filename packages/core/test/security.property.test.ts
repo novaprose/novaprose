@@ -31,6 +31,7 @@ const SCHEMA_PLUGINS = [
   'pagebreak',
   'media',
   'pageembed',
+  'advtable',
   'comments',
   'mentions',
   'mergetags',
@@ -205,6 +206,7 @@ const ATTRS = [
   'data-id',
   'data-checked',
   'data-type',
+  'data-series',
 ];
 
 const STYLE_VALUES = [
@@ -432,6 +434,8 @@ describe('HTML security and stability (property-based)', () => {
         fc.array(fc.record({ level: anyValue, id: attrValue, text: attrValue }), { maxLength: 3 }),
       ),
       rowspan: anyValue,
+      // The numbers column of advanced tables: the series' name goes into data-series.
+      series: fc.oneof(anyValue, attrValue, fc.constantFrom('numeric', 'alpha')),
       colwidth: fc.oneof(anyValue, fc.array(fc.integer({ min: -5, max: 900 }), { maxLength: 2 })),
     });
     const mark = fc.record({

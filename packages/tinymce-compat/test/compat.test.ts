@@ -921,6 +921,55 @@ describe('tinymce.init', () => {
     expect(warn.mock.calls.flat().join(' ')).not.toContain('pageembed');
   });
 
+  it('advtable: the numbers column and sorting through TinyMCE commands, your series', async () => {
+    page(
+      '<textarea id="t"><table><tbody><tr><th><p>Fruit</p></th><th><p>Price</p></th></tr>' +
+        '<tr><td><p>Pear</p></td><td><p>3</p></td></tr>' +
+        '<tr><td><p>Apple</p></td><td><p>12</p></td></tr></tbody></table></textarea>',
+    );
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const [editor] = await tinymce.init({
+      selector: '#t',
+      plugins: 'table advtable',
+      advtable_value_series: {
+        roman: {
+          title: 'Roman',
+          generator: (_info: unknown, row: number) => ({ value: ['i', 'ii', 'iii'][row] }),
+        },
+      },
+    });
+    const { core } = editor!;
+    await core.ready;
+    const cursorIn = (text: string) => {
+      let pos = -1;
+      core.view.state.doc.descendants((node, p) => {
+        if (pos < 0 && node.isText && node.text === text) pos = p;
+        return pos < 0;
+      });
+      core.view.dispatch(
+        core.view.state.tr.setSelection(TextSelection.create(core.view.state.doc, pos)),
+      );
+    };
+    const column = (index: number) =>
+      [...core.view.dom.querySelectorAll('tr')].map((tr) => tr.children[index]?.textContent);
+    cursorIn('Pear');
+    expect(editor!.execCommand('mceTableToggleSeries', false, { name: 'roman' })).toBe(true);
+    expect(editor!.getContent()).toContain('data-series="roman"><p>i</p></td>');
+    // By price (the third column now), descending.
+    editor!.execCommand('mceSortTableAdvanced', false, {
+      sortby: 'column',
+      roworcol: '2',
+      sort: 'table',
+      order: 'descending',
+    });
+    expect(column(1)).toEqual(['Fruit', 'Apple', 'Pear']);
+    expect(column(0)).toEqual(['', 'i', 'ii']);
+    cursorIn('Pear');
+    editor!.execCommand('mceSortTableByColumnDesc');
+    expect(column(1)).toEqual(['Fruit', 'Pear', 'Apple']);
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('advtable');
+  });
+
   it('text_patterns: false turns off the typing shortcuts, without a warning', async () => {
     page('<textarea id="t"></textarea>');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});

@@ -135,6 +135,40 @@ const SPELLCHECK_COMMANDS = new Set([
   'mcespellcheckdialogclose',
 ]);
 
+/**
+ * Commands of advanced tables (the advtable plugin), as in the TinyMCE documentation → what the
+ * plugin does: its Sort dialog, a sort, the numbers column (mceTableToggleSeries { name }).
+ */
+const ADVTABLE_COMMANDS: Record<string, (value: unknown) => { command: string; value?: unknown }> =
+  {
+    mceadvancedtablesort: () => ({ command: 'dialog' }),
+    mcesorttablebycolumnasc: () => ({ command: 'sort', value: { by: 'column', direction: 'asc' } }),
+    mcesorttablebycolumndesc: () => ({
+      command: 'sort',
+      value: { by: 'column', direction: 'desc' },
+    }),
+    mcesorttablebyrowasc: () => ({ command: 'sort', value: { by: 'row', direction: 'asc' } }),
+    mcesorttablebyrowdesc: () => ({ command: 'sort', value: { by: 'row', direction: 'desc' } }),
+    // { sortby: 'row' | 'column', roworcol: '0', sort: 'table' | 'selection' | …, order }
+    mcesorttableadvanced: (value) => {
+      const v = (value && typeof value === 'object' ? value : {}) as Record<string, unknown>;
+      const index = Number(v.roworcol);
+      return {
+        command: 'sort',
+        value: {
+          by: v.sortby === 'row' ? 'row' : 'column',
+          ...(Number.isInteger(index) && index >= 0 ? { index } : {}),
+          direction: v.order === 'descending' ? 'desc' : 'asc',
+          scope: v.sort === 'selection' ? 'selection' : 'table',
+        },
+      };
+    },
+    mcetabletoggleseries: (value) => ({
+      command: 'series',
+      value: (value as { name?: unknown } | undefined)?.name,
+    }),
+  };
+
 /** Commands of collapsible blocks (the accordion plugin), as in the TinyMCE documentation. */
 const ACCORDION_COMMANDS = new Set([
   'insertaccordion',
@@ -438,6 +472,11 @@ export class CompatEditor {
         control.onAction(this.core);
         done = true;
       }
+    } else if (ADVTABLE_COMMANDS[name] && this.core.hasPlugin('advtable')) {
+      this.core.root.dispatchEvent(
+        new CustomEvent('nova-advtable', { detail: ADVTABLE_COMMANDS[name]!(value) }),
+      );
+      done = true;
     } else if (ACCORDION_COMMANDS.has(name)) {
       done = this.accordionCommand(name, value);
     } else if (name === 'mceinserttemplate' && this.core.hasPlugin('template')) {

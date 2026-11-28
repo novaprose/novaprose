@@ -217,6 +217,7 @@ const editor = createEditor({
           'pagebreak',
           'media',
           'pageembed',
+          'advtable',
           'directionality',
           'advlist',
           'checklist',

@@ -121,19 +121,41 @@ function numericValue(text: string): number | null {
   return Number(cleaned);
 }
 
-interface SortTarget {
-  pos: number;
-  table: PMNode;
-  column: number;
-  /** The number of header rows at the top (they aren't sorted). */
-  headerRows: number;
+/** How to sort a table (the "Sort" dialog of advanced tables). */
+export interface SortOptions {
+  /** 'column': the rows, by the values in a column; 'row': the columns, by the values in a row. */
+  by: 'column' | 'row';
+  /** The column (or row) whose values decide, from 0; the one with the cursor when left out. */
+  index?: number;
+  direction: SortDirection;
+  /** Only the selected rows (or columns), or the whole table (the default). */
+  scope?: 'table' | 'selection';
 }
 
-function sortTarget(state: EditorState): SortTarget | null {
+/** Why a table can't be sorted: merged cells, or fewer than two rows (columns) to sort. */
+export type SortProblem = 'merged' | 'few';
+
+interface Grid {
+  pos: number;
+  table: PMNode;
+  rows: PMNode[][];
+  width: number;
+  /** Header rows at the top and header columns at the left: they stay where they are. */
+  headerRows: number;
+  headerColumns: number;
+  rect: { left: number; right: number; top: number; bottom: number };
+}
+
+function isHeader(cell: PMNode | undefined, state: EditorState): boolean {
+  return cell?.type === (state.schema as NovaSchema).nodes.table_header;
+}
+
+/** The current table as a grid of cells; null with a reason when it can't be sorted. */
+function tableGrid(state: EditorState): Grid | SortProblem | null {
   if (!isInTable(state)) return null;
   const rect = selectedRect(state);
   const table = rect.table;
-  // Merged cells break row-by-row reordering: such tables aren't sorted.
+  // Merged cells break the reordering of rows and columns: such tables aren't sorted.
   let merged = false;
   table.descendants((node) => {
     if (node.attrs.colspan > 1 || node.attrs.rowspan > 1) merged = true;
@@ -141,55 +163,137 @@ function sortTarget(state: EditorState): SortTarget | null {
       !merged && node.type.spec.tableRole !== 'cell' && node.type.spec.tableRole !== 'header_cell'
     );
   });
-  if (merged) return null;
-  const nodes = (state.schema as NovaSchema).nodes;
+  if (merged) return 'merged';
+  const rows: PMNode[][] = [];
+  table.forEach((row) => {
+    const cells: PMNode[] = [];
+    row.forEach((cell) => cells.push(cell));
+    rows.push(cells);
+  });
+  const width = Math.min(...rows.map((cells) => cells.length));
   let headerRows = 0;
-  for (let i = 0; i < table.childCount; i++) {
-    let allHeaders = true;
-    table.child(i).forEach((cell) => {
-      if (cell.type !== nodes.table_header) allHeaders = false;
-    });
-    if (!allHeaders) break;
+  while (headerRows < rows.length && rows[headerRows]!.every((c) => isHeader(c, state)))
     headerRows++;
-  }
-  if (table.childCount - headerRows < 2) return null;
-  return { pos: rect.tableStart - 1, table, column: rect.left, headerRows };
+  // A header column, or a column of row numbers (advanced tables), stays at the left.
+  let headerColumns = 0;
+  while (
+    headerColumns < width &&
+    rows.every(
+      (cells) => isHeader(cells[headerColumns], state) || !!cells[headerColumns]?.attrs.series,
+    )
+  )
+    headerColumns++;
+  return {
+    pos: rect.tableStart - 1,
+    table,
+    rows,
+    width,
+    headerRows,
+    headerColumns,
+    rect: { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom },
+  };
 }
 
-/** Sorts the table rows by the column with the cursor. Header rows stay at the top. */
-export function sortTable(direction: SortDirection, locale?: string): Command {
+/** The order of items by their texts: numbers as numbers when every one is, empty ones last. */
+function sortOrder(texts: string[], direction: SortDirection, locale?: string): number[] {
+  const numbers = texts.map(numericValue);
+  // Numeric sorting only if every non-empty cell holds a number.
+  const numeric = texts.every((t, i) => t === '' || numbers[i] !== null);
+  const collator = new Intl.Collator(locale, { numeric: true, sensitivity: 'base' });
+  return texts
+    .map((_, i) => i)
+    .sort((a, b) => {
+      const ta = texts[a]!;
+      const tb = texts[b]!;
+      // Empty cells always go last.
+      if (!ta || !tb) return ta ? -1 : tb ? 1 : a - b;
+      const cmp = numeric ? numbers[a]! - numbers[b]! : collator.compare(ta, tb);
+      return (direction === 'asc' ? cmp : -cmp) || a - b;
+    });
+}
+
+/** Whether the current table can be sorted that way, and if not, why. */
+export function sortProblem(state: EditorState, options: SortOptions): SortProblem | null {
+  const grid = tableGrid(state);
+  if (grid === null) return 'few';
+  if (typeof grid === 'string') return grid;
+  return sortRange(grid, options) ? null : 'few';
+}
+
+/** The rows (or columns) to sort: [from, to). */
+function sortRange(grid: Grid, options: SortOptions): [number, number] | null {
+  const byColumn = options.by === 'column';
+  const first = byColumn ? grid.headerRows : grid.headerColumns;
+  const count = byColumn ? grid.rows.length : grid.width;
+  let [from, to] = [first, count];
+  if (options.scope === 'selection') {
+    from = Math.max(first, byColumn ? grid.rect.top : grid.rect.left);
+    to = Math.min(count, byColumn ? grid.rect.bottom : grid.rect.right);
+  }
+  const key = options.index ?? (byColumn ? grid.rect.left : grid.rect.top);
+  const keyCount = byColumn ? grid.width : grid.rows.length;
+  if (!Number.isInteger(key) || key < 0 || key >= keyCount) return null;
+  return to - from >= 2 ? [from, to] : null;
+}
+
+/**
+ * Sorts the current table: its rows by a column, or its columns by a row; the whole table or the
+ * selected part. Header rows and columns (and a column of row numbers) stay in place.
+ */
+export function sortTableBy(options: SortOptions, locale?: string): Command {
   return (state, dispatch) => {
-    const target = sortTarget(state);
-    if (!target) return false;
+    const grid = tableGrid(state);
+    if (!grid || typeof grid === 'string') return false;
+    const range = sortRange(grid, options);
+    if (!range) return false;
     if (dispatch) {
-      const { table, column, headerRows, pos } = target;
-      const rows: PMNode[] = [];
-      table.forEach((row) => rows.push(row));
-      const head = rows.slice(0, headerRows);
-      const body = rows.slice(headerRows);
-      const texts = body.map((row) =>
-        column < row.childCount ? row.child(column).textContent.trim() : '',
-      );
-      const numbers = texts.map(numericValue);
-      // Numeric sorting only if every non-empty cell of the column holds a number.
-      const numeric = texts.every((t, i) => t === '' || numbers[i] !== null);
-      const collator = new Intl.Collator(locale, { numeric: true, sensitivity: 'base' });
-      const order = body
-        .map((row, i) => ({ row, i }))
-        .sort((a, b) => {
-          const ta = texts[a.i]!;
-          const tb = texts[b.i]!;
-          // Empty cells always go last.
-          if (!ta || !tb) return ta ? -1 : tb ? 1 : a.i - b.i;
-          const cmp = numeric ? numbers[a.i]! - numbers[b.i]! : collator.compare(ta, tb);
-          return (direction === 'asc' ? cmp : -cmp) || a.i - b.i;
-        })
-        .map(({ row }) => row);
-      const sorted = table.copy(Fragment.from([...head, ...order]));
+      const [from, to] = range;
+      const { rows, table, pos } = grid;
+      const rowNodes: PMNode[] = [];
+      table.forEach((row) => rowNodes.push(row));
+      let next: PMNode[];
+      if (options.by === 'column') {
+        // Whole rows move (with their own attributes).
+        const column = options.index ?? grid.rect.left;
+        const order = sortOrder(
+          rows.slice(from, to).map((cells) => cells[column]?.textContent.trim() ?? ''),
+          options.direction,
+          locale,
+        );
+        next = [
+          ...rowNodes.slice(0, from),
+          ...order.map((i) => rowNodes[from + i]!),
+          ...rowNodes.slice(to),
+        ];
+      } else {
+        // The cells of every row move to their column's new place.
+        const keyRow = rows[options.index ?? grid.rect.top]!;
+        const order = sortOrder(
+          keyRow.slice(from, to).map((cell) => cell.textContent.trim()),
+          options.direction,
+          locale,
+        );
+        next = rowNodes.map((row, r) => {
+          const cells = rows[r]!;
+          return row.copy(
+            Fragment.from([
+              ...cells.slice(0, from),
+              ...order.map((i) => cells[from + i]!),
+              ...cells.slice(to),
+            ]),
+          );
+        });
+      }
+      const sorted = table.copy(Fragment.from(next));
       dispatch(state.tr.replaceWith(pos, pos + table.nodeSize, sorted).scrollIntoView());
     }
     return true;
   };
+}
+
+/** Sorts the table rows by the column with the cursor. Header rows stay at the top. */
+export function sortTable(direction: SortDirection, locale?: string): Command {
+  return sortTableBy({ by: 'column', direction }, locale);
 }
 
 // ---------- table and cell properties ----------
