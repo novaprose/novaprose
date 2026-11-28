@@ -1,6 +1,6 @@
 {
   "name": "@novaprose/collab",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Real-time collaborative editing for the NovaProse editor: Yjs sync, live cursors and presence, per-user undo.",
   "keywords": [
     "collaboration",

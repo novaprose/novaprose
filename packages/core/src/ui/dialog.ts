@@ -175,7 +175,9 @@ export function textField(options: TextFieldOptions): { el: HTMLElement; input: 
     className: 'nova-input',
     value: options.value ?? '',
     placeholder: options.placeholder,
-    required: options.required ?? false,
+    // aria-required, not required: an empty native required field is :invalid from the start, and
+    // VoiceOver says "invalid data" before anything was typed. The dialog checks the value itself.
+    ...(options.required ? { 'aria-required': 'true' } : {}),
     autocomplete: options.autocomplete ?? 'off',
     spellcheck: 'false',
     'aria-describedby': hintId,

@@ -69,5 +69,8 @@ test('Command+K opens the link dialog and says its name', async ({ page, voiceOv
   await voiceOver.press('Command+k');
   await expect(page.getByRole('dialog', { name: 'Insert link' })).toBeVisible();
   const spoken = await heard(voiceOver, 'Command+K');
-  expect(spoken, 'what VoiceOver said when the dialog opened').toMatch(/Insert link|URL/);
+  expect(spoken, 'what VoiceOver said when the dialog opened').toMatch(/Insert link/);
+  // It said "URL required invalid data" while the address field was a native required field:
+  // the empty address isn't an error before anything was typed.
+  expect(spoken, 'what VoiceOver said when the dialog opened').not.toMatch(/invalid/i);
 });

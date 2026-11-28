@@ -4,7 +4,23 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
-## Unreleased
+## 0.9.0 — 2026-11-28
+
+An accessibility release. A phrase in another language can be marked for screen readers; the line
+with the cursor never hides under the sticky toolbar; field edges, focus and pressed buttons stand
+out 3:1, also in Windows high contrast mode; and find and replace stays in view in long documents.
+The [accessibility conformance report](https://novaprose.com/project/accessibility-report/) (VPAT
+2.5, International Edition) describes this version.
+
+### Upgrading from 0.8
+
+Nothing in the API changed. Visible differences:
+
+- The edges of fields and of the editor are darker (3:1 on every surface). A theme of your own can
+  set `--nova-control-border`.
+- The find bar sits in the sticky header, under the toolbar, instead of above the text.
+- Collaborators' default cursor colors are darker.
+- Pasted HTML keeps `lang` on a passage in another language than the text's.
 
 ### Accessibility
 
@@ -30,6 +46,11 @@ All packages in this repository are versioned together. The format follows
   its tint, a focused menu item shows the focus ring, and a white color swatch has a visible edge.
 - Windows high contrast mode: pressed buttons, the table size grid, search matches and selected
   cells show in the system's colors, and color swatches keep their colors.
+- **Fixed (screen readers):** VoiceOver said "invalid data" for the link dialog's empty address
+  field as soon as the dialog opened; the field is marked required for screen readers without being
+  an error, and an empty address now says it is required.
+- VoiceOver on macOS is checked in CI as well as NVDA on Windows: what it says after formatting and
+  Markdown shortcuts and when a dialog opens.
 - **Fixed (screen readers):** the resize handle in the status bar said its value (the editor's
   height) only after the first resize; it says it from the start, with its range.
 - Collaboration: the cursor colors are darker, so the white name labels are at least 4.5:1, and a

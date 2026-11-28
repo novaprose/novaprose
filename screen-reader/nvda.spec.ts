@@ -147,4 +147,6 @@ test('Ctrl+K opens the link dialog: "Insert link"', async ({ page, nvda }) => {
   const spoken = await heard(nvda, 'Ctrl+K');
   await expect(page.getByRole('dialog', { name: 'Insert link' })).toBeVisible();
   expect(spoken, 'what NVDA said after Ctrl+K').toContain('Insert link');
+  // The empty address isn't an error before anything was typed.
+  expect(spoken, 'what NVDA said after Ctrl+K').not.toMatch(/invalid/i);
 });

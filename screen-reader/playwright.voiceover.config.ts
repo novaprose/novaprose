@@ -11,7 +11,8 @@ export default withGuidepup({
   testMatch: 'voiceover.spec.ts',
   outputDir: 'test-results',
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // VoiceOver sometimes doesn't start on the first try on a fresh macOS runner.
+  retries: process.env.CI ? 2 : 0,
   timeout: 3 * 60 * 1000,
   reportSlowTests: null,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',

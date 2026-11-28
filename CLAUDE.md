@@ -105,6 +105,8 @@ pnpm build          # build the packages (tsup → dist/)
 pnpm e2e            # Playwright browser tests (the playground starts by itself)
 pnpm sr             # NVDA tests: Windows only, NVDA takes over the keyboard and speaks (CI: screen-reader.yml;
                     # locally first npx --ignore-scripts @guidepup/setup install nvda)
+pnpm sr:voiceover   # VoiceOver tests (WebKit): macOS only, the same checks with the Mac's keys (CI: the
+                    # macOS job of screen-reader.yml; locally first npx @guidepup/setup setup)
 pnpm check          # format, lint, types, unit tests, English-only check: before a commit (the pre-push hook runs it)
 pnpm test:coverage  # unit tests + coverage; thresholds (a ratchet) in vitest.config.ts: raise them as coverage grows
 pnpm test:deep [N]  # property-based tests on N random documents (5000 by default; 20 000 nightly in CI)
@@ -197,12 +199,14 @@ Conventional Commits.
   `e2e/a11y.spec.ts` (axe). Screen readers: an inline mark whose element Chromium exposes as an object of
   its own (strong, em, s, code, sub, sup) gets `role="none"` in the editing view (`mark-views.ts`),
   otherwise NVDA reads the next word as "unselected" after its shortcut; a new shortcut or announcement →
-  a check in `screen-reader/nvda.spec.ts` (runs on a Windows runner, see what NVDA said in the run's notices).
+  a check in `screen-reader/nvda.spec.ts` and `voiceover.spec.ts` (Windows and macOS runners; what the
+  screen reader said is in the run's notices).
   What isn't text is 3:1 too (WCAG 1.4.11): the edge of a field uses `--nova-control-border`, a pressed
   state needs more than a faint tint (a ring), focus is the focus ring, not only a background; states
   that rely on a background also need a `@media (forced-colors: active)` rule (Windows high contrast).
-  `e2e/wcag.spec.ts` measures these, text spacing (1.4.12) and the sticky header (2.4.11); the public
-  accessibility report (ACR, VPAT INT) lives in ../nova-internal/docs/ACR-DRAFT.md: keep it in step.
+  `e2e/wcag.spec.ts` measures these, text spacing (1.4.12), reflow at 320 px and the sticky header
+  (2.4.11). The accessibility report (ACR, VPAT 2.5 INT) is public:
+  `apps/site/src/content/docs/project/accessibility-report.md`; keep it in step with the product.
 - Every UI color comes from the `--nova-*` CSS variables in `style.css`; the light and dark themes must both work.
 - **Styles of lazy parts** (panels, dialogs, plugin views) don't go into `style.css` (12 KB budget) but into
   `<module>.css` next to the code: `import css from './x.css?raw'` + `editor.ui.addStyles('nova-x', css)` on first

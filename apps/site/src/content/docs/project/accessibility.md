@@ -40,12 +40,13 @@ Every change runs these checks in CI ([How NovaProse is tested](/project/testing
 - what axe doesn't measure: the contrast of field edges, focus rings and pressed buttons computed
   from the drawn colors, text spacing, a 320-pixel screen, the sticky toolbar and the cursor, and
   Windows high contrast;
-- NVDA with Chrome on Windows: what a person hears after shortcuts and in dialogs;
+- NVDA with Chrome on Windows and VoiceOver on macOS (WebKit, the engine of Safari): what a
+  person hears after shortcuts and in dialogs;
 - keyboard-only use in Chromium, Firefox and WebKit, and touch in an emulated phone;
 - axe on every page of this site, in both themes and on a phone-sized screen.
 
-Not tested yet: JAWS, VoiceOver, TalkBack, Dragon NaturallySpeaking and real phones. There has been
-no independent audit.
+Not tested yet: JAWS, VoiceOver on iPhone and iPad, TalkBack, Dragon NaturallySpeaking and real
+phones. There has been no independent audit.
 
 ## Report a problem
 

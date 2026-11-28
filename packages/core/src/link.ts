@@ -120,7 +120,7 @@ export function openLinkDialog(editor: Editor): void {
       if (!href || !isSafeLinkUrl(href)) {
         url.input.setAttribute('aria-invalid', 'true');
         url.input.focus();
-        return t('link.invalid');
+        return url.input.value.trim() ? t('link.invalid') : t('dialog.required');
       }
       editor.exec(
         applyLink({
