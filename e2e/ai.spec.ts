@@ -118,6 +118,32 @@ test('the chat in Edit mode: the whole document changed as suggestions, then "Ac
   );
 });
 
+test('the chat in Edit mode changes structure too: a title, a list, a removed paragraph', async ({
+  page,
+}) => {
+  const original = '<p>Shopping:</p><p>Milk</p><p>Eggs</p><p>Old note</p>';
+  for (const action of ['Accept all', 'Reject all']) {
+    await open(page, original);
+    await page.locator('.nova-prosemirror p').first().click();
+    await clickControl(page, 'aichat');
+    const panel = page.locator('.nova-sidebar[data-sidebar="aichat"]');
+    await panel.getByRole('radio', { name: 'Edit' }).check();
+    await panel.getByRole('textbox', { name: 'Message to AI' }).fill('Give it structure');
+    await panel.getByRole('textbox', { name: 'Message to AI' }).press('Enter');
+    await expect(panel.getByText('Paragraphs with suggested changes: 4')).toBeVisible();
+    // Until decided, everything is still in the text, marked.
+    await expect(page.locator('.nova-prosemirror h2')).toHaveText('A Demo Title');
+    await expect(page.locator('.nova-prosemirror')).toContainText('Old note');
+    await panel.getByRole('button', { name: action }).click();
+    await expect(panel.getByText('All changes reviewed.')).toBeVisible();
+    expect(await page.evaluate(() => window.editor.getHTML())).toBe(
+      action === 'Accept all'
+        ? '<h2>A Demo Title</h2><p>Shopping:</p><ul><li><p>Milk</p></li><li><p>Eggs</p></li></ul>'
+        : original,
+    );
+  }
+});
+
 test('the chat in Review mode: remarks with reasons, each fix accepted or rejected on its own', async ({
   page,
 }) => {

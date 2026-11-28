@@ -131,7 +131,10 @@ requests in one click.
   arrives, so a long edit shows progress; the panel then says how many paragraphs changed and
   offers **Show in the text**, **Accept all** and **Reject all** for this edit. A paragraph someone
   changes while the model is writing is left as it is, and the panel says so. Code blocks are left
-  out.
+  out. When you ask for structure, it changes that too: a paragraph made a heading, paragraphs put
+  in a bulleted or numbered list or a quote (neighbours form one list), new paragraphs and
+  headings, paragraphs removed. Each of these is a suggestion as well, so rejecting gives the text
+  back as it was.
 - **Review.** The model reads the document (or the selected paragraphs) and lists its remarks,
   each with the reason: **Review the document** looks for mistakes, unclear sentences, repetitions
   and inconsistencies, and you can ask for something else (“check the tone of a business letter”).
@@ -170,24 +173,26 @@ that reads images, as in the example below.
 
 ## What a request contains
 
-| Field             | Description                                                                                                                                                                                                                                                    |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prompt`          | a ready prompt with everything below and the rules for the answer: send it to the model as the user's message                                                                                                                                                  |
-| `rules`           | the rules alone (the format of the answer, the language), for when you build your own prompt from the fields                                                                                                                                                   |
-| `instruction`     | what to do: the user's own words, or, for a quick action, a ready instruction in English                                                                                                                                                                       |
-| `action`          | a quick action (`improve`, `fix`, `shorter`, `longer`, `simplify`, `formal`, `friendly`, `summarize`, `continue`), `custom` (a request typed in the window), `chat`, `edit`, `review`, `complete` (autocomplete) or `describe` (alternative text for an image) |
-| `text`            | the selected text, paragraphs separated by a blank line; empty when nothing is selected. For `edit` and `review`, the paragraphs, each as `<block id="N">text</block>`                                                                                         |
-| `before`, `after` | up to 1,500 characters before and after the text or the cursor, for context                                                                                                                                                                                    |
-| `document`        | for `chat`, the whole document as text (up to `maxDocument` characters)                                                                                                                                                                                        |
-| `messages`        | for `chat`, the conversation so far: `[{ role: 'user' \| 'assistant', text }]`                                                                                                                                                                                 |
-| `image`           | for `describe`, the image: `{ src?, data?, mimeType? }` — its address, and its bytes as base64 when the browser could read them                                                                                                                                |
-| `language`        | the editor's language, such as `en`                                                                                                                                                                                                                            |
-| `signal`          | an `AbortSignal`, aborted when the user closes the window, presses **Stop** or types on                                                                                                                                                                        |
+| Field             | Description                                                                                                                                                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prompt`          | a ready prompt with everything below and the rules for the answer: send it to the model as the user's message                                                                                                                                                                                     |
+| `rules`           | the rules alone (the format of the answer, the language), for when you build your own prompt from the fields                                                                                                                                                                                      |
+| `instruction`     | what to do: the user's own words, or, for a quick action, a ready instruction in English                                                                                                                                                                                                          |
+| `action`          | a quick action (`improve`, `fix`, `shorter`, `longer`, `simplify`, `formal`, `friendly`, `summarize`, `continue`), `custom` (a request typed in the window), `chat`, `edit`, `review`, `complete` (autocomplete) or `describe` (alternative text for an image)                                    |
+| `text`            | the selected text, paragraphs separated by a blank line; empty when nothing is selected. For `edit` and `review`, the paragraphs, each as `<block id="N">text</block>`; a heading, quote, list item or table cell says its kind, `<block id="N" type="h2">` (`quote`, `bullet`, `number`, `cell`) |
+| `before`, `after` | up to 1,500 characters before and after the text or the cursor, for context                                                                                                                                                                                                                       |
+| `document`        | for `chat`, the whole document as text (up to `maxDocument` characters)                                                                                                                                                                                                                           |
+| `messages`        | for `chat`, the conversation so far: `[{ role: 'user' \| 'assistant', text }]`                                                                                                                                                                                                                    |
+| `image`           | for `describe`, the image: `{ src?, data?, mimeType? }` — its address, and its bytes as base64 when the browser could read them                                                                                                                                                                   |
+| `language`        | the editor's language, such as `en`                                                                                                                                                                                                                                                               |
+| `signal`          | an `AbortSignal`, aborted when the user closes the window, presses **Stop** or types on                                                                                                                                                                                                           |
 
 The answer is plain text, with paragraphs separated by a blank line. It goes into the document as
 text, never as HTML, so a model can't add markup or scripts. For `edit`, the model answers with the
 paragraphs it changed in the same `<block id="N">` form, or `NO CHANGES` — the rules in the prompt
-ask for exactly that. For `review`, it answers with one line per remark,
+ask for exactly that; for structure, `<block id="N" type="h2">` (a block of another kind: `p`,
+`h1`–`h6`, `quote`, `bullet`, `number`), `<block after="N" type="p">` (a new block) and
+`<block id="N" remove></block>`. For `review`, it answers with one line per remark,
 `<finding block="N"><quote>words of that paragraph</quote><fix>what to put instead</fix><why>the reason</why></finding>`
 (an empty `<fix>` for a remark without one), or `NO PROBLEMS`.
 

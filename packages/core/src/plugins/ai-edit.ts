@@ -1,5 +1,6 @@
 import { Mark, type Node as PMNode } from 'prosemirror-model';
 import type { EditorState, Transaction } from 'prosemirror-state';
+import { describedKind } from './ai-structure';
 import { lcs, tokenize } from './history-diff';
 import { OWN, suggestTransaction, type SuggestionAuthor } from './suggestions';
 
@@ -170,32 +171,18 @@ export function editableBlocks(doc: PMNode, from: number, to: number): TextSegme
   return blocks;
 }
 
-/** The blocks for the model: `<block id="N">text</block>`, one per line, numbered from 1. */
-export function blocksText(blocks: readonly TextSegment[]): string {
-  return blocks.map((block, index) => `<block id="${index + 1}">${block.text}</block>`).join('\n');
-}
-
-// A block's text can hold "<" (a < b), but not another <block> tag: a block the model left unclosed
-// isn't read together with the next one.
-const BLOCK_RE = /<block\s+id=["']?(\d+)["']?\s*>((?:[^<]|<(?!\/?block\b))*)<\/block>/g;
-
 /**
- * The complete blocks of an answer, read from `start` (an answer is read again as it streams in);
- * `end` is where the reading stopped, the start for the next time.
+ * The blocks for the model: `<block id="N">text</block>`, one per line, numbered from 1. With the
+ * document they are in, a block that isn't a plain paragraph says its kind: `type="h2"`, `quote`,
+ * `bullet`, `number`, `cell` (the answer is read by readBlockOps in ai-structure.ts).
  */
-export function readBlocks(
-  answer: string,
-  start = 0,
-): { blocks: Array<[id: number, text: string]>; end: number } {
-  const re = new RegExp(BLOCK_RE.source, 'g');
-  re.lastIndex = start;
-  const blocks: Array<[number, string]> = [];
-  let end = start;
-  for (let match = re.exec(answer); match; match = re.exec(answer)) {
-    blocks.push([Number(match[1]), match[2]!]);
-    end = re.lastIndex;
-  }
-  return { blocks, end };
+export function blocksText(blocks: readonly TextSegment[], doc?: PMNode): string {
+  return blocks
+    .map((block, index) => {
+      const kind = doc ? describedKind(doc.resolve(block.from)) : null;
+      return `<block id="${index + 1}"${kind ? ` type="${kind}"` : ''}>${block.text}</block>`;
+    })
+    .join('\n');
 }
 
 /**

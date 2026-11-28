@@ -11,10 +11,11 @@ All packages in this repository are versioned together. The format follows
 
 ## 0.10.0 — 2026-11-28
 
-Templates you can lock, AI that reviews, and a sharper look: locked content with editable fields
-inside, the AI chat's Review mode, alternative text written by your model, photos made smaller and
-stripped of camera data before upload, two icon packs and three skins, HTML cleaned on a server
-with the editor's own rules, and formulas from other editors and sites read as LaTeX.
+Templates you can lock, AI that reviews and restructures, and a sharper look: locked content with
+editable fields inside, the AI chat's Review mode and structural edits, alternative text written by
+your model, photos made smaller and stripped of camera data before upload, two icon packs and three
+skins, HTML cleaned on a server with the editor's own rules, and formulas from other editors and
+sites read as LaTeX.
 
 ### Upgrading from 0.9
 
@@ -29,6 +30,10 @@ with the editor's own rules, and formulas from other editors and sites read as L
 - **AI requests have two new actions**, `describe` (alternative text for an image, with `image`) and
   `review` (remarks on the document). A server that sends `prompt` as it is needs nothing; one that
   builds its own prompt by `action` should handle them.
+- **The blocks of an `edit` or `review` request say their kind**: a heading, quote, list item or
+  table cell comes as `<block id="N" type="h2">` (`quote`, `bullet`, `number`, `cell`); a plain
+  paragraph stays `<block id="N">`. A server that reads these lines itself should allow the
+  attribute.
 - **The compatibility layer locks `mceNonEditable` content**, as TinyMCE does; until now such content
   was editable.
 
@@ -44,6 +49,12 @@ with the editor's own rules, and formulas from other editors and sites read as L
 
 ### AI
 
+- The chat panel's Edit mode changes structure when you ask for it: a paragraph made a heading,
+  paragraphs put in a bulleted or numbered list or a quote (neighbours form one list), new
+  paragraphs and headings, paragraphs removed — each a suggestion, so rejecting gives the text
+  back. The model sees each block's kind and answers in the same block form (`type`, `after`,
+  `remove`); a new paragraph after a list's last item comes after the list, a new item joins the
+  list next to it.
 - AI review: the chat panel's **Review** mode lists the model's remarks on the document (or the
   selected paragraphs), each with the reason. A remark with a fix arrives as a suggestion where its
   words are, accepted or rejected on its own from the panel or in the text; a remark without a fix

@@ -1,4 +1,4 @@
-import { Plugin, PluginKey, Selection, TextSelection } from 'prosemirror-state';
+import { Plugin, PluginKey, Selection, TextSelection, type Transaction } from 'prosemirror-state';
 import { Mapping } from 'prosemirror-transform';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import type { Editor } from '../editor';
@@ -23,11 +23,20 @@ import {
   editableBlocks,
   hasEditableText,
   rangeText,
-  readBlocks,
   suggestInsert,
   suggestRewrite,
 } from './ai-edit';
 import { REVIEW_INSTRUCTION, runReview, type Finding, type ReviewResult } from './ai-review';
+import {
+  insertBlock,
+  kindOf,
+  readBlockOps,
+  removeBlock,
+  setTextKind,
+  textblockAt,
+  wrapBlocks,
+  type BlockKind,
+} from './ai-structure';
 import {
   listSuggestions,
   OWN,
@@ -63,7 +72,9 @@ export interface EditResult {
 
 /**
  * Changes the selected blocks (the whole document without a selection) as the instruction asks. The
- * blocks the model changed are applied as suggestions as soon as each one arrives.
+ * blocks the model changed are applied as suggestions as soon as each one arrives: new text, another
+ * kind (a heading, a list item, a quote), a new block, a removed one (see ai-structure.ts). Blocks
+ * put in a list or a quote are wrapped at the end, so neighbours of one kind form one list.
  */
 export async function runEdit(
   editor: Editor,
@@ -101,40 +112,155 @@ export async function runEdit(
   );
   const seen = new Set<number>();
   let read = 0;
+  /** A change as a suggestion under the model's name; whether it changed the document. */
+  const suggest = (build: (tr: Transaction) => boolean): boolean => {
+    if (!editor.isEditable()) return false;
+    const state = editor.view.state;
+    const tr = state.tr;
+    if (!build(tr) || !tr.docChanged) return false;
+    editor.view.dispatch(suggestTransaction(tr, state, author).setMeta(OWN, true));
+    return true;
+  };
+  const counted = (done: boolean) => {
+    if (!done) return;
+    result.changed += 1;
+    onProgress?.(result.changed);
+  };
+  /** A block of the request where it is now (its text may have changed since). */
+  const blockNow = (id: number) => {
+    const sent = blocks[id - 1];
+    return sent ? textblockAt(editor.view.state.doc, mapping.map(sent.from, -1)) : null;
+  };
+  // Blocks to put in a list or a quote, wrapped at the end; where new blocks after a block went.
+  const wraps = new Map<number, BlockKind>();
+  const inserted = new Map<number, { end: number; maps: number }>();
   const apply = (answer: string) => {
-    const { blocks: edits, end } = readBlocks(answer, read);
+    const { ops, end } = readBlockOps(answer, read);
     read = end;
-    for (const [id, next] of edits) {
-      const sent = blocks[id - 1];
-      if (!sent || seen.has(id)) continue;
-      seen.add(id);
-      const text = blockText(sent.text, next);
-      if (text === sent.text) continue;
-      const state = editor.view.state;
-      const segment = editor.isEditable()
-        ? currentBlock(state.doc, mapping.map(sent.from, -1), sent.text)
-        : null;
-      if (!segment) {
-        result.skipped += 1;
+    for (const op of ops) {
+      if (op.op === 'insert') {
+        if (op.after < 0 || op.after > blocks.length) continue;
+        seen.add(-1);
+        // After the block (before the first one for after="0"); after the block added there before.
+        const last = inserted.get(op.after);
+        const $block = last ? null : blockNow(Math.max(op.after, 1));
+        const anchor = last
+          ? mapping.slice(last.maps).map(last.end)
+          : $block
+            ? op.after === 0
+              ? $block.before()
+              : $block.after()
+            : null;
+        if (anchor === null) {
+          result.skipped += 1;
+          continue;
+        }
+        const side = !last && op.after === 0 ? -1 : 1;
+        const ended = { at: null as number | null };
+        const done = suggest((tr) => {
+          ended.at = insertBlock(
+            tr,
+            editor.view.state,
+            anchor,
+            op.kind,
+            blockText('', op.text),
+            side,
+          );
+          return ended.at !== null;
+        });
+        // The next block after the same one goes after this one: its end, mapped from now on.
+        if (done && ended.at !== null)
+          inserted.set(op.after, { end: ended.at, maps: mapping.maps.length });
+        counted(done);
         continue;
       }
-      const tr = blockEditsTransaction(state, [{ segment, text }]);
-      if (!tr.docChanged) continue;
-      editor.view.dispatch(suggestTransaction(tr, state, author).setMeta(OWN, true));
-      result.changed += 1;
-      onProgress?.(result.changed);
+      const sent = blocks[op.id - 1];
+      if (!sent || seen.has(op.id)) continue;
+      seen.add(op.id);
+      if (op.op === 'remove') {
+        const $block = blockNow(op.id);
+        if (!$block) {
+          result.skipped += 1;
+          continue;
+        }
+        counted(suggest((tr) => removeBlock(tr, $block)));
+        continue;
+      }
+      let changed = false;
+      if (op.text !== null) {
+        const text = blockText(sent.text, op.text);
+        if (text !== sent.text) {
+          const state = editor.view.state;
+          const segment = editor.isEditable()
+            ? currentBlock(state.doc, mapping.map(sent.from, -1), sent.text)
+            : null;
+          if (!segment) {
+            result.skipped += 1;
+            continue;
+          }
+          const tr = blockEditsTransaction(state, [{ segment, text }]);
+          if (tr.docChanged) {
+            editor.view.dispatch(suggestTransaction(tr, state, author).setMeta(OWN, true));
+            changed = true;
+          }
+        }
+      }
+      if (op.kind) {
+        const $block = blockNow(op.id);
+        if ($block && kindOf($block) !== op.kind) {
+          if (op.kind === 'quote' || op.kind === 'bullet' || op.kind === 'number')
+            wraps.set(op.id, op.kind);
+          else changed = suggest((tr) => setTextKind(tr, $block, op.kind!)) || changed;
+        }
+      }
+      counted(changed);
     }
+  };
+  /** Blocks next to each other of one kind: one list (or quote) for all of them. */
+  const wrapAll = () => {
+    const ids = [...wraps.keys()].sort((a, b) => a - b);
+    let run: number[] = [];
+    const flush = () => {
+      if (!run.length) return;
+      const first = blockNow(run[0]!);
+      const last = blockNow(run[run.length - 1]!);
+      const kind = wraps.get(run[0]!)!;
+      const together =
+        first &&
+        last &&
+        first.depth === last.depth &&
+        first.node(first.depth - 1) === last.node(last.depth - 1);
+      if (first && last && together) {
+        if (suggest((tr) => wrapBlocks(tr, first.start(), last.end(), kind))) {
+          for (let i = 0; i < run.length; i++) counted(true);
+        }
+      } else {
+        for (const id of run) {
+          const $block = blockNow(id);
+          if ($block) counted(suggest((tr) => wrapBlocks(tr, $block.start(), $block.end(), kind)));
+        }
+      }
+      run = [];
+    };
+    for (const id of ids) {
+      const previous = run[run.length - 1];
+      if (previous !== undefined && (id !== previous + 1 || wraps.get(id) !== wraps.get(previous)))
+        flush();
+      run.push(id);
+    }
+    flush();
   };
   let answer = '';
   try {
     const context = whole ? {} : around(doc, blocks[0]!.from, blocks[blocks.length - 1]!.to);
     answer = await askModel(
       editor,
-      { action: 'edit', instruction, text: blocksText(blocks), ...context, messages },
+      { action: 'edit', instruction, text: blocksText(blocks, doc), ...context, messages },
       signal,
       apply,
     );
     if (signal.aborted) result.status = 'stopped';
+    else wrapAll();
   } catch (error) {
     if (!signal.aborted) console.error('[nova] ai:', error);
     result.status = signal.aborted ? 'stopped' : failureKind(error);

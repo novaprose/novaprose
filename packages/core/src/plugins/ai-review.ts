@@ -146,7 +146,7 @@ export async function runReview(
     const context = whole ? {} : around(doc, blocks[0]!.from, blocks[blocks.length - 1]!.to);
     answer = await askModel(
       editor,
-      { action: 'review', instruction, text: blocksText(blocks), ...context, messages },
+      { action: 'review', instruction, text: blocksText(blocks, doc), ...context, messages },
       signal,
       apply,
     );

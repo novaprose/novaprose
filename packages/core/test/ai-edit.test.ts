@@ -9,10 +9,10 @@ import {
   editableBlocks,
   paragraphs,
   rangeText,
-  readBlocks,
   suggestInsert,
   suggestRewrite,
 } from '../src/plugins/ai-edit';
+import { readBlockOps } from '../src/plugins/ai-structure';
 import { listSuggestions, suggestionsResult } from '../src/plugins/suggestions';
 
 /**
@@ -137,20 +137,46 @@ describe('edits block by block', () => {
     const all = editableBlocks(doc, 0, doc.content.size);
     expect(all.map((b) => b.text)).toEqual(['Title', 'Item']);
     expect(blocksText(all)).toBe('<block id="1">Title</block>\n<block id="2">Item</block>');
+    // With the document, each block that isn't a plain paragraph says its kind.
+    expect(blocksText(all, doc)).toBe(
+      '<block id="1" type="h2">Title</block>\n<block id="2" type="bullet">Item</block>',
+    );
     // A selection inside a block takes the whole block.
     expect(editableBlocks(doc, 3, 4).map((b) => b.text)).toEqual(['Title']);
   });
 
+  it('the kinds the model sees: paragraphs plain, cells, quotes, numbered items', () => {
+    const e = mount(
+      '<p>Plain</p><blockquote><p>Quoted</p></blockquote><ol><li><p>First</p><p>More</p></li></ol>' +
+        '<table><tbody><tr><td><p>Cell</p></td></tr></tbody></table>',
+    );
+    const { doc } = e.view.state;
+    expect(blocksText(editableBlocks(doc, 0, doc.content.size), doc)).toBe(
+      [
+        '<block id="1">Plain</block>',
+        '<block id="2" type="quote">Quoted</block>',
+        '<block id="3" type="number">First</block>',
+        // The second paragraph of an item is the item's own paragraph, not another item.
+        '<block id="4">More</block>',
+        '<block id="5" type="cell">Cell</block>',
+      ].join('\n'),
+    );
+  });
+
   it('reads complete blocks as they stream in, from where it stopped', () => {
-    const first = readBlocks('<block id="2">New two</block>\n<block id="5">Fi');
-    expect(first.blocks).toEqual([[2, 'New two']]);
+    const texts = (answer: string, start?: number) => {
+      const { ops, end } = readBlockOps(answer, start);
+      return { ops: ops.map((op) => (op.op === 'text' ? [op.id, op.text] : op)), end };
+    };
+    const first = texts('<block id="2">New two</block>\n<block id="5">Fi');
+    expect(first.ops).toEqual([[2, 'New two']]);
     const answer = '<block id="2">New two</block>\n<block id="5">Five < six</block>';
-    const next = readBlocks(answer, first.end);
-    expect(next.blocks).toEqual([[5, 'Five < six']]);
+    const next = texts(answer, first.end);
+    expect(next.ops).toEqual([[5, 'Five < six']]);
     expect(next.end).toBe(answer.length);
     // An unclosed block doesn't swallow the next one; quotes around the id are optional.
-    expect(readBlocks("<block id=1>a <block id='3'>c</block>").blocks).toEqual([[3, 'c']]);
-    expect(readBlocks('NO CHANGES').blocks).toEqual([]);
+    expect(texts("<block id=1>a <block id='3'>c</block>").ops).toEqual([[3, 'c']]);
+    expect(texts('NO CHANGES').ops).toEqual([]);
   });
 
   it("a block's new text: no paragraph breaks, edges like the original's", () => {

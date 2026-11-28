@@ -83,31 +83,45 @@ async function* demoModel(request: AiRequest): AsyncGenerator<string> {
               ? /title/i.test(request.instruction)
                 ? 'A Demo Title'
                 : `The document has ${request.document.split(/\s+/).filter(Boolean).length} words.`
-              : request.action === 'edit'
-                ? // Edits of the document: only the blocks that change, in the editor's block format.
-                  [...request.text.matchAll(/<block id="(\d+)">([\s\S]*?)<\/block>/g)]
-                    .filter(([, , text]) => edit(text!) !== text)
-                    .map(([, id, text]) => `<block id="${id}">${edit(text!)}</block>\n`)
-                    .join('') || 'NO CHANGES'
-                : request.action === 'review'
-                  ? // Remarks on the document: two known misspellings with fixes, a vague word without one.
-                    [...request.text.matchAll(/<block id="(\d+)">([\s\S]*?)<\/block>/g)]
-                      .flatMap(([, id, text]) => [
-                        ...[...text!.matchAll(/\b(teh|recieve)\b/g)].map(
-                          ([word]) =>
-                            `<finding block="${id}"><quote>${word}</quote><fix>${word === 'teh' ? 'the' : 'receive'}</fix><why>A spelling mistake.</why></finding>\n`,
-                        ),
-                        ...(/\bgood\b/.test(text!)
-                          ? [
-                              `<finding block="${id}"><quote>good</quote><fix></fix><why>Say what exactly is good.</why></finding>\n`,
-                            ]
-                          : []),
-                      ])
-                      .join('') || 'NO PROBLEMS'
-                  : request.action === 'custom' && !request.text
-                    ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
-                      'Once upon a time, the demo model told a story. '.repeat(40)
-                    : (rewrite[request.action] ?? ((t: string) => t))(request.text);
+              : request.action === 'edit' && /structure/i.test(request.instruction)
+                ? // Structure: a title before the first block, the rest as a bulleted list, the last one removed.
+                  [
+                    '<block after="0" type="h2">A Demo Title</block>\n',
+                    ...[
+                      ...request.text.matchAll(/<block id="(\d+)"[^>]*>([\s\S]*?)<\/block>/g),
+                    ].map(([, id, text], index, all) =>
+                      index === all.length - 1 && all.length > 2
+                        ? `<block id="${id}" remove></block>\n`
+                        : index > 0
+                          ? `<block id="${id}" type="bullet">${text}</block>\n`
+                          : '',
+                    ),
+                  ].join('')
+                : request.action === 'edit'
+                  ? // Edits of the document: only the blocks that change, in the editor's block format.
+                    [...request.text.matchAll(/<block id="(\d+)"[^>]*>([\s\S]*?)<\/block>/g)]
+                      .filter(([, , text]) => edit(text!) !== text)
+                      .map(([, id, text]) => `<block id="${id}">${edit(text!)}</block>\n`)
+                      .join('') || 'NO CHANGES'
+                  : request.action === 'review'
+                    ? // Remarks on the document: two known misspellings with fixes, a vague word without one.
+                      [...request.text.matchAll(/<block id="(\d+)"[^>]*>([\s\S]*?)<\/block>/g)]
+                        .flatMap(([, id, text]) => [
+                          ...[...text!.matchAll(/\b(teh|recieve)\b/g)].map(
+                            ([word]) =>
+                              `<finding block="${id}"><quote>${word}</quote><fix>${word === 'teh' ? 'the' : 'receive'}</fix><why>A spelling mistake.</why></finding>\n`,
+                          ),
+                          ...(/\bgood\b/.test(text!)
+                            ? [
+                                `<finding block="${id}"><quote>good</quote><fix></fix><why>Say what exactly is good.</why></finding>\n`,
+                              ]
+                            : []),
+                        ])
+                        .join('') || 'NO PROBLEMS'
+                    : request.action === 'custom' && !request.text
+                      ? // A custom request at the cursor gets a long answer (several seconds of streaming): e2e cancels it midway.
+                        'Once upon a time, the demo model told a story. '.repeat(40)
+                      : (rewrite[request.action] ?? ((t: string) => t))(request.text);
   for (const word of result.split(/(?<= )/)) {
     await new Promise((resolve) => setTimeout(resolve, 15));
     if (request.signal.aborted) return;

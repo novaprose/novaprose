@@ -55,7 +55,8 @@ export interface AiRequest {
   /**
    * The text to work on: the selected text, paragraphs separated by a blank line (empty: the model
    * writes at the cursor). For edit and review, the blocks, each as `<block id="N">text</block>` on its
-   * own line.
+   * own line, with `type="KIND"` for a block that is not a plain paragraph (`h2`, `quote`, `bullet`,
+   * `number`, `cell`).
    */
   text: string;
   /** Up to 1,500 characters before and after the text (or the cursor), for context. */
@@ -238,9 +239,11 @@ export function buildPrompt(f: PromptFields): { prompt: string; rules: string[] 
     ];
     rules = [
       data,
-      `The blocks are the paragraphs, headings, list items and table cells of the document, each as <block id="N">its text</block>${f.before || f.after ? '; <before> and <after> are the text around them' : ''}.`,
+      `The blocks are the paragraphs, headings, list items and table cells of the document, each as <block id="N">its text</block>; a block that is not a plain paragraph has its kind as type="KIND" (h1 to h6, quote, bullet, number, or cell for a table cell)${f.before || f.after ? '; <before> and <after> are the text around them' : ''}.`,
       'Apply the instruction to the blocks. Reply with only the blocks you changed, each as <block id="N">its whole new text</block> on its own line, and nothing else.',
-      'Keep the ids. Do not add, split, merge or reorder blocks; to empty a block, reply with <block id="N"></block>.',
+      'Change the structure only when the instruction asks for it. To make a block another kind, add type: <block id="N" type="KIND">its text</block>, where KIND is p (a paragraph), h1 to h6 (a heading), quote, bullet (an item of a bulleted list) or number (an item of a numbered list); items of one kind next to each other form one list.',
+      'To add a block, write <block after="N" type="KIND">its text</block> on its own line (after="0" puts it before the first block; several after the same block keep their order). To remove a block, write <block id="N" remove></block>.',
+      'Keep the ids. Do not split, merge or reorder blocks; to empty a block, reply with <block id="N"></block>.',
       `Keep line breaks inside a block. No Markdown. ${objects}`,
       language,
       'If nothing needs to change, reply with NO CHANGES.',
@@ -253,7 +256,7 @@ export function buildPrompt(f: PromptFields): { prompt: string; rules: string[] 
     ];
     rules = [
       data,
-      `The blocks are the paragraphs, headings, list items and table cells of the document, each as <block id="N">its text</block>${f.before || f.after ? '; <before> and <after> are the text around them' : ''}.`,
+      `The blocks are the paragraphs, headings, list items and table cells of the document, each as <block id="N">its text</block>; a block that is not a plain paragraph has its kind as type="KIND" (h1 to h6, quote, bullet, number, or cell for a table cell)${f.before || f.after ? '; <before> and <after> are the text around them' : ''}.`,
       'Review the blocks as the instruction asks. Do not rewrite them: list the remarks, the most important first, at most 30, in the order of the blocks.',
       'Write each remark on its own line as <finding block="N"><quote>the exact words of that block the remark is about</quote><fix>the words to put in their place</fix><why>the reason, in one short sentence</why></finding>, and nothing else.',
       'Quote the words exactly as they are in the block, only as many as needed to find them. Leave <fix></fix> empty when there is no simple fix (for example, a claim that needs a source).',

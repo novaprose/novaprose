@@ -246,7 +246,7 @@ describe('the AI chat: Edit', () => {
       action: 'edit',
       instruction: 'Use another color',
       text: [
-        '<block id="1">Title</block>',
+        '<block id="1" type="h2">Title</block>',
         '<block id="2">The quick brown fox.</block>',
         '<block id="3">Last one.</block>',
       ].join('\n'),
