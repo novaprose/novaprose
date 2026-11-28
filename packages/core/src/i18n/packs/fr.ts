@@ -369,6 +369,7 @@ const fr: LanguagePack = {
   'mergetags.search': 'Variables',
   'mergetags.empty': 'Aucune variable trouvée',
   'mergetags.unknown': 'Variable inconnue',
+  'noneditable.locked': 'Contenu verrouillé : il peut être copié ou supprimé, mais pas modifié.',
   'nonbreaking.title': 'Espace insécable',
   'checklist.checklist': 'Liste de contrôle',
   'checklist.done': 'Fait',

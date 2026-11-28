@@ -22,6 +22,7 @@ const PLUGINS = [
   'mentions',
   'mergetags',
   'suggestions',
+  'noneditable',
   // Lazy ones: decorations (checkboxes, code highlighting) must not crash on garbage attributes either.
   'checklist',
   'codesample',
@@ -76,6 +77,8 @@ const ATTR_NAMES = [
   'description',
   'image',
   'site',
+  'lock',
+  'tag',
 ];
 const VARIANTS: unknown[] = [null, 7, 0, -1, true, 'url(x.htc)', '"><x', 'a b', [], {}];
 const attrsWith = (v: unknown) => Object.fromEntries(ATTR_NAMES.map((n) => [n, v]));
@@ -125,6 +128,14 @@ const NODES: Record<string, (a: Record<string, unknown>) => unknown> = {
     attrs,
     content: [{ type: 'list_item', content: [para(text)] }],
   }),
+  noneditable: (attrs) => ({ type: 'noneditable', attrs, content: [para(text)] }),
+  noneditable_inline: (attrs) => para({ type: 'noneditable_inline', attrs, content: [text] }),
+  editable_inline: (attrs) =>
+    ({
+      type: 'paragraph',
+      attrs: { lock: 'attr' },
+      content: [{ type: 'editable_inline', attrs, content: [text] }],
+    }) as unknown,
   table: (attrs) => ({
     type: 'table',
     attrs,

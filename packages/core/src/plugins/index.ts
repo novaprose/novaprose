@@ -15,6 +15,7 @@ import fullpagehtml from './fullpagehtml';
 import pagebreak from './pagebreak';
 import pagelayout from './pagelayout';
 import footnotes from './footnotes';
+import noneditable from './noneditable';
 
 /**
  * The catalog of built-in NovaProse plugins. Each one is attached by name (`plugins: ['insertdatetime']`)
@@ -62,6 +63,7 @@ registerPlugin('math', math);
 registerPlugin('pagebreak', pagebreak);
 registerPlugin('pagelayout', pagelayout);
 registerPlugin('footnotes', footnotes);
+registerPlugin('noneditable', noneditable);
 registerPlugin('media', media);
 registerPlugin('pageembed', pageembed);
 registerPlugin('advtable', advtable);

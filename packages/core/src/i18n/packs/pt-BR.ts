@@ -364,6 +364,7 @@ const ptBR: LanguagePack = {
   'mergetags.search': 'Variáveis',
   'mergetags.empty': 'Nenhuma variável encontrada',
   'mergetags.unknown': 'Variável desconhecida',
+  'noneditable.locked': 'Conteúdo bloqueado: pode ser copiado ou excluído, mas não alterado.',
   'nonbreaking.title': 'Espaço não separável',
   'checklist.checklist': 'Lista de tarefas',
   'checklist.done': 'Concluído',

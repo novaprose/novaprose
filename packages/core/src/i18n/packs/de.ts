@@ -369,6 +369,8 @@ const de: LanguagePack = {
   'mergetags.search': 'Variablen',
   'mergetags.empty': 'Keine Variablen gefunden',
   'mergetags.unknown': 'Unbekannte Variable',
+  'noneditable.locked':
+    'Geschützter Inhalt: Er kann kopiert oder gelöscht, aber nicht geändert werden.',
   'nonbreaking.title': 'Geschütztes Leerzeichen',
   'checklist.checklist': 'Checkliste',
   'checklist.done': 'Erledigt',

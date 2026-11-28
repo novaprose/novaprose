@@ -257,6 +257,8 @@ const editor = createEditor({
     'insertdatetime',
     'quickbars',
     ...(new URLSearchParams(location.search).has('mergetags') ? ['mergetags'] : []),
+    // ?noneditable=1: locked content (e2e/noneditable.spec.ts).
+    ...(new URLSearchParams(location.search).has('noneditable') ? ['noneditable'] : []),
     ...(new URLSearchParams(location.search).has('parity')
       ? [
           'charmap',

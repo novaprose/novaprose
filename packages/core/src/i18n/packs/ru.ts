@@ -363,6 +363,7 @@ const ru: LanguagePack = {
   'mergetags.search': 'Переменные',
   'mergetags.empty': 'Переменные не найдены',
   'mergetags.unknown': 'Неизвестная переменная',
+  'noneditable.locked': 'Защищённый фрагмент: его можно скопировать или удалить, но не изменить.',
   'nonbreaking.title': 'Неразрывный пробел',
   'checklist.checklist': 'Чек-лист',
   'checklist.done': 'Выполнено',

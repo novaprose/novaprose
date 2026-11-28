@@ -1,0 +1,30 @@
+/* Locked content (the noneditable plugin): a piece that is selected whole, and the parts opened in it. */
+.nova-prosemirror .nova-locked {
+  cursor: default;
+}
+
+.nova-prosemirror .nova-locked:not(.ProseMirror-selectednode):hover {
+  outline: 1px dashed var(--nova-control-border);
+  outline-offset: 2px;
+}
+
+.nova-prosemirror .nova-locked.ProseMirror-selectednode {
+  outline: 2px solid var(--nova-focus);
+  outline-offset: 2px;
+}
+
+.nova-prosemirror .nova-unlocked {
+  cursor: text;
+  outline: 1px dashed var(--nova-accent);
+  outline-offset: 1px;
+}
+
+@media (forced-colors: active) {
+  .nova-prosemirror .nova-locked.ProseMirror-selectednode {
+    outline-color: Highlight;
+  }
+
+  .nova-prosemirror .nova-unlocked {
+    outline-color: CanvasText;
+  }
+}

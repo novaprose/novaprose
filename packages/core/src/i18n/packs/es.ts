@@ -363,6 +363,7 @@ const es: LanguagePack = {
   'mergetags.search': 'Variables',
   'mergetags.empty': 'No se encontraron variables',
   'mergetags.unknown': 'Variable desconocida',
+  'noneditable.locked': 'Contenido bloqueado: se puede copiar o eliminar, pero no modificar.',
   'nonbreaking.title': 'Espacio de no separación',
   'checklist.checklist': 'Lista de tareas',
   'checklist.done': 'Hecho',

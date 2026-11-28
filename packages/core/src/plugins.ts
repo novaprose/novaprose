@@ -43,9 +43,11 @@ export interface NovaPlugin {
   /**
    * Attributes added to existing nodes, by name: read from the node's element when HTML is parsed and
    * written back to it (`nodes: 'textblock'` for every node that holds text). The suggestions plugin
-   * keeps a suggested change of a block's type or style this way.
+   * keeps a suggested change of a block's type or style this way. A function receives the editor's
+   * settings (as `nodes` does), for attributes that depend on them.
    */
-  nodeAttributes?: Record<string, NodeAttribute>;
+  nodeAttributes?:
+    Record<string, NodeAttribute> | ((editor: Editor) => Record<string, NodeAttribute>);
   /**
    * Your own way to draw nodes in the editor: `{ callout: reactNodeView(Callout) }`, `vueNodeView(…)`
    * or `defineNodeView(…)`. Doesn't affect the HTML (that comes from toDOM). Views belong in the plugin

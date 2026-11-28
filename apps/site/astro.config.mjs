@@ -96,6 +96,7 @@ export default defineConfig({
             { slug: 'guides/pages-and-printing' },
             { slug: 'guides/word' },
             { slug: 'guides/content-restrictions' },
+            { slug: 'guides/locked-content' },
             { slug: 'guides/collaboration' },
             { slug: 'guides/comments' },
             { slug: 'guides/mentions' },

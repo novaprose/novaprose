@@ -11,6 +11,20 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Locked content
+
+- The `noneditable` plugin locks parts of a document: an element with the class
+  `mceNonEditable` or `contenteditable="false"` (a paragraph, a table, a `div` around several
+  blocks, a `span` in a line) is selected, copied and deleted whole, and nothing inside it changes.
+  Typing or pasting over a selected locked piece doesn't replace it; formatting across it formats
+  what is around it. Parts marked `mceEditable` (or `contenteditable="true"`) inside stay
+  editable, without changes leaking past their edges. The HTML is written back as it came. Arrow
+  keys, Backspace and Delete next to a locked piece select it; screen readers hear that it is
+  locked. See [Locked content](https://novaprose.com/guides/locked-content/).
+- The compatibility layer locks `mceNonEditable` content by default, as TinyMCE does, with
+  `noneditable_class` and `editable_class`.
+- Plugins can give `nodeAttributes` as a function of the editor's settings, as `nodes`.
+
 ### Security
 
 - HTML from outside can be cleaned on a server with the editor's own rules:

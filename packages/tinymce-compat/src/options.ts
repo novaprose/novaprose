@@ -119,6 +119,8 @@ const IGNORED = new Set([
   'toolbar_mode',
   'toolbar_sticky',
   'toolbar_sticky_offset',
+  'noneditable_class',
+  'editable_class',
   'content_language',
   'content_langs',
   'font_family_formats',
@@ -471,6 +473,8 @@ export function mapOptions(config: TinyConfig): MappedOptions {
   if (plugins.includes('ai') && !plugins.includes('suggestions')) {
     plugins.splice(plugins.indexOf('ai'), 0, 'suggestions');
   }
+  // Locked content (mceNonEditable, contenteditable="false") is part of TinyMCE's core: always on.
+  if (!plugins.includes('noneditable')) plugins.push('noneditable');
   // mediaembed's button is the media plugin's: its dialog then takes any address.
   if (plugins.includes('mediaembed') && !plugins.includes('media')) {
     plugins.splice(plugins.indexOf('mediaembed'), 0, 'media');
@@ -635,6 +639,16 @@ export function mapOptions(config: TinyConfig): MappedOptions {
 
   // Plugin settings under their options.
   const pluginOptions: Record<string, unknown> = {};
+  if (typeof config.noneditable_class === 'string' || typeof config.editable_class === 'string') {
+    pluginOptions.noneditable = {
+      ...(typeof config.noneditable_class === 'string'
+        ? { noneditableClass: config.noneditable_class }
+        : {}),
+      ...(typeof config.editable_class === 'string'
+        ? { editableClass: config.editable_class }
+        : {}),
+    };
+  }
   if (config.autosave_interval || config.autosave_retention || config.autosave_prefix) {
     const seconds = (value: unknown) => parseInt(String(value), 10);
     pluginOptions.autosave = {

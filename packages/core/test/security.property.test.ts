@@ -38,6 +38,7 @@ const SCHEMA_PLUGINS = [
   'mentions',
   'mergetags',
   'suggestions',
+  'noneditable',
 ];
 
 let editor: Editor;
@@ -153,6 +154,7 @@ const TAGS = [
   'colgroup',
   'col',
   'section',
+  'aside',
   'summary',
   'abbr',
   'kbd',
@@ -232,6 +234,8 @@ const attrValue = fc.oneof(
     "' onmouseover='alert(1)",
     '<img src=x onerror=alert(1)>',
   ),
+  // Locked content (the noneditable plugin): its classes and contenteditable values.
+  fc.constantFrom('mceNonEditable', 'mceEditable', 'mceNonEditable intro', 'false', 'true', ''),
   fc.string({ maxLength: 12 }),
 );
 

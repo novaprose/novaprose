@@ -1040,9 +1040,22 @@ function withAttribute(name: string, attr: NodeAttribute, spec: NodeSpec): NodeS
               typeof second === 'object' &&
               !Array.isArray(second) &&
               (second as { nodeType?: unknown }).nodeType === undefined;
+            const own = (hasAttrs ? second : {}) as Record<string, unknown>;
+            // A class from the attribute joins the node's own classes instead of replacing them
+            // (once: with every class kept, the node may already have it).
+            const merged =
+              typeof own.class === 'string' && own.class && extra.class
+                ? {
+                    ...own,
+                    ...extra,
+                    class: [
+                      ...new Set(`${own.class} ${extra.class}`.split(/\s+/).filter(Boolean)),
+                    ].join(' '),
+                  }
+                : { ...own, ...extra };
             return [
               out[0],
-              { ...(hasAttrs ? (second as Attrs) : {}), ...extra },
+              merged,
               ...(out as unknown[]).slice(hasAttrs ? 2 : 1),
             ] as unknown as DOMOutputSpec;
           },

@@ -80,7 +80,8 @@ editor.on('change', () => console.log(editor.getContent()));
   `paste_as_text`, `paste_preprocess`, `valid_elements` (with attribute rules)/`invalid_elements`/`valid_styles`,
   `extended_valid_elements`, `custom_elements`, `directionality`,
   `font_family_formats`, `font_size_formats`, `line_height_formats`, `color_map`, `toolbar_mode`,
-  `setup`, `init_instance_callback`, `autosave_*`, `quickbars_*`, `mentions_fetch`.
+  `setup`, `init_instance_callback`, `autosave_*`, `quickbars_*`, `mentions_fetch`,
+  `noneditable_class`, `editable_class` (locked content is always on, as in TinyMCE).
 - Form submit writes the HTML back into the textarea.
 
 Plugins built into NovaProse (`lists`, `link`, `image`, `table`, `code`, `searchreplace`…) need

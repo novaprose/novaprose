@@ -81,11 +81,16 @@ export function schemaFromOptions(
   const marks: Record<string, MarkSpec> = {};
   const attributes: Record<string, NodeAttribute> = {};
   for (const plugin of plugins) {
-    Object.assign(attributes, plugin.nodeAttributes);
     // Nodes may depend on plugin settings (for example, the variable's attribute name). If one
     // plugin fails, it goes without its nodes, but the editor (and server rendering) keeps working.
     let pluginNodes: Record<string, NodeSpec> | undefined;
     try {
+      Object.assign(
+        attributes,
+        typeof plugin.nodeAttributes === 'function'
+          ? plugin.nodeAttributes(context as Parameters<typeof plugin.nodeAttributes>[0])
+          : plugin.nodeAttributes,
+      );
       pluginNodes =
         typeof plugin.nodes === 'function'
           ? plugin.nodes(context as Parameters<typeof plugin.nodes>[0])

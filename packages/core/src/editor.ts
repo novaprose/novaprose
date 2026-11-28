@@ -14,6 +14,7 @@ import type { AdvCodeOptions } from './plugins/advcode';
 import type { EditImageOptions } from './plugins/editimage';
 import type { MediaEmbedOptions } from './plugins/mediaembed';
 import type { FullPageHtmlOptions } from './plugins/fullpagehtml';
+import type { NoneditableOptions } from './plugins/noneditable';
 import type { TypographyOptions } from './plugins/typography';
 import type { A11yCheckerOptions } from './plugins/a11ychecker';
 import { languageTag, type ContentLanguage } from './language';
@@ -161,6 +162,7 @@ export interface PluginOptions {
   editimage?: EditImageOptions;
   mediaembed?: MediaEmbedOptions;
   fullpagehtml?: FullPageHtmlOptions;
+  noneditable?: NoneditableOptions;
   /** The email plugin's options; emailHTML() from @novaprose/core/email uses them too. */
   email?: EmailOptions;
   [plugin: string]: unknown;
