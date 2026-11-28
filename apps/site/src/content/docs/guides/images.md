@@ -34,6 +34,39 @@ The returned URL must pass the image allowlist: `https:`, `http:` and relative U
 base64 `data:` URLs of raster formats (PNG, JPEG, GIF, WebP, AVIF, BMP). Anything else, including
 `data:image/svg+xml`, is refused.
 
+## Smaller files, no camera metadata
+
+Before an image is uploaded (or embedded, without `uploadImage`), the editor prepares it in the
+browser:
+
+- a photo larger than 2560 pixels on a side is scaled down, so a 12-megapixel phone photo of 4 MB
+  becomes a few hundred kilobytes;
+- what the camera wrote into the file besides the picture — EXIF and XMP, with the place where the
+  photo was taken, the camera and the date — is left out, so a pasted photo doesn't share your
+  location;
+- the photo keeps its orientation: a picture the phone stored sideways arrives standing upright.
+
+A file that needs none of this goes as it is, byte for byte. GIF, SVG and animated WebP never
+change, PNG stays PNG and a BMP becomes PNG. The work happens in the browser, before anything is
+sent.
+
+```ts
+createEditor({
+  element,
+  uploadImage,
+  imageOptimize: { maxWidth: 1920, maxHeight: 1920, quality: 0.8 },
+  // imageOptimize: { keepMetadata: true }, // keep EXIF and the place
+  // imageOptimize: false,                  // upload files as they are
+});
+```
+
+| Option         | Default | What it does                                   |
+| -------------- | ------- | ---------------------------------------------- |
+| `maxWidth`     | `2560`  | the largest width in pixels                    |
+| `maxHeight`    | `2560`  | the largest height in pixels                   |
+| `quality`      | `0.85`  | JPEG and WebP quality, from 0 to 1             |
+| `keepMetadata` | `false` | keep EXIF, XMP and IPTC (the place of a photo) |
+
 ## Cloud storage
 
 `@novaprose/core/upload` has ready `uploadImage` functions for cloud storage. Keys never reach the

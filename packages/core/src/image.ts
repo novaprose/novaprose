@@ -72,6 +72,22 @@ export function uploadImages(editor: Editor, files: File[], pos?: number): void 
   }
 }
 
+/**
+ * The file as it will be uploaded or embedded (the imageOptimize option, on by default): a photo
+ * larger than the limit is scaled down and its camera metadata (EXIF, the place it was taken) is
+ * left out. A lazy part: it loads with the first image.
+ */
+export async function prepareImage(editor: Editor, file: File): Promise<File> {
+  const option = editor.options.imageOptimize;
+  if (option === false) return file;
+  try {
+    const { optimizeImage } = await import('./image-optimize');
+    return await optimizeImage(file, typeof option === 'object' ? option : {});
+  } catch {
+    return file;
+  }
+}
+
 /** Pauses before automatic retries: most network failures are temporary. */
 export const UPLOAD_RETRY_DELAYS = [1000, 3000];
 
@@ -84,7 +100,20 @@ class UnsafeUploadUrl extends Error {}
  * "Retry" and "Remove image" buttons. Closing the notification removes the image: a blob: address must not
  * end up in the saved document.
  */
-function startUpload(editor: Editor, file: File, blobUrl: string, attempt: number): void {
+function startUpload(
+  editor: Editor,
+  file: File,
+  blobUrl: string,
+  attempt: number,
+  prepared = false,
+): void {
+  // The file is prepared once (scaled down, without camera metadata); retries reuse it.
+  if (!prepared) {
+    void prepareImage(editor, file).then((ready) =>
+      startUpload(editor, ready, blobUrl, attempt, true),
+    );
+    return;
+  }
   const view = editor.view;
   const { t } = editor.ui;
   const handler = editor.options.uploadImage;
@@ -124,7 +153,7 @@ function startUpload(editor: Editor, file: File, blobUrl: string, attempt: numbe
         setTimeout(() => {
           waiting.close();
           if (view.isDestroyed) return release();
-          startUpload(editor, file, blobUrl, attempt + 1);
+          startUpload(editor, file, blobUrl, attempt + 1, true);
         }, delay);
         return;
       }
@@ -133,7 +162,7 @@ function startUpload(editor: Editor, file: File, blobUrl: string, attempt: numbe
         text: t('image.uploadFailed'),
         type: 'error',
         actions: [
-          { label: t('image.retry'), onAction: () => startUpload(editor, file, blobUrl, 0) },
+          { label: t('image.retry'), onAction: () => startUpload(editor, file, blobUrl, 0, true) },
           { label: t('image.delete'), onAction: remove },
         ],
         onClose: remove,
@@ -179,8 +208,9 @@ function replaceImageSrc(view: EditorView, from: string, to: string): void {
  */
 export async function uploadEmbeddedImage(editor: Editor, src: string): Promise<void> {
   const handler = editor.options.uploadImage;
-  const file = handler ? dataUrlToFile(src) : null;
-  if (!handler || !file) return;
+  const embedded = handler ? dataUrlToFile(src) : null;
+  if (!handler || !embedded) return;
+  const file = await prepareImage(editor, embedded);
   const notice = editor.ui.notify({ text: editor.ui.t('image.uploading'), timeout: 0 });
   try {
     const url = await handler(file, (percent) =>

@@ -18,6 +18,7 @@ import type { TypographyOptions } from './plugins/typography';
 import type { A11yCheckerOptions } from './plugins/a11ychecker';
 import { languageTag, type ContentLanguage } from './language';
 import { stickyHeader } from './sticky-header';
+import type { ImageOptimizeOptions } from './image-optimize';
 import type { EmailOptions } from './email';
 import type { AutosaveOptions } from './plugins/autosave';
 import type { CodeSampleOptions } from './plugins/codesample';
@@ -282,6 +283,13 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   translations?: LanguagePack;
   /** Upload images to your server. Without it, images are embedded as data: URLs. */
   uploadImage?: UploadImageHandler;
+  /**
+   * Images are prepared before they are uploaded or embedded: a photo larger than 2560 pixels is
+   * scaled down and what the camera wrote besides the picture (EXIF: the place, the camera, the
+   * date) is left out. On by default; options change the limits and quality, false sends files as
+   * they are.
+   */
+  imageOptimize?: boolean | ImageOptimizeOptions;
   /**
    * Your own file picker: a Browse button next to the address field of the link, image and video
    * dialogs. Gets the field type and the current address, returns { url, text?, title?, alt? } or null.

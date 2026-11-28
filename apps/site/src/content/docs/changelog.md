@@ -9,6 +9,17 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
+## Unreleased
+
+### Images
+
+- Images are prepared in the browser before they are uploaded or embedded: a photo larger than
+  2560 pixels is scaled down, keeps its orientation and loses what the camera wrote into it (EXIF
+  and XMP: the place it was taken, the camera, the date). A file that needs none of this goes as it
+  is; GIF, SVG and animated WebP never change. `imageOptimize` sets the limits and the quality,
+  `false` sends files as they are. See
+  [Images](https://novaprose.com/guides/images/#smaller-files-no-camera-metadata).
+
 ## 0.9.0 — 2026-11-28
 
 An accessibility release. A phrase in another language can be marked for screen readers; the line

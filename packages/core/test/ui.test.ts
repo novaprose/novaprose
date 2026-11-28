@@ -387,6 +387,8 @@ describe('image upload', () => {
     select(e, 2, 2);
     uploadImages(e, [png()]);
     expect(e.getHTML()).toMatch(/<img src="blob:/);
+    // The file is prepared first (imageOptimize, on by default), then handed to uploadImage.
+    await vi.waitFor(() => expect(uploadImage).toHaveBeenCalledTimes(1));
     resolve('https://cdn.example.com/a.png');
     await flush();
     expect(e.getHTML()).toBe('<p>a<img src="https://cdn.example.com/a.png"></p>');
@@ -419,7 +421,7 @@ describe('image upload', () => {
 
     it('a temporary failure: an automatic retry, the image uploads without the user', async () => {
       const uploadImage = flaky(2);
-      const e = mount('<p>a</p>', { uploadImage });
+      const e = mount('<p>a</p>', { uploadImage, imageOptimize: false });
       select(e, 2, 2);
       uploadImages(e, [png()]);
       await vi.advanceTimersByTimeAsync(5000);
@@ -430,7 +432,7 @@ describe('image upload', () => {
 
     it('a persistent failure: the image stays, "Retry" uploads it', async () => {
       const uploadImage = flaky(3);
-      const e = mount('<p>a</p>', { uploadImage });
+      const e = mount('<p>a</p>', { uploadImage, imageOptimize: false });
       select(e, 2, 2);
       uploadImages(e, [png()]);
       await vi.advanceTimersByTimeAsync(5000);
@@ -445,7 +447,7 @@ describe('image upload', () => {
 
     it('"Remove image" and closing the notification remove it (blob: never reaches the document)', async () => {
       for (const how of ['remove', 'close'] as const) {
-        const e = mount('<p>a</p>', { uploadImage: flaky(99) });
+        const e = mount('<p>a</p>', { uploadImage: flaky(99), imageOptimize: false });
         select(e, 2, 2);
         uploadImages(e, [png()]);
         await vi.advanceTimersByTimeAsync(5000);

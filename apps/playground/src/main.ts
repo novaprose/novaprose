@@ -419,25 +419,39 @@ const editor = createEditor({
           url: `https://storage.example.test/images/${encodeURIComponent(file.name)}?X-Amz-Signature=demo`,
         })),
       }
-    : new URLSearchParams(location.search).has('upload')
+    : new URLSearchParams(location.search).get('upload') === 'inspect'
       ? {
-          uploadImage: (file: File, progress: (p: number) => void) =>
-            new Promise<string>((resolve, reject) => {
-              const mode = new URLSearchParams(location.search).get('upload');
-              let p = 0;
-              const timer = setInterval(() => progress((p = Math.min(100, p + 20))), 300);
-              setTimeout(() => {
-                clearInterval(timer);
-                if (mode === 'fail') reject(new Error('The server is unavailable'));
-                else {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(String(reader.result));
-                  reader.readAsDataURL(file);
-                }
-              }, 1600);
-            }),
+          // ?upload=inspect: the files the editor uploads are kept in window.uploads
+          // (e2e/image-optimize.spec.ts); &original turns the preparation off.
+          uploadImage: (file: File) => {
+            ((window as unknown as { uploads?: File[] }).uploads ??= []).push(file);
+            return new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(String(reader.result));
+              reader.readAsDataURL(file);
+            });
+          },
+          ...(new URLSearchParams(location.search).has('original') ? { imageOptimize: false } : {}),
         }
-      : {}),
+      : new URLSearchParams(location.search).has('upload')
+        ? {
+            uploadImage: (file: File, progress: (p: number) => void) =>
+              new Promise<string>((resolve, reject) => {
+                const mode = new URLSearchParams(location.search).get('upload');
+                let p = 0;
+                const timer = setInterval(() => progress((p = Math.min(100, p + 20))), 300);
+                setTimeout(() => {
+                  clearInterval(timer);
+                  if (mode === 'fail') reject(new Error('The server is unavailable'));
+                  else {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(String(reader.result));
+                    reader.readAsDataURL(file);
+                  }
+                }, 1600);
+              }),
+          }
+        : {}),
   onChange: (e) => {
     localStorage.setItem(STORAGE_KEY, e.getHTML());
     render(e);
