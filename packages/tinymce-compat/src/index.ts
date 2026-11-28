@@ -7,7 +7,7 @@ import {
 } from '@novaprose/core';
 import { htmlRules } from '@novaprose/core/html-rules';
 import type { TinyAiHandler } from './ai';
-import { CompatEditor } from './editor';
+import { CompatEditor, iconPackFor } from './editor';
 import { activePlugins, mapOptions, type TinyConfig } from './options';
 
 /**
@@ -55,6 +55,42 @@ function warnOnce(message: string): void {
   console.warn(`[nova] tinymce-compat: ${message}`);
 }
 
+/**
+ * An icon pack's script (icons_url): a classic script from an http(s) address, as TinyMCE loads it.
+ * Resolves when it has run, failed or taken too long: the editors then draw the built-in icons.
+ */
+function loadIconPack(url: string): Promise<void> {
+  let href: URL;
+  try {
+    href = new URL(url, document.baseURI);
+  } catch {
+    warnOnce(`icons_url is not an address: ${url}`);
+    return Promise.resolve();
+  }
+  if (href.protocol !== 'https:' && href.protocol !== 'http:') {
+    warnOnce('icons_url must be an http or https address');
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    const script = document.createElement('script');
+    const done = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    const timer = setTimeout(() => {
+      warnOnce(`icon pack took too long to load: ${href.href}`);
+      done();
+    }, 10_000);
+    script.src = href.href;
+    script.addEventListener('load', done);
+    script.addEventListener('error', () => {
+      warnOnce(`icon pack failed to load: ${href.href}`);
+      done();
+    });
+    document.head.append(script);
+  });
+}
+
 /** The number for ids of editors without their own id (mce_1, mce_2…). */
 let counter = 0;
 
@@ -65,6 +101,8 @@ export function createTinymce(): TinyMCECompat {
   registerHtmlRules(htmlRules);
   const all: CompatEditor[] = [];
   const plugins = new Map<string, PluginFn>();
+  /** Icon packs by name (tinymce.IconManager.add): the icons option picks one. */
+  const iconPacks = new Map<string, Record<string, string>>();
   let active: CompatEditor | null = null;
 
   async function initOne(target: HTMLElement, config: TinyConfig): Promise<CompatEditor> {
@@ -72,6 +110,11 @@ export function createTinymce(): TinyMCECompat {
     if (existing) return existing;
 
     const { options, unknown, missingPlugins } = mapOptions(config);
+    // icons: 'name' draws the editor with that pack, the built-in buttons included; what it lacks stays.
+    const pack = typeof config.icons === 'string' ? iconPacks.get(config.icons) : undefined;
+    if (pack) options.icons = iconPackFor(pack);
+    else if (typeof config.icons === 'string' && config.icons !== 'default')
+      warnOnce(`icon pack "${config.icons}" is not loaded (tinymce.IconManager.add or icons_url)`);
     if (unknown.length) warnOnce(`options not supported yet: ${unknown.join(', ')}`);
     const custom = String(
       Array.isArray(config.plugins) ? config.plugins.join(' ') : (config.plugins ?? ''),
@@ -308,6 +351,14 @@ export function createTinymce(): TinyMCECompat {
       }
       // A language with a loader (every pack in the CDN build) loads before the editors are created, like langs/<code>.js
       // in TinyMCE: interface strings are read at creation. If it fails to load, English is used and the editor works.
+      // icons_url: the pack's script calls tinymce.IconManager.add; it runs before the editors are created.
+      if (
+        typeof config.icons === 'string' &&
+        typeof config.icons_url === 'string' &&
+        !iconPacks.has(config.icons)
+      ) {
+        await loadIconPack(config.icons_url);
+      }
       if (typeof config.language === 'string') {
         await loadLanguage(config.language.replace('_', '-')).catch((error: unknown) => {
           console.warn('[nova] tinymce-compat: language pack failed to load', error);
@@ -355,10 +406,16 @@ export function createTinymce(): TinyMCECompat {
       urls: {},
     },
     IconManager: {
-      add: (_name, pack) => {
-        for (const [icon, svg] of Object.entries(pack.icons ?? {})) {
-          CompatEditor.registerIcon(icon, svg);
-        }
+      add: (name, pack) => {
+        const icons = pack && typeof pack.icons === 'object' && pack.icons ? pack.icons : {};
+        const own = Object.fromEntries(
+          Object.entries(icons).filter(
+            (entry): entry is [string, string] => typeof entry[1] === 'string',
+          ),
+        );
+        iconPacks.set(String(name), { ...iconPacks.get(String(name)), ...own });
+        // Buttons of your own with icon: '<name>' find the pack's icons, as before.
+        for (const [icon, svg] of Object.entries(own)) CompatEditor.registerIcon(icon, svg);
       },
     },
     util: { I18n: { translate: (text) => text } },

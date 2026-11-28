@@ -6,6 +6,30 @@ All packages in this repository are versioned together. The format follows
 
 ## Unreleased
 
+### Themes and icons
+
+- Icon packs: `icons` takes SVGs by icon name over the built-in ones. Two packs come ready, each
+  with every icon the editor uses: `@novaprose/core/icons/tabler` (Tabler Icons) and
+  `@novaprose/core/icons/phosphor` (Phosphor), separate files that load only when imported. A pack
+  redraws the whole interface: the toolbar and menus, dropdown arrows, the "more" button, dialogs,
+  notifications and plugin buttons. `editor.ui.registry.addIcon(name, svg)` replaces one icon by
+  name, and controls take an icon by name as well as an SVG.
+- Skins: `@novaprose/core/skins/rounded.css`, `square.css` and `compact.css` change shapes and
+  spacing (never colors), so they work with both themes and your own tokens. The compact one has
+  28 px controls and 16 px icons, and keeps 40 px controls on touch screens.
+- Icons draw at one size, the new `--nova-icon-size` token (18 px), whatever size an SVG says, so
+  a row of controls stays even with icons from any pack.
+- Icons that don't come with the editor (packs, `addIcon`, a control's own SVG) are drawn as one
+  `<svg>` element of SVG elements only: no scripts, `<style>`, event handlers, links, animation,
+  embedded HTML or text, and marked decorative. An SVG file can go in as saved, with its XML
+  declaration, doctype and comments.
+- The compatibility layer takes TinyMCE icon packs: `tinymce.IconManager.add(name, { icons })`
+  with `icons: name`, or `icons_url` (http and https addresses only). The pack's icons redraw
+  NovaProse's own buttons too, and many more TinyMCE icon names are understood (`chevron-down`,
+  `more-drawer`, the table icons and others).
+- A new guide, [Themes, skins and icons](https://novaprose.com/guides/themes-and-icons/): the light
+  and dark themes, design tokens and your brand color, skins, icon packs.
+
 ### Images
 
 - AI for images: with the `ai` plugin, the **Alternative text** dialog has **Describe with AI**. It

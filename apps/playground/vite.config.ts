@@ -72,6 +72,12 @@ export default defineConfig({
       '@novaprose/core/upload': fileURLToPath(
         new URL('../../packages/core/src/upload.ts', import.meta.url),
       ),
+      '@novaprose/core/icons': fileURLToPath(
+        new URL('../../packages/core/src/icons', import.meta.url),
+      ),
+      '@novaprose/core/skins': fileURLToPath(
+        new URL('../../packages/core/src/skins', import.meta.url),
+      ),
       '@novaprose/core': fileURLToPath(
         new URL('../../packages/core/src/index.ts', import.meta.url),
       ),

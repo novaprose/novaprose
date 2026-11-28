@@ -114,7 +114,7 @@ export function createMenubar(
     const def = menus[button.dataset.menu!]!;
     const items = entries(def);
     if (!items.length) return;
-    const menu = createMenu(items, () => editor.ui.closePopover(), title(def));
+    const menu = createMenu(items, () => editor.ui.closePopover(), title(def), editor.ui.registry);
     // ←/→ inside an open menu go to the neighboring menu (standard menubar behavior).
     menu.addEventListener('keydown', (event) => {
       const key = logicalKey(event, menu);

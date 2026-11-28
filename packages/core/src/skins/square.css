@@ -1,0 +1,15 @@
+/*
+ * NovaProse skin "square": straight corners and a crisp frame, for interfaces without rounded
+ * shapes. Load it after the editor's style:
+ *   import '@novaprose/core/style.css';
+ *   import '@novaprose/core/skins/square.css';
+ * Only shapes change: colors (and their contrast) stay the theme's.
+ */
+.nova-editor {
+  --nova-radius: 0;
+  --nova-radius-sm: 0;
+}
+
+.nova-editor .nova-toolbar {
+  gap: 2px;
+}

@@ -281,6 +281,11 @@ export interface EditorOptions extends PasteOptions, ContentRulesOptions {
   direction?: 'ltr' | 'rtl';
   /** Override individual UI strings. */
   translations?: LanguagePack;
+  /**
+   * An icon pack: SVGs by icon name over the built-in ones (`@novaprose/core/icons/tabler`, `…/phosphor`, or your own
+   * { bold: '<svg…>' }). Icons the pack lacks stay the built-in ones.
+   */
+  icons?: Record<string, string>;
   /** Upload images to your server. Without it, images are embedded as data: URLs. */
   uploadImage?: UploadImageHandler;
   /**

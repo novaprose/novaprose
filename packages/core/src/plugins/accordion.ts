@@ -3,7 +3,7 @@ import { Plugin, PluginKey, TextSelection, type Transaction } from 'prosemirror-
 import type { EditorView, NodeView } from 'prosemirror-view';
 import type { Editor } from '../editor';
 import { definePlugin } from '../plugins';
-import { h, icon } from '../ui/dom';
+import { h, icon, type IconSource } from '../ui/dom';
 import { icons } from '../ui/icons';
 import css from './accordion.css?raw';
 import { pickLabels } from './shared';
@@ -116,6 +116,7 @@ class DetailsView implements NodeView {
     view: EditorView,
     getPos: () => number | undefined,
     private readonly labels: (typeof LABELS)['en'],
+    iconSource: IconSource,
   ) {
     this.toggle = h('button', {
       type: 'button',
@@ -124,7 +125,7 @@ class DetailsView implements NodeView {
       // Not in the Tab order (Tab leaves the editor); from the keyboard it is Ctrl/Cmd+Enter in the title.
       tabIndex: -1,
     }) as HTMLButtonElement;
-    this.toggle.append(icon(icons.chevronDown));
+    this.toggle.append(icon(icons.chevronDown, iconSource));
     // The button doesn't take focus from the text.
     this.toggle.addEventListener('mousedown', (event) => event.preventDefault());
     this.toggle.addEventListener('click', () => {
@@ -179,7 +180,8 @@ export default definePlugin({
         key: new PluginKey('nova-accordion'),
         props: {
           nodeViews: {
-            details: (node, view, getPos) => new DetailsView(node, view, getPos, labels),
+            details: (node, view, getPos) =>
+              new DetailsView(node, view, getPos, labels, editor.ui.registry),
           },
         },
       }),

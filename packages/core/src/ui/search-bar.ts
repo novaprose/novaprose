@@ -81,7 +81,7 @@ export function createSearchBar(
     const b = h(
       'button',
       { type: 'button', className: 'nova-btn', 'aria-label': label, 'data-tooltip': label },
-      icon(svg),
+      icon(svg, editor.ui.registry),
     );
     editor.ui.tooltip.attach(b);
     b.addEventListener('click', onClick);

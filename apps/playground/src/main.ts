@@ -1,5 +1,10 @@
 import { createEditor, registerLanguage, type Editor, type EmbedInfo } from '@novaprose/core';
 import { signedUpload } from '@novaprose/core/upload';
+import phosphor from '@novaprose/core/icons/phosphor';
+import tabler from '@novaprose/core/icons/tabler';
+import compact from '@novaprose/core/skins/compact.css?raw';
+import rounded from '@novaprose/core/skins/rounded.css?raw';
+import square from '@novaprose/core/skins/square.css?raw';
 import type { AiRequest } from '../../../packages/core/src/plugins/ai';
 import type {
   SpellCheckMatch,
@@ -159,6 +164,12 @@ async function demoEmbed(url: string): Promise<EmbedInfo | null> {
   };
 }
 
+// ?icons=tabler|phosphor: an icon pack; ?skin=rounded|square|compact: a skin (e2e/themes.spec.ts).
+const iconPack = { tabler, phosphor }[new URLSearchParams(location.search).get('icons') ?? ''];
+const skin = { rounded, square, compact }[new URLSearchParams(location.search).get('skin') ?? ''];
+if (skin)
+  document.head.append(Object.assign(document.createElement('style'), { textContent: skin }));
+
 const stickyOffset = Number(new URLSearchParams(location.search).get('sticky'));
 if (stickyOffset > 0) {
   const bar = document.createElement('div');
@@ -171,6 +182,7 @@ const editor = createEditor({
   element: $('#editor'),
   content: localStorage.getItem(STORAGE_KEY) ?? SAMPLE.trim(),
   placeholder: 'Start typing…',
+  ...(iconPack ? { icons: iconPack } : {}),
   // ?resize=1 | both: a resize handle in the statusbar; ?disabled=1: a disabled editor.
   ...(new URLSearchParams(location.search).has('resize')
     ? { resize: new URLSearchParams(location.search).get('resize') === 'both' ? 'both' : true }

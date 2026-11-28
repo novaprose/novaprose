@@ -83,6 +83,7 @@ export function registerTableUi(editor: Editor): void {
         label: t('table.cellBackground'),
         removeLabel: t('removeColor'),
         customLabel: t('customColor'),
+        iconSource: e.ui.registry,
         onPick: (color) => {
           close();
           e.exec(setCellBackground(color));

@@ -46,7 +46,7 @@ export function attachFilePicker(
       'aria-label': editor.ui.t('dialog.browse'),
       title: editor.ui.t('dialog.browse'),
     },
-    icon(icons.browse),
+    icon(icons.browse, editor.ui.registry),
   );
   const group = h('div', { className: 'nova-input-group' });
   input.replaceWith(group);

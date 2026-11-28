@@ -1,4 +1,4 @@
-import { activeElement, formatShortcut, h, icon } from './dom';
+import { activeElement, formatShortcut, h, icon, type IconSource } from './dom';
 import { icons } from './icons';
 
 export interface MenuItem {
@@ -31,9 +31,15 @@ export type MenuEntry = MenuItem | MenuSeparator | MenuHeading;
 
 /**
  * A menu with keyboard navigation per WAI-ARIA: arrows, Home/End, Enter/Space,
- * search by the first letter. The parent Popover handles Escape.
+ * search by the first letter. The parent Popover handles Escape. `iconSource` draws the icons as
+ * the editor's icon pack has them (editor.ui.registry).
  */
-export function createMenu(entries: MenuEntry[], onDone: () => void, label: string): HTMLElement {
+export function createMenu(
+  entries: MenuEntry[],
+  onDone: () => void,
+  label: string,
+  iconSource?: IconSource,
+): HTMLElement {
   const items: HTMLButtonElement[] = [];
   const menu = h('div', { className: 'nova-menu', role: 'menu', 'aria-label': label });
   const hasChecks = entries.some(
@@ -68,9 +74,13 @@ export function createMenu(entries: MenuEntry[], onDone: () => void, label: stri
         ...(entry.active !== undefined ? { 'aria-checked': String(entry.active) } : {}),
       },
       hasChecks
-        ? h('span', { className: 'nova-menu-check' }, entry.active ? icon(icons.check) : null)
+        ? h(
+            'span',
+            { className: 'nova-menu-check' },
+            entry.active ? icon(icons.check, iconSource) : null,
+          )
         : null,
-      entry.icon ? icon(entry.icon) : null,
+      entry.icon ? icon(entry.icon, iconSource) : null,
       labelEl,
       entry.shortcut
         ? h('kbd', { className: 'nova-menu-shortcut' }, formatShortcut(entry.shortcut))

@@ -1,4 +1,4 @@
-import { h, icon } from './dom';
+import { h, icon, type IconSource } from './dom';
 import { icons } from './icons';
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';
@@ -29,7 +29,12 @@ export class Notifications {
   private readonly region: HTMLDivElement;
   private readonly closeLabel: string;
 
-  constructor(host: HTMLElement, closeLabel: string) {
+  constructor(
+    host: HTMLElement,
+    closeLabel: string,
+    /** The editor's icons (its icon pack): editor.ui.registry. */
+    private readonly iconSource?: IconSource,
+  ) {
     this.closeLabel = closeLabel;
     // aria-live: the screen reader reads notifications without moving focus.
     this.region = h('div', { className: 'nova-notifications', 'aria-live': 'polite' });
@@ -43,7 +48,7 @@ export class Notifications {
     const closeBtn = h(
       'button',
       { type: 'button', className: 'nova-btn', 'aria-label': this.closeLabel },
-      icon(icons.close),
+      icon(icons.close, this.iconSource),
     );
     const actions = (options.actions ?? []).map((action) =>
       h('button', { type: 'button', className: 'nova-btn nova-notification-action' }, action.label),

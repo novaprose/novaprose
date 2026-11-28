@@ -121,7 +121,7 @@ function createResizeHandle(editor: Editor, host: HTMLElement, both: boolean): (
     'aria-label': editor.ui.t('status.resize'),
     'aria-valuemin': String(MIN_HEIGHT),
   });
-  handle.append(icon(both ? icons.resizeHandleBoth : icons.resizeHandle));
+  handle.append(icon(both ? icons.resizeHandleBoth : icons.resizeHandle, editor.ui.registry));
   root.dataset.resize = both ? 'both' : 'vertical';
   host.append(handle);
   // A focusable separator says its value (WCAG 4.1.2): the editor's height in pixels.

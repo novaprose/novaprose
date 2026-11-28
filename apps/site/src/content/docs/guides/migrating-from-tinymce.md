@@ -29,34 +29,36 @@ When you're ready, move to the native API below — it is smaller, typed and fra
 
 ## Options
 
-| TinyMCE                                 | NovaProse                                                          |
-| --------------------------------------- | ------------------------------------------------------------------ |
-| `selector` / `target`                   | `element` (one editor per element)                                 |
-| `toolbar`                               | `toolbar` — same syntax and control names                          |
-| `toolbar_mode` (all four modes)         | `toolbarMode: 'floating'`, `'sliding'`, `'scrolling'`, `'wrap'`    |
-| `menubar`, `menu`                       | `menubar`, `menu`                                                  |
-| `statusbar`                             | `statusbar`                                                        |
-| `plugins`                               | `plugins` — most open-source plugins are built in (see below)      |
-| `inline: true`                          | `mode: 'inline'`                                                   |
-| `placeholder`                           | `placeholder`                                                      |
-| `language`                              | `language`                                                         |
-| `content_language`, `content_langs`     | `contentLanguage`, `contentLangs` (`customCode` has no equivalent) |
-| `toolbar_sticky_offset`                 | `toolbarStickyOffset` (the header is always sticky)                |
-| `directionality: 'rtl'`                 | `direction: 'rtl'` (automatic for Arabic, Hebrew, Persian)         |
-| read-only mode                          | `editable: false`, `editor.setEditable(false)`                     |
-| `images_upload_handler`                 | `uploadImage(file, progress) => Promise<url>`                      |
-| `font_family_formats`                   | `fontFamilies: [{ label, value }]`                                 |
-| `font_size_formats`                     | `fontSizes: ['12px', '14px', …]`                                   |
-| `line_height_formats`                   | `lineHeights: ['1', '1.5', '2']`                                   |
-| `color_map`                             | `colors: ['#000000', …]`                                           |
-| `valid_elements`, `invalid_elements`    | `validElements`, `invalidElements`                                 |
-| `extended_valid_elements`               | `extendedValidElements` (with `@novaprose/core/html-rules`)        |
-| `custom_elements`                       | `customElements` (with `@novaprose/core/html-rules`)               |
-| `valid_styles`                          | `validStyles`                                                      |
-| `paste_preprocess`, `paste_postprocess` | `pastePreprocess(html)`, `pastePostprocess(fragment)`              |
-| `paste_as_text`                         | `pasteAsText`                                                      |
-| `setup`                                 | `setup(editor)`                                                    |
-| `height`, `min_height`                  | CSS on the container, or the `--nova-min-height` variable          |
+| TinyMCE                                 | NovaProse                                                                      |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| `selector` / `target`                   | `element` (one editor per element)                                             |
+| `toolbar`                               | `toolbar` — same syntax and control names                                      |
+| `toolbar_mode` (all four modes)         | `toolbarMode: 'floating'`, `'sliding'`, `'scrolling'`, `'wrap'`                |
+| `menubar`, `menu`                       | `menubar`, `menu`                                                              |
+| `statusbar`                             | `statusbar`                                                                    |
+| `plugins`                               | `plugins` — most open-source plugins are built in (see below)                  |
+| `inline: true`                          | `mode: 'inline'`                                                               |
+| `placeholder`                           | `placeholder`                                                                  |
+| `language`                              | `language`                                                                     |
+| `content_language`, `content_langs`     | `contentLanguage`, `contentLangs` (`customCode` has no equivalent)             |
+| `toolbar_sticky_offset`                 | `toolbarStickyOffset` (the header is always sticky)                            |
+| `icons`, `icons_url` (an icon pack)     | `icons` ([Themes, skins and icons](/guides/themes-and-icons/))                 |
+| `skin`, `skin_url`                      | design tokens and skins ([Themes, skins and icons](/guides/themes-and-icons/)) |
+| `directionality: 'rtl'`                 | `direction: 'rtl'` (automatic for Arabic, Hebrew, Persian)                     |
+| read-only mode                          | `editable: false`, `editor.setEditable(false)`                                 |
+| `images_upload_handler`                 | `uploadImage(file, progress) => Promise<url>`                                  |
+| `font_family_formats`                   | `fontFamilies: [{ label, value }]`                                             |
+| `font_size_formats`                     | `fontSizes: ['12px', '14px', …]`                                               |
+| `line_height_formats`                   | `lineHeights: ['1', '1.5', '2']`                                               |
+| `color_map`                             | `colors: ['#000000', …]`                                                       |
+| `valid_elements`, `invalid_elements`    | `validElements`, `invalidElements`                                             |
+| `extended_valid_elements`               | `extendedValidElements` (with `@novaprose/core/html-rules`)                    |
+| `custom_elements`                       | `customElements` (with `@novaprose/core/html-rules`)                           |
+| `valid_styles`                          | `validStyles`                                                                  |
+| `paste_preprocess`, `paste_postprocess` | `pastePreprocess(html)`, `pastePostprocess(fragment)`                          |
+| `paste_as_text`                         | `pasteAsText`                                                                  |
+| `setup`                                 | `setup(editor)`                                                                |
+| `height`, `min_height`                  | CSS on the container, or the `--nova-min-height` variable                      |
 
 ## Plugins
 

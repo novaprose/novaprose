@@ -312,7 +312,7 @@ export function openImageDialog(editor: Editor): void {
   const dropzone = h(
     'button',
     { type: 'button', className: 'nova-dropzone' },
-    icon(icons.upload),
+    icon(icons.upload, editor.ui.registry),
     h('span', {}, t('image.drop')),
   );
   const url = textField({ label: t('image.url'), type: 'url', placeholder: 'https://' });

@@ -1,0 +1,29 @@
+/*
+ * NovaProse skin "compact": smaller controls and tighter bars, for narrow forms and side panels.
+ * Load it after the editor's style:
+ *   import '@novaprose/core/style.css';
+ *   import '@novaprose/core/skins/compact.css';
+ * Controls stay at least 24 pixels (WCAG 2.5.8) and 40 on touch screens; colors stay the theme's.
+ */
+.nova-editor {
+  --nova-control-size: 28px;
+  --nova-icon-size: 16px;
+  --nova-ui-font-size: 13px;
+  --nova-radius: 6px;
+  --nova-radius-sm: 4px;
+}
+
+.nova-editor .nova-toolbar {
+  gap: 2px;
+  padding: 3px 4px;
+}
+
+.nova-editor .nova-btn {
+  padding: 0 5px;
+}
+
+@media (pointer: coarse) {
+  .nova-editor {
+    --nova-control-size: 40px;
+  }
+}

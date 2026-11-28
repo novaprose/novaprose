@@ -189,7 +189,7 @@ export function openCodeEditor(editor: Editor, labels: AdvCodeLabels): void {
         'data-tooltip': label,
         ...(pressed === undefined ? {} : { 'aria-pressed': String(pressed) }),
       },
-      icon(svgIcon),
+      icon(svgIcon, editor.ui.registry),
     );
     el.addEventListener('click', onClick);
     editor.ui.tooltip.attach(el);
@@ -220,7 +220,9 @@ export function openCodeEditor(editor: Editor, labels: AdvCodeLabels): void {
       full = !full;
       handle.el.classList.toggle('nova-advcode-full', full);
       fullButton.setAttribute('aria-pressed', String(full));
-      fullButton.replaceChildren(icon(full ? icons.fullscreenExit : icons.fullscreen));
+      fullButton.replaceChildren(
+        icon(full ? icons.fullscreenExit : icons.fullscreen, editor.ui.registry),
+      );
       view.requestMeasure();
       view.focus();
     },

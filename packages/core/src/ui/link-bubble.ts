@@ -46,7 +46,7 @@ export function linkBubblePlugin(editor: Editor): Plugin {
         const b = h(
           'button',
           { type: 'button', className: 'nova-btn', 'aria-label': label, 'data-tooltip': label },
-          icon(svg),
+          icon(svg, editor.ui.registry),
         );
         b.addEventListener('click', onClick);
         editor.ui.tooltip.attach(b);
@@ -55,7 +55,7 @@ export function linkBubblePlugin(editor: Editor): Plugin {
       const row = h(
         'div',
         { className: 'nova-bubble-row' },
-        icon(icons.externalLink),
+        icon(icons.externalLink, editor.ui.registry),
         anchor,
         h('span', { className: 'nova-bubble-sep' }),
         button(icons.edit, t('link.edit'), () => openLinkDialog(editor)),

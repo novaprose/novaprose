@@ -1,4 +1,12 @@
-import { activeElement, FOCUSABLE, h, icon, listenDocument, uniqueId } from './dom';
+import {
+  activeElement,
+  FOCUSABLE,
+  h,
+  icon,
+  listenDocument,
+  uniqueId,
+  type IconSource,
+} from './dom';
 import { icons } from './icons';
 
 export interface DialogOptions {
@@ -18,6 +26,8 @@ export interface DialogOptions {
   returnFocus?: () => void;
   /** The element that gets focus on opening (the first field by default). */
   initialFocus?: HTMLElement;
+  /** The editor's icons (its icon pack): editor.ui.registry. */
+  iconSource?: IconSource;
 }
 
 export interface DialogHandle {
@@ -43,7 +53,7 @@ export function openDialog(options: DialogOptions): DialogHandle {
   const closeButton = h(
     'button',
     { type: 'button', className: 'nova-btn nova-dialog-close', 'aria-label': options.closeLabel },
-    icon(icons.close),
+    icon(icons.close, options.iconSource),
   );
 
   const form = h(

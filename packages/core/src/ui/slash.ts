@@ -149,7 +149,7 @@ export function registerSlashCommands(editor: Editor, extra: SlashCommand[] = []
       rankSlashCommands(commands, query, t).map<AutocompleterItem>((cmd) => ({
         value: cmd.name,
         label: t(cmd.label),
-        icon: cmd.icon,
+        icon: editor.ui.registry.getIcon(cmd.icon),
         ...(cmd.shortcut ? { shortcut: cmd.shortcut } : {}),
       })),
     onSelect: (item, range, e) => {

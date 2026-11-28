@@ -24,15 +24,15 @@ createEditor({
 });
 ```
 
-| Field       | Description                                                            |
-| ----------- | ---------------------------------------------------------------------- |
-| `tooltip`   | tooltip and accessible label (required)                                |
-| `text`      | button text, shown when there is no icon                               |
-| `icon`      | an SVG string                                                          |
-| `shortcut`  | shortcut shown in the tooltip, in ProseMirror format (`'Mod-Shift-s'`) |
-| `onAction`  | `(editor) => void`                                                     |
-| `isActive`  | `(editor) => boolean` — makes it a toggle button (`aria-pressed`)      |
-| `isEnabled` | `(editor) => boolean` — disables the button when it returns `false`    |
+| Field       | Description                                                                                        |
+| ----------- | -------------------------------------------------------------------------------------------------- |
+| `tooltip`   | tooltip and accessible label (required)                                                            |
+| `text`      | button text, shown when there is no icon                                                           |
+| `icon`      | an SVG string, or the name of an icon ([your own icons](/guides/themes-and-icons/#your-own-icons)) |
+| `shortcut`  | shortcut shown in the tooltip, in ProseMirror format (`'Mod-Shift-s'`)                             |
+| `onAction`  | `(editor) => void`                                                                                 |
+| `isActive`  | `(editor) => boolean` — makes it a toggle button (`aria-pressed`)                                  |
+| `isEnabled` | `(editor) => boolean` — disables the button when it returns `false`                                |
 
 Other control types: `addToggleButton`, `addMenuButton` (a dropdown list), `addSplitButton` (an
 action plus a dropdown of options), `addPanelButton` (a popover with your own content),

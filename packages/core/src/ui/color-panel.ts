@@ -1,4 +1,4 @@
-import { activeElement, h, icon, logicalKey } from './dom';
+import { activeElement, h, icon, logicalKey, type IconSource } from './dom';
 import { icons } from './icons';
 
 /** The default palette: 8 hues × (dark, base, light) plus a gray scale. */
@@ -44,6 +44,8 @@ export interface ColorPanelOptions {
   removeLabel: string;
   customLabel: string;
   onPick: (color: string | null) => void;
+  /** The editor's icons (its icon pack): editor.ui.registry. */
+  iconSource?: IconSource;
 }
 
 /** The color palette: a grid of swatches (arrows across the grid), "remove color" and a custom color. */
@@ -69,7 +71,7 @@ export function createColorPanel(options: ColorPanelOptions): HTMLElement {
         title: color,
         tabindex: '-1',
       },
-      selected ? icon(icons.check) : null,
+      selected ? icon(icons.check, options.iconSource) : null,
     );
     swatch.style.setProperty('--swatch', color);
     swatch.addEventListener('click', () => options.onPick(color));
@@ -106,7 +108,7 @@ export function createColorPanel(options: ColorPanelOptions): HTMLElement {
   const remove = h(
     'button',
     { type: 'button', className: 'nova-panel-action' },
-    icon(icons.clearFormatting),
+    icon(icons.clearFormatting, options.iconSource),
     options.removeLabel,
   );
   remove.addEventListener('click', () => options.onPick(null));

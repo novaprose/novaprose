@@ -28,6 +28,9 @@ export default defineConfig({
     email: 'src/email.ts',
     // Upload adapters for cloud storage (S3, Google Cloud Storage, Azure, Cloudinary, Uploadcare).
     upload: 'src/upload.ts',
+    // Icon packs (Tabler, Phosphor): only for editors that use them.
+    'icons/tabler': 'src/icons/tabler.ts',
+    'icons/phosphor': 'src/icons/phosphor.ts',
     ...packs,
   },
   format: ['esm', 'cjs'],

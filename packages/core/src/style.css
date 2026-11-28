@@ -57,6 +57,8 @@
   --nova-content-font-size: 16px;
   --nova-min-height: 240px;
   --nova-control-size: 32px;
+  /* Icons of every pack draw at one size, so a row of controls stays even. */
+  --nova-icon-size: 18px;
   --nova-z-overlay: 1000;
 
   color-scheme: light;
@@ -182,6 +184,8 @@
 
 .nova-icon svg {
   display: block;
+  width: var(--nova-icon-size, 18px);
+  height: var(--nova-icon-size, 18px);
 }
 
 .nova-visually-hidden {

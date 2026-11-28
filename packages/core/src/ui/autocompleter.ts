@@ -124,7 +124,7 @@ export function autocompleterPlugin(editor: Editor): Plugin {
           role: 'option',
           'aria-selected': String(index === active),
         },
-        item.icon ? icon(item.icon) : null,
+        item.icon ? icon(item.icon, editor.ui.registry) : null,
         h('span', { className: 'nova-menu-label' }, item.label),
         item.shortcut
           ? h('kbd', { className: 'nova-menu-shortcut' }, formatShortcut(item.shortcut))

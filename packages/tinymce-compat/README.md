@@ -67,7 +67,8 @@ editor.on('change', () => console.log(editor.getContent()));
 - **`editor.ui.registry`**: `addButton`, `addToggleButton` (with `onSetup` and `api.setActive`),
   `addMenuButton` (`fetch`), `addMenuItem`, `addContextToolbar`, `addSidebar` (with
   `ToggleSidebar` and `queryCommandValue`), `addIcon`; TinyMCE icon names map to
-  NovaProse icons.
+  NovaProse icons. Icon packs: `tinymce.IconManager.add(name, { icons })` with `icons: name`, or
+  `icons_url` (an http(s) address of the pack script); the pack redraws the built-in buttons too.
 - **Events**: `init`, `input`, `change` (on blur after edits), `NodeChange`, `focus`, `blur`,
   `keydown`, `keyup`, `click`, `paste`, `SetContent`, `GetContent`, `SaveContent`, `ExecCommand`,
   `Dirty`, `remove`.

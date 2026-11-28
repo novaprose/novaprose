@@ -108,7 +108,7 @@ export function createToolbar(
       // The strip is right under the toolbar; the panel floats.
       ...(strip ? { 'aria-controls': overflowBox.id } : { 'aria-haspopup': 'true' }),
     },
-    icon(icons.more),
+    icon(icons.more, ui.registry),
   );
   ui.tooltip.attach(moreButton);
   let overflowPopover: Popover | null = null;
@@ -319,7 +319,7 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
   });
   ui.tooltip.attach(el);
 
-  if (spec.icon) el.append(icon(spec.icon));
+  if (spec.icon) el.append(icon(spec.icon, ui.registry));
   const label =
     spec.type === 'menu' && (spec.label || spec.text)
       ? h('span', { className: 'nova-tb-label' })
@@ -340,7 +340,7 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
   if (spec.type !== 'button') {
     el.setAttribute('aria-haspopup', spec.type === 'menu' ? 'menu' : 'dialog');
     el.setAttribute('aria-expanded', 'false');
-    el.append(icon(icons.chevronDown));
+    el.append(icon(icons.chevronDown, ui.registry));
     el.lastElementChild?.classList.add('nova-chevron');
   }
 
@@ -358,7 +358,7 @@ export function renderControl(editor: Editor, name: string, spec: ControlSpec): 
     const closeAndRefocus = () => ui.closePopover();
     const content =
       spec.type === 'menu'
-        ? createMenu(spec.items(editor), closeAndRefocus, spec.tooltip)
+        ? createMenu(spec.items(editor), closeAndRefocus, spec.tooltip, ui.registry)
         : spec.render(editor, closeAndRefocus);
     el.setAttribute('aria-expanded', 'true');
     const popover = ui.openPopover({

@@ -28,11 +28,20 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   return el;
 }
 
-/** Icons are our own static SVG strings (not user data). */
-export function icon(svg: string): HTMLSpanElement {
+/** Where the editor's icons come from: editor.ui.registry (its icon pack and addIcon). */
+export interface IconSource {
+  getIcon(value: string | undefined): string | undefined;
+}
+
+/**
+ * An icon: a built-in SVG string, drawn as the editor's icon pack has it when `source` is given.
+ * Icons are never user data: built-in ones are ours, the rest come from the integrator's
+ * configuration and are cleaned on the way in (cleanIcon in registry.ts).
+ */
+export function icon(svg: string, source?: IconSource): HTMLSpanElement {
   const span = document.createElement('span');
   span.className = 'nova-icon';
-  span.innerHTML = svg;
+  span.innerHTML = (source ? source.getIcon(svg) : svg) ?? '';
   return span;
 }
 

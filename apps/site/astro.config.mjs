@@ -81,6 +81,7 @@ export default defineConfig({
           label: 'Guides',
           items: [
             { slug: 'guides/toolbar-and-menus' },
+            { slug: 'guides/themes-and-icons' },
             { slug: 'guides/headless' },
             { slug: 'guides/images' },
             { slug: 'guides/embeds' },

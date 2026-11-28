@@ -148,7 +148,7 @@ export class Sidebars {
         'aria-label': this.editor.ui.t('dialog.close'),
         onClick: () => this.hide(),
       },
-      icon(icons.close),
+      icon(icons.close, this.editor.ui.registry),
     );
     const header =
       spec.header === false

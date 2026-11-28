@@ -236,7 +236,68 @@ const ICON_NAMES: Record<string, keyof typeof icons> = {
   'text-color': 'textColor',
   'highlight-bg-color': 'highlight',
   'line-height': 'lineHeight',
+  // The rest of the interface and the plugins (names from the public list of icon identifiers):
+  // with an icon pack (the icons option) they redraw NovaProse's own buttons too.
+  'chevron-down': 'chevronDown',
+  'chevron-up': 'chevronUp',
+  'more-drawer': 'more',
+  'resize-handle': 'resizeHandle',
+  resize: 'resize',
+  drag: 'dragHandle',
+  remove: 'trash',
+  'new-tab': 'externalLink',
+  browse: 'browse',
+  paragraph: 'paragraph',
+  language: 'language',
+  'alt-text': 'altText',
+  caption: 'imageCaption',
+  bookmark: 'anchor',
+  embed: 'media',
+  emoji: 'emoji',
+  'insert-character': 'charmap',
+  'insert-time': 'dateTime',
+  'non-breaking': 'nonBreaking',
+  'page-break': 'pageBreak',
+  template: 'template',
+  toc: 'tableOfContents',
+  footnote: 'footnote',
+  accordion: 'accordion',
+  checklist: 'checklist',
+  'math-equation': 'math',
+  duplicate: 'duplicate',
+  'change-case': 'caseChange',
+  'format-painter': 'formatPainter',
+  'permanent-pen': 'permanentPen',
+  visualblocks: 'visualBlocks',
+  visualchars: 'visualChars',
+  ltr: 'ltr',
+  rtl: 'rtl',
+  save: 'save',
+  cancel: 'cancelChanges',
+  'comment-add': 'commentAdd',
+  comment: 'comments',
+  'revision-history': 'history',
+  suggestededits: 'suggest',
+  'table-insert-row-above': 'rowBefore',
+  'table-insert-row-after': 'rowAfter',
+  'table-delete-row': 'rowDelete',
+  'table-insert-column-before': 'colBefore',
+  'table-insert-column-after': 'colAfter',
+  'table-delete-column': 'colDelete',
+  'table-merge-cells': 'merge',
+  'table-split-cells': 'split',
+  'table-top-header': 'rowHeader',
+  'table-left-header': 'colHeader',
+  'table-cell-properties': 'cellProps',
+  'table-delete-table': 'tableDelete',
 };
+
+/** A TinyMCE icon pack (tinymce.IconManager.add) in NovaProse's icon names, for the icons option. */
+export function iconPackFor(pack: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(pack).map(([name, svg]) => [ICON_NAMES[name] ?? name, svg]),
+  );
+}
 
 /** Built-in TinyMCE formats → NovaProse commands. */
 const FORMAT_COMMANDS: Record<string, CommandName> = {
@@ -877,6 +938,8 @@ export class CompatEditor {
     registry: {
       addIcon: (name: string, svg: string) => {
         customIcons.set(name, svg);
+        // A TinyMCE name of a built-in icon ('bold', 'align-left') replaces it on the built-in buttons too.
+        this.core.ui.registry.addIcon(ICON_NAMES[name] ?? name, svg);
       },
       addButton: (name: string, spec: ButtonSpec) => this.addButton(name, spec, false),
       addToggleButton: (name: string, spec: ButtonSpec & { active?: boolean }) =>

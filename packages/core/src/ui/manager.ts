@@ -8,7 +8,7 @@ import { h } from './dom';
 import type { DialogData, DialogSpec } from './form-dialog-types';
 import { Notifications, type NotificationHandle, type NotificationOptions } from './notification';
 import { Popover, type PopoverOptions } from './popover';
-import { Registry } from './registry';
+import { isSvgMarkup, Registry } from './registry';
 import { Sidebars } from './sidebar';
 import { Views } from './editor-views';
 import { Tooltip } from './tooltip';
@@ -18,7 +18,7 @@ import { Tooltip } from './tooltip';
  * notifications and translations. Available as editor.ui.
  */
 export class UiManager {
-  readonly registry = new Registry();
+  readonly registry: Registry;
   readonly t: Translator;
   /** The layer for all floating elements. It sits inside .nova-editor, so it inherits the theme. */
   readonly overlayHost: HTMLDivElement;
@@ -44,10 +44,17 @@ export class UiManager {
   ) {
     this.t = t;
     this.rootEl = root;
+    // The icon pack (the icons option): SVGs by name over the built-in icons.
+    const pack = editor.options.icons;
+    this.registry = new Registry(
+      pack && typeof pack === 'object'
+        ? Object.fromEntries(Object.entries(pack).filter(([, svg]) => isSvgMarkup(svg)))
+        : {},
+    );
     this.overlayHost = h('div', { className: 'nova-overlays' });
     root.append(this.overlayHost);
     this.tooltip = new Tooltip(this.overlayHost);
-    this.notifications = new Notifications(root, t('dialog.close'));
+    this.notifications = new Notifications(root, t('dialog.close'), this.registry);
     this.sidebar = new Sidebars(editor);
     this.view = new Views(editor);
     this.liveRegion = h('div', {
@@ -169,6 +176,7 @@ export class UiManager {
       closeLabel: this.t('dialog.close'),
       ...options,
       host: this.overlayHost,
+      iconSource: this.registry,
       returnFocus: this.focusEditor,
       onClose: () => {
         if (this.currentDialog === handle) this.currentDialog = null;

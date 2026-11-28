@@ -513,6 +513,7 @@ export function registerBuiltins(editor: Editor): void {
           label: t(label),
           removeLabel: t('removeColor'),
           customLabel: t('customColor'),
+          iconSource: e.ui.registry,
           onPick: (color) => {
             close();
             e.exec(setStyle(mark, color));

@@ -1,0 +1,26 @@
+/*
+ * NovaProse skin "rounded": softer corners and airier bars. Load it after the editor's style:
+ *   import '@novaprose/core/style.css';
+ *   import '@novaprose/core/skins/rounded.css';
+ * Only shapes and spacing change: colors (and their contrast) stay the theme's.
+ */
+.nova-editor {
+  --nova-radius: 14px;
+  --nova-radius-sm: 10px;
+  --nova-control-size: 34px;
+}
+
+.nova-editor .nova-toolbar {
+  gap: 6px;
+  padding: 8px 10px;
+}
+
+.nova-editor .nova-btn,
+.nova-editor .nova-button,
+.nova-editor .nova-input {
+  border-radius: 999px;
+}
+
+.nova-editor textarea.nova-input {
+  border-radius: var(--nova-radius-sm);
+}

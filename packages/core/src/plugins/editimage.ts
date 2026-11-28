@@ -489,7 +489,7 @@ function openEditDialog(
     const button = h(
       'button',
       { type: 'button', className: 'nova-btn', 'aria-label': label, 'data-tooltip': label },
-      icon(svgIcon),
+      icon(svgIcon, editor.ui.registry),
     );
     button.addEventListener('click', run);
     editor.ui.tooltip.attach(button);

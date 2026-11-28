@@ -114,11 +114,23 @@
         "default": "./dist/i18n/*.cjs"
       }
     },
+    "./icons/*": {
+      "import": {
+        "types": "./dist/icons/*.d.ts",
+        "default": "./dist/icons/*.js"
+      },
+      "require": {
+        "types": "./dist/icons/*.d.cts",
+        "default": "./dist/icons/*.cjs"
+      }
+    },
+    "./skins/*": "./src/skins/*",
     "./style.css": "./src/style.css"
   },
   "files": [
     "dist",
     "src/style.css",
+    "src/skins",
     "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {

@@ -30,7 +30,7 @@
     "verify:release": "pnpm release:pack && pnpm size && pnpm check:packages",
     "verify:examples": "node scripts/verify-examples.mjs",
     "site:a11y": "node scripts/site-a11y.mjs",
-    "icons": "node scripts/icons.mjs && prettier --write packages/core/src/ui/icons.ts apps/site/src/components/site/icons.ts"
+    "icons": "node scripts/icons.mjs && node scripts/icon-packs.mjs && prettier --write packages/core/src/ui/icons.ts packages/core/src/icons apps/site/src/components/site/icons.ts"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",
@@ -38,8 +38,10 @@
     "@eslint/js": "^9.17.0",
     "@guidepup/guidepup": "^0.40.0",
     "@guidepup/playwright": "^0.21.0",
+    "@phosphor-icons/core": "2.1.1",
     "@playwright/test": "^1.49",
     "@primer/octicons": "^19.43.0",
+    "@tabler/icons": "3.53.0",
     "@types/node": "^22.10.2",
     "@vitest/coverage-v8": "5.1.2",
     "esbuild": "0.28.2",

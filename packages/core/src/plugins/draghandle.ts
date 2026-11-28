@@ -233,7 +233,7 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
         title: labels.handle,
         hidden: true,
       });
-      handle.append(icon(icons.dragHandle));
+      handle.append(icon(icons.dragHandle, editor.ui.registry));
       const line = h('div', { className: 'nova-drop-line', hidden: true });
       host.append(handle, line);
 
@@ -405,7 +405,12 @@ function handlePlugin(editor: Editor, labels: (typeof LABELS)['en']): Plugin {
           },
           { id: 'delete', label: labels.delete, icon: icons.trash, onSelect: run(deleteBlock) },
         ];
-        const menu = createMenu(entries, () => editor.ui.closePopover(), labels.menu);
+        const menu = createMenu(
+          entries,
+          () => editor.ui.closePopover(),
+          labels.menu,
+          editor.ui.registry,
+        );
         editor.ui.openPopover({
           anchor: handle,
           content: menu,
