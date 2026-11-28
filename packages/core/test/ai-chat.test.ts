@@ -363,3 +363,95 @@ describe('the AI chat: Edit', () => {
     expect(button(panel, 'Copy').disabled).toBe(false);
   });
 });
+
+function reviewMode(panel: HTMLElement): void {
+  const radio = panel.querySelector<HTMLInputElement>('input[value="review"]')!;
+  radio.checked = true;
+  radio.dispatchEvent(new Event('change'));
+}
+
+const remark = (block: number, quote: string, fix: string, why: string) =>
+  `<finding block="${block}"><quote>${quote}</quote><fix>${fix}</fix><why>${why}</why></finding>\n`;
+
+describe('the AI chat: Review', () => {
+  it('lists the remarks with reasons; each fix is accepted or rejected on its own', async () => {
+    const request = vi.fn(
+      async (_r: AiRequest) =>
+        remark(1, 'recieve', 'receive', 'Spelling.') +
+        remark(1, 'teh', 'the', 'Spelling.') +
+        remark(2, 'good', '', 'Say what exactly is good.'),
+    );
+    const e = await mount('<p>We recieve teh results.</p><p>The plan is good.</p>', { request });
+    const panel = await openChat(e);
+    reviewMode(panel);
+    expect(panel.querySelector('.nova-ai-scope')!.textContent).toBe('Review: the whole document');
+    expect(panel.querySelector<HTMLTextAreaElement>('.nova-ai-input')!.placeholder).toContain(
+      'What should AI check?',
+    );
+    button(panel, 'Review the document').click();
+    await vi.waitFor(() => expect(lastAnswer(panel).textContent).toContain('Remarks: 3'));
+    expect(request.mock.calls[0]![0].action).toBe('review');
+    const items = () => [...lastAnswer(panel).querySelectorAll<HTMLElement>('.nova-ai-finding')];
+    expect(items().map((item) => item.textContent)).toEqual([
+      expect.stringContaining('recieve → receiveSpelling.'),
+      expect.stringContaining('teh → theSpelling.'),
+      // <q> draws its quotation marks itself (CSS): the text is the words.
+      expect.stringContaining('goodSay what exactly is good.'),
+    ]);
+    expect(items()[2]!.textContent).toContain('No change proposed');
+    // The second fix accepted, the first rejected, from the panel.
+    const inItem = (index: number, label: string) =>
+      [...items()[index]!.querySelectorAll('button')].find((b) => b.textContent === label)!;
+    inItem(1, 'Accept').click();
+    inItem(0, 'Reject').click();
+    expect(e.getHTML()).toBe('<p>We recieve the results.</p><p>The plan is good.</p>');
+    await vi.waitFor(() => expect(items()[0]!.textContent).toContain('Reviewed'));
+    // Show: a remark without a fix selects its words in the text.
+    inItem(2, 'Show in the text').click();
+    const { from, to } = e.view.state.selection;
+    expect(e.view.state.doc.textBetween(from, to)).toBe('good');
+    // The conversation goes on with the remarks in it.
+    send(panel, 'Thanks');
+    await vi.waitFor(() => expect(request).toHaveBeenCalledTimes(2));
+    expect(request.mock.calls[1]![0].messages.at(-1)!.text).toContain('"recieve" → "receive"');
+  });
+
+  it('Accept all takes every open fix; a lost quote and "no remarks" are said so', async () => {
+    const request = vi
+      .fn<(r: AiRequest) => Promise<string>>()
+      .mockResolvedValueOnce(
+        remark(1, 'Teh', 'The', 'Spelling.') +
+          remark(2, 'dgo', 'dog', 'Spelling.') +
+          remark(2, 'not in the text', 'x', 'Misquoted.'),
+      )
+      .mockResolvedValueOnce('NO PROBLEMS')
+      .mockResolvedValueOnce('Looks fine!');
+    const e = await mount('<p>Teh cat.</p><p>A dgo.</p>', { request });
+    const panel = await openChat(e);
+    reviewMode(panel);
+    send(panel, 'Check spelling');
+    await vi.waitFor(() => expect(button(panel, 'Accept all')).toBeDefined());
+    expect(lastAnswer(panel).textContent).toContain('Not found in the text');
+    button(panel, 'Accept all').click();
+    expect(e.getHTML()).toBe('<p>The cat.</p><p>A dog.</p>');
+    send(panel, 'Again');
+    await vi.waitFor(() => expect(lastAnswer(panel).textContent).toContain('AI has no remarks.'));
+    send(panel, 'Once more');
+    await vi.waitFor(() =>
+      expect(lastAnswer(panel).textContent).toContain("couldn't be read as a list of remarks"),
+    );
+  });
+
+  it('a read-only document can be reviewed: remarks, no fixes in the text', async () => {
+    const request = vi.fn(async () => remark(1, 'Teh', 'The', 'Spelling.'));
+    const e = await mount('<p>Teh cat.</p>', { request });
+    e.setEditable(false);
+    const panel = await openChat(e);
+    reviewMode(panel);
+    expect(panel.querySelector<HTMLInputElement>('input[value="review"]')!.disabled).toBe(false);
+    button(panel, 'Check clarity').click();
+    await vi.waitFor(() => expect(lastAnswer(panel).textContent).toContain('Remarks: 1'));
+    expect(listSuggestions(e.view.state.doc)).toEqual([]);
+    expect(e.getHTML()).toBe('<p>Teh cat.</p>');
+  });
+});
