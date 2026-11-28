@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@novaprose/core": "^0.9.0",
-    "@novaprose/react": "^0.9.0",
+    "@novaprose/core": "^0.10.0",
+    "@novaprose/react": "^0.10.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

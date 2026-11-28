@@ -9,7 +9,28 @@ All packages in this repository are versioned together. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/)
 (until 1.0, minor versions may contain breaking changes).
 
-## Unreleased
+## 0.10.0 — 2026-11-28
+
+Templates you can lock, AI that reviews, and a sharper look: locked content with editable fields
+inside, the AI chat's Review mode, alternative text written by your model, photos made smaller and
+stripped of camera data before upload, two icon packs and three skins, HTML cleaned on a server
+with the editor's own rules, and formulas from other editors and sites read as LaTeX.
+
+### Upgrading from 0.9
+
+- **Photos are prepared before upload.** A photo larger than 2560 pixels is scaled down and loses
+  its camera metadata (EXIF and XMP, the place it was taken). To send files as they are, pass
+  `imageOptimize: false`.
+- **Icons draw at one size**, the `--nova-icon-size` token (18 px), whatever size their SVG says: a
+  button icon of your own drawn at 24 px now shows at 18 px. Set the token to change it.
+- **Icons that don't come with the editor are cleaned** before they are drawn (your controls' own
+  SVG, `addIcon`, icon packs): one `<svg>` of SVG elements only, without `<title>`, `<desc>`,
+  scripts, styles, event handlers or links, marked `aria-hidden`. A control is named by its tooltip.
+- **AI requests have two new actions**, `describe` (alternative text for an image, with `image`) and
+  `review` (remarks on the document). A server that sends `prompt` as it is needs nothing; one that
+  builds its own prompt by `action` should handle them.
+- **The compatibility layer locks `mceNonEditable` content**, as TinyMCE does; until now such content
+  was editable.
 
 ### Formulas
 

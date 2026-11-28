@@ -1,6 +1,6 @@
 {
   "name": "@novaprose/vue",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "NovaProse rich text editor for Vue 3: v-model component and composables (useEditor, useEditorState, useCommand), Nuxt-safe.",
   "keywords": [
     "vue",

@@ -9,8 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@novaprose/core": "^0.9.0",
-    "@novaprose/vue": "^0.9.0",
+    "@novaprose/core": "^0.10.0",
+    "@novaprose/vue": "^0.10.0",
     "vue": "^3.5.0"
   },
   "devDependencies": {

@@ -14,9 +14,9 @@ in plain HTML forms, Svelte, Angular, Lit, Astro and server templates (Django, R
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.9/dist/novaprose.css"
+  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.10/dist/novaprose.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.9/dist/novaprose.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.10/dist/novaprose.global.js"></script>
 
 <form method="post">
   <novaprose-editor name="body" required>

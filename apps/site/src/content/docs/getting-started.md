@@ -52,9 +52,9 @@ editor.on('change', () => console.log(editor.getHTML()));
 ```html
 <link
   rel="stylesheet"
-  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.9/dist/novaprose.css"
+  href="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.10/dist/novaprose.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.9/dist/novaprose.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@novaprose/web-component@0.10/dist/novaprose.global.js"></script>
 
 <form method="post" action="/posts">
   <novaprose-editor name="body">
